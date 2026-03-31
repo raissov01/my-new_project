@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
+	"github.com/midoriya/flashlearn-backend/internal/model"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 )
 
@@ -118,4 +119,50 @@ func (h *Classroom) GetTeacherClassroomDetail(w http.ResponseWriter, r *http.Req
 	}
 
 	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Classroom) CreateGroup(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var req model.CreateGroupRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	req.Name = strings.TrimSpace(req.Name)
+	req.Members = strings.TrimSpace(req.Members)
+
+	if req.Name == "" {
+		writeError(w, http.StatusBadRequest, "class name is required", nil)
+		return
+	}
+
+	resp, err := h.svc.CreateGroup(r.Context(), userID, req)
+	if err != nil {
+		log.Printf("create group error: %v", err)
+		msg := "failed to create class"
+		status := http.StatusInternalServerError
+
+		normalized := strings.ToLower(err.Error())
+		switch {
+		case strings.Contains(normalized, "unknown usernames:"):
+			msg = err.Error()
+			status = http.StatusBadRequest
+		case strings.Contains(normalized, "class name is required"):
+			msg = err.Error()
+			status = http.StatusBadRequest
+		case h.isDev():
+			msg = err.Error()
+		}
+
+		writeError(w, status, msg, err)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, resp)
 }

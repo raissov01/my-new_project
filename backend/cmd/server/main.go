@@ -97,6 +97,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/classroom/available-sets", internalAuth(classroomH.GetAvailableSets))
 	mux.HandleFunc("GET /api/v1/classroom/my-challenges", internalAuth(classroomH.GetMyChallenges))
 	mux.HandleFunc("GET /api/v1/classroom/groups/{groupID}", internalAuth(classroomH.GetTeacherClassroomDetail))
+	mux.HandleFunc("POST /api/v1/classroom/groups", internalAuth(classroomH.CreateGroup))
 
 	// ── WRITE endpoints (new) ──────────────────────────────────────────────
 

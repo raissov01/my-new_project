@@ -44,3 +44,11 @@ func (s *Classroom) GetTeacherClassroomDetail(
 ) (*model.TeacherClassroomDetail, error) {
 	return s.repo.GetTeacherClassroomDetail(ctx, userID, groupID)
 }
+
+func (s *Classroom) CreateGroup(
+	ctx context.Context,
+	userID string,
+	req model.CreateGroupRequest,
+) (*model.CreateGroupResponse, error) {
+	return s.repo.CreateGroup(ctx, userID, req)
+}

@@ -7,6 +7,8 @@ import { createTranslator } from "@/lib/i18n/shared";
 import { getServerLocale } from "@/lib/i18n/server";
 import { getAccessibleSetById, resolveInviteProfiles } from "@/lib/set-access";
 import { getClassChallengeById } from "@/lib/class-challenges";
+import { createClassGroupViaGo } from "@/lib/backend/classroom-write";
+import { isGoBackendBridgeConfigured } from "@/lib/backend/env";
 import type { Database } from "@/types/database";
 
 type TableError = { message: string } | null;
@@ -133,7 +135,7 @@ async function verifyTeacherOwnsGroup(groupId: string, ownerId: string) {
   return Boolean(data);
 }
 
-export async function createClassGroup(formData: FormData) {
+async function createClassGroupWithSupabase(formData: FormData) {
   const access = await requireTeacherProfile();
   if (access.error || !access.user) {
     return { error: access.error };
@@ -221,6 +223,52 @@ export async function createClassGroup(formData: FormData) {
   revalidatePath(`/teacher/classes/${group.id}`);
 
   return { error: null, groupId: group.id };
+}
+
+export async function createClassGroup(formData: FormData) {
+  const access = await requireTeacherProfile();
+  if (access.error || !access.user) {
+    return { error: access.error };
+  }
+
+  const name = String(formData.get("name") ?? "").trim();
+  const members = String(formData.get("members") ?? "");
+
+  if (!name) {
+    return { error: "Class name is required." };
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      const result = await createClassGroupViaGo(access.user.id, {
+        name,
+        members,
+      });
+
+      revalidatePath("/teacher/classes");
+      revalidatePath("/teacher/dashboard");
+      revalidatePath(`/teacher/classes/${result.groupId}`);
+
+      return { error: null, groupId: result.groupId };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create class.";
+      console.error("[createClassGroup] Go backend create failed, falling back to Supabase:", {
+        teacherId: access.user.id,
+        name,
+        message,
+      });
+
+      const normalized = message.replace(/^\[Go backend\]\s*\d+\s*/i, "").trim();
+      if (
+        normalized.toLowerCase().includes("unknown usernames:") ||
+        normalized.toLowerCase().includes("class name is required")
+      ) {
+        return { error: normalized };
+      }
+    }
+  }
+
+  return createClassGroupWithSupabase(formData);
 }
 
 export async function submitCreateClassGroup(

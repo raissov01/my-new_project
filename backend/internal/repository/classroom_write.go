@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"slices"
 	"strings"
 
 	"github.com/midoriya/flashlearn-backend/internal/model"
@@ -47,20 +48,53 @@ func (r *Classroom) CreateGroup(ctx context.Context, ownerID string, req model.C
 		usernames := parseUsernames(req.Members)
 		if len(usernames) > 0 {
 			rows, err := r.pool.Query(ctx,
-				`SELECT id FROM profiles WHERE username = ANY($1) AND id != $2`,
+				`SELECT id, username FROM profiles WHERE username = ANY($1) AND id != $2`,
 				usernames, ownerID,
 			)
-			if err == nil {
-				defer rows.Close()
-				for rows.Next() {
-					var memberID string
-					if err := rows.Scan(&memberID); err == nil {
-						tx.Exec(ctx,
-							`INSERT INTO class_group_members (group_id, user_id, role) VALUES ($1, $2, 'student')
-							 ON CONFLICT (group_id, user_id) DO NOTHING`,
-							groupID, memberID,
-						)
-					}
+			if err != nil {
+				return nil, fmt.Errorf("resolve invited members: %w", err)
+			}
+			defer rows.Close()
+
+			type invitedProfile struct {
+				id       string
+				username string
+			}
+
+			var invited []invitedProfile
+			for rows.Next() {
+				var profile invitedProfile
+				if err := rows.Scan(&profile.id, &profile.username); err != nil {
+					return nil, fmt.Errorf("scan invited member: %w", err)
+				}
+				invited = append(invited, profile)
+			}
+
+			if err := rows.Err(); err != nil {
+				return nil, fmt.Errorf("iterate invited members: %w", err)
+			}
+
+			var missing []string
+			for _, username := range usernames {
+				found := slices.ContainsFunc(invited, func(profile invitedProfile) bool {
+					return profile.username == username
+				})
+				if !found {
+					missing = append(missing, username)
+				}
+			}
+
+			if len(missing) > 0 {
+				return nil, fmt.Errorf("unknown usernames: %s", strings.Join(missing, ", "))
+			}
+
+			for _, profile := range invited {
+				if _, err := tx.Exec(ctx,
+					`INSERT INTO class_group_members (group_id, user_id, role) VALUES ($1, $2, 'student')
+					 ON CONFLICT (group_id, user_id) DO NOTHING`,
+					groupID, profile.id,
+				); err != nil {
+					return nil, fmt.Errorf("insert invited member: %w", err)
 				}
 			}
 		}
