@@ -53,16 +53,17 @@ function getFeedbackMessage(
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
-  const [{ status, error }, user, profile, pomodoro] = await Promise.all([
-    searchParams,
-    getCurrentUser(),
-    getCurrentProfile(),
-    getPomodoroPreferences(),
-  ]);
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");
   }
+
+  const [{ status, error }, profile, pomodoro] = await Promise.all([
+    searchParams,
+    getCurrentProfile(user),
+    getPomodoroPreferences(),
+  ]);
 
   const feedback = getFeedbackMessage(t, status, error);
 

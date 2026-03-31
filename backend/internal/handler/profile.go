@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 )
@@ -31,6 +33,11 @@ func (h *Profile) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.svc.GetMe(r.Context(), userID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "profile not found", err)
+			return
+		}
+
 		log.Printf("profile error: %v", err)
 		msg := "failed to load profile"
 		if h.isDev() {

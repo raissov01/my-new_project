@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import type { User } from "@supabase/supabase-js";
 import type { Database, Profile, ProfileRole } from "@/types/database";
 import { getSupabaseEnv, getSupabaseEnvSafe } from "./env";
+import { getCurrentProfileFromGo } from "@/lib/backend/profile";
+import { isGoBackendBridgeConfigured } from "@/lib/backend/env";
 import {
   ADMIN_COOKIE_NAME,
   ADMIN_USER,
@@ -269,6 +271,14 @@ export async function getCurrentProfile(
 
   if (!user || DEV_MODE || user.email === ADMIN_USER.email) {
     return null;
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      return await getCurrentProfileFromGo(user.id);
+    } catch (error) {
+      console.warn("[getCurrentProfile] Falling back to Supabase:", error);
+    }
   }
 
   const supabase = await createClient();

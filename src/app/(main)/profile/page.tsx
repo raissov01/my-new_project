@@ -20,16 +20,17 @@ interface ProfilePageProps {
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
-  const [{ status }, user, profile, stats] = await Promise.all([
-    searchParams,
-    getCurrentUser(),
-    getCurrentProfile(),
-    getUserStats(),
-  ]);
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");
   }
+
+  const [{ status }, profile, stats] = await Promise.all([
+    searchParams,
+    getCurrentProfile(user),
+    getUserStats(),
+  ]);
 
   const supabase = await createClient();
   const { count: createdSets } = await supabase
