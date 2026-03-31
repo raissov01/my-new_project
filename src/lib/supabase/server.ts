@@ -25,6 +25,11 @@ type ProfilesTable = {
       maybeSingle: () => Promise<{ data: Profile | null }>;
     };
   };
+  update: (
+    values: Database["public"]["Tables"]["profiles"]["Update"]
+  ) => {
+    eq: (column: string, value: string) => Promise<{ error: TableError }>;
+  };
 };
 
 const VALID_ROLES = new Set<ProfileRole>(["student", "teacher"]);
@@ -203,34 +208,41 @@ export async function upsertCurrentUserRole(role: ProfileRole) {
 
   const supabase = await createClient();
   const profilesTable = supabase.from("profiles") as never as ProfilesTable;
-  const existingProfile = await getCurrentProfile(user);
+  const { data: existingProfile } = await profilesTable
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
   const userMetadata =
     "user_metadata" in user && user.user_metadata && typeof user.user_metadata === "object"
       ? (user.user_metadata as { full_name?: unknown; username?: unknown })
       : null;
+
+  if (existingProfile) {
+    const { error } = await profilesTable.update({ role }).eq("id", user.id);
+    return { error: error?.message ?? null, user };
+  }
+
   const fullName =
-    existingProfile?.full_name ??
-    (typeof userMetadata?.full_name === "string" && userMetadata.full_name.trim()
+    typeof userMetadata?.full_name === "string" && userMetadata.full_name.trim()
       ? userMetadata.full_name.trim()
       : typeof userMetadata?.username === "string" && userMetadata.username.trim()
         ? userMetadata.username.trim()
-        : user.email?.split("@")[0] ?? `user_${user.id.slice(0, 8)}`);
+        : user.email?.split("@")[0] ?? `user_${user.id.slice(0, 8)}`;
   const username =
-    existingProfile?.username ??
-    (typeof userMetadata?.username === "string" && userMetadata.username.trim()
+    typeof userMetadata?.username === "string" && userMetadata.username.trim()
       ? userMetadata.username.trim()
-      : fullName);
+      : fullName;
 
   const payload: Database["public"]["Tables"]["profiles"]["Insert"] = {
     id: user.id,
-    email: existingProfile?.email ?? user.email ?? "",
+    email: user.email ?? "",
     full_name: fullName,
     username,
     role,
-    streak_days: existingProfile?.streak_days ?? 0,
-    points: existingProfile?.points ?? 0,
-    avatar_url: existingProfile?.avatar_url ?? null,
-    bio: existingProfile?.bio ?? null,
+    streak_days: 0,
+    points: 0,
+    avatar_url: null,
+    bio: null,
   };
 
   const { error } = await profilesTable.upsert(payload, { onConflict: "id" });

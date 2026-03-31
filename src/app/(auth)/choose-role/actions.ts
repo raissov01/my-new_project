@@ -27,7 +27,12 @@ async function persistRole(role: ProfileRole): Promise<RoleResult> {
       role,
       userId: result.user?.id ?? null,
     });
-    return { error: t("action.genericError") };
+    return {
+      error:
+        process.env.NODE_ENV !== "production"
+          ? `${t("action.genericError")} (${result.error})`
+          : t("action.genericError"),
+    };
   }
 
   redirect(getDefaultAppRoute(role));
