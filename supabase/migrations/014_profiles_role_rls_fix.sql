@@ -11,7 +11,7 @@ begin
     from pg_policies
     where schemaname = 'public'
       and tablename = 'profiles'
-      and policyname = 'Users can create their own profile'
+      and policyname = 'Users can create their own  profile'
   ) then
     create policy "Users can create their own profile"
       on public.profiles for insert

@@ -57,13 +57,13 @@ export function SignupForm() {
   // Success message screen
   if (message) {
     return (
-      <div className="glass-card animate-confetti-pop rounded-3xl p-8 text-center">
+      <div className="animate-confetti-pop rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-8 text-center shadow-[var(--surface-shadow-strong)]">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-md shadow-emerald-500/20">
           <CheckCircle2 className="h-7 w-7 text-white" />
         </div>
-        <h2 className="mt-4 text-lg font-bold text-[var(--text-primary)]">{t("auth.checkEmail")}</h2>
-        <p className="mt-2 text-sm text-[var(--text-secondary)]">{message}</p>
-        <Link href="/login" className="mt-6 inline-block text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400">
+        <h2 className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">{t("auth.checkEmail")}</h2>
+        <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{message}</p>
+        <Link href="/login" className="mt-6 inline-block text-sm font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
           {t("auth.backToLogin")}
         </Link>
       </div>
@@ -71,23 +71,25 @@ export function SignupForm() {
   }
 
   return (
-    <div className="glass-card animate-scale-in rounded-3xl p-7 sm:p-8">
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t("auth.createAccount")}</h1>
-        <p className="mt-1.5 text-sm text-[var(--text-secondary)]">{t("auth.startStudying")}</p>
+    <div className="animate-scale-in rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-7 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="mb-8 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)]">
+          <ShieldCheck className="h-5 w-5 text-indigo-400" />
+        </div>
+        <h1 className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{t("auth.createAccount")}</h1>
+        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{t("auth.startStudying")}</p>
       </div>
 
-      {/* Role selection — always visible, even for social login */}
-      <fieldset className="mb-6 space-y-3">
+      <fieldset className="mb-7 space-y-3">
         <legend className="text-sm font-medium text-[var(--text-primary)]">
           {t("auth.role")}
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all hover:border-indigo-400/50 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all ${
               selectedRole === "student"
-                ? "border-indigo-500 bg-indigo-500/5 ring-2 ring-indigo-500/20"
-                : "border-[var(--border)] bg-[var(--bg-surface)]"
+                ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--surface-shadow)]"
+                : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
             }`}
           >
             <input
@@ -99,7 +101,7 @@ export function SignupForm() {
               disabled={isDisabled}
               className="sr-only"
             />
-            <div className={`mt-0.5 rounded-xl p-2 ${selectedRole === "student" ? "bg-indigo-500/15 text-indigo-600" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
+            <div className={`mt-0.5 rounded-xl p-2.5 ${selectedRole === "student" ? "bg-indigo-500/15 text-indigo-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
               <GraduationCap className="h-5 w-5" />
             </div>
             <div>
@@ -110,10 +112,10 @@ export function SignupForm() {
             </div>
           </label>
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all hover:border-emerald-400/50 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all ${
               selectedRole === "teacher"
-                ? "border-emerald-500 bg-emerald-500/5 ring-2 ring-emerald-500/20"
-                : "border-[var(--border)] bg-[var(--bg-surface)]"
+                ? "border-emerald-500/30 bg-emerald-500/6 shadow-[var(--surface-shadow)]"
+                : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
             }`}
           >
             <input
@@ -125,7 +127,7 @@ export function SignupForm() {
               disabled={isDisabled}
               className="sr-only"
             />
-            <div className={`mt-0.5 rounded-xl p-2 ${selectedRole === "teacher" ? "bg-emerald-500/15 text-emerald-600" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
+            <div className={`mt-0.5 rounded-xl p-2.5 ${selectedRole === "teacher" ? "bg-emerald-500/15 text-emerald-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
@@ -138,13 +140,12 @@ export function SignupForm() {
         </div>
       </fieldset>
 
-      {/* Social login buttons */}
       <div className="space-y-3">
         <button
           type="button"
           onClick={() => handleSocial("google")}
           disabled={isDisabled}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-all hover:bg-[var(--bg-surface)] hover:shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <GoogleIcon className="h-5 w-5" />
           {socialPending === "google" ? "..." : t("auth.continueWithGoogle")}
@@ -155,19 +156,17 @@ export function SignupForm() {
         {t("auth.socialLoginHint")}
       </p>
 
-      {/* Divider */}
-      <div className="relative my-6">
+      <div className="relative my-7">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-[var(--border)]" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-[var(--glass-bg)] px-3 text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
+          <span className="bg-[var(--bg-elevated)] px-3 text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
             {t("auth.orContinueWith")}
           </span>
         </div>
       </div>
 
-      {/* Email / password form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input id="full_name" name="full_name" type="text" label={t("auth.fullName")} placeholder={t("auth.fullNamePlaceholder")} required autoComplete="name" disabled={isDisabled} />
         <Input id="username" name="username" type="text" label={t("auth.username")} placeholder={t("auth.usernamePlaceholder")} required autoComplete="username" disabled={isDisabled} />
@@ -178,7 +177,7 @@ export function SignupForm() {
         <input type="hidden" name="role" value={selectedRole} />
 
         {error && (
-          <div className="flex items-start gap-2.5 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -189,9 +188,9 @@ export function SignupForm() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+      <p className="mt-7 text-center text-sm text-[var(--text-muted)]">
         {t("auth.haveAccount")}{" "}
-        <Link href="/login" className="font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400">
+        <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
           {t("auth.logIn")}
         </Link>
       </p>

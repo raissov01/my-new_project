@@ -19,14 +19,6 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-function AppleIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09ZM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25Z"/>
-    </svg>
-  );
-}
-
 export function LoginForm() {
   const { t } = useLocale();
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +35,7 @@ export function LoginForm() {
     });
   }
 
-  function handleSocial(provider: "google" | "apple") {
+  function handleSocial(provider: "google") {
     setError(null);
     setSocialPending(provider);
     startTransition(async () => {
@@ -58,49 +50,42 @@ export function LoginForm() {
   const isDisabled = isPending || !!socialPending;
 
   return (
-    <div className="glass-card animate-scale-in rounded-3xl p-7 sm:p-8">
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t("auth.welcomeBack")}</h1>
-        <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
+    <div className="animate-scale-in rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-7 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="mb-8 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)]">
+          <GoogleIcon className="h-5 w-5" />
+        </div>
+        <h1 className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+          {t("auth.welcomeBack")}
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
           {t("auth.logInContinue")}
         </p>
       </div>
 
-      {/* Social login buttons */}
       <div className="space-y-3">
         <button
           type="button"
           onClick={() => handleSocial("google")}
           disabled={isDisabled}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-all hover:bg-[var(--bg-surface)] hover:shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <GoogleIcon className="h-5 w-5" />
           {socialPending === "google" ? "..." : t("auth.continueWithGoogle")}
         </button>
-        <button
-          type="button"
-          onClick={() => handleSocial("apple")}
-          disabled={isDisabled}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-all hover:bg-[var(--bg-surface)] hover:shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          <AppleIcon className="h-5 w-5" />
-          {socialPending === "apple" ? "..." : t("auth.continueWithApple")}
-        </button>
       </div>
 
-      {/* Divider */}
-      <div className="relative my-6">
+      <div className="relative my-7">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-[var(--border)]" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-[var(--glass-bg)] px-3 text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
+          <span className="bg-[var(--bg-elevated)] px-3 text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
             {t("auth.orContinueWith")}
           </span>
         </div>
       </div>
 
-      {/* Email / password form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           id="email"
@@ -124,7 +109,7 @@ export function LoginForm() {
         />
 
         {error && (
-          <div className="flex items-start gap-2.5 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -135,9 +120,9 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+      <p className="mt-7 text-center text-sm text-[var(--text-muted)]">
         {t("auth.noAccount")}{" "}
-        <Link href="/signup" className="font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400">
+        <Link href="/signup" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
           {t("auth.signUp")}
         </Link>
       </p>

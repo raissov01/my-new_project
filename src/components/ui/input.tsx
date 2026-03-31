@@ -1,4 +1,5 @@
 import { InputHTMLAttributes, forwardRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -8,11 +9,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className = "", label, error, id, ...props }, ref) => {
     return (
-      <div className="w-full">
+      <div className="w-full space-y-2">
         {label && (
           <label
             htmlFor={id}
-            className="mb-1.5 block text-sm font-medium text-[var(--text-primary)]"
+            className="block text-sm font-medium tracking-[-0.01em] text-[var(--text-primary)]"
           >
             {label}
           </label>
@@ -20,15 +21,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={id}
-          className={`block h-11 w-full rounded-xl border bg-[var(--bg-elevated)] px-4 text-sm text-[var(--text-primary)] shadow-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={cn(
+            "block h-12 w-full rounded-2xl border bg-[var(--bg-surface)] px-4 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all duration-200 placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50",
             error
-              ? "border-red-400 focus:ring-red-500/50 focus:border-red-400"
-              : "border-[var(--border)]"
-          } ${className}`}
+              ? "border-red-400/70 focus:border-red-400 focus:ring-red-500/10"
+              : "border-[var(--border)]",
+            className
+          )}
           {...props}
         />
         {error && (
-          <p className="mt-1.5 text-sm text-red-500" role="alert">
+          <p className="text-sm text-red-500" role="alert">
             {error}
           </p>
         )}

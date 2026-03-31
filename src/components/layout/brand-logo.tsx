@@ -18,14 +18,14 @@ export function BrandLogo({
         width={compact ? 32 : 40}
         height={compact ? 32 : 40}
         className={cn(
-          "h-8 w-8 rounded-xl shadow-[0_14px_28px_-16px_rgba(75,107,255,0.95)] sm:h-10 sm:w-10",
+          "h-8 w-8 rounded-xl border border-white/10 shadow-[0_18px_36px_-24px_rgba(79,124,255,0.72)] sm:h-10 sm:w-10",
           compact && "h-7 w-7 rounded-lg sm:h-8 sm:w-8"
         )}
         priority
       />
       {showWordmark ? (
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-base">
+          <p className="truncate text-sm font-semibold tracking-[-0.035em] text-[var(--text-primary)] sm:text-[15px]">
             StudyWithRaissov
           </p>
         </div>

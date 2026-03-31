@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "react";
 
 type CardProps = HTMLAttributes<HTMLDivElement>;
@@ -5,7 +6,7 @@ type CardProps = HTMLAttributes<HTMLDivElement>;
 export function Card({ className = "", children, ...props }: CardProps) {
   return (
     <div
-      className={`glass-card ui-panel ${className}`}
+      className={cn("ui-panel", className)}
       {...props}
     >
       {children}
@@ -16,7 +17,7 @@ export function Card({ className = "", children, ...props }: CardProps) {
 export function CardHeader({ className = "", children, ...props }: CardProps) {
   return (
     <div
-      className={`border-b border-[var(--border)] px-6 py-4 ${className}`}
+      className={cn("border-b border-[var(--border)] px-6 py-5", className)}
       {...props}
     >
       {children}
@@ -26,7 +27,7 @@ export function CardHeader({ className = "", children, ...props }: CardProps) {
 
 export function CardContent({ className = "", children, ...props }: CardProps) {
   return (
-    <div className={`px-6 py-4 ${className}`} {...props}>
+    <div className={cn("px-6 py-5", className)} {...props}>
       {children}
     </div>
   );

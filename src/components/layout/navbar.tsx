@@ -72,18 +72,18 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 glass border-b border-[var(--glass-border)]">
+      <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--glass-bg)] backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between sm:h-16">
+          <div className="flex h-16 items-center justify-between gap-4">
             {/* Logo + nav links */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <Link
                 href={homeHref}
-                className="flex items-center gap-2 text-lg font-bold sm:text-xl"
+                className="shrink-0 rounded-2xl px-1 py-1"
               >
                 <BrandLogo compact />
               </Link>
-              <div className="hidden items-center gap-2 xl:flex">
+              <div className="hidden items-center gap-1 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-1 xl:flex">
                 {userNavItems.map((item) => (
                   <DesktopNavLink
                     key={item.href}
@@ -95,7 +95,7 @@ export function Navbar() {
                 ))}
               </div>
               {DEV_MODE && (
-                <span className="rounded-full bg-gradient-to-r from-amber-400/20 to-orange-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 sm:px-2.5 sm:text-[11px]">
+                <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-400">
                   {t("nav.dev")}
                 </span>
               )}
@@ -112,14 +112,14 @@ export function Navbar() {
                 <>
                   <Link
                     href="/dashboard#study-today"
-                    className="click-scale inline-flex h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-sm font-medium text-[var(--text-primary)] transition-all hover:bg-[var(--bg-surface)]"
+                    className="inline-flex h-11 items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]"
                   >
                     <GraduationCap className="mr-1.5 h-4 w-4" />
                     {t("nav.startStudy")}
                   </Link>
                   <Link
                     href="/sets/new"
-                    className="click-scale inline-flex h-10 items-center rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-4 text-sm font-medium text-white shadow-sm shadow-blue-500/20 transition-all hover:shadow-md hover:shadow-blue-500/25"
+                    className="inline-flex h-11 items-center rounded-2xl bg-[linear-gradient(135deg,var(--primary-from),var(--primary-to))] px-4 text-sm font-medium text-white shadow-[0_18px_34px_-24px_rgba(79,124,255,0.8)] transition-transform hover:-translate-y-0.5"
                   >
                     <Plus className="mr-1.5 h-4 w-4" />
                     {t("nav.newSet")}
@@ -132,7 +132,7 @@ export function Navbar() {
                     <>
                       <Link
                         href="/login"
-                        className="click-scale rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-surface)]"
+                        className="rounded-2xl px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
                       >
                         {t("nav.logIn")}
                       </Link>
@@ -148,7 +148,7 @@ export function Navbar() {
             {/* Mobile: hamburger only */}
             <div className="flex items-center lg:hidden">
               <button
-                className="rounded-xl p-2.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] active:scale-95"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-2.5 text-[var(--text-secondary)] shadow-[var(--surface-shadow)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
                 onClick={() => setDrawerOpen(true)}
                 aria-label={t("nav.toggleMenu")}
               >
@@ -170,14 +170,12 @@ export function Navbar() {
           />
           {/* Drawer panel */}
           <div className="absolute inset-y-0 right-0 flex w-full max-w-[min(20rem,85vw)] animate-slide-in-drawer">
-            <div className="flex h-full w-full flex-col bg-[var(--bg-elevated)] shadow-2xl">
+            <div className="flex h-full w-full flex-col border-l border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--surface-shadow-strong)]">
               {/* Drawer header */}
-              <div className="flex h-14 items-center justify-between border-b border-[var(--border)] px-4 sm:h-16 sm:px-5">
-                <span className="text-sm font-semibold text-[var(--text-primary)]">
-                  {t("nav.toggleMenu")}
-                </span>
+              <div className="flex h-16 items-center justify-between border-b border-[var(--border)] px-4 sm:px-5">
+                <BrandLogo compact />
                 <button
-                  className="rounded-xl p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] active:scale-95"
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
                   onClick={() => setDrawerOpen(false)}
                   aria-label={t("aria.closeMenu")}
                 >
@@ -187,7 +185,7 @@ export function Navbar() {
 
               {/* Drawer body */}
               <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {userNavItems.map((item) => (
                     <DrawerLink
                       key={item.href}
@@ -292,10 +290,10 @@ function DesktopNavLink({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+      className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium tracking-[-0.01em] transition-all ${
         active
-          ? "border-indigo-500/30 bg-indigo-500/10 text-[var(--text-primary)]"
-          : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+          ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--surface-shadow)]"
+          : "text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -322,13 +320,13 @@ function DrawerLink({
       href={href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors active:bg-[var(--bg-surface)] ${
+      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:bg-[var(--bg-surface)] ${
         active
-          ? "bg-indigo-500/10 text-[var(--text-primary)]"
-          : "text-[var(--text-primary)] hover:bg-[var(--bg-surface)]"
+          ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] text-[var(--text-primary)]"
+          : "border-transparent text-[var(--text-primary)] hover:border-[var(--border)] hover:bg-[var(--bg-surface)]"
       }`}
     >
-      <Icon className={`h-5 w-5 ${active ? "text-indigo-500" : "text-[var(--text-secondary)]"}`} />
+      <Icon className={`h-5 w-5 ${active ? "text-indigo-400" : "text-[var(--text-secondary)]"}`} />
       {label}
     </Link>
   );
