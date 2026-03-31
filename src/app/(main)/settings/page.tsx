@@ -68,15 +68,15 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const feedback = getFeedbackMessage(t, status, error);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+    <div className="page-shell py-5 sm:py-8 lg:py-10">
+      <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
           Workspace
         </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+        <h1 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:mt-4 sm:text-4xl">
           {t("settings.title")}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
           {t("settings.subtitle")}
         </p>
 
@@ -93,24 +93,24 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         )}
       </div>
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[1.05fr_1.2fr]">
-        <div className="space-y-6">
-          <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+      <div className="mt-5 grid gap-4 sm:mt-8 sm:gap-6 xl:grid-cols-[1.05fr_1.2fr]">
+        <div className="space-y-4 sm:space-y-6">
+          <section className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-[var(--bg-soft)] p-3 text-indigo-400">
+              <div className="rounded-2xl bg-[var(--bg-soft)] p-2.5 text-indigo-400 sm:p-3">
                 <Mail className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
                   {t("settings.account")}
                 </h2>
-                <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
                   {t("settings.accountDescription")}
                 </p>
               </div>
             </div>
 
-            <form action={updateEmail} className="mt-6 space-y-4">
+            <form action={updateEmail} className="mt-5 space-y-3.5 sm:mt-6 sm:space-y-4">
               <Input
                 name="email"
                 type="email"
@@ -121,16 +121,16 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <Button type="submit">{t("settings.updateEmail")}</Button>
             </form>
 
-            <form action={updatePassword} className="mt-6 space-y-4 border-t border-[var(--border)] pt-6">
+            <form action={updatePassword} className="mt-5 space-y-3.5 border-t border-[var(--border)] pt-5 sm:mt-6 sm:space-y-4 sm:pt-6">
               <div className="flex items-start gap-3">
-                <div className="rounded-2xl bg-[var(--bg-soft)] p-3 text-amber-400">
+                <div className="rounded-2xl bg-[var(--bg-soft)] p-2.5 text-amber-400 sm:p-3">
                   <LockKeyhole className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                  <h3 className="text-base font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-lg">
                     {t("settings.changePassword")}
                   </h3>
-                  <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
                     {t("settings.passwordDescription")}
                   </p>
                 </div>
@@ -151,7 +151,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <Button type="submit">{t("settings.updatePassword")}</Button>
             </form>
 
-            <form action={logout} className="mt-6 border-t border-[var(--border)] pt-6">
+            <form action={logout} className="mt-5 border-t border-[var(--border)] pt-5 sm:mt-6 sm:pt-6">
               <Button type="submit" variant="outline">
                 <LogOut className="h-4 w-4" />
                 {t("nav.logOut")}
@@ -160,62 +160,62 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           </section>
 
           {/* Role management */}
-          <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+          <section className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-[var(--bg-soft)] p-3 text-violet-400">
+              <div className="rounded-2xl bg-[var(--bg-soft)] p-2.5 text-violet-400 sm:p-3">
                 <UserCog className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
                   {t("settings.roleTitle")}
                 </h2>
-                <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
                   {t("settings.roleDescription")}
                 </p>
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
               <RoleSection currentRole={(profile?.role as ProfileRole) ?? "student"} />
             </div>
           </section>
 
           {/* Privacy & security */}
-          <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+          <section className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-[var(--bg-soft)] p-3 text-slate-400">
+              <div className="rounded-2xl bg-[var(--bg-soft)] p-2.5 text-slate-400 sm:p-3">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
                   {t("settings.privacySecurity")}
                 </h2>
-                <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
                   {t("settings.privacyDescription")}
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm text-[var(--text-secondary)]">
+            <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm text-[var(--text-secondary)] sm:mt-6">
               <p>{profile?.username}</p>
               <p className="mt-1">{user.email}</p>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
               <DeleteAccountSection />
             </div>
           </section>
         </div>
 
-        <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
-          <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+        <section className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+          <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
             {t("settings.preferences")}
           </h2>
-          <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
             {t("settings.preferencesDescription")}
           </p>
 
-          <div className="mt-6">
+          <div className="mt-5 sm:mt-6">
             <PreferencesPanel initialPomodoro={pomodoro} />
           </div>
         </section>
