@@ -16,9 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FlashLearn — AI-Ready Education Platform",
+  title: "StudyWithRaissov — Заманауи оқу платформасы",
   description:
-    "Modern student and teacher learning platform built with Next.js, TypeScript, and a Vercel-ready architecture.",
+    "StudyWithRaissov — студенттер мен оқытушыларға арналған жан-жақты оқу экожүйесі. Флешкарталар, тесттер, челленджтер және тағы басқа.",
+  icons: {
+    icon: "/brand-mark.svg",
+    shortcut: "/brand-mark.svg",
+    apple: "/brand-mark.svg",
+  },
 };
 
 export default async function RootLayout({

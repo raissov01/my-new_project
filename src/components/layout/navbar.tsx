@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import {
   Home,
   Plus,
-  Sparkles,
   Menu,
   X,
   GraduationCap,
@@ -17,6 +16,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AvatarMenu } from "@/components/layout/avatar-menu";
+import { BrandLogo } from "@/components/layout";
 import { DEV_MODE } from "@/lib/dev-mode";
 
 export function Navbar() {
@@ -53,18 +53,13 @@ export function Navbar() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between sm:h-16">
             {/* Logo + nav links */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Link
-                href={homeHref}
-                className="flex items-center gap-2 text-lg font-bold sm:text-xl"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 shadow-md shadow-indigo-500/20 sm:h-8 sm:w-8">
-                  <Sparkles className="h-3.5 w-3.5 text-white sm:h-4 sm:w-4" />
-                </div>
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400">
-                  FlashLearn
-                </span>
-              </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href={homeHref}
+            className="flex items-center gap-2 text-lg font-bold sm:text-xl"
+          >
+            <BrandLogo compact />
+          </Link>
               <Link
                 href={homeHref}
                 className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] sm:inline-flex"
@@ -106,7 +101,7 @@ export function Navbar() {
                   </Link>
                   <Link
                     href="/sets/new"
-                    className="click-scale inline-flex h-10 items-center rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white transition-all hover:bg-indigo-700"
+                    className="click-scale inline-flex h-10 items-center rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-4 text-sm font-medium text-white shadow-sm shadow-blue-500/20 transition-all hover:shadow-md hover:shadow-blue-500/25"
                   >
                     <Plus className="mr-1.5 h-4 w-4" />
                     {t("nav.newSet")}

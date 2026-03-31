@@ -1,4 +1,4 @@
-# FlashLearn — Setup Instructions
+# StudyWithRaissov — Setup Instructions
 
 ## Prerequisites
 

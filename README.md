@@ -1,6 +1,6 @@
-# FlashLearn
+# StudyWithRaissov
 
-FlashLearn is a modern education platform for students and teachers built with Next.js App Router, TypeScript, and Tailwind CSS. It is structured for Vercel deployment today and prepared for future AI features like generating flashcards from PDF and Word documents.
+StudyWithRaissov is a modern education platform for students and teachers built with Next.js App Router, TypeScript, and Tailwind CSS. It is structured for Vercel deployment today and prepared for future AI features like generating flashcards from PDF and Word documents.
 
 ## File Structure
 
@@ -176,7 +176,7 @@ git add .
 4. Make your first commit:
 
 ```bash
-git commit -m "Initial FlashLearn platform"
+git commit -m "Initial StudyWithRaissov platform"
 ```
 
 5. Connect your GitHub repository:

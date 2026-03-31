@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { User } from "@supabase/supabase-js";
 import type { Database, Profile, ProfileRole } from "@/types/database";
-import { getSupabaseEnv } from "./env";
+import { getSupabaseEnv, getSupabaseEnvSafe } from "./env";
 import {
   ADMIN_COOKIE_NAME,
   ADMIN_USER,
@@ -79,6 +79,11 @@ export async function getCurrentUser() {
   const cookieStore = await cookies();
   if (isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME))) {
     return ADMIN_USER;
+  }
+
+  const env = getSupabaseEnvSafe();
+  if (!env) {
+    return null;
   }
 
   const supabase = await createClient();

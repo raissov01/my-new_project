@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { User } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
+import { createClientSafe } from "@/lib/supabase/client";
 import { DEV_MODE, DEV_USER } from "@/lib/dev-mode";
 import { ADMIN_COOKIE_NAME, ADMIN_EMAIL, ADMIN_USER } from "@/lib/admin-auth";
 
@@ -28,7 +28,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(!(DEV_MODE || adminSession));
 
   const supabase = useMemo(
-    () => (DEV_MODE || adminSession ? null : createClient()),
+    () => (DEV_MODE || adminSession ? null : createClientSafe()),
     [adminSession]
   );
 

@@ -2,6 +2,9 @@
  * Validates and returns Supabase environment variables.
  * Throws a clear error if they're missing or still set to placeholders.
  */
+export const SUPABASE_CONFIG_ERROR =
+  "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.";
+
 export function getSupabaseEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -70,4 +73,8 @@ export function getSupabaseEnvSafe() {
   }
 
   return { url, anonKey };
+}
+
+export function isSupabaseConfigured() {
+  return getSupabaseEnvSafe() !== null;
 }

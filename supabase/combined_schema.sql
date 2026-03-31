@@ -1,5 +1,5 @@
 -- ============================================================================
--- FlashLearn — Combined Schema
+-- StudyWithRaissov — Combined Schema
 -- Run this in the Supabase SQL Editor to create all tables, policies,
 -- functions, and triggers in one go.
 -- ============================================================================

@@ -12,11 +12,13 @@ import {
 import { DEV_MODE } from "@/lib/dev-mode";
 import { createTranslator } from "@/lib/i18n/shared";
 import { getServerLocale } from "@/lib/i18n/server";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import {
   getAdminLogoutCookie,
   getAdminSessionCookie,
   isAdminCredentials,
 } from "@/lib/admin-auth";
+import type { ProfileRole } from "@/types/database";
 
 export type AuthResult = {
   error: string | null;
@@ -31,6 +33,32 @@ type ProfileLookupTable = {
   };
 };
 
+/**
+ * Maps raw Supabase error messages to friendly localized messages.
+ * Technical details are logged to console only.
+ */
+function friendlyAuthError(
+  rawMessage: string,
+  t: (key: string, vars?: Record<string, string | number>) => string
+): string {
+  const lower = rawMessage.toLowerCase();
+
+  if (lower.includes("invalid login credentials")) return t("action.invalidCredentials");
+  if (lower.includes("email not confirmed")) return t("action.emailNotConfirmed");
+  if (lower.includes("email rate limit exceeded")) return t("action.rateLimitEmail");
+  if (lower.includes("rate limit") || lower.includes("too many requests")) return t("action.rateLimitGeneral");
+  if (lower.includes("user already registered")) return t("action.accountExists");
+  if (lower.includes("signup is disabled")) return t("action.signupDisabled");
+  if (lower.includes("password") && lower.includes("at least")) return t("action.passwordMin");
+  if (lower.includes("network") || lower.includes("fetch")) return t("action.networkError");
+  if (lower.includes("email") && lower.includes("format")) return t("action.invalidEmail");
+
+  // Fallback: generic friendly message, raw error in console only
+  return t("action.genericError");
+}
+
+// ── Login ────────────────────────────────────────────────────────────────────
+
 export async function login(formData: FormData): Promise<AuthResult> {
   if (DEV_MODE) {
     redirect("/student");
@@ -38,7 +66,10 @@ export async function login(formData: FormData): Promise<AuthResult> {
 
   const t = createTranslator(await getServerLocale());
 
-  // Read and sanitize — trim whitespace to prevent copy-paste issues
+  if (!isSupabaseConfigured()) {
+    return { error: t("action.supabaseNotConfigured") };
+  }
+
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -55,50 +86,32 @@ export async function login(formData: FormData): Promise<AuthResult> {
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { data, error } = await supabase.auth
+    .signInWithPassword({ email, password })
+    .catch((authError: Error) => ({
+      data: { user: null, session: null },
+      error: { message: authError.message, status: 0, code: "fetch_failed" },
+    }));
 
   if (error) {
-    // Log full error in development for debugging
     console.error("[login] Supabase auth error:", {
       message: error.message,
-      status: error.status,
       code: error.code,
       email,
-      passwordLength: password.length,
     });
-
-    // Show a more helpful message for common cases
-    if (error.message === "Invalid login credentials") {
-      return {
-        error: t("action.invalidCredentials"),
-      };
-    }
-
-    if (error.message === "Email not confirmed") {
-      return {
-        error: t("action.emailNotConfirmed"),
-      };
-    }
-
-    return { error: error.message };
+    return { error: friendlyAuthError(error.message, t) };
   }
 
-  // Defensive: if no error but also no session, something is wrong
   if (!data.session) {
-    console.error("[login] No error but no session returned:", {
-      user: data.user?.id,
-      email,
-    });
+    console.error("[login] No session returned:", { user: data.user?.id, email });
     return { error: t("action.loginNoSession") };
   }
 
   await ensureProfile(data.user);
-
   redirect(await getAppHomePath(data.user));
 }
+
+// ── Signup ───────────────────────────────────────────────────────────────────
 
 export async function signup(formData: FormData): Promise<AuthResult> {
   if (DEV_MODE) {
@@ -107,10 +120,13 @@ export async function signup(formData: FormData): Promise<AuthResult> {
 
   const t = createTranslator(await getServerLocale());
 
+  if (!isSupabaseConfigured()) {
+    return { error: t("action.supabaseNotConfigured") };
+  }
+
   const supabase = await createClient();
   const profilesTable = supabase.from("profiles") as never as ProfileLookupTable;
 
-  // Read and sanitize
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("full_name") ?? "").trim();
@@ -129,6 +145,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     return { error: t("action.passwordMin") };
   }
 
+  // Check username uniqueness
   const { data: existingProfile } = await profilesTable
     .select("id")
     .eq("username", username)
@@ -138,58 +155,58 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     return { error: t("action.usernameTaken") };
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { full_name: fullName, username, role },
-    },
-  });
+  const { data, error } = await supabase.auth
+    .signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName, username, role },
+        // Allow immediate login without email confirmation.
+        // In Supabase dashboard, set "Enable email confirmations" to OFF,
+        // or this option is ignored and a confirmation email is still sent.
+        emailRedirectTo: undefined,
+      },
+    })
+    .catch((authError: Error) => ({
+      data: { user: null, session: null },
+      error: { message: authError.message, status: 0, code: "fetch_failed" },
+    }));
 
   if (error) {
     console.error("[signup] Supabase auth error:", {
       message: error.message,
-      status: error.status,
       code: error.code,
       email,
     });
-    return { error: error.message };
+    return { error: friendlyAuthError(error.message, t) };
   }
 
-  // Supabase returns a user with identities=[] when the email already exists
-  // and email confirmation is enabled. Detect this case.
-  if (
-    data.user &&
-    data.user.identities &&
-    data.user.identities.length === 0
-  ) {
-    return {
-      error: t("action.accountExists"),
-    };
+  // Supabase returns identities=[] when user already exists + email confirmation is on
+  if (data.user && data.user.identities && data.user.identities.length === 0) {
+    return { error: t("action.accountExists") };
   }
 
-  // If email confirmation is required, Supabase returns a user with
-  // an empty session. Don't redirect to dashboard — they can't access it.
+  // Create profile in database
   if (data.user) {
     const profileResult = await createProfileForSignup({
       user: data.user,
       email,
       fullName,
       username,
-      role,
+      role: role as ProfileRole,
     });
 
     if (profileResult.error) {
       console.error("[signup] profile insert failed:", {
         error: profileResult.error,
         userId: data.user.id,
-        email,
-        role,
       });
       return { error: t("action.profileCreateFailed") };
     }
   }
 
+  // If Supabase still requires email confirmation (session is null), show message.
+  // Otherwise, log in immediately.
   if (data.user && !data.session) {
     return {
       error: null,
@@ -197,10 +214,49 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     };
   }
 
-  await ensureProfile(data.user, role);
-
-  redirect(getRoleRegistrationRedirect(role));
+  await ensureProfile(data.user, role as ProfileRole);
+  redirect(getRoleRegistrationRedirect(role as ProfileRole));
 }
+
+// ── Social OAuth ─────────────────────────────────────────────────────────────
+
+export async function socialLogin(
+  provider: "google" | "apple",
+  role: ProfileRole = "student"
+): Promise<AuthResult> {
+  if (DEV_MODE) {
+    redirect("/student");
+  }
+
+  const t = createTranslator(await getServerLocale());
+
+  if (!isSupabaseConfigured()) {
+    return { error: t("action.supabaseNotConfigured") };
+  }
+
+  const supabase = await createClient();
+
+  // Store role in redirect URL so callback can pick it up
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/callback?role=${role}`,
+    },
+  });
+
+  if (error) {
+    console.error("[socialLogin] OAuth error:", { message: error.message, provider });
+    return { error: friendlyAuthError(error.message, t) };
+  }
+
+  if (data.url) {
+    redirect(data.url);
+  }
+
+  return { error: t("action.genericError") };
+}
+
+// ── Logout ───────────────────────────────────────────────────────────────────
 
 export async function logout(): Promise<void> {
   if (DEV_MODE) {
