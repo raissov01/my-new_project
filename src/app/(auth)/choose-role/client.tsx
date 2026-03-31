@@ -1,26 +1,43 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AlertCircle, GraduationCap, ShieldCheck } from "lucide-react";
+import { AlertCircle, Check, GraduationCap, ShieldCheck } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { saveRole } from "./actions";
-import type { ProfileRole } from "@/types/database";
+
+type Role = "student" | "teacher";
 
 export function ChooseRoleClient() {
   const { t } = useLocale();
-  const [selected, setSelected] = useState<ProfileRole | null>(null);
+  const [selected, setSelected] = useState<Role | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  function handleSelect(role: Role) {
+    if (isPending) return;
+    setSelected(role);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[choose-role] Selected:", role);
+    }
+  }
+
   function handleContinue() {
-    if (!selected) return;
+    if (!selected || isPending) return;
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[choose-role] Submitting role:", selected);
+    }
+
     setError(null);
     startTransition(async () => {
       const result = await saveRole(selected);
       if (result?.error) setError(result.error);
     });
   }
+
+  const isStudent = selected === "student";
+  const isTeacher = selected === "teacher";
 
   return (
     <div className="animate-scale-in rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-7 shadow-[var(--surface-shadow-strong)] sm:p-8">
@@ -37,72 +54,96 @@ export function ChooseRoleClient() {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        {/* ── Student card ──────────────────────────────────────────── */}
         <button
           type="button"
-          onClick={() => setSelected("student")}
+          onClick={() => handleSelect("student")}
           disabled={isPending}
-          className={`group relative flex flex-col items-start rounded-[1.5rem] border p-6 text-left transition-all ${
-            selected === "student"
-              ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--surface-shadow)]"
-              : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
+          className={`group relative flex w-full cursor-pointer flex-col items-start rounded-[1.5rem] border-2 p-6 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
+            isStudent
+              ? "border-indigo-500 bg-indigo-500/10 shadow-[0_0_24px_-6px_rgba(99,91,255,0.35)] ring-1 ring-indigo-500/30"
+              : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-elevated)]"
           }`}
         >
+          {/* Checkmark badge */}
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${
-              selected === "student"
-                ? "bg-indigo-500/15 text-indigo-400"
-                : "bg-[var(--bg-elevated)] text-[var(--text-muted)] group-hover:text-indigo-400"
+            className={`absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
+              isStudent
+                ? "scale-100 bg-indigo-500 text-white shadow-lg shadow-indigo-500/40"
+                : "scale-0 bg-transparent text-transparent"
+            }`}
+          >
+            <Check className="h-4 w-4" strokeWidth={3} />
+          </div>
+
+          {/* Icon */}
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 ${
+              isStudent
+                ? "bg-indigo-500/20 text-indigo-400 shadow-sm"
+                : "bg-[var(--bg-elevated)] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
             }`}
           >
             <GraduationCap className="h-7 w-7" />
           </div>
-          <h3 className="mt-5 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+
+          {/* Text */}
+          <h3
+            className={`mt-5 text-xl font-semibold tracking-[-0.03em] transition-colors duration-200 ${
+              isStudent ? "text-indigo-400" : "text-[var(--text-primary)]"
+            }`}
+          >
             {t("auth.roleStudent")}
           </h3>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
             {t("role.studentDescription")}
           </p>
-          {selected === "student" && (
-            <div className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-white shadow-md">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-          )}
         </button>
 
+        {/* ── Teacher card ──────────────────────────────────────────── */}
         <button
           type="button"
-          onClick={() => setSelected("teacher")}
+          onClick={() => handleSelect("teacher")}
           disabled={isPending}
-          className={`group relative flex flex-col items-start rounded-[1.5rem] border p-6 text-left transition-all ${
-            selected === "teacher"
-              ? "border-emerald-500/30 bg-emerald-500/6 shadow-[var(--surface-shadow)]"
-              : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
+          className={`group relative flex w-full cursor-pointer flex-col items-start rounded-[1.5rem] border-2 p-6 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
+            isTeacher
+              ? "border-emerald-500 bg-emerald-500/10 shadow-[0_0_24px_-6px_rgba(16,185,129,0.35)] ring-1 ring-emerald-500/30"
+              : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-elevated)]"
           }`}
         >
+          {/* Checkmark badge */}
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${
-              selected === "teacher"
-                ? "bg-emerald-500/15 text-emerald-400"
-                : "bg-[var(--bg-elevated)] text-[var(--text-muted)] group-hover:text-emerald-400"
+            className={`absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
+              isTeacher
+                ? "scale-100 bg-emerald-500 text-white shadow-lg shadow-emerald-500/40"
+                : "scale-0 bg-transparent text-transparent"
+            }`}
+          >
+            <Check className="h-4 w-4" strokeWidth={3} />
+          </div>
+
+          {/* Icon */}
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 ${
+              isTeacher
+                ? "bg-emerald-500/20 text-emerald-400 shadow-sm"
+                : "bg-[var(--bg-elevated)] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
             }`}
           >
             <ShieldCheck className="h-7 w-7" />
           </div>
-          <h3 className="mt-5 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+
+          {/* Text */}
+          <h3
+            className={`mt-5 text-xl font-semibold tracking-[-0.03em] transition-colors duration-200 ${
+              isTeacher ? "text-emerald-400" : "text-[var(--text-primary)]"
+            }`}
+          >
             {t("auth.roleTeacher")}
           </h3>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
             {t("role.teacherDescription")}
           </p>
-          {selected === "teacher" && (
-            <div className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-          )}
         </button>
       </div>
 
