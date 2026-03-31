@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Users, Sparkles } from "lucide-react";
 import { joinClassByCode } from "@/app/(main)/classes/challenges/actions";
 import { getStudentDashboardSummary } from "@/lib/classrooms";
 import { createTranslator } from "@/lib/i18n/shared";
 import { getServerLocale } from "@/lib/i18n/server";
 import { requireRole } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default async function StudentClassesPage() {
   const locale = await getServerLocale();
@@ -41,14 +43,14 @@ export default async function StudentClassesPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.2fr]">
-        <section className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-          <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
+        <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)]">
+          <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
             {t("student.classesEyebrow")}
           </p>
-          <h1 className="mt-3 text-3xl font-semibold text-[var(--text-primary)]">
+          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
             {t("student.classesTitle")}
           </h1>
-          <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+          <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
             {t("student.classesSubtitle")}
           </p>
 
@@ -59,28 +61,27 @@ export default async function StudentClassesPage() {
             }}
             className="mt-6 space-y-4"
           >
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
-                {t("student.classCode")}
-              </span>
-              <input
-                name="join_code"
-                required
-                placeholder={t("student.classCodePlaceholder")}
-                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm uppercase tracking-[0.18em] text-[var(--text-primary)] outline-none"
-              />
-            </label>
+            <Input
+              name="join_code"
+              required
+              label={t("student.classCode")}
+              placeholder={t("student.classCodePlaceholder")}
+              className="uppercase tracking-[0.18em]"
+            />
             <Button type="submit">{t("student.joinClass")}</Button>
           </form>
         </section>
 
-        <section className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
+        <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-semibold text-[var(--text-primary)]">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-indigo-400" />
+                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                 {t("student.myClasses")}
-              </h2>
-              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                </h2>
+              </div>
+              <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
                 {t("student.myClassesBody")}
               </p>
             </div>
@@ -94,7 +95,7 @@ export default async function StudentClassesPage() {
               summary.classes.map((group) => (
                 <div
                   key={group.id}
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5"
+                  className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
@@ -112,12 +113,12 @@ export default async function StudentClassesPage() {
                     </Link>
                   </div>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
                       {t("student.assignmentsCount", {
                         count: assignmentCountByGroup.get(group.id) ?? 0,
                       })}
                     </div>
-                    <div className="rounded-2xl bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
                       {t("student.challengesCount", {
                         count: challengeCountByGroup.get(group.id) ?? 0,
                       })}
@@ -126,7 +127,8 @@ export default async function StudentClassesPage() {
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10">
+              <div className="rounded-[1.5rem] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10">
+                <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
                   {t("student.noClassesTitle")}
                 </p>

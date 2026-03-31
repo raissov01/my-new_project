@@ -23,9 +23,12 @@ export default async function NewSetPage() {
         {t("nav.mySets")}
       </Link>
 
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-sm">
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">{t("newSet.title")}</h1>
-        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
+          Flashcard creation
+        </p>
+        <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">{t("newSet.title")}</h1>
+        <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
           {t("newSet.subtitle")}
         </p>
       </div>

@@ -74,15 +74,16 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
+          <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
             {t("nav.flashcardLibrary")}
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--text-primary)]">
+          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
             {t("sets.title")}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
             {t("sets.subtitle")}
           </p>
         </div>
@@ -107,8 +108,9 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
           </Link>
         </div>
       </div>
+      </div>
 
-      <form className="mt-8 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-sm">
+      <form className="mt-8 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)]">
         <div className="grid gap-4 lg:grid-cols-[1.6fr_0.7fr_0.7fr_auto]">
           <label className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4">
             <Search className="h-4 w-4 text-[var(--text-muted)]" />
@@ -183,7 +185,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
           ))}
         </div>
       ) : (
-        <div className="mt-10 rounded-[1.75rem] border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-16 text-center">
+        <div className="mt-10 rounded-[1.75rem] border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-16 text-center shadow-[var(--surface-shadow)]">
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             {t("sets.emptyTitle")}
           </h2>

@@ -60,27 +60,27 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 sm:p-8">
+      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <ProfileAvatar username={username} avatarUrl={profile?.avatar_url} size="lg" />
             <div className="space-y-3">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">
+                <h1 className="text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                   {username}
                 </h1>
-                <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
                   {t("profile.subtitle")}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-sm">
-                <span className="rounded-full bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
+                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
                   {user.email}
                 </span>
-                <span className="rounded-full bg-indigo-500/10 px-3 py-1.5 text-indigo-600">
+                <span className="rounded-full border border-[rgba(99,91,255,0.18)] bg-indigo-500/10 px-3 py-1.5 text-indigo-400">
                   {t("profile.joined")} {formatDate(joinDate, locale)}
                 </span>
-                <span className="rounded-full bg-amber-500/10 px-3 py-1.5 text-amber-600">
+                <span className="rounded-full border border-amber-500/15 bg-amber-500/10 px-3 py-1.5 text-amber-400">
                   {stats.points} XP
                 </span>
               </div>
@@ -104,7 +104,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
 
         {status === "profile-updated" && (
-          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700">
+          <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-300">
             {t("profile.profileUpdated")}
           </div>
         )}
@@ -114,10 +114,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         {metricCards.map((metric) => (
           <div
             key={metric.label}
-            className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
+            className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]"
           >
             <p className="text-sm text-[var(--text-secondary)]">{metric.label}</p>
-            <p className="mt-3 text-3xl font-semibold text-[var(--text-primary)]">
+            <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
               {metric.value}
             </p>
           </div>
@@ -125,22 +125,22 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
+        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-indigo-500" />
-            <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+            <Sparkles className="h-5 w-5 text-indigo-400" />
+            <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
               {t("profile.statsOverview")}
             </h2>
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl bg-[var(--bg-surface)] p-4">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
               <p className="text-sm text-[var(--text-secondary)]">{t("profile.streak")}</p>
               <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
                 {stats.streakDays}
               </p>
             </div>
-            <div className="rounded-2xl bg-[var(--bg-surface)] p-4">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
               <p className="text-sm text-[var(--text-secondary)]">{t("profile.rank")}</p>
               <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
                 {rankLabel}
@@ -149,13 +149,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 {stats.levelMeaning}
               </p>
             </div>
-            <div className="rounded-2xl bg-[var(--bg-surface)] p-4">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
               <p className="text-sm text-[var(--text-secondary)]">{t("profile.weakCards")}</p>
               <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
                 {stats.smart.weakCards}
               </p>
             </div>
-            <div className="rounded-2xl bg-[var(--bg-surface)] p-4">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
               <p className="text-sm text-[var(--text-secondary)]">{t("profile.dueToday")}</p>
               <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
                 {stats.smart.dueToday}
@@ -165,15 +165,15 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-            <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+          <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+            <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
               {t("profile.recentActivity")}
             </h2>
             <div className="mt-5 space-y-3">
               {stats.recentActivity.map((activity) => (
                 <div
                   key={activity.date}
-                  className="flex items-center justify-between rounded-2xl bg-[var(--bg-surface)] px-4 py-3"
+                  className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3"
                 >
                   <span className="text-sm text-[var(--text-secondary)]">
                     {formatDate(activity.date, locale)}
@@ -186,10 +186,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
+          <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
           <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
-            <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+            <Trophy className="h-5 w-5 text-amber-400" />
+            <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
               {t("profile.achievements")}
             </h2>
           </div>

@@ -24,15 +24,16 @@ export default async function CollectionsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
+          <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
             {t("nav.myCollections")}
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--text-primary)]">
+          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
             {t("collections.title")}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
             {t("collections.subtitle")}
           </p>
         </div>
@@ -51,6 +52,7 @@ export default async function CollectionsPage() {
             </Button>
           </Link>
         </div>
+      </div>
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -71,7 +73,7 @@ export default async function CollectionsPage() {
         />
       </div>
 
-      <div className="mt-8 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-sm">
+      <div className="mt-8 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-[var(--text-primary)]">
@@ -130,12 +132,12 @@ function CollectionStatCard({
   value: string;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-sm">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500">
+    <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--bg-soft)] text-indigo-400">
         <Icon className="h-5 w-5" />
       </div>
       <p className="mt-4 text-sm text-[var(--text-secondary)]">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{value}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }

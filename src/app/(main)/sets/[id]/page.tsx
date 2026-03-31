@@ -92,34 +92,34 @@ export default async function SetDetailPage({ params }: SetDetailPageProps) {
       </Link>
 
       {/* Header */}
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 sm:p-8">
+      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">
+          <h1 className="text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
             {set.title}
           </h1>
           {set.description && (
-            <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--text-secondary)]">
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[var(--text-secondary)]">
               {set.description}
             </p>
           )}
           <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
               <Layers className="h-4 w-4" />
               {cards.length} {cards.length === 1 ? t("set.card") : t("set.cards")}
             </span>
             {dueCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1.5 text-indigo-600">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(99,91,255,0.18)] bg-indigo-500/10 px-3 py-1.5 text-indigo-400">
                 <Zap className="h-4 w-4" />
                 {dueCount} {t("set.dueToday")}
               </span>
             )}
             {weakCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-amber-600">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/15 bg-amber-500/10 px-3 py-1.5 text-amber-400">
                 <Flag className="h-4 w-4" />
                 {weakCount} {t("set.difficult")}
               </span>
             )}
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-muted)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-muted)]">
               <Clock3 className="h-4 w-4" />
               {t("set.created")} {formatDate(set.created_at, locale)}
             </span>
@@ -182,10 +182,10 @@ export default async function SetDetailPage({ params }: SetDetailPageProps) {
       {/* Content */}
       <div className="mt-10 grid gap-8 xl:grid-cols-[0.78fr_1.22fr]">
         <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
+          <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-indigo-500" />
-              <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+              <BarChart3 className="h-5 w-5 text-indigo-400" />
+              <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
                 {t("sets.stats")}
               </h2>
             </div>
@@ -198,8 +198,8 @@ export default async function SetDetailPage({ params }: SetDetailPageProps) {
           </div>
 
           {reviewCount > 0 && (
-            <div className="rounded-[1.75rem] border border-indigo-200/70 bg-indigo-500/5 p-6">
-              <div className="flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+            <div className="rounded-[1.75rem] border border-[rgba(99,91,255,0.18)] bg-indigo-500/6 p-6 shadow-[var(--surface-shadow)]">
+              <div className="flex items-center gap-2 text-sm font-semibold text-indigo-400">
                 <Zap className="h-4 w-4" />
                 {t("set.reviewToday")}
               </div>
@@ -209,7 +209,7 @@ export default async function SetDetailPage({ params }: SetDetailPageProps) {
               <Link
                 href={`/sets/${id}/study?mode=review`}
                 prefetch
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-400 hover:text-indigo-300"
               >
                 {t("set.reviewSession")}
               </Link>
@@ -217,8 +217,8 @@ export default async function SetDetailPage({ params }: SetDetailPageProps) {
           )}
         </div>
 
-        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+          <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
             {t("set.flashcardsPreview")}
           </h2>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">

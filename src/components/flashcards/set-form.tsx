@@ -374,9 +374,8 @@ export function SetForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-      {/* Set details */}
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-sm sm:rounded-[1.75rem] sm:p-6">
-        <h2 className="mb-3 text-base font-semibold text-[var(--text-primary)] sm:mb-4 sm:text-lg">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+        <h2 className="mb-3 text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mb-4 sm:text-xl">
           {t("form.setDetails")}
         </h2>
         <div className="space-y-4">
@@ -390,10 +389,7 @@ export function SetForm({
             disabled={isPending}
           />
           <div className="w-full">
-            <label
-              htmlFor="description"
-              className="mb-1.5 block text-sm font-medium text-[var(--text-primary)]"
-            >
+            <label htmlFor="description" className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
               {t("form.description")}
             </label>
             <textarea
@@ -403,11 +399,11 @@ export function SetForm({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isPending}
-              className="block w-full rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-primary)] shadow-sm transition-all placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+          <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
             <p className="text-sm font-medium text-[var(--text-primary)]">
               {t("form.challengeAccess")}
             </p>
@@ -419,14 +415,14 @@ export function SetForm({
               <button
                 type="button"
                 onClick={() => setIsPublic(true)}
-                className={`rounded-2xl border px-4 py-3 text-left transition-colors ${
+                className={`rounded-2xl border px-4 py-4 text-left transition-all ${
                   isPublic
-                    ? "border-indigo-500 bg-indigo-500/10"
-                    : "border-[var(--border)] bg-[var(--bg-elevated)]"
+                    ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--surface-shadow)]"
+                    : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-strong)]"
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-                  <Globe2 className="h-4 w-4 text-indigo-500" />
+                  <Globe2 className="h-4 w-4 text-indigo-400" />
                   {t("form.publicRanking")}
                 </div>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -437,14 +433,14 @@ export function SetForm({
               <button
                 type="button"
                 onClick={() => setIsPublic(false)}
-                className={`rounded-2xl border px-4 py-3 text-left transition-colors ${
+                className={`rounded-2xl border px-4 py-4 text-left transition-all ${
                   !isPublic
-                    ? "border-indigo-500 bg-indigo-500/10"
-                    : "border-[var(--border)] bg-[var(--bg-elevated)]"
+                    ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--surface-shadow)]"
+                    : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-strong)]"
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-                  <Lock className="h-4 w-4 text-indigo-500" />
+                  <Lock className="h-4 w-4 text-indigo-400" />
                   {t("form.privateRanking")}
                 </div>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -455,10 +451,7 @@ export function SetForm({
 
             {!isPublic && (
               <div className="mt-4">
-                <label
-                  htmlFor="invited-users"
-                  className="mb-1.5 block text-sm font-medium text-[var(--text-primary)]"
-                >
+                <label htmlFor="invited-users" className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
                   {t("form.invitedUsernames")}
                 </label>
                 <textarea
@@ -468,7 +461,7 @@ export function SetForm({
                   onChange={(event) => setInvitedUsers(event.target.value)}
                   placeholder={t("form.invitedUsersPlaceholder")}
                   disabled={isPending}
-                  className="block w-full rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-primary)] shadow-sm transition-all placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <p className="mt-2 text-xs text-[var(--text-muted)]">
                   {t("form.invitedUsersHelper")}
@@ -479,13 +472,13 @@ export function SetForm({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-sm sm:rounded-[1.75rem] sm:p-6">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-[var(--text-primary)] sm:text-lg">
+            <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
               {t("form.smartImportTitle")}
             </h2>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
               {t("form.smartImportSubtitle")}
             </p>
           </div>
@@ -498,9 +491,9 @@ export function SetForm({
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[1.4fr_0.9fr]">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+          <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-              <Brain className="h-4 w-4 text-indigo-500" />
+              <Brain className="h-4 w-4 text-indigo-400" />
               {t("form.aiImportTitle")}
             </div>
             <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -517,7 +510,7 @@ export function SetForm({
                   onChange={(event) =>
                     setAiMode(event.target.value as GenerationMode)
                   }
-                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-sm text-[var(--text-primary)] outline-none"
+                  className="h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-sm text-[var(--text-primary)] outline-none"
                   disabled={isGeneratingImport || isImportingCsv || isPending}
                 >
                   {AI_MODES.map((mode) => (
@@ -536,7 +529,7 @@ export function SetForm({
                   onChange={(event) =>
                     setAiLanguage(event.target.value as GenerationLanguage)
                   }
-                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-sm text-[var(--text-primary)] outline-none"
+                  className="h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-sm text-[var(--text-primary)] outline-none"
                   disabled={isGeneratingImport || isImportingCsv || isPending}
                 >
                   {AI_LANGUAGES.map((language) => (
@@ -599,9 +592,9 @@ export function SetForm({
             </Button>
           </div>
 
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+          <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-              <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+              <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
               {t("form.csvImportTitle")}
             </div>
             <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -649,16 +642,15 @@ export function SetForm({
         ) : null}
 
         {importError ? (
-          <div className="mt-4 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
             {importError}
           </div>
         ) : null}
       </div>
 
-      {/* Flashcards */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+          <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
             {t("form.flashcards")} ({cards.length})
           </h2>
           <Button
@@ -676,7 +668,7 @@ export function SetForm({
         {cards.map((card, index) => (
           <div
             key={card._key}
-            className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-sm sm:rounded-[1.5rem]"
+            className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--surface-shadow)] sm:rounded-[1.5rem]"
           >
             <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-2.5 sm:px-6 sm:py-3">
               <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-muted)]">
@@ -688,7 +680,7 @@ export function SetForm({
                 onClick={() => removeCard(index)}
                 disabled={cards.length <= 1 || isPending}
                 aria-label={`${t("form.removeCard")} ${index + 1}`}
-                className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:pointer-events-none disabled:opacity-30 dark:hover:bg-red-900/20 tap-target"
+                className="rounded-xl p-2 text-gray-400 transition-colors hover:bg-red-500/8 hover:text-red-400 disabled:pointer-events-none disabled:opacity-30 tap-target"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -718,16 +710,15 @@ export function SetForm({
           type="button"
           onClick={addCard}
           disabled={isPending}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--border)] py-4 text-sm font-medium text-[var(--text-muted)] transition-all hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-500/5 tap-target sm:rounded-[1.5rem]"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--border)] py-4 text-sm font-medium text-[var(--text-muted)] transition-all hover:border-indigo-400 hover:bg-[rgba(99,91,255,0.05)] hover:text-indigo-300 tap-target sm:rounded-[1.5rem]"
         >
           <Plus className="h-4 w-4" />
           {t("form.addCard")}
         </button>
       </div>
 
-      {/* Error + submit */}
       {error && (
-        <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
           {error}
         </div>
       )}

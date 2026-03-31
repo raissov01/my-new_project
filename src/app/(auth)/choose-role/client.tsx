@@ -10,34 +10,34 @@ type Role = "student" | "teacher";
 
 export function ChooseRoleClient() {
   const { t } = useLocale();
-  const [selected, setSelected] = useState<Role | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"student" | "teacher" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSelect(role: Role) {
     if (isPending) return;
-    setSelected(role);
+    setSelectedRole(role);
     if (process.env.NODE_ENV !== "production") {
-      console.log("[choose-role] Selected:", role);
+      console.log("[choose-role] Role card clicked:", role);
     }
   }
 
   function handleContinue() {
-    if (!selected || isPending) return;
+    if (!selectedRole || isPending) return;
 
     if (process.env.NODE_ENV !== "production") {
-      console.log("[choose-role] Submitting role:", selected);
+      console.log("[choose-role] Submitting selectedRole:", selectedRole);
     }
 
     setError(null);
     startTransition(async () => {
-      const result = await saveRole(selected);
+      const result = await saveRole(selectedRole);
       if (result?.error) setError(result.error);
     });
   }
 
-  const isStudent = selected === "student";
-  const isTeacher = selected === "teacher";
+  const isStudentSelected = selectedRole === "student";
+  const isTeacherSelected = selectedRole === "teacher";
 
   return (
     <div className="animate-scale-in rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-7 shadow-[var(--surface-shadow-strong)] sm:p-8">
@@ -60,7 +60,7 @@ export function ChooseRoleClient() {
           onClick={() => handleSelect("student")}
           disabled={isPending}
           className={`group relative flex w-full cursor-pointer flex-col items-start rounded-[1.5rem] border-2 p-6 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
-            isStudent
+            isStudentSelected
               ? "border-indigo-500 bg-indigo-500/10 shadow-[0_0_24px_-6px_rgba(99,91,255,0.35)] ring-1 ring-indigo-500/30"
               : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-elevated)]"
           }`}
@@ -68,7 +68,7 @@ export function ChooseRoleClient() {
           {/* Checkmark badge */}
           <div
             className={`absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
-              isStudent
+              isStudentSelected
                 ? "scale-100 bg-indigo-500 text-white shadow-lg shadow-indigo-500/40"
                 : "scale-0 bg-transparent text-transparent"
             }`}
@@ -79,7 +79,7 @@ export function ChooseRoleClient() {
           {/* Icon */}
           <div
             className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 ${
-              isStudent
+              isStudentSelected
                 ? "bg-indigo-500/20 text-indigo-400 shadow-sm"
                 : "bg-[var(--bg-elevated)] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
             }`}
@@ -90,7 +90,7 @@ export function ChooseRoleClient() {
           {/* Text */}
           <h3
             className={`mt-5 text-xl font-semibold tracking-[-0.03em] transition-colors duration-200 ${
-              isStudent ? "text-indigo-400" : "text-[var(--text-primary)]"
+              isStudentSelected ? "text-indigo-400" : "text-[var(--text-primary)]"
             }`}
           >
             {t("auth.roleStudent")}
@@ -106,7 +106,7 @@ export function ChooseRoleClient() {
           onClick={() => handleSelect("teacher")}
           disabled={isPending}
           className={`group relative flex w-full cursor-pointer flex-col items-start rounded-[1.5rem] border-2 p-6 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
-            isTeacher
+            isTeacherSelected
               ? "border-emerald-500 bg-emerald-500/10 shadow-[0_0_24px_-6px_rgba(16,185,129,0.35)] ring-1 ring-emerald-500/30"
               : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-elevated)]"
           }`}
@@ -114,7 +114,7 @@ export function ChooseRoleClient() {
           {/* Checkmark badge */}
           <div
             className={`absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
-              isTeacher
+              isTeacherSelected
                 ? "scale-100 bg-emerald-500 text-white shadow-lg shadow-emerald-500/40"
                 : "scale-0 bg-transparent text-transparent"
             }`}
@@ -125,7 +125,7 @@ export function ChooseRoleClient() {
           {/* Icon */}
           <div
             className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 ${
-              isTeacher
+              isTeacherSelected
                 ? "bg-emerald-500/20 text-emerald-400 shadow-sm"
                 : "bg-[var(--bg-elevated)] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
             }`}
@@ -136,7 +136,7 @@ export function ChooseRoleClient() {
           {/* Text */}
           <h3
             className={`mt-5 text-xl font-semibold tracking-[-0.03em] transition-colors duration-200 ${
-              isTeacher ? "text-emerald-400" : "text-[var(--text-primary)]"
+              isTeacherSelected ? "text-emerald-400" : "text-[var(--text-primary)]"
             }`}
           >
             {t("auth.roleTeacher")}
@@ -162,7 +162,7 @@ export function ChooseRoleClient() {
         size="lg"
         className="mt-6 w-full"
         onClick={handleContinue}
-        disabled={!selected || isPending}
+        disabled={!selectedRole || isPending}
         isLoading={isPending}
       >
         {t("role.continue")}

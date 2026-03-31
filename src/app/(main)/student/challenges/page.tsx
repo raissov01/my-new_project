@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Trophy, Sparkles } from "lucide-react";
 import { getMyClassChallenges } from "@/lib/class-challenges";
 import { createTranslator } from "@/lib/i18n/shared";
 import { getServerLocale } from "@/lib/i18n/server";
@@ -19,14 +20,14 @@ export default async function StudentChallengesPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
+      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
           {t("student.challengesEyebrow")}
         </p>
-        <h1 className="mt-3 text-4xl font-semibold text-[var(--text-primary)]">
+        <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
           {t("student.challengesTitle")}
         </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--text-secondary)]">
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--text-secondary)]">
           {t("student.challengesSubtitle")}
         </p>
       </div>
@@ -36,11 +37,11 @@ export default async function StudentChallengesPage() {
           challenges.map((challenge) => (
             <div
               key={challenge.id}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
+              className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+                  <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
                     {challenge.title}
                   </h2>
                   <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -66,7 +67,8 @@ export default async function StudentChallengesPage() {
             </div>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-10">
+          <div className="rounded-[1.5rem] border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-10 shadow-[var(--surface-shadow)]">
+            <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
             <p className="text-lg font-semibold text-[var(--text-primary)]">
               {t("student.noChallengesTitle")}
             </p>
