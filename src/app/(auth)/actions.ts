@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import {
   createProfileForSignup,
   createClient,
-  ensureProfile,
   getAppHomePath,
   getRoleRegistrationRedirect,
 } from "@/lib/supabase/server";
@@ -107,7 +106,6 @@ export async function login(formData: FormData): Promise<AuthResult> {
     return { error: t("action.loginNoSession") };
   }
 
-  await ensureProfile(data.user);
   redirect(await getAppHomePath(data.user));
 }
 
@@ -214,7 +212,6 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     };
   }
 
-  await ensureProfile(data.user, role as ProfileRole);
   redirect(getRoleRegistrationRedirect(role as ProfileRole));
 }
 

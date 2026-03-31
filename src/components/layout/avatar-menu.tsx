@@ -46,7 +46,7 @@ export function AvatarMenu() {
   const fallback = useMemo(() => (user ? getUserFallback(user) : null), [user]);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !open) {
       return;
     }
 
@@ -91,7 +91,7 @@ export function AvatarMenu() {
       isActive = false;
       window.removeEventListener("flashlearn-profile-updated", handleProfileUpdated);
     };
-  }, [fallback?.avatarUrl, fallback?.username, user]);
+  }, [fallback?.avatarUrl, fallback?.username, open, user]);
 
   // Lock scroll when bottom sheet is open on mobile
   useEffect(() => {

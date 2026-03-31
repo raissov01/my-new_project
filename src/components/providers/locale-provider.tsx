@@ -2,12 +2,14 @@
 
 import {
   createContext,
+  startTransition,
   useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   LOCALE_COOKIE_NAME,
   type Locale,
@@ -30,22 +32,39 @@ export function LocaleProvider({
   initialLocale: Locale;
   children: ReactNode;
 }) {
+  const router = useRouter();
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
+  function persistLocale(nextLocale: Locale) {
+    document.documentElement.lang = nextLocale;
+    document.cookie = `${LOCALE_COOKIE_NAME}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
+    localStorage.setItem(LOCALE_COOKIE_NAME, nextLocale);
+  }
+
   useEffect(() => {
-    document.documentElement.lang = locale;
-    document.cookie = `${LOCALE_COOKIE_NAME}=${locale}; path=/; max-age=31536000; samesite=lax`;
-    localStorage.setItem(LOCALE_COOKIE_NAME, locale);
+    persistLocale(locale);
   }, [locale]);
 
   const value = useMemo<LocaleContextValue>(() => {
     const t = createTranslator(locale);
     return {
       locale,
-      setLocale: (nextLocale) => setLocaleState(normalizeLocale(nextLocale)),
+      setLocale: (nextLocale) => {
+        const normalized = normalizeLocale(nextLocale);
+
+        if (normalized === locale) {
+          return;
+        }
+
+        persistLocale(normalized);
+        setLocaleState(normalized);
+        startTransition(() => {
+          router.refresh();
+        });
+      },
       t,
     };
-  }, [locale]);
+  }, [locale, router]);
 
   return (
     <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>

@@ -120,9 +120,16 @@ function buildChunkText(chunks: TextChunk[]) {
 function extractTextResponse(data: unknown) {
   if (!data || typeof data !== "object") return "";
 
-  const candidate = (data as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> })
-    .candidates?.[0];
-  return candidate?.content?.parts?.[0]?.text ?? "";
+  const candidate = (data as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  }).candidates?.[0];
+
+  return (
+    candidate?.content?.parts
+      ?.map((part) => (typeof part.text === "string" ? part.text : ""))
+      .join("")
+      .trim() ?? ""
+  );
 }
 
 function parseGeneratedCards(raw: string): GeneratedCard[] {
@@ -163,8 +170,8 @@ function parseGeneratedCards(raw: string): GeneratedCard[] {
       front: String(card.front ?? "").trim(),
       back: String(card.back ?? "").trim(),
       category: String(card.category ?? "General").trim(),
-      difficulty: validDifficulties.has(String(card.difficulty))
-        ? (String(card.difficulty) as GeneratedCard["difficulty"])
+      difficulty: validDifficulties.has(String(card.difficulty).toLowerCase())
+        ? (String(card.difficulty).toLowerCase() as GeneratedCard["difficulty"])
         : "medium",
       source: String(card.source ?? "").trim(),
     }))
@@ -245,6 +252,16 @@ export async function generateFlashcardsWithAI(
   const config = getAIConfig();
   const prompt = `${buildPrompt(options)}\n\n## Source material:\n${buildChunkText(options.chunks)}`;
 
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[Gemini] Starting generation:", {
+      model: config.geminiModel,
+      chunkCount: options.chunks.length,
+      mode: options.mode,
+      language: options.language,
+      cardCount: options.cardCount,
+    });
+  }
+
   let response = await requestGemini(prompt, config.geminiApiKey, config.geminiModel);
 
   if (!response.ok) {
@@ -313,6 +330,13 @@ export async function generateFlashcardsWithAI(
       "Gemini returned no usable cards.",
       422
     );
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[Gemini] Parsed cards:", {
+      count: cards.length,
+      model: config.geminiModel,
+    });
   }
 
   return cards;

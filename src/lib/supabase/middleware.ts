@@ -69,6 +69,10 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthRoute = pathname === "/login" || pathname === "/signup";
   const isChooseRole = pathname === "/choose-role";
+  const isTeacherRoute = pathname === "/teacher" || pathname.startsWith("/teacher/");
+  const isStudentRoute = pathname === "/student" || pathname.startsWith("/student/");
+  const isRoleSensitiveRoute =
+    isAuthRoute || isChooseRole || pathname === "/dashboard" || isTeacherRoute || isStudentRoute;
 
   // Admin bypass
   if (isAdminSessionCookie(request.cookies.get(ADMIN_COOKIE_NAME))) {
@@ -119,13 +123,7 @@ export async function updateSession(request: NextRequest) {
 
     // ── Logged in: resolve role ────────────────────────────────────────
     // Only fetch profile when we need role information
-    const needsRoleCheck =
-      isAuthRoute ||
-      isChooseRole ||
-      isProtectedRoute ||
-      pathname === "/dashboard";
-
-    if (!needsRoleCheck) {
+    if (!isRoleSensitiveRoute) {
       return supabaseResponse;
     }
 
@@ -179,7 +177,7 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse;
       }
       // If on auth route, redirect to choose-role (they're logged in but need a role)
-      if (isAuthRoute || isProtectedRoute || pathname === "/dashboard") {
+      if (isRoleSensitiveRoute) {
         const url = request.nextUrl.clone();
         url.pathname = "/choose-role";
         return NextResponse.redirect(url);

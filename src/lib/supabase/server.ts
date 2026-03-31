@@ -146,7 +146,7 @@ export async function ensureProfile(
     metadataRole ??
     (authProvider === "google" ? "student" : undefined);
 
-  await profilesTable.upsert(
+  const { error } = await profilesTable.upsert(
     {
       id: user.id,
       email: user.email ?? "",
@@ -158,6 +158,15 @@ export async function ensureProfile(
     },
     { onConflict: "id" }
   );
+
+  if (error) {
+    console.error("[ensureProfile] Failed to upsert profile:", {
+      userId: user.id,
+      email: user.email,
+      role,
+      message: error.message,
+    });
+  }
 }
 
 export async function createProfileForSignup(params: {
@@ -262,8 +271,6 @@ export async function getCurrentProfile(
     return null;
   }
 
-  await ensureProfile(user);
-
   const supabase = await createClient();
   const profilesTable = supabase.from("profiles") as never as ProfilesTable;
   const { data } = await profilesTable
@@ -271,7 +278,18 @@ export async function getCurrentProfile(
     .eq("id", user.id)
     .maybeSingle();
 
-  return data ?? null;
+  if (data) {
+    return data;
+  }
+
+  await ensureProfile(user);
+
+  const { data: ensuredProfile } = await profilesTable
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return ensuredProfile ?? null;
 }
 
 export async function getCurrentRole(

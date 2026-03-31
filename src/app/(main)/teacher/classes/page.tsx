@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Users, Sparkles } from "lucide-react";
-import { createClassGroup } from "@/app/(main)/classes/challenges/actions";
 import { requireRole } from "@/lib/supabase/server";
 import { createTranslator } from "@/lib/i18n/shared";
 import { getServerLocale } from "@/lib/i18n/server";
 import { getTeacherDashboardSummary } from "@/lib/classrooms";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CreateClassForm } from "./create-class-form";
 
 export default async function TeacherClassesPage() {
   const locale = await getServerLocale();
@@ -18,7 +17,7 @@ export default async function TeacherClassesPage() {
     redirect(access.redirectTo);
   }
 
-  const summary = await getTeacherDashboardSummary();
+  const summary = await getTeacherDashboardSummary(access.user?.id);
 
   if (!summary) {
     redirect("/login");
@@ -38,34 +37,7 @@ export default async function TeacherClassesPage() {
             {t("teacher.classesSubtitle")}
           </p>
 
-          <form
-            action={async (formData) => {
-              "use server";
-              await createClassGroup(formData);
-            }}
-            className="mt-6 space-y-4"
-          >
-            <Input
-              name="name"
-              required
-              label={t("teacher.className")}
-              placeholder={t("teacher.classNamePlaceholder")}
-            />
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
-                {t("teacher.inviteStudents")}
-              </span>
-              <textarea
-                name="members"
-                rows={6}
-                placeholder={t("teacher.inviteStudentsPlaceholder")}
-                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] outline-none focus:border-[rgba(99,91,255,0.48)] focus:ring-4 focus:ring-[rgba(99,91,255,0.12)]"
-              />
-            </label>
-
-            <Button type="submit">{t("teacher.createClass")}</Button>
-          </form>
+          <CreateClassForm />
         </section>
 
         <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">

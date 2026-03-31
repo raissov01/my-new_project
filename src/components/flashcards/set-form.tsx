@@ -20,6 +20,7 @@ import type {
   FlashcardInput,
   SetVisibilityInput,
 } from "@/app/(main)/sets/actions";
+import { AIClientRequestError, requestAIGeneration } from "@/lib/ai/client";
 import type { GenerationLanguage, GenerationMode } from "@/lib/ai/gemini";
 
 interface SetFormProps {
@@ -195,13 +196,11 @@ export function SetForm({
       formData.append("language", aiLanguage);
       formData.append("cardCount", String(aiCardCount));
 
-      const response = await fetch("/api/ai/generate", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json().catch(() => null);
+      const { response, data } = await requestAIGeneration(formData);
       if (!response.ok) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[SetForm] AI import API error:", data);
+        }
         const errorKey = AI_ERROR_MAP[data?.error] ?? "ai.errorGeneric";
         const detail = data?.detail ? ` ${String(data.detail)}` : "";
         setImportError(`${t(errorKey)}${detail}`);
@@ -223,8 +222,18 @@ export function SetForm({
       }
 
       mergeImportedCards(importedCards);
-    } catch {
-      setImportError(t("ai.errorGeneric"));
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[SetForm] AI import request failed:", error);
+      }
+
+      setImportError(
+        error instanceof AIClientRequestError
+          ? `${t("ai.errorAI")} ${error.message}`
+          : error instanceof Error
+            ? `${t("ai.errorGeneric")} ${error.message}`
+            : t("ai.errorGeneric")
+      );
     } finally {
       setIsGeneratingImport(false);
     }

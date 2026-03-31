@@ -23,6 +23,7 @@ import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createSet, type FlashcardInput } from "@/app/(main)/sets/actions";
+import { AIClientRequestError, requestAIGeneration } from "@/lib/ai/client";
 import type { GeneratedCard, GenerationMode, GenerationLanguage } from "@/lib/ai/gemini";
 
 type Step = "upload" | "generating" | "preview";
@@ -148,6 +149,7 @@ export function AIGeneratorClient() {
     setGenerating(true);
     setStep("generating");
     setGeneratingMessage(t("ai.extracting"));
+    let messageTimer: ReturnType<typeof setTimeout> | null = null;
 
     try {
       const formData = new FormData();
@@ -157,20 +159,16 @@ export function AIGeneratorClient() {
       formData.append("cardCount", String(cardCount));
 
       // After a delay, update the message to show AI is working
-      const messageTimer = setTimeout(() => {
+      messageTimer = setTimeout(() => {
         setGeneratingMessage(t("ai.analyzing"));
       }, 3000);
 
-      const response = await fetch("/api/ai/generate", {
-        method: "POST",
-        body: formData,
-      });
-
-      clearTimeout(messageTimer);
-
-      const data = await response.json().catch(() => null);
+      const { response, data } = await requestAIGeneration(formData);
 
       if (!response.ok) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[AIGeneratorClient] API error:", data);
+        }
         setError(buildUiError(t, data?.error, data?.detail));
         setStep("upload");
         return;
@@ -186,11 +184,21 @@ export function AIGeneratorClient() {
       setMeta(data.meta ?? null);
       setStep("preview");
     } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[AIGeneratorClient] Request failed:", error);
+      }
       setError(
-        error instanceof Error ? `${t("ai.errorGeneric")} ${error.message}` : t("ai.errorGeneric")
+        error instanceof AIClientRequestError
+          ? `${t("ai.errorAI")} ${error.message}`
+          : error instanceof Error
+            ? `${t("ai.errorGeneric")} ${error.message}`
+            : t("ai.errorGeneric")
       );
       setStep("upload");
     } finally {
+      if (messageTimer) {
+        clearTimeout(messageTimer);
+      }
       setGenerating(false);
     }
   }
@@ -248,6 +256,7 @@ export function AIGeneratorClient() {
         setError(result.error);
       } else {
         toast("success", t("ai.saveSuccess"));
+        router.push("/sets");
       }
     } catch {
       setError(t("ai.errorGeneric"));

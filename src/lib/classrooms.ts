@@ -10,14 +10,15 @@ import type {
 
 type ProfileSummary = Pick<Profile, "id" | "username" | "avatar_url" | "role">;
 type GroupMembershipRow = Database["public"]["Tables"]["class_group_members"]["Row"];
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
-async function getProfilesByIds(userIds: string[]) {
-  const supabase = await createClient();
+async function getProfilesByIds(userIds: string[], supabase?: SupabaseClient) {
+  const client = supabase ?? (await createClient());
   if (userIds.length === 0) {
     return new Map<string, ProfileSummary>();
   }
 
-  const { data } = await supabase
+  const { data } = await client
     .from("profiles")
     .select("id, username, avatar_url, role")
     .in("id", userIds);
@@ -27,8 +28,8 @@ async function getProfilesByIds(userIds: string[]) {
   );
 }
 
-async function getSetsByIds(setIds: string[]) {
-  const supabase = await createClient();
+async function getSetsByIds(setIds: string[], supabase?: SupabaseClient) {
+  const client = supabase ?? (await createClient());
   if (setIds.length === 0) {
     return new Map<
       string,
@@ -36,7 +37,7 @@ async function getSetsByIds(setIds: string[]) {
     >();
   }
 
-  const { data } = await supabase
+  const { data } = await client
     .from("flashcard_sets")
     .select("id, title, description")
     .in("id", setIds);
@@ -50,9 +51,9 @@ async function getSetsByIds(setIds: string[]) {
   );
 }
 
-async function getGroupMembershipsForUser(userId: string) {
-  const supabase = await createClient();
-  const { data } = await supabase
+async function getGroupMembershipsForUser(userId: string, supabase?: SupabaseClient) {
+  const client = supabase ?? (await createClient());
+  const { data } = await client
     .from("class_group_members")
     .select("*")
     .eq("user_id", userId);
@@ -60,39 +61,38 @@ async function getGroupMembershipsForUser(userId: string) {
   return (data as GroupMembershipRow[] | null) ?? [];
 }
 
-export async function getTeacherDashboardSummary() {
-  const supabase = await createClient();
-  const user = await getCurrentUser();
+export async function getTeacherDashboardSummary(preloadedUserId?: string) {
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
 
-  if (!user) {
+  if (!userId) {
     return null;
   }
+
+  const supabase = await createClient();
 
   const { data: groupsData } = await supabase
     .from("class_groups")
     .select("*")
-    .eq("owner_id", user.id)
+    .eq("owner_id", userId)
     .order("created_at", { ascending: false });
   const groups = (groupsData as ClassGroup[] | null) ?? [];
   const groupIds = groups.map((group) => group.id);
 
-  const { data: membersData } =
+  const [membersResult, assignmentsResult, challengesResult] =
     groupIds.length > 0
-      ? await supabase.from("class_group_members").select("*").in("group_id", groupIds)
-      : { data: [] as const };
-  const members = (membersData as GroupMembershipRow[] | null) ?? [];
-
-  const { data: assignmentsData } =
-    groupIds.length > 0
-      ? await supabase.from("class_set_assignments").select("*").in("group_id", groupIds)
-      : { data: [] as const };
-  const assignments = (assignmentsData as ClassSetAssignment[] | null) ?? [];
-
-  const { data: challengesData } =
-    groupIds.length > 0
-      ? await supabase.from("class_challenges").select("*").in("group_id", groupIds)
-      : { data: [] as const };
-  const challenges = (challengesData as ClassChallenge[] | null) ?? [];
+      ? await Promise.all([
+          supabase.from("class_group_members").select("*").in("group_id", groupIds),
+          supabase.from("class_set_assignments").select("*").in("group_id", groupIds),
+          supabase.from("class_challenges").select("*").in("group_id", groupIds),
+        ])
+      : [
+          { data: [] as const },
+          { data: [] as const },
+          { data: [] as const },
+        ];
+  const members = (membersResult.data as GroupMembershipRow[] | null) ?? [];
+  const assignments = (assignmentsResult.data as ClassSetAssignment[] | null) ?? [];
+  const challenges = (challengesResult.data as ClassChallenge[] | null) ?? [];
 
   const challengeIds = challenges.map((challenge) => challenge.id);
   const { data: attemptsData } =
@@ -108,7 +108,7 @@ export async function getTeacherDashboardSummary() {
   const memberIds = Array.from(
     new Set(members.filter((member) => member.role === "student").map((member) => member.user_id))
   );
-  const profiles = await getProfilesByIds(memberIds);
+  const profiles = await getProfilesByIds(memberIds, supabase);
 
   const memberCountByGroup = new Map<string, number>();
   for (const member of members) {
@@ -195,44 +195,45 @@ export async function getTeacherDashboardSummary() {
   };
 }
 
-export async function getStudentDashboardSummary() {
-  const supabase = await createClient();
-  const user = await getCurrentUser();
+export async function getStudentDashboardSummary(preloadedUserId?: string) {
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
 
-  if (!user) {
+  if (!userId) {
     return null;
   }
 
-  const memberships = await getGroupMembershipsForUser(user.id);
+  const supabase = await createClient();
+  const memberships = await getGroupMembershipsForUser(userId, supabase);
   const groupIds = memberships.map((membership) => membership.group_id);
 
-  const { data: groupsData } =
+  const [groupsResult, assignmentsResult, challengesResult] =
     groupIds.length > 0
-      ? await supabase.from("class_groups").select("*").in("id", groupIds)
-      : { data: [] as const };
-  const groups = (groupsData as ClassGroup[] | null) ?? [];
+      ? await Promise.all([
+          supabase.from("class_groups").select("*").in("id", groupIds),
+          supabase
+            .from("class_set_assignments")
+            .select("*")
+            .in("group_id", groupIds)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("class_challenges")
+            .select("*")
+            .in("group_id", groupIds)
+            .order("created_at", { ascending: false }),
+        ])
+      : [
+          { data: [] as const },
+          { data: [] as const },
+          { data: [] as const },
+        ];
+  const groups = (groupsResult.data as ClassGroup[] | null) ?? [];
+  const assignments = (assignmentsResult.data as ClassSetAssignment[] | null) ?? [];
+  const challenges = (challengesResult.data as ClassChallenge[] | null) ?? [];
 
-  const { data: assignmentsData } =
-    groupIds.length > 0
-      ? await supabase
-          .from("class_set_assignments")
-          .select("*")
-          .in("group_id", groupIds)
-          .order("created_at", { ascending: false })
-      : { data: [] as const };
-  const assignments = (assignmentsData as ClassSetAssignment[] | null) ?? [];
-
-  const { data: challengesData } =
-    groupIds.length > 0
-      ? await supabase
-          .from("class_challenges")
-          .select("*")
-          .in("group_id", groupIds)
-          .order("created_at", { ascending: false })
-      : { data: [] as const };
-  const challenges = (challengesData as ClassChallenge[] | null) ?? [];
-
-  const setMap = await getSetsByIds(Array.from(new Set(assignments.map((assignment) => assignment.set_id))));
+  const setMap = await getSetsByIds(
+    Array.from(new Set(assignments.map((assignment) => assignment.set_id))),
+    supabase
+  );
   const groupMap = new Map(groups.map((group) => [group.id, group]));
 
   const { data: participantsData } =
@@ -245,7 +246,7 @@ export async function getStudentDashboardSummary() {
   const participantRows =
     (participantsData as { challenge_id: string; user_id: string }[] | null) ?? [];
   const joinedIds = new Set(
-    participantRows.filter((row) => row.user_id === user.id).map((row) => row.challenge_id)
+    participantRows.filter((row) => row.user_id === userId).map((row) => row.challenge_id)
   );
 
   return {

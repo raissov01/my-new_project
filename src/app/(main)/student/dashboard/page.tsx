@@ -27,7 +27,10 @@ export default async function StudentDashboardPage() {
     redirect(access.redirectTo);
   }
 
-  const [summary, stats] = await Promise.all([getStudentDashboardSummary(), getUserStats()]);
+  const [summary, stats] = await Promise.all([
+    getStudentDashboardSummary(access.user?.id),
+    getUserStats(),
+  ]);
 
   if (!summary) {
     redirect("/login");

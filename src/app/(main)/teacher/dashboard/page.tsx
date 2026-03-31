@@ -16,7 +16,7 @@ export default async function TeacherDashboardPage() {
     redirect(access.redirectTo);
   }
 
-  const summary = await getTeacherDashboardSummary();
+  const summary = await getTeacherDashboardSummary(access.user?.id);
 
   if (!summary) {
     redirect("/login");

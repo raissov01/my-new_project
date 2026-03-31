@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getCurrentProfile, getCurrentUser } from "@/lib/supabase/server";
+import { createTranslator } from "@/lib/i18n/shared";
+import { getServerLocale } from "@/lib/i18n/server";
 import { getAccessibleSetById, resolveInviteProfiles } from "@/lib/set-access";
 import { getClassChallengeById } from "@/lib/class-challenges";
 import type { Database } from "@/types/database";
@@ -64,6 +66,17 @@ type JoinClassByCodeRpc = (
   fn: "join_class_group_by_code",
   args: Database["public"]["Functions"]["join_class_group_by_code"]["Args"]
 ) => Promise<{ data: string | null; error: TableError }>;
+
+export type CreateClassGroupActionState = {
+  status: "idle" | "success" | "error";
+  error: string | null;
+  success: string | null;
+  groupId: string | null;
+};
+
+function generateJoinCode() {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+}
 
 async function requireTeacherProfile() {
   const user = await getCurrentUser();
@@ -131,15 +144,33 @@ export async function createClassGroup(formData: FormData) {
   const groupsTable = supabase.from("class_groups") as never as ClassGroupsTable;
   const membersTable = supabase.from("class_group_members") as never as GroupMembersTable;
 
-  const { data: group, error } = await groupsTable
-    .insert({
-      name,
-      owner_id: access.user.id,
-    })
-    .select("*")
-    .single();
+  let group: Database["public"]["Tables"]["class_groups"]["Row"] | null = null;
+  let error: TableError = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const result = await groupsTable
+      .insert({
+        name,
+        owner_id: access.user.id,
+        join_code: generateJoinCode(),
+      })
+      .select("*")
+      .single();
+
+    group = result.data;
+    error = result.error;
+
+    if (!error || !error.message.toLowerCase().includes("join_code")) {
+      break;
+    }
+  }
 
   if (error || !group) {
+    console.error("[createClassGroup] Failed to create class group:", {
+      teacherId: access.user.id,
+      name,
+      message: error?.message ?? "Unknown insert error",
+    });
     return { error: error?.message ?? "Failed to create class." };
   }
 
@@ -160,13 +191,43 @@ export async function createClassGroup(formData: FormData) {
 
   const { error: memberError } = await membersTable.insert(memberRows);
   if (memberError) {
+    console.error("[createClassGroup] Failed to insert class members:", {
+      teacherId: access.user.id,
+      groupId: group.id,
+      message: memberError.message,
+    });
     return { error: memberError.message };
   }
 
   revalidatePath("/teacher/classes");
+  revalidatePath("/teacher/dashboard");
   revalidatePath(`/teacher/classes/${group.id}`);
 
   return { error: null, groupId: group.id };
+}
+
+export async function submitCreateClassGroup(
+  _previousState: CreateClassGroupActionState,
+  formData: FormData
+): Promise<CreateClassGroupActionState> {
+  const t = createTranslator(await getServerLocale());
+  const result = await createClassGroup(formData);
+
+  if (result.error || !result.groupId) {
+    return {
+      status: "error",
+      error: result.error ?? t("common.networkError"),
+      success: null,
+      groupId: null,
+    };
+  }
+
+  return {
+    status: "success",
+    error: null,
+    success: t("teacher.classCreatedSuccess"),
+    groupId: result.groupId,
+  };
 }
 
 export async function createClassChallenge(formData: FormData) {

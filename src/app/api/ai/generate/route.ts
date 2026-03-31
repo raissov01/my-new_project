@@ -37,6 +37,15 @@ export async function POST(request: NextRequest) {
     const requestedCardCount = Number(formData.get("cardCount") ?? 15);
     const cardCount = Math.min(50, Math.max(5, requestedCardCount));
 
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[AI Generate] Incoming request:", {
+        mode,
+        language,
+        requestedCardCount,
+        cardCount,
+      });
+    }
+
     // Validate file
     if (!(file instanceof File)) {
       return NextResponse.json(
@@ -117,6 +126,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[AI Generate] Extraction complete:", {
+        fileName: file.name,
+        chunkCount: extraction.chunks.length,
+        pageCount: extraction.pageCount,
+        textLength: extraction.text.length,
+        model: aiConfig.geminiModel,
+      });
+    }
+
     // Step 2: Generate flashcards with AI
     const cards = await generateFlashcardsWithAI({
       chunks: extraction.chunks,
@@ -124,6 +143,13 @@ export async function POST(request: NextRequest) {
       language: language as GenerationLanguage,
       cardCount,
     });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[AI Generate] Generation complete:", {
+        fileName: file.name,
+        cards: cards.length,
+      });
+    }
 
     return NextResponse.json({
       cards,
