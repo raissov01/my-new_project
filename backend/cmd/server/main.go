@@ -45,6 +45,12 @@ func main() {
 	setRepo := repository.NewSet(pool)
 	setSvc := service.NewSet(setRepo)
 	setHandler := handler.NewSet(setSvc, cfg.Environment)
+	dashboardRepo := repository.NewDashboard(pool)
+	dashboardSvc := service.NewDashboard(dashboardRepo)
+	dashboardHandler := handler.NewDashboard(dashboardSvc, cfg.Environment)
+	classroomRepo := repository.NewClassroom(pool)
+	classroomSvc := service.NewClassroom(classroomRepo)
+	classroomHandler := handler.NewClassroom(classroomSvc, cfg.Environment)
 
 	// ── Routes ──────────────────────────────────────────────────────────────
 	mux := http.NewServeMux()
@@ -59,6 +65,12 @@ func main() {
 	mux.HandleFunc("GET /api/v1/leaderboard", middleware.OptionalAuth(leaderboardHandler.GetLeaderboard))
 	mux.HandleFunc("GET /api/v1/me", middleware.InternalAuth(cfg.InternalAPIToken, profileHandler.GetMe))
 	mux.HandleFunc("GET /api/v1/sets/overview", middleware.InternalAuth(cfg.InternalAPIToken, setHandler.GetOverview))
+	mux.HandleFunc("GET /api/v1/dashboard/teacher", middleware.InternalAuth(cfg.InternalAPIToken, dashboardHandler.GetTeacherSummary))
+	mux.HandleFunc("GET /api/v1/dashboard/student", middleware.InternalAuth(cfg.InternalAPIToken, dashboardHandler.GetStudentSummary))
+	mux.HandleFunc("GET /api/v1/classroom/owned-groups", middleware.InternalAuth(cfg.InternalAPIToken, classroomHandler.GetOwnedGroups))
+	mux.HandleFunc("GET /api/v1/classroom/available-sets", middleware.InternalAuth(cfg.InternalAPIToken, classroomHandler.GetAvailableSets))
+	mux.HandleFunc("GET /api/v1/classroom/my-challenges", middleware.InternalAuth(cfg.InternalAPIToken, classroomHandler.GetMyChallenges))
+	mux.HandleFunc("GET /api/v1/classroom/groups/{groupID}", middleware.InternalAuth(cfg.InternalAPIToken, classroomHandler.GetTeacherClassroomDetail))
 
 	// Debug: check if required views/tables exist (dev only)
 	if cfg.Environment == "development" {

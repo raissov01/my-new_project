@@ -18,7 +18,7 @@ export default async function StudentClassesPage() {
     redirect(access.redirectTo);
   }
 
-  const summary = await getStudentDashboardSummary();
+  const summary = await getStudentDashboardSummary(access.user?.id);
 
   if (!summary) {
     redirect("/login");

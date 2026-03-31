@@ -1,3 +1,5 @@
+import { getStudentDashboardSummaryFromGo, getTeacherDashboardSummaryFromGo } from "@/lib/backend/classrooms";
+import { isGoBackendBridgeConfigured } from "@/lib/backend/env";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import type {
   ClassChallenge,
@@ -7,6 +9,10 @@ import type {
   Database,
   Profile,
 } from "@/types/database";
+import type {
+  StudentDashboardSummary,
+  TeacherDashboardSummary,
+} from "@/lib/classrooms-types";
 
 type ProfileSummary = Pick<Profile, "id" | "username" | "avatar_url" | "role">;
 type GroupMembershipRow = Database["public"]["Tables"]["class_group_members"]["Row"];
@@ -61,7 +67,9 @@ async function getGroupMembershipsForUser(userId: string, supabase?: SupabaseCli
   return (data as GroupMembershipRow[] | null) ?? [];
 }
 
-export async function getTeacherDashboardSummary(preloadedUserId?: string) {
+async function getTeacherDashboardSummaryFromSupabase(
+  preloadedUserId?: string
+): Promise<TeacherDashboardSummary | null> {
   const userId = preloadedUserId ?? (await getCurrentUser())?.id;
 
   if (!userId) {
@@ -200,7 +208,9 @@ export async function getTeacherDashboardSummary(preloadedUserId?: string) {
   };
 }
 
-export async function getStudentDashboardSummary(preloadedUserId?: string) {
+async function getStudentDashboardSummaryFromSupabase(
+  preloadedUserId?: string
+): Promise<StudentDashboardSummary | null> {
   const userId = preloadedUserId ?? (await getCurrentUser())?.id;
 
   if (!userId) {
@@ -284,6 +294,46 @@ export async function getStudentDashboardSummary(preloadedUserId?: string) {
       joined: joinedIds.has(challenge.id),
     })),
   };
+}
+
+export async function getTeacherDashboardSummary(
+  preloadedUserId?: string
+): Promise<TeacherDashboardSummary | null> {
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
+
+  if (!userId) {
+    return null;
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      return await getTeacherDashboardSummaryFromGo(userId);
+    } catch (error) {
+      console.warn("[getTeacherDashboardSummary] Falling back to Supabase:", error);
+    }
+  }
+
+  return getTeacherDashboardSummaryFromSupabase(userId);
+}
+
+export async function getStudentDashboardSummary(
+  preloadedUserId?: string
+): Promise<StudentDashboardSummary | null> {
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
+
+  if (!userId) {
+    return null;
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      return await getStudentDashboardSummaryFromGo(userId);
+    } catch (error) {
+      console.warn("[getStudentDashboardSummary] Falling back to Supabase:", error);
+    }
+  }
+
+  return getStudentDashboardSummaryFromSupabase(userId);
 }
 
 export async function getTeacherClassroomDetail(groupId: string) {
