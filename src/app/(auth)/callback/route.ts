@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient, ensureProfile, getAppHomePath, getCurrentUser } from "@/lib/supabase/server";
+import { createClient, ensureProfile, getCurrentUser, getCurrentProfile, getDefaultAppRoute } from "@/lib/supabase/server";
 import { DEV_MODE } from "@/lib/dev-mode";
 import type { ProfileRole } from "@/types/database";
 
@@ -22,18 +22,42 @@ export async function GET(request: Request) {
       const user = await getCurrentUser();
 
       if (user) {
-        // For social logins: ensure a profile exists.
-        // If a role was passed via the redirect URL, use it.
-        const validRole = role === "teacher" || role === "student" ? role : "student";
+        // Check if this user already has a profile with a role
+        const existingProfile = await getCurrentProfile(user);
+
+        if (existingProfile?.role) {
+          // Returning user with a role → go to dashboard
+          if (next) {
+            return NextResponse.redirect(`${origin}${next}`);
+          }
+          return NextResponse.redirect(
+            `${origin}${getDefaultAppRoute(existingProfile.role)}`
+          );
+        }
+
+        // New user — ensure a profile row exists.
+        // If a role was passed via URL (from signup form), use it.
+        // Otherwise, pass undefined so the role stays null, forcing /choose-role.
+        const validRole =
+          role === "teacher" || role === "student" ? role : undefined;
         await ensureProfile(user, validRole);
+
+        if (validRole) {
+          // Role was pre-selected during signup → go to dashboard
+          return NextResponse.redirect(
+            `${origin}${getDefaultAppRoute(validRole)}`
+          );
+        }
+
+        // No role → middleware will redirect to /choose-role
+        return NextResponse.redirect(`${origin}/choose-role`);
       }
 
       if (next) {
         return NextResponse.redirect(`${origin}${next}`);
       }
 
-      const appHome = user ? await getAppHomePath(user) : "/login";
-      return NextResponse.redirect(`${origin}${appHome}`);
+      return NextResponse.redirect(`${origin}/login`);
     }
   }
 

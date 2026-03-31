@@ -1,5 +1,6 @@
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
+import { getAIConfigSafe } from "./config";
 
 export type ExtractionResult = {
   text: string;
@@ -12,8 +13,6 @@ export type TextChunk = {
   source: string; // e.g. "Page 2, paragraph 3"
 };
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-
 /**
  * Extract text from a PDF or DOCX file buffer.
  */
@@ -22,7 +21,10 @@ export async function extractText(
   mimeType: string,
   fileName: string
 ): Promise<ExtractionResult> {
-  if (buffer.length > MAX_FILE_SIZE) {
+  const config = getAIConfigSafe();
+  const maxFileSize = config?.maxUploadBytes ?? 20 * 1024 * 1024;
+
+  if (buffer.length > maxFileSize) {
     throw new Error("FILE_TOO_LARGE");
   }
 

@@ -1,6 +1,5 @@
+import { getAIConfig } from "./config";
 import type { TextChunk } from "./extract-text";
-
-// ── Types ────────────────────────────────────────────────────────────────────
 
 export type GeneratedCard = {
   front: string;
@@ -20,7 +19,25 @@ export type GenerateOptions = {
   cardCount: number;
 };
 
-// ── Prompt engineering ───────────────────────────────────────────────────────
+export class AIProviderError extends Error {
+  constructor(
+    public code:
+      | "AI_CONFIG_MISSING_API_KEY"
+      | "GEMINI_API_HTTP_ERROR"
+      | "GEMINI_EMPTY_RESPONSE"
+      | "GEMINI_NO_CARDS_GENERATED"
+      | "GEMINI_INVALID_JSON"
+      | "GEMINI_INVALID_FORMAT"
+      | "GEMINI_PROMPT_BLOCKED"
+      | "GEMINI_RATE_LIMITED"
+      | "GEMINI_TIMEOUT",
+    message: string,
+    public status = 500,
+    public detail?: string
+  ) {
+    super(message);
+  }
+}
 
 const LANGUAGE_NAMES: Record<GenerationLanguage, string> = {
   kk: "Kazakh",
@@ -31,16 +48,16 @@ const LANGUAGE_NAMES: Record<GenerationLanguage, string> = {
 const MODE_INSTRUCTIONS: Record<GenerationMode, string> = {
   mixed: `Use a mix of formats: definitions, questions-and-answers, vocabulary, and concept explanations.
 Automatically detect the best format for each piece of content.`,
-  definition: `Focus on term → definition cards.
+  definition: `Focus on term -> definition cards.
 Identify key terms, concepts, formulas, and provide clear, concise definitions.`,
-  qa: `Focus on question → answer cards.
+  qa: `Focus on question -> answer cards.
 Create questions that test understanding of concepts, facts, and processes.
 Questions should start with "What", "Why", "How", "Explain", etc.`,
-  vocabulary: `Focus on word/term → meaning/translation cards.
+  vocabulary: `Focus on word/term -> meaning/translation cards.
 Extract vocabulary, technical terms, abbreviations, and their meanings.`,
 };
 
-function buildPrompt(options: GenerateOptions): string {
+function buildPrompt(options: GenerateOptions) {
   const langName = LANGUAGE_NAMES[options.language];
   const modeInstr = MODE_INSTRUCTIONS[options.mode];
 
@@ -53,110 +70,37 @@ function buildPrompt(options: GenerateOptions): string {
 
 ## Card quality rules
 - Each card must be self-contained and understandable without external context.
-- "front" is the question/term side (concise, clear prompt).
-- "back" is the answer/definition side (complete but concise, max 2-3 sentences).
+- "front" is the question/term side.
+- "back" is the answer/definition side.
+- Prefer meaningful study pairs where the model correctly infers which part is the term and which part is the definition.
 - Avoid duplicate or near-duplicate cards.
-- Avoid trivially obvious or filler content.
-- Prioritize content that has high study/memorization value.
-- For definitions: use clear, textbook-style language.
-- For Q&A: make questions specific, not vague.
-- Assign difficulty: "easy" (basic recall), "medium" (understanding), "hard" (application/analysis).
-- Assign a short category label (1-3 words) based on the topic.
+- Avoid filler content.
+- Assign difficulty: "easy", "medium", or "hard".
+- Assign a short category label (1-3 words).
 - Include the source reference from the chunk metadata.
 
 ## Output format
-Return ONLY a valid JSON array. No markdown, no explanation, no prefix/suffix text.
-Each element must have exactly these fields:
-{
-  "front": "string",
-  "back": "string",
-  "category": "string",
-  "difficulty": "easy" | "medium" | "hard",
-  "source": "string"
-}
-
-## Source material:
+Return ONLY a valid JSON array. No markdown, no prose, no code fences.
 `;
 }
 
-// ── Gemini API call ──────────────────────────────────────────────────────────
-
-const GEMINI_MODEL = "gemini-2.0-flash";
-
-export async function generateFlashcardsWithAI(
-  options: GenerateOptions
-): Promise<GeneratedCard[]> {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not configured");
-  }
-
-  // Build the content from chunks
-  const chunkTexts = options.chunks
-    .map((chunk, i) => `--- Chunk ${i + 1} (${chunk.source}) ---\n${chunk.text}`)
+function buildChunkText(chunks: TextChunk[]) {
+  const joined = chunks
+    .map((chunk, index) => `--- Chunk ${index + 1} (${chunk.source}) ---\n${chunk.text}`)
     .join("\n\n");
 
-  // Limit total text to ~30k chars to stay within token limits
-  const truncatedText =
-    chunkTexts.length > 30000 ? chunkTexts.slice(0, 30000) + "\n...[truncated]" : chunkTexts;
-
-  const prompt = buildPrompt(options) + truncatedText;
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.4,
-          topP: 0.9,
-          maxOutputTokens: 8192,
-          responseMimeType: "application/json",
-        },
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => "");
-    console.error("[Gemini] API error:", response.status, errorBody);
-    throw new Error(`GEMINI_API_ERROR:${response.status}`);
-  }
-
-  const data = await response.json();
-
-  // Extract text from Gemini response
-  const textContent =
-    data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-
-  if (!textContent) {
-    console.error("[Gemini] Empty response:", JSON.stringify(data).slice(0, 500));
-    throw new Error("GEMINI_EMPTY_RESPONSE");
-  }
-
-  // Parse the JSON array from the response
-  const cards = parseGeneratedCards(textContent);
-
-  if (cards.length === 0) {
-    throw new Error("GEMINI_NO_CARDS_GENERATED");
-  }
-
-  return cards;
+  return joined.length > 30_000 ? `${joined.slice(0, 30_000)}\n...[truncated]` : joined;
 }
 
-/**
- * Parse and validate the AI-generated JSON array of cards.
- * Handles cases where the AI wraps the JSON in markdown code fences.
- */
+function extractTextResponse(data: unknown) {
+  if (!data || typeof data !== "object") return "";
+
+  const candidate = (data as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> })
+    .candidates?.[0];
+  return candidate?.content?.parts?.[0]?.text ?? "";
+}
+
 function parseGeneratedCards(raw: string): GeneratedCard[] {
-  // Strip markdown code fences if present
   let cleaned = raw.trim();
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
@@ -167,14 +111,22 @@ function parseGeneratedCards(raw: string): GeneratedCard[] {
     parsed = JSON.parse(cleaned);
   } catch {
     console.error("[Gemini] Failed to parse JSON:", cleaned.slice(0, 200));
-    throw new Error("GEMINI_INVALID_JSON");
+    throw new AIProviderError(
+      "GEMINI_INVALID_JSON",
+      "Gemini returned invalid JSON.",
+      502,
+      cleaned.slice(0, 200)
+    );
   }
 
   if (!Array.isArray(parsed)) {
-    throw new Error("GEMINI_INVALID_FORMAT");
+    throw new AIProviderError(
+      "GEMINI_INVALID_FORMAT",
+      "Gemini returned a non-array payload.",
+      502
+    );
   }
 
-  // Validate and sanitize each card
   const validDifficulties = new Set(["easy", "medium", "hard"]);
 
   return parsed
@@ -192,4 +144,127 @@ function parseGeneratedCards(raw: string): GeneratedCard[] {
       source: String(card.source ?? "").trim(),
     }))
     .filter((card) => card.front.length > 0 && card.back.length > 0);
+}
+
+export async function generateFlashcardsWithAI(
+  options: GenerateOptions
+): Promise<GeneratedCard[]> {
+  const config = getAIConfig();
+  const prompt = `${buildPrompt(options)}\n\n## Source material:\n${buildChunkText(options.chunks)}`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 45_000);
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": config.geminiApiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.4,
+            topP: 0.9,
+            maxOutputTokens: 8192,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                required: ["front", "back", "category", "difficulty", "source"],
+                properties: {
+                  front: { type: "STRING" },
+                  back: { type: "STRING" },
+                  category: { type: "STRING" },
+                  difficulty: {
+                    type: "STRING",
+                    enum: ["easy", "medium", "hard"],
+                  },
+                  source: { type: "STRING" },
+                },
+              },
+            },
+          },
+        }),
+        signal: controller.signal,
+      }
+    );
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new AIProviderError(
+        "GEMINI_TIMEOUT",
+        "Gemini request timed out.",
+        504
+      );
+    }
+    throw new AIProviderError(
+      "GEMINI_API_HTTP_ERROR",
+      "Failed to reach Gemini API.",
+      502,
+      error instanceof Error ? error.message : "Unknown fetch failure"
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    console.error("[Gemini] API error:", response.status, errorBody);
+
+    if (response.status === 429) {
+      throw new AIProviderError(
+        "GEMINI_RATE_LIMITED",
+        "Gemini rate limit exceeded.",
+        429,
+        errorBody.slice(0, 300)
+      );
+    }
+
+    throw new AIProviderError(
+      "GEMINI_API_HTTP_ERROR",
+      `Gemini API returned ${response.status}.`,
+      502,
+      errorBody.slice(0, 300)
+    );
+  }
+
+  const data = await response.json();
+  const blockedReason = (data as { promptFeedback?: { blockReason?: string } })
+    ?.promptFeedback?.blockReason;
+
+  if (blockedReason) {
+    throw new AIProviderError(
+      "GEMINI_PROMPT_BLOCKED",
+      "Gemini blocked the prompt.",
+      422,
+      blockedReason
+    );
+  }
+
+  const textContent = extractTextResponse(data);
+  if (!textContent) {
+    console.error("[Gemini] Empty response:", JSON.stringify(data).slice(0, 500));
+    throw new AIProviderError(
+      "GEMINI_EMPTY_RESPONSE",
+      "Gemini returned an empty response.",
+      502,
+      JSON.stringify(data).slice(0, 300)
+    );
+  }
+
+  const cards = parseGeneratedCards(textContent);
+  if (cards.length === 0) {
+    throw new AIProviderError(
+      "GEMINI_NO_CARDS_GENERATED",
+      "Gemini returned no usable cards.",
+      422
+    );
+  }
+
+  return cards;
 }

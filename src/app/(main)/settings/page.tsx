@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Mail, LockKeyhole, LogOut, ShieldCheck } from "lucide-react";
+import { Mail, LockKeyhole, LogOut, ShieldCheck, UserCog } from "lucide-react";
 import {
   getCurrentProfile,
   getCurrentUser,
@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PreferencesPanel } from "@/components/settings/preferences-panel";
 import { DeleteAccountSection } from "@/components/settings/delete-account-section";
+import { RoleSection } from "@/components/settings/role-section";
+import type { ProfileRole } from "@/types/database";
 
 interface SettingsPageProps {
   searchParams: Promise<{ status?: string; error?: string }>;
@@ -153,6 +155,28 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             </form>
           </section>
 
+          {/* Role management */}
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-violet-500/10 p-3 text-violet-600">
+                <UserCog className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+                  {t("settings.roleTitle")}
+                </h2>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  {t("settings.roleDescription")}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <RoleSection currentRole={(profile?.role as ProfileRole) ?? "student"} />
+            </div>
+          </section>
+
+          {/* Privacy & security */}
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-slate-500/10 p-3 text-slate-600">

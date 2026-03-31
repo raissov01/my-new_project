@@ -27,14 +27,13 @@ function getRoleFromMetadata(metadata: unknown): ProfileRole | null {
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  // DEV MODE: auth disabled — skip all redirects, allow all routes
   if (DEV_MODE) {
     return supabaseResponse;
   }
 
   const pathname = request.nextUrl.pathname;
-  // All /dashboard, /teacher, /student, /sets, /profile, /settings, /guide, /leaderboard, /classes
-  // routes require authentication. Only the landing page and auth routes are public.
+
+  // Routes that require authentication
   const isProtectedRoute =
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
@@ -54,8 +53,11 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/leaderboard/") ||
     pathname === "/classes" ||
     pathname.startsWith("/classes/");
-  const isAuthRoute = pathname === "/login" || pathname === "/signup";
 
+  const isAuthRoute = pathname === "/login" || pathname === "/signup";
+  const isChooseRole = pathname === "/choose-role";
+
+  // Admin bypass
   if (isAdminSessionCookie(request.cookies.get(ADMIN_COOKIE_NAME))) {
     if (isAuthRoute) {
       const url = request.nextUrl.clone();
@@ -92,66 +94,91 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user && isProtectedRoute) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
+    // ── Not logged in ──────────────────────────────────────────────────
+    if (!user) {
+      if (isProtectedRoute || isChooseRole) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/login";
+        return NextResponse.redirect(url);
+      }
+      return supabaseResponse;
     }
 
-    if (user && isAuthRoute) {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-      const role =
-        ((profileData as { role?: ProfileRole } | null)?.role ??
-          getRoleFromMetadata(user.user_metadata) ??
-          "student") as ProfileRole;
+    // ── Logged in: resolve role ────────────────────────────────────────
+    // Only fetch profile when we need role information
+    const needsRoleCheck =
+      isAuthRoute ||
+      isChooseRole ||
+      isProtectedRoute ||
+      pathname === "/dashboard";
+
+    if (!needsRoleCheck) {
+      return supabaseResponse;
+    }
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const role =
+      (profileData as { role?: ProfileRole } | null)?.role ??
+      getRoleFromMetadata(user.user_metadata) ??
+      null; // null = no role yet
+
+    // ── User has NO role: force role selection ─────────────────────────
+    if (!role) {
+      // If already on choose-role, let them through
+      if (isChooseRole) {
+        return supabaseResponse;
+      }
+      // If on auth route, redirect to choose-role (they're logged in but need a role)
+      if (isAuthRoute || isProtectedRoute || pathname === "/dashboard") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/choose-role";
+        return NextResponse.redirect(url);
+      }
+      return supabaseResponse;
+    }
+
+    // ── User HAS a role ────────────────────────────────────────────────
+
+    // Logged-in user on auth route or choose-role → go to dashboard
+    if (isAuthRoute || isChooseRole) {
       const url = request.nextUrl.clone();
       url.pathname = getDefaultAppRoute(role);
       return NextResponse.redirect(url);
     }
 
-    if (user && (pathname === "/teacher" || pathname.startsWith("/teacher/") || pathname === "/student" || pathname.startsWith("/student/") || pathname === "/dashboard")) {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-      const role =
-        ((profileData as { role?: ProfileRole } | null)?.role ??
-          getRoleFromMetadata(user.user_metadata) ??
-          "student") as ProfileRole;
-      const targetHome = getDefaultAppRoute(role);
+    // /dashboard → redirect to role-specific dashboard
+    if (pathname === "/dashboard") {
+      const url = request.nextUrl.clone();
+      url.pathname = getDefaultAppRoute(role);
+      return NextResponse.redirect(url);
+    }
 
-      if (pathname === "/dashboard") {
-        const url = request.nextUrl.clone();
-        url.pathname = targetHome;
-        return NextResponse.redirect(url);
-      }
+    // Prevent students from accessing teacher routes and vice versa
+    if (pathname.startsWith("/teacher/") && role !== "teacher") {
+      const url = request.nextUrl.clone();
+      url.pathname = getDefaultAppRoute(role);
+      return NextResponse.redirect(url);
+    }
 
-      if (pathname.startsWith("/teacher/") && role !== "teacher") {
-        const url = request.nextUrl.clone();
-        url.pathname = targetHome;
-        return NextResponse.redirect(url);
-      }
+    if (pathname.startsWith("/student/") && role !== "student") {
+      const url = request.nextUrl.clone();
+      url.pathname = getDefaultAppRoute(role);
+      return NextResponse.redirect(url);
+    }
 
-      if (pathname.startsWith("/student/") && role !== "student") {
-        const url = request.nextUrl.clone();
-        url.pathname = targetHome;
-        return NextResponse.redirect(url);
-      }
-
-      if (pathname === "/teacher" || pathname === "/student") {
-        const url = request.nextUrl.clone();
-        url.pathname = targetHome;
-        return NextResponse.redirect(url);
-      }
+    // Bare /teacher or /student → redirect to dashboard
+    if (pathname === "/teacher" || pathname === "/student") {
+      const url = request.nextUrl.clone();
+      url.pathname = getDefaultAppRoute(role);
+      return NextResponse.redirect(url);
     }
   } catch {
     // If Supabase is unreachable, let the request through
-    // rather than crashing the middleware.
   }
 
   return supabaseResponse;
