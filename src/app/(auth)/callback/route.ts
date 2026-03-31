@@ -36,21 +36,16 @@ export async function GET(request: Request) {
         }
 
         // New user — ensure a profile row exists.
-        // If a role was passed via URL (from signup form), use it.
-        // Otherwise, pass undefined so the role stays null, forcing /choose-role.
-        const validRole =
-          role === "teacher" || role === "student" ? role : undefined;
+        // If a role was explicitly passed via URL (from email signup form), use it.
+        // Otherwise default to "student" — this covers Google sign-in where no
+        // role selection screen is shown.
+        const validRole: ProfileRole =
+          role === "teacher" || role === "student" ? role : "student";
         await ensureProfile(user, validRole);
 
-        if (validRole) {
-          // Role was pre-selected during signup → go to dashboard
-          return NextResponse.redirect(
-            `${origin}${getDefaultAppRoute(validRole)}`
-          );
-        }
-
-        // No role → middleware will redirect to /choose-role
-        return NextResponse.redirect(`${origin}/choose-role`);
+        return NextResponse.redirect(
+          `${origin}${getDefaultAppRoute(validRole)}`
+        );
       }
 
       if (next) {
