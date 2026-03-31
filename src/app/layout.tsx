@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FlashLearn — Study Smarter",
+  title: "FlashLearn — AI-Ready Education Platform",
   description:
-    "Create, share, and study flashcard sets. Powered by Next.js and Supabase.",
+    "Modern student and teacher learning platform built with Next.js, TypeScript, and a Vercel-ready architecture.",
 };
 
 export default async function RootLayout({

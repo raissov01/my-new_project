@@ -1,38 +1,76 @@
 # Deploy Notes
 
-## Recommended stack
+## Recommended Hosting Setup
 
-- Frontend/app: Vercel Hobby
-- Database/Auth/Storage: Supabase Free
-- Optional Go API: only deploy if you specifically want the standalone leaderboard service
+- Frontend: Vercel
+- Authentication and database: Supabase
+- AI provider later: OpenAI or another LLM provider
+- Optional standalone backend: only if you need one later
 
-## Why this is enough for a small launch
+## Before You Deploy
 
-This app is a standard Next.js App Router project with Supabase-backed auth, database reads/writes, and small avatar uploads. For a private MVP or early launch with around 20 active users, the default Vercel Hobby and Supabase Free tiers are typically enough.
+Make sure these commands work locally:
 
-## Required environment variables in Vercel
+```bash
+npm install
+npm run dev
+npm run build
+```
 
+## Environment Variables For Vercel
+
+Add these in the Vercel project settings:
+
+- `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_BACKEND_URL` only if you deploy the Go backend separately
+- `NEXT_PUBLIC_BACKEND_URL` only if you use a separate backend
+- `OPENAI_API_KEY` only when you add AI features
+- `AI_DOCUMENT_IMPORT_ENABLED` optional, default is `false`
+- `AI_MAX_UPLOAD_MB` optional
 
-## Supabase production settings
+## Step-by-Step Vercel Deployment
 
-In Supabase Dashboard:
+1. Push your code to GitHub.
+2. Open Vercel and create a new project.
+3. Import the GitHub repository.
+4. Confirm that Vercel detects `Next.js`.
+5. Add your environment variables.
+6. Click `Deploy`.
+7. Wait for the first production build to finish.
+8. Open the live domain Vercel gives you.
 
-- Set **Site URL** to your deployed Vercel domain
-- Add `https://your-domain/callback` to **Redirect URLs**
-- Run all SQL files in `supabase/migrations/` if you have not already
-- Make sure the `avatars` storage bucket from `supabase/migrations/009_avatar_storage.sql` exists
+## Supabase Setup After Deploy
 
-## Deploy path
+If you are connecting Supabase:
 
-1. Push the repo to GitHub.
-2. Import the repo into Vercel.
-3. Add the required environment variables.
-4. Trigger a deploy.
-5. Copy the final Vercel URL into Supabase Auth settings.
+1. Open your Supabase project dashboard.
+2. Go to Authentication settings.
+3. Set the site URL to your Vercel production domain.
+4. Add redirect URLs such as:
 
-## Optional Go backend
+```text
+https://your-domain.vercel.app/callback
+```
 
-The app already falls back to a Next.js server action if the Go leaderboard backend is unreachable. That means you can ship the app on Vercel without deploying the Go service first.
+5. Run the SQL files in `supabase/migrations/` if your database is still empty.
+
+## When You Update The App Later
+
+If you push to the connected GitHub branch again, Vercel automatically creates a new deployment.
+
+## Future AI Features
+
+The project is already prepared for future AI document ingestion.
+The placeholder code lives in:
+
+- `src/lib/ai/index.ts`
+- `src/lib/ai/document-import.ts`
+
+Later you can connect:
+
+- PDF upload
+- Word upload
+- text extraction
+- LLM flashcard generation
+- review and approval UI
