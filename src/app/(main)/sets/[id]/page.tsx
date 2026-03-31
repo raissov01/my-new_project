@@ -260,10 +260,10 @@ function StudyModeButton({
     <Link
       href={href}
       prefetch
-      className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors ${
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
         tone === "primary"
-          ? "bg-indigo-600 text-white hover:bg-indigo-700"
-          : "border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]"
+          ? "bg-[linear-gradient(135deg,var(--primary-from),var(--primary-to))] text-white shadow-[0_18px_34px_-24px_rgba(79,124,255,0.8)] hover:-translate-y-0.5"
+          : "border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]"
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -274,11 +274,11 @@ function StudyModeButton({
 
 function StatItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-[var(--bg-surface)] px-4 py-3">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-4">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
         {label}
       </p>
-      <p className="mt-2 text-xl font-semibold text-[var(--text-primary)]">{value}</p>
+      <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }
