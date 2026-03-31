@@ -284,7 +284,7 @@ export async function createSet(
   revalidatePath("/collections");
   revalidatePath("/sets");
   revalidatePath("/leaderboard");
-  redirect("/sets");
+  redirect(`/sets/${set.id}?share=1`);
 }
 
 export async function updateSet(

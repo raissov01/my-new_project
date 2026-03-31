@@ -7,3 +7,4 @@ export { DashboardStats } from "./dashboard-stats";
 export { PersonalizedRecommendations } from "./personalized-recommendations";
 export { SetDetailSkeleton } from "./set-detail-skeleton";
 export { StudyRoutePrefetch } from "./study-route-prefetch";
+export { ShareSetPanel } from "./share-set-panel";

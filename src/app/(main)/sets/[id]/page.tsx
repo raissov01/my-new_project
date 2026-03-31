@@ -18,6 +18,7 @@ import {
   FlashcardList,
   DeleteSetButton,
   StudyRoutePrefetch,
+  ShareSetPanel,
 } from "@/components/flashcards";
 import { formatDate } from "@/lib/utils";
 import { getSetProgress } from "@/app/(main)/sets/progress-actions";
@@ -34,10 +35,15 @@ import type { Database } from "@/types/database";
 
 interface SetDetailPageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ share?: string }>;
 }
 
-export default async function SetDetailPage({ params }: SetDetailPageProps) {
+export default async function SetDetailPage({
+  params,
+  searchParams,
+}: SetDetailPageProps) {
   const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const locale = await getServerLocale();
   const t = createTranslator(locale);
   const supabase = await createClient();
@@ -78,6 +84,7 @@ export default async function SetDetailPage({ params }: SetDetailPageProps) {
   const reviewCount = filterReviewCards(cardsWithProgress).length;
   const primaryLabel =
     reviewCount > 0 ? t("set.reviewSession") : t("set.study");
+  const shouldHighlightShare = resolvedSearchParams?.share === "1";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -180,7 +187,30 @@ export default async function SetDetailPage({ params }: SetDetailPageProps) {
       </div>
 
       {/* Content */}
-      <div className="mt-10 grid gap-8 xl:grid-cols-[0.78fr_1.22fr]">
+      <div className="mt-10 space-y-8">
+        <ShareSetPanel
+          setId={id}
+          title={set.title}
+          description={set.description}
+          isPublic={set.is_public}
+          highlight={shouldHighlightShare}
+          labels={{
+            badge: t("share.badge"),
+            title: t("share.title"),
+            subtitle: t("share.subtitle"),
+            copyLink: t("share.copyLink"),
+            copied: t("share.copied"),
+            nativeShare: t("share.native"),
+            nativeUnavailable: t("share.nativeUnavailable"),
+            whatsapp: t("share.whatsapp"),
+            telegram: t("share.telegram"),
+            openSet: t("share.openSet"),
+            privateHint: t("share.privateHint"),
+            copyFailed: t("share.copyFailed"),
+          }}
+        />
+
+        <div className="grid gap-8 xl:grid-cols-[0.78fr_1.22fr]">
         <div className="space-y-6">
           <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
             <div className="flex items-center gap-2">
@@ -239,6 +269,7 @@ export default async function SetDetailPage({ params }: SetDetailPageProps) {
               }}
             />
           </div>
+        </div>
         </div>
       </div>
     </div>
