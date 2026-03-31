@@ -1,0 +1,117 @@
+package repository
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/midoriya/flashlearn-backend/internal/model"
+)
+
+// Set reads flashcard set data from PostgreSQL.
+type Set struct {
+	pool *pgxpool.Pool
+}
+
+func NewSet(pool *pgxpool.Pool) *Set {
+	return &Set{pool: pool}
+}
+
+func (r *Set) GetOverviewByUserID(ctx context.Context, userID string) ([]model.SetOverview, error) {
+	query := `
+		WITH user_sets AS (
+			SELECT id, title, description, created_at, updated_at
+			FROM public.flashcard_sets
+			WHERE user_id = $1
+		),
+		set_cards AS (
+			SELECT
+				f.set_id,
+				COUNT(*)::int AS card_count
+			FROM public.flashcards f
+			JOIN user_sets us ON us.id = f.set_id
+			GROUP BY f.set_id
+		),
+		set_progress AS (
+			SELECT
+				f.set_id,
+				COALESCE(SUM(sp.times_correct), 0)::int AS total_correct,
+				COALESCE(SUM(sp.times_correct + sp.times_incorrect), 0)::int AS total_attempts,
+				COALESCE(SUM(CASE WHEN sp.is_weak THEN 1 ELSE 0 END), 0)::int AS weak_count,
+				COALESCE(SUM(CASE WHEN sp.next_review_at <= NOW() THEN 1 ELSE 0 END), 0)::int AS due_count,
+				MAX(sp.last_studied_at) AS last_studied_at
+			FROM public.flashcards f
+			JOIN user_sets us ON us.id = f.set_id
+			LEFT JOIN public.study_progress sp
+				ON sp.flashcard_id = f.id
+				AND sp.user_id = $1
+			GROUP BY f.set_id
+		)
+		SELECT
+			us.id,
+			us.title,
+			us.description,
+			us.created_at,
+			us.updated_at,
+			COALESCE(sc.card_count, 0) AS card_count,
+			sp.last_studied_at,
+			CASE
+				WHEN COALESCE(sp.total_attempts, 0) > 0
+					THEN ROUND((sp.total_correct::numeric / sp.total_attempts::numeric) * 100)::int
+				ELSE 0
+			END AS accuracy,
+			COALESCE(sp.weak_count, 0) + COALESCE(sp.due_count, 0) AS review_count,
+			COALESCE(sp.weak_count, 0) AS weak_count,
+			COALESCE(sp.due_count, 0) AS due_count
+		FROM user_sets us
+		LEFT JOIN set_cards sc ON sc.set_id = us.id
+		LEFT JOIN set_progress sp ON sp.set_id = us.id
+		ORDER BY us.updated_at DESC
+	`
+
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get set overview by user id: %w", err)
+	}
+	defer rows.Close()
+
+	var items []model.SetOverview
+	for rows.Next() {
+		var item model.SetOverview
+		var createdAt time.Time
+		var updatedAt time.Time
+		var lastStudiedAt *time.Time
+
+		if err := rows.Scan(
+			&item.ID,
+			&item.Title,
+			&item.Description,
+			&createdAt,
+			&updatedAt,
+			&item.CardCount,
+			&lastStudiedAt,
+			&item.Accuracy,
+			&item.ReviewCount,
+			&item.WeakCount,
+			&item.DueCount,
+		); err != nil {
+			return nil, fmt.Errorf("scan set overview: %w", err)
+		}
+
+		item.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+		item.UpdatedAt = updatedAt.UTC().Format(time.RFC3339)
+		if lastStudiedAt != nil {
+			value := lastStudiedAt.UTC().Format(time.RFC3339)
+			item.LastStudiedAt = &value
+		}
+
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate set overview rows: %w", err)
+	}
+
+	return items, nil
+}

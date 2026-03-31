@@ -14,6 +14,7 @@ type Config struct {
 	DatabaseURL       string
 	SupabaseJWTSecret string // For future JWT verification
 	CORSOrigins       []string
+	InternalAPIToken  string
 	Environment       string // "development" | "production"
 }
 
@@ -26,6 +27,7 @@ func Load() (*Config, error) {
 		Port:              getEnv("PORT", "8080"),
 		DatabaseURL:       os.Getenv("DATABASE_URL"),
 		SupabaseJWTSecret: os.Getenv("SUPABASE_JWT_SECRET"),
+		InternalAPIToken:  os.Getenv("BACKEND_INTERNAL_TOKEN"),
 		Environment:       getEnv("ENVIRONMENT", "development"),
 	}
 

@@ -1,3 +1,4 @@
+import { fetchBackendJson } from "@/lib/backend/server";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import type { Flashcard, FlashcardSet, StudyProgress } from "@/types/database";
 
@@ -19,16 +20,22 @@ function isDueToday(value: string) {
   return new Date(value).getTime() <= Date.now();
 }
 
-export async function getUserSetsOverview(): Promise<UserSetOverview[]> {
-  const user = await getCurrentUser();
-  if (!user) return [];
+async function getUserSetsOverviewFromGo(userId: string) {
+  const response = await fetchBackendJson<{ items: UserSetOverview[] }>({
+    path: "/api/v1/sets/overview",
+    userId,
+  });
 
+  return response.items;
+}
+
+async function getUserSetsOverviewFromSupabase(userId: string): Promise<UserSetOverview[]> {
   const supabase = await createClient();
 
   const { data: setsData } = await supabase
     .from("flashcard_sets")
     .select("id, title, description, created_at, updated_at")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("updated_at", { ascending: false });
 
   const sets = (setsData ?? []) as Pick<
@@ -48,7 +55,7 @@ export async function getUserSetsOverview(): Promise<UserSetOverview[]> {
     supabase
       .from("study_progress")
       .select("*")
-      .eq("user_id", user.id),
+      .eq("user_id", userId),
   ]);
 
   const flashcards = (flashcardsData ?? []) as Flashcard[];
@@ -105,4 +112,16 @@ export async function getUserSetsOverview(): Promise<UserSetOverview[]> {
       dueCount,
     };
   });
+}
+
+export async function getUserSetsOverview(): Promise<UserSetOverview[]> {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  try {
+    return await getUserSetsOverviewFromGo(user.id);
+  } catch (error) {
+    console.warn("[sets-overview] Falling back to Supabase:", error);
+    return await getUserSetsOverviewFromSupabase(user.id);
+  }
 }

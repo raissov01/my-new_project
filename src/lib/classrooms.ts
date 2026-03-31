@@ -75,6 +75,11 @@ export async function getTeacherDashboardSummary(preloadedUserId?: string) {
     .select("*")
     .eq("owner_id", userId)
     .order("created_at", { ascending: false });
+  if (!groupsData) {
+    console.error(
+      "[getTeacherDashboardSummary] Failed to load class_groups. Make sure classroom migrations 011/012/015 are applied in Supabase."
+    );
+  }
   const groups = (groupsData as ClassGroup[] | null) ?? [];
   const groupIds = groups.map((group) => group.id);
 
@@ -226,6 +231,11 @@ export async function getStudentDashboardSummary(preloadedUserId?: string) {
           { data: [] as const },
           { data: [] as const },
         ];
+  if (!groupsResult.data && groupIds.length > 0) {
+    console.error(
+      "[getStudentDashboardSummary] Failed to load class_groups. Make sure classroom migrations 011/012/015 are applied in Supabase."
+    );
+  }
   const groups = (groupsResult.data as ClassGroup[] | null) ?? [];
   const assignments = (assignmentsResult.data as ClassSetAssignment[] | null) ?? [];
   const challenges = (challengesResult.data as ClassChallenge[] | null) ?? [];

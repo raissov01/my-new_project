@@ -78,6 +78,21 @@ function generateJoinCode() {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
 }
 
+function formatClassroomError(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("public.class_groups") ||
+    normalized.includes("public.class_group_members") ||
+    normalized.includes("public.class_challenges") ||
+    normalized.includes("schema cache")
+  ) {
+    return "Supabase classroom tables are missing. Run migrations 011_class_private_rankings.sql, 012_teacher_mode.sql, and 015_class_group_join_code_default.sql.";
+  }
+
+  return message;
+}
+
 async function requireTeacherProfile() {
   const user = await getCurrentUser();
   if (!user) {
@@ -171,7 +186,9 @@ export async function createClassGroup(formData: FormData) {
       name,
       message: error?.message ?? "Unknown insert error",
     });
-    return { error: error?.message ?? "Failed to create class." };
+    return {
+      error: formatClassroomError(error?.message ?? "Failed to create class."),
+    };
   }
 
   const memberRows = [
@@ -196,7 +213,7 @@ export async function createClassGroup(formData: FormData) {
       groupId: group.id,
       message: memberError.message,
     });
-    return { error: memberError.message };
+    return { error: formatClassroomError(memberError.message) };
   }
 
   revalidatePath("/teacher/classes");
@@ -270,7 +287,11 @@ export async function createClassChallenge(formData: FormData) {
     .single();
 
   if (error || !challenge) {
-    return { error: error?.message ?? "Failed to create class challenge." };
+    return {
+      error: formatClassroomError(
+        error?.message ?? "Failed to create class challenge."
+      ),
+    };
   }
 
   revalidatePath("/teacher/challenges");
@@ -325,7 +346,7 @@ export async function joinClassByCode(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: formatClassroomError(error.message) };
   }
 
   revalidatePath("/student/classes");

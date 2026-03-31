@@ -39,6 +39,12 @@ func main() {
 	leaderboardRepo := repository.NewLeaderboard(pool)
 	leaderboardSvc := service.NewLeaderboard(leaderboardRepo)
 	leaderboardHandler := handler.NewLeaderboard(leaderboardSvc, cfg.Environment)
+	profileRepo := repository.NewProfile(pool)
+	profileSvc := service.NewProfile(profileRepo)
+	profileHandler := handler.NewProfile(profileSvc, cfg.Environment)
+	setRepo := repository.NewSet(pool)
+	setSvc := service.NewSet(setRepo)
+	setHandler := handler.NewSet(setSvc, cfg.Environment)
 
 	// ── Routes ──────────────────────────────────────────────────────────────
 	mux := http.NewServeMux()
@@ -51,6 +57,8 @@ func main() {
 
 	// Leaderboard (public read, auth optional for "your rank")
 	mux.HandleFunc("GET /api/v1/leaderboard", middleware.OptionalAuth(leaderboardHandler.GetLeaderboard))
+	mux.HandleFunc("GET /api/v1/me", middleware.InternalAuth(cfg.InternalAPIToken, profileHandler.GetMe))
+	mux.HandleFunc("GET /api/v1/sets/overview", middleware.InternalAuth(cfg.InternalAPIToken, setHandler.GetOverview))
 
 	// Debug: check if required views/tables exist (dev only)
 	if cfg.Environment == "development" {
