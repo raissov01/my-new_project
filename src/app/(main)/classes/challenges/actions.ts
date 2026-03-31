@@ -90,6 +90,7 @@ function formatClassroomError(message: string) {
   const normalized = message.toLowerCase();
 
   if (
+    normalized.includes("infinite recursion detected in policy") ||
     normalized.includes("public.class_groups") ||
     normalized.includes("public.class_set_assignments") ||
     normalized.includes("public.class_group_members") ||
@@ -98,7 +99,7 @@ function formatClassroomError(message: string) {
     normalized.includes("public.class_challenge_attempts") ||
     normalized.includes("schema cache")
   ) {
-    return "Supabase classroom schema is missing or outdated. Run migration 016_classroom_schema_repair.sql.";
+    return "Supabase classroom schema or RLS policies are outdated. Run migrations 016_classroom_schema_repair.sql and 017_classroom_rls_recursion_fix.sql.";
   }
 
   return message;
