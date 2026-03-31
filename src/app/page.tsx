@@ -111,14 +111,11 @@ export default async function LandingPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium uppercase tracking-[0.25em] text-blue-500">
-                    Brand system
+                    Logo
                   </p>
                   <h3 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
-                    Premium identity for web and app
+                    Minimal StudyWithRaissov
                   </h3>
-                </div>
-                <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-300">
-                  New
                 </div>
               </div>
               <div className="mt-5 rounded-3xl border border-slate-200/70 bg-slate-950/95 p-4 dark:border-white/10">
@@ -131,8 +128,7 @@ export default async function LandingPage() {
                 />
               </div>
               <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
-                Distinctive symbol for navbar, favicon, app icon, and social branding with
-                a futuristic violet-to-electric-blue visual system.
+                Navbar, favicon және app icon үшін бірдей таза минимал стиль қолданылды.
               </p>
             </div>
           </div>

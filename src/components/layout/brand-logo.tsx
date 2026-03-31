@@ -25,11 +25,8 @@ export function BrandLogo({
       />
       {showWordmark ? (
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold uppercase tracking-[0.14em] text-[var(--text-primary)] sm:text-base">
+          <p className="truncate text-sm font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-base">
             StudyWithRaissov
-          </p>
-          <p className="truncate text-[11px] text-[var(--text-secondary)] sm:text-xs">
-            Premium learning platform
           </p>
         </div>
       ) : null}

@@ -12,7 +12,7 @@ import {
 import { DEV_MODE } from "@/lib/dev-mode";
 import { createTranslator } from "@/lib/i18n/shared";
 import { getServerLocale } from "@/lib/i18n/server";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { getPublicSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
 import {
   getAdminLogoutCookie,
   getAdminSessionCookie,
@@ -235,12 +235,13 @@ export async function socialLogin(
   }
 
   const supabase = await createClient();
+  const siteUrl = getPublicSiteUrl();
 
   // Store role in redirect URL so callback can pick it up
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/callback?role=${role}`,
+      redirectTo: `${siteUrl}/callback?role=${role}`,
     },
   });
 
