@@ -281,8 +281,10 @@ export async function createSet(
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/collections");
+  revalidatePath("/sets");
   revalidatePath("/leaderboard");
-  redirect(`/sets/${set.id}`);
+  redirect("/sets");
 }
 
 export async function updateSet(

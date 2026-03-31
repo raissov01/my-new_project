@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   Home,
@@ -11,6 +12,8 @@ import {
   HelpCircle,
   UserCircle2,
   Settings,
+  LibraryBig,
+  Layers3,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,8 +25,28 @@ import { DEV_MODE } from "@/lib/dev-mode";
 export function Navbar() {
   const { user, loading } = useAuth();
   const { t } = useLocale();
+  const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const homeHref = user ? "/dashboard" : "/";
+
+  const userNavItems = user
+    ? [
+        { href: homeHref, label: t("nav.home"), icon: Home, exact: false },
+        {
+          href: "/collections",
+          label: t("nav.myCollections"),
+          icon: Layers3,
+          exact: true,
+        },
+        {
+          href: "/sets",
+          label: t("nav.flashcardLibrary"),
+          icon: LibraryBig,
+          exact: false,
+        },
+        { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
+      ]
+    : [{ href: homeHref, label: t("nav.home"), icon: Home, exact: true }];
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -53,29 +76,24 @@ export function Navbar() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between sm:h-16">
             {/* Logo + nav links */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href={homeHref}
-            className="flex items-center gap-2 text-lg font-bold sm:text-xl"
-          >
-            <BrandLogo compact />
-          </Link>
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href={homeHref}
-                className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] sm:inline-flex"
+                className="flex items-center gap-2 text-lg font-bold sm:text-xl"
               >
-                <Home className="h-4 w-4" />
-                {t("nav.home")}
+                <BrandLogo compact />
               </Link>
-              {user && (
-                <Link
-                  href="/guide"
-                  className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] sm:inline-flex"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                  {t("nav.guide")}
-                </Link>
-              )}
+              <div className="hidden items-center gap-2 xl:flex">
+                {userNavItems.map((item) => (
+                  <DesktopNavLink
+                    key={item.href}
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    active={isActivePath(pathname, item.href, item.exact)}
+                  />
+                ))}
+              </div>
               {DEV_MODE && (
                 <span className="rounded-full bg-gradient-to-r from-amber-400/20 to-orange-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 sm:px-2.5 sm:text-[11px]">
                   {t("nav.dev")}
@@ -170,30 +188,30 @@ export function Navbar() {
               {/* Drawer body */}
               <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
                 <div className="space-y-1">
-                  <DrawerLink
-                    href={homeHref}
-                    icon={Home}
-                    label={t("nav.home")}
-                    onClick={() => setDrawerOpen(false)}
-                  />
+                  {userNavItems.map((item) => (
+                    <DrawerLink
+                      key={item.href}
+                      href={item.href}
+                      icon={item.icon}
+                      label={item.label}
+                      active={isActivePath(pathname, item.href, item.exact)}
+                      onClick={() => setDrawerOpen(false)}
+                    />
+                  ))}
                   {user && (
                     <>
                       <DrawerLink
                         href="/dashboard#study-today"
                         icon={GraduationCap}
                         label={t("nav.startStudy")}
+                        active={false}
                         onClick={() => setDrawerOpen(false)}
                       />
                       <DrawerLink
                         href="/sets/new"
                         icon={Plus}
                         label={t("nav.newSet")}
-                        onClick={() => setDrawerOpen(false)}
-                      />
-                      <DrawerLink
-                        href="/guide"
-                        icon={HelpCircle}
-                        label={t("nav.guide")}
+                        active={pathname === "/sets/new"}
                         onClick={() => setDrawerOpen(false)}
                       />
 
@@ -203,12 +221,14 @@ export function Navbar() {
                         href="/profile"
                         icon={UserCircle2}
                         label={t("nav.profile")}
+                        active={pathname === "/profile"}
                         onClick={() => setDrawerOpen(false)}
                       />
                       <DrawerLink
                         href="/settings"
                         icon={Settings}
                         label={t("nav.settings")}
+                        active={pathname === "/settings"}
                         onClick={() => setDrawerOpen(false)}
                       />
                     </>
@@ -251,24 +271,64 @@ export function Navbar() {
   );
 }
 
+function isActivePath(pathname: string, href: string, exact = false) {
+  if (exact) return pathname === href;
+  if (href === "/dashboard") return pathname === "/dashboard";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function DesktopNavLink({
+  href,
+  icon: Icon,
+  label,
+  active,
+}: {
+  href: string;
+  icon: typeof Home;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+        active
+          ? "border-indigo-500/30 bg-indigo-500/10 text-[var(--text-primary)]"
+          : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Link>
+  );
+}
+
 function DrawerLink({
   href,
   icon: Icon,
   label,
+  active,
   onClick,
 }: {
   href: string;
   icon: typeof Home;
   label: string;
+  active: boolean;
   onClick: () => void;
 }) {
   return (
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] active:bg-[var(--bg-surface)]"
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors active:bg-[var(--bg-surface)] ${
+        active
+          ? "bg-indigo-500/10 text-[var(--text-primary)]"
+          : "text-[var(--text-primary)] hover:bg-[var(--bg-surface)]"
+      }`}
     >
-      <Icon className="h-5 w-5 text-[var(--text-secondary)]" />
+      <Icon className={`h-5 w-5 ${active ? "text-indigo-500" : "text-[var(--text-secondary)]"}`} />
       {label}
     </Link>
   );

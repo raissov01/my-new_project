@@ -77,7 +77,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
-            {t("nav.mySets")}
+            {t("nav.flashcardLibrary")}
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--text-primary)]">
             {t("sets.title")}
@@ -88,6 +88,11 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
         </div>
 
         <div className="flex flex-wrap gap-3">
+          <Link href="/collections">
+            <Button size="lg" variant="outline">
+              {t("nav.myCollections")}
+            </Button>
+          </Link>
           <Link href={quickStartHref}>
             <Button size="lg" variant="outline">
               <GraduationCap className="h-4 w-4" />
