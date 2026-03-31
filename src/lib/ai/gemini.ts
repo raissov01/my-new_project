@@ -19,6 +19,8 @@ export type GenerateOptions = {
   cardCount: number;
 };
 
+const FALLBACK_GEMINI_MODEL = "gemini-2.5-flash";
+
 export class AIProviderError extends Error {
   constructor(
     public code:
@@ -37,6 +39,29 @@ export class AIProviderError extends Error {
   ) {
     super(message);
   }
+}
+
+function shouldRetryWithFallbackModel(
+  configuredModel: string,
+  responseStatus: number,
+  errorBody: string
+) {
+  if (configuredModel === FALLBACK_GEMINI_MODEL) {
+    return false;
+  }
+
+  if (responseStatus !== 400 && responseStatus !== 404) {
+    return false;
+  }
+
+  const body = errorBody.toLowerCase();
+  return (
+    body.includes("not found") ||
+    body.includes("deprecated") ||
+    body.includes("unsupported") ||
+    body.includes("is not found") ||
+    body.includes("models/")
+  );
 }
 
 const LANGUAGE_NAMES: Record<GenerationLanguage, string> = {
@@ -146,24 +171,23 @@ function parseGeneratedCards(raw: string): GeneratedCard[] {
     .filter((card) => card.front.length > 0 && card.back.length > 0);
 }
 
-export async function generateFlashcardsWithAI(
-  options: GenerateOptions
-): Promise<GeneratedCard[]> {
-  const config = getAIConfig();
-  const prompt = `${buildPrompt(options)}\n\n## Source material:\n${buildChunkText(options.chunks)}`;
-
+async function requestGemini(
+  prompt: string,
+  geminiApiKey: string,
+  model: string
+) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 45_000);
 
   let response: Response;
   try {
     response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         method: "POST",
         headers: {
+          "x-goog-api-key": geminiApiKey,
           "Content-Type": "application/json",
-          "x-goog-api-key": config.geminiApiKey,
         },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
@@ -193,7 +217,7 @@ export async function generateFlashcardsWithAI(
         }),
         signal: controller.signal,
       }
-    );
+      );
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new AIProviderError(
@@ -210,6 +234,31 @@ export async function generateFlashcardsWithAI(
     );
   } finally {
     clearTimeout(timeout);
+  }
+
+  return response;
+}
+
+export async function generateFlashcardsWithAI(
+  options: GenerateOptions
+): Promise<GeneratedCard[]> {
+  const config = getAIConfig();
+  const prompt = `${buildPrompt(options)}\n\n## Source material:\n${buildChunkText(options.chunks)}`;
+
+  let response = await requestGemini(prompt, config.geminiApiKey, config.geminiModel);
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    if (shouldRetryWithFallbackModel(config.geminiModel, response.status, errorBody)) {
+      console.warn("[Gemini] Retrying with fallback model:", {
+        configuredModel: config.geminiModel,
+        fallbackModel: FALLBACK_GEMINI_MODEL,
+        status: response.status,
+      });
+      response = await requestGemini(prompt, config.geminiApiKey, FALLBACK_GEMINI_MODEL);
+    } else {
+      console.error("[Gemini] API error:", response.status, errorBody);
+    }
   }
 
   if (!response.ok) {

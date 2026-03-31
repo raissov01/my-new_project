@@ -1,4 +1,4 @@
-const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash-001";
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 const DEFAULT_MAX_UPLOAD_MB = 20;
 
 export type AIConfig = {
