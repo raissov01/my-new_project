@@ -26,9 +26,9 @@ const variantStyles: Record<Variant, string> = {
 };
 
 const sizeStyles: Record<Size, string> = {
-  sm: "h-10 rounded-xl px-4 text-sm",
-  md: "h-11 rounded-2xl px-4 text-sm",
-  lg: "h-12 rounded-2xl px-5 text-[15px]",
+  sm: "min-h-10 rounded-xl px-3.5 text-sm sm:px-4",
+  md: "min-h-10 rounded-xl px-4 text-sm sm:min-h-11 sm:rounded-2xl",
+  lg: "min-h-11 rounded-2xl px-4 text-sm sm:min-h-12 sm:px-5 sm:text-[15px]",
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -49,7 +49,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={cn(
-          "click-scale ui-interactive inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium tracking-[-0.01em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(99,91,255,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)] disabled:pointer-events-none disabled:opacity-50",
+          "click-scale ui-interactive inline-flex items-center justify-center gap-2 whitespace-nowrap text-center font-medium tracking-[-0.01em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(99,91,255,0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)] disabled:pointer-events-none disabled:opacity-50",
           variantStyles[variant],
           sizeStyles[size],
           className

@@ -8,11 +8,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-main px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-main px-4 py-4 sm:px-5 sm:py-6 lg:px-8">
       <div className="mx-auto flex max-w-6xl justify-end">
         <LanguageSwitcher />
       </div>
-      <div className="mx-auto mt-6 grid min-h-[calc(100vh-5.5rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="mx-auto mt-4 grid min-h-[calc(100vh-4.75rem)] max-w-6xl items-start gap-6 sm:mt-6 sm:gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <div className="hidden rounded-[2rem] border border-[var(--border)] bg-[var(--bg-surface)] p-8 shadow-[var(--surface-shadow-strong)] lg:block lg:p-10">
           <Link href="/" className="inline-flex items-center">
             <BrandLogo />
@@ -47,7 +47,7 @@ export default function AuthLayout({
         </div>
 
         <div className="w-full">
-          <div className="mb-6 flex justify-center lg:hidden">
+          <div className="mb-4 flex justify-center lg:hidden">
             <Link href="/" className="inline-flex items-center">
               <BrandLogo />
             </Link>

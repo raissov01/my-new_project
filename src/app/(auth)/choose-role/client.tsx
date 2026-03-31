@@ -40,12 +40,12 @@ export function ChooseRoleClient() {
   const isTeacherSelected = selectedRole === "teacher";
 
   return (
-    <div className="animate-scale-in rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-7 shadow-[var(--surface-shadow-strong)] sm:p-8">
+    <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
       <div className="text-center">
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
           Onboarding
         </p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+        <h1 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:mt-4 sm:text-3xl">
           {t("role.chooseTitle")}
         </h1>
         <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
@@ -53,13 +53,13 @@ export function ChooseRoleClient() {
         </p>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-3.5 sm:mt-8 sm:grid-cols-2 sm:gap-4">
         {/* ── Student card ──────────────────────────────────────────── */}
         <button
           type="button"
           onClick={() => handleSelect("student")}
           disabled={isPending}
-          className={`group relative flex w-full cursor-pointer flex-col items-start rounded-[1.5rem] border-2 p-6 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
+          className={`group relative flex w-full cursor-pointer flex-col items-start rounded-[1.5rem] border-2 p-4 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 sm:p-6 ${
             isStudentSelected
               ? "border-indigo-500 bg-indigo-500/10 shadow-[0_0_24px_-6px_rgba(99,91,255,0.35)] ring-1 ring-indigo-500/30"
               : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-elevated)]"
@@ -78,18 +78,18 @@ export function ChooseRoleClient() {
 
           {/* Icon */}
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 ${
+            className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200 sm:h-14 sm:w-14 ${
               isStudentSelected
                 ? "bg-indigo-500/20 text-indigo-400 shadow-sm"
                 : "bg-[var(--bg-elevated)] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
             }`}
           >
-            <GraduationCap className="h-7 w-7" />
+            <GraduationCap className="h-6 w-6 sm:h-7 sm:w-7" />
           </div>
 
           {/* Text */}
           <h3
-            className={`mt-5 text-xl font-semibold tracking-[-0.03em] transition-colors duration-200 ${
+            className={`mt-4 text-lg font-semibold tracking-[-0.03em] transition-colors duration-200 sm:mt-5 sm:text-xl ${
               isStudentSelected ? "text-indigo-400" : "text-[var(--text-primary)]"
             }`}
           >
@@ -105,7 +105,7 @@ export function ChooseRoleClient() {
           type="button"
           onClick={() => handleSelect("teacher")}
           disabled={isPending}
-          className={`group relative flex w-full cursor-pointer flex-col items-start rounded-[1.5rem] border-2 p-6 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
+          className={`group relative flex w-full cursor-pointer flex-col items-start rounded-[1.5rem] border-2 p-4 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 sm:p-6 ${
             isTeacherSelected
               ? "border-emerald-500 bg-emerald-500/10 shadow-[0_0_24px_-6px_rgba(16,185,129,0.35)] ring-1 ring-emerald-500/30"
               : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-elevated)]"
@@ -124,18 +124,18 @@ export function ChooseRoleClient() {
 
           {/* Icon */}
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 ${
+            className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200 sm:h-14 sm:w-14 ${
               isTeacherSelected
                 ? "bg-emerald-500/20 text-emerald-400 shadow-sm"
                 : "bg-[var(--bg-elevated)] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
             }`}
           >
-            <ShieldCheck className="h-7 w-7" />
+            <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7" />
           </div>
 
           {/* Text */}
           <h3
-            className={`mt-5 text-xl font-semibold tracking-[-0.03em] transition-colors duration-200 ${
+            className={`mt-4 text-lg font-semibold tracking-[-0.03em] transition-colors duration-200 sm:mt-5 sm:text-xl ${
               isTeacherSelected ? "text-emerald-400" : "text-[var(--text-primary)]"
             }`}
           >
@@ -147,7 +147,7 @@ export function ChooseRoleClient() {
         </button>
       </div>
 
-      <p className="mt-5 text-center text-xs text-[var(--text-muted)]">
+      <p className="mt-4 text-center text-xs leading-5 text-[var(--text-muted)] sm:mt-5">
         {t("role.changeableHint")}
       </p>
 
@@ -160,7 +160,7 @@ export function ChooseRoleClient() {
 
       <Button
         size="lg"
-        className="mt-6 w-full"
+        className="mt-5 w-full sm:mt-6"
         onClick={handleContinue}
         disabled={!selectedRole || isPending}
         isLoading={isPending}

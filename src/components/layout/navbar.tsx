@@ -73,13 +73,13 @@ export function Navbar() {
   return (
     <>
       <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--glass-bg)] backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+        <div className="page-shell">
+          <div className="flex h-14 items-center justify-between gap-3 sm:h-16 sm:gap-4">
             {/* Logo + nav links */}
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
               <Link
                 href={homeHref}
-                className="shrink-0 rounded-2xl px-1 py-1"
+                className="shrink-0 rounded-2xl px-0.5 py-1 sm:px-1"
               >
                 <BrandLogo compact />
               </Link>
@@ -148,7 +148,7 @@ export function Navbar() {
             {/* Mobile: hamburger only */}
             <div className="flex items-center lg:hidden">
               <button
-                className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-2.5 text-[var(--text-secondary)] shadow-[var(--surface-shadow)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
+                className="tap-target rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] shadow-[var(--surface-shadow)] transition-colors hover:text-[var(--text-primary)] active:scale-95 sm:p-2.5"
                 onClick={() => setDrawerOpen(true)}
                 aria-label={t("nav.toggleMenu")}
               >
@@ -169,13 +169,13 @@ export function Navbar() {
             aria-hidden="true"
           />
           {/* Drawer panel */}
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-[min(20rem,85vw)] animate-slide-in-drawer">
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-[min(19rem,88vw)] animate-slide-in-drawer sm:max-w-[min(20rem,85vw)]">
             <div className="flex h-full w-full flex-col border-l border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--surface-shadow-strong)]">
               {/* Drawer header */}
-              <div className="flex h-16 items-center justify-between border-b border-[var(--border)] px-4 sm:px-5">
+              <div className="flex h-14 items-center justify-between border-b border-[var(--border)] px-4 sm:h-16 sm:px-5">
                 <BrandLogo compact />
                 <button
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
+                  className="tap-target rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
                   onClick={() => setDrawerOpen(false)}
                   aria-label={t("aria.closeMenu")}
                 >
@@ -213,7 +213,7 @@ export function Navbar() {
                         onClick={() => setDrawerOpen(false)}
                       />
 
-                      <div className="my-3 border-t border-[var(--border)]" />
+                      <div className="my-4 border-t border-[var(--border)]" />
 
                       <DrawerLink
                         href="/profile"
@@ -234,7 +234,7 @@ export function Navbar() {
                 </div>
 
                 {!user && !DEV_MODE && (
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-5 space-y-2.5">
                     <Link
                       href="/login"
                       onClick={() => setDrawerOpen(false)}
@@ -257,7 +257,7 @@ export function Navbar() {
 
               {/* Drawer footer - avatar menu area */}
               {user && (
-                <div className="border-t border-[var(--border)] px-4 py-4 sm:px-5">
+                <div className="safe-bottom border-t border-[var(--border)] px-4 py-4 sm:px-5">
                   <AvatarMenu />
                 </div>
               )}
@@ -320,7 +320,7 @@ function DrawerLink({
       href={href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:bg-[var(--bg-surface)] ${
+      className={`flex min-h-11 items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:bg-[var(--bg-surface)] ${
         active
           ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] text-[var(--text-primary)]"
           : "border-transparent text-[var(--text-primary)] hover:border-[var(--border)] hover:bg-[var(--bg-surface)]"

@@ -12,10 +12,13 @@ import (
 type Config struct {
 	Port              string
 	DatabaseURL       string
-	SupabaseJWTSecret string // For future JWT verification
+	SupabaseJWTSecret string
 	CORSOrigins       []string
 	InternalAPIToken  string
 	Environment       string // "development" | "production"
+	GeminiAPIKey      string
+	GeminiModel       string
+	MaxUploadBytes    int64
 }
 
 // Load reads environment variables (with optional .env file) and returns Config.
@@ -29,6 +32,9 @@ func Load() (*Config, error) {
 		SupabaseJWTSecret: os.Getenv("SUPABASE_JWT_SECRET"),
 		InternalAPIToken:  os.Getenv("BACKEND_INTERNAL_TOKEN"),
 		Environment:       getEnv("ENVIRONMENT", "development"),
+		GeminiAPIKey:      os.Getenv("GEMINI_API_KEY"),
+		GeminiModel:       getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
+		MaxUploadBytes:    20 * 1024 * 1024, // 20 MB
 	}
 
 	// Parse CORS origins

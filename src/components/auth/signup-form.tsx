@@ -57,11 +57,11 @@ export function SignupForm() {
   // Success message screen
   if (message) {
     return (
-      <div className="animate-confetti-pop rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-8 text-center shadow-[var(--surface-shadow-strong)]">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-md shadow-emerald-500/20">
+      <div className="animate-confetti-pop rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 text-center shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-md shadow-emerald-500/20 sm:h-14 sm:w-14">
           <CheckCircle2 className="h-7 w-7 text-white" />
         </div>
-        <h2 className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">{t("auth.checkEmail")}</h2>
+        <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mt-5 sm:text-2xl">{t("auth.checkEmail")}</h2>
         <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{message}</p>
         <Link href="/login" className="mt-6 inline-block text-sm font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
           {t("auth.backToLogin")}
@@ -71,22 +71,22 @@ export function SignupForm() {
   }
 
   return (
-    <div className="animate-scale-in rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-7 shadow-[var(--surface-shadow-strong)] sm:p-8">
-      <div className="mb-8 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+      <div className="mb-6 text-center sm:mb-8">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] sm:h-12 sm:w-12">
           <ShieldCheck className="h-5 w-5 text-indigo-400" />
         </div>
-        <h1 className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{t("auth.createAccount")}</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:mt-5 sm:text-3xl">{t("auth.createAccount")}</h1>
         <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{t("auth.startStudying")}</p>
       </div>
 
-      <fieldset className="mb-7 space-y-3">
+      <fieldset className="mb-6 space-y-3 sm:mb-7">
         <legend className="text-sm font-medium text-[var(--text-primary)]">
           {t("auth.role")}
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all ${
+            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-all sm:p-4 ${
               selectedRole === "student"
                 ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--surface-shadow)]"
                 : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
@@ -101,7 +101,7 @@ export function SignupForm() {
               disabled={isDisabled}
               className="sr-only"
             />
-            <div className={`mt-0.5 rounded-xl p-2.5 ${selectedRole === "student" ? "bg-indigo-500/15 text-indigo-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
+            <div className={`mt-0.5 rounded-xl p-2 sm:p-2.5 ${selectedRole === "student" ? "bg-indigo-500/15 text-indigo-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
               <GraduationCap className="h-5 w-5" />
             </div>
             <div>
@@ -112,7 +112,7 @@ export function SignupForm() {
             </div>
           </label>
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all ${
+            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-all sm:p-4 ${
               selectedRole === "teacher"
                 ? "border-emerald-500/30 bg-emerald-500/6 shadow-[var(--surface-shadow)]"
                 : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
@@ -127,7 +127,7 @@ export function SignupForm() {
               disabled={isDisabled}
               className="sr-only"
             />
-            <div className={`mt-0.5 rounded-xl p-2.5 ${selectedRole === "teacher" ? "bg-emerald-500/15 text-emerald-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
+            <div className={`mt-0.5 rounded-xl p-2 sm:p-2.5 ${selectedRole === "teacher" ? "bg-emerald-500/15 text-emerald-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
@@ -145,7 +145,7 @@ export function SignupForm() {
           type="button"
           onClick={() => handleSocial("google")}
           disabled={isDisabled}
-          className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex min-h-11 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12"
         >
           <GoogleIcon className="h-5 w-5" />
           {socialPending === "google" ? "..." : t("auth.continueWithGoogle")}
@@ -156,7 +156,7 @@ export function SignupForm() {
         {t("auth.googleStudentHint")}
       </p>
 
-      <div className="relative my-7">
+      <div className="relative my-6 sm:my-7">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-[var(--border)]" />
         </div>
@@ -167,7 +167,7 @@ export function SignupForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
         <Input id="full_name" name="full_name" type="text" label={t("auth.fullName")} placeholder={t("auth.fullNamePlaceholder")} required autoComplete="name" disabled={isDisabled} />
         <Input id="username" name="username" type="text" label={t("auth.username")} placeholder={t("auth.usernamePlaceholder")} required autoComplete="username" disabled={isDisabled} />
         <Input id="email" name="email" type="email" label={t("auth.email")} placeholder={t("auth.emailPlaceholder")} required autoComplete="email" disabled={isDisabled} />
@@ -188,7 +188,7 @@ export function SignupForm() {
         </Button>
       </form>
 
-      <p className="mt-7 text-center text-sm text-[var(--text-muted)]">
+      <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("auth.haveAccount")}{" "}
         <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
           {t("auth.logIn")}

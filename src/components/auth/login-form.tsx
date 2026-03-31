@@ -50,12 +50,12 @@ export function LoginForm() {
   const isDisabled = isPending || !!socialPending;
 
   return (
-    <div className="animate-scale-in rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-7 shadow-[var(--surface-shadow-strong)] sm:p-8">
-      <div className="mb-8 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+      <div className="mb-6 text-center sm:mb-8">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] sm:h-12 sm:w-12">
           <GoogleIcon className="h-5 w-5" />
         </div>
-        <h1 className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+        <h1 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:mt-5 sm:text-3xl">
           {t("auth.welcomeBack")}
         </h1>
         <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
@@ -68,14 +68,14 @@ export function LoginForm() {
           type="button"
           onClick={() => handleSocial("google")}
           disabled={isDisabled}
-          className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex min-h-11 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12"
         >
           <GoogleIcon className="h-5 w-5" />
           {socialPending === "google" ? "..." : t("auth.continueWithGoogle")}
         </button>
       </div>
 
-      <div className="relative my-7">
+      <div className="relative my-6 sm:my-7">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-[var(--border)]" />
         </div>
@@ -86,7 +86,7 @@ export function LoginForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
         <Input
           id="email"
           name="email"
@@ -120,7 +120,7 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <p className="mt-7 text-center text-sm text-[var(--text-muted)]">
+      <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("auth.noAccount")}{" "}
         <Link href="/signup" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
           {t("auth.signUp")}

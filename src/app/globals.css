@@ -186,7 +186,44 @@ body {
 }
 
 .ui-section {
-  padding: 1.5rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .ui-section {
+    padding: 1.5rem;
+  }
+}
+
+.page-shell {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .page-shell {
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .page-shell {
+    padding-inline: 1.5rem;
+  }
+}
+
+.mobile-panel {
+  border-radius: 1.4rem;
+  padding: 1.1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-panel {
+    border-radius: 1.75rem;
+    padding: 1.5rem;
+  }
 }
 
 .ui-subtle {
