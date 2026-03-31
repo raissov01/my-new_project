@@ -137,7 +137,7 @@ export default async function LandingPage() {
         </section>
 
         <section className="border-t border-[var(--border)]">
-          <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 sm:py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <div className="max-w-2xl">
               <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
                 Core product areas
@@ -169,7 +169,7 @@ export default async function LandingPage() {
         </section>
 
         <section className="border-t border-[var(--border)] bg-[var(--bg-surface)]">
-          <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 sm:py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <div className="grid gap-6 lg:grid-cols-2">
               <AudienceCard
                 title="For students"
@@ -194,7 +194,7 @@ export default async function LandingPage() {
         </section>
 
         <section className="border-t border-[var(--border)]">
-          <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 sm:py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-10 shadow-[var(--surface-shadow-strong)] sm:px-10 sm:py-12">
               <div className="max-w-3xl">
                 <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">

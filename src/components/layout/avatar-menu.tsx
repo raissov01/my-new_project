@@ -165,7 +165,7 @@ export function AvatarMenu() {
           className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] active:bg-[var(--bg-surface)]"
         >
           <span className="flex items-center gap-3">
-            <UserCircle2 className="h-4.5 w-4.5 text-indigo-500" />
+            <UserCircle2 className="h-4 w-4 text-indigo-500" />
             {t("nav.profile")}
           </span>
         </Link>
@@ -176,7 +176,7 @@ export function AvatarMenu() {
           className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] active:bg-[var(--bg-surface)]"
         >
           <span className="flex items-center gap-3">
-            <Settings className="h-4.5 w-4.5 text-sky-500" />
+            <Settings className="h-4 w-4 text-sky-500" />
             {t("nav.settings")}
           </span>
         </Link>
@@ -197,7 +197,7 @@ export function AvatarMenu() {
         className="mt-3 flex w-full items-center justify-between rounded-2xl border border-red-500/10 bg-red-500/5 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 active:bg-red-500/15 disabled:opacity-60"
       >
         <span className="flex items-center gap-3">
-          <LogOut className="h-4.5 w-4.5" />
+          <LogOut className="h-4 w-4" />
           {loggingOut ? t("nav.loggingOut") : t("nav.logOut")}
         </span>
       </button>

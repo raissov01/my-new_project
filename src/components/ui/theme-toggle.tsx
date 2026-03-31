@@ -46,9 +46,9 @@ export function ThemeToggle({
           )}
         >
           {theme === "dark" ? (
-            <Sun className="h-4.5 w-4.5" />
+            <Sun className="h-4 w-4" />
           ) : (
-            <MoonStar className="h-4.5 w-4.5" />
+            <MoonStar className="h-4 w-4" />
           )}
         </span>
       </button>
