@@ -24,6 +24,19 @@ function getRoleFromMetadata(metadata: unknown): ProfileRole | null {
   return null;
 }
 
+function getAuthProvider(metadata: unknown): string | null {
+  if (
+    metadata &&
+    typeof metadata === "object" &&
+    "provider" in metadata &&
+    typeof (metadata as { provider?: unknown }).provider === "string"
+  ) {
+    return (metadata as { provider: string }).provider;
+  }
+
+  return null;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -129,6 +142,38 @@ export async function updateSession(request: NextRequest) {
 
     // ── User has NO role: force role selection ─────────────────────────
     if (!role) {
+      const provider = getAuthProvider(user.app_metadata);
+
+      if (provider === "google") {
+        const fullName =
+          typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()
+            ? user.user_metadata.full_name.trim()
+            : typeof user.user_metadata?.name === "string" && user.user_metadata.name.trim()
+              ? user.user_metadata.name.trim()
+              : user.email?.split("@")[0] ?? `user_${user.id.slice(0, 8)}`;
+        const username =
+          typeof user.user_metadata?.username === "string" && user.user_metadata.username.trim()
+            ? user.user_metadata.username.trim()
+            : fullName;
+
+        await supabase.from("profiles").upsert(
+          {
+            id: user.id,
+            email: user.email ?? "",
+            full_name: fullName,
+            username,
+            role: "student",
+            streak_days: 0,
+            points: 0,
+          },
+          { onConflict: "id" }
+        );
+
+        const url = request.nextUrl.clone();
+        url.pathname = "/student/dashboard";
+        return NextResponse.redirect(url);
+      }
+
       // If already on choose-role, let them through
       if (isChooseRole) {
         return supabaseResponse;

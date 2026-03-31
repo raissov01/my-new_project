@@ -44,7 +44,7 @@ export function SignupForm() {
     setError(null);
     setSocialPending(provider);
     startTransition(async () => {
-      const result = await socialLogin(provider, selectedRole);
+      const result = await socialLogin(provider);
       if (result?.error) {
         setError(result.error);
         setSocialPending(null);
@@ -153,7 +153,7 @@ export function SignupForm() {
       </div>
 
       <p className="mt-3 text-center text-xs text-[var(--text-muted)]">
-        {t("auth.socialLoginHint")}
+        {t("auth.googleStudentHint")}
       </p>
 
       <div className="relative my-7">

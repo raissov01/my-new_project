@@ -9,6 +9,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const next = searchParams.get("next");
   const role = searchParams.get("role") as ProfileRole | null;
+  const provider = searchParams.get("provider");
 
   if (DEV_MODE) {
     return NextResponse.redirect(`${origin}/student/dashboard`);
@@ -40,7 +41,11 @@ export async function GET(request: Request) {
         // Otherwise default to "student" — this covers Google sign-in where no
         // role selection screen is shown.
         const validRole: ProfileRole =
-          role === "teacher" || role === "student" ? role : "student";
+          role === "teacher" || role === "student"
+            ? role
+            : provider === "google"
+              ? "student"
+              : "student";
         await ensureProfile(user, validRole);
 
         return NextResponse.redirect(

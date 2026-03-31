@@ -29,6 +29,23 @@ type ProfilesTable = {
 
 const VALID_ROLES = new Set<ProfileRole>(["student", "teacher"]);
 
+function getAuthProvider(
+  user:
+    | (Pick<User, "id" | "email"> & {
+        app_metadata?: User["app_metadata"];
+        user_metadata?: User["user_metadata"];
+      })
+    | null
+    | undefined
+) {
+  const provider =
+    typeof user?.app_metadata?.provider === "string"
+      ? user.app_metadata.provider
+      : null;
+
+  return provider;
+}
+
 function getRoleFromMetadata(
   user:
     | (Pick<User, "id" | "email"> & { user_metadata?: User["user_metadata"] })
@@ -117,7 +134,12 @@ export async function ensureProfile(
     typeof user.user_metadata?.username === "string" && user.user_metadata.username.trim()
       ? user.user_metadata.username.trim()
       : fullName;
-  const role = roleOverride ?? getRoleFromMetadata(user);
+  const metadataRole = getRoleFromMetadata(user);
+  const authProvider = getAuthProvider(user);
+  const role =
+    roleOverride ??
+    metadataRole ??
+    (authProvider === "google" ? "student" : undefined);
 
   await profilesTable.upsert(
     {
@@ -170,6 +192,49 @@ export async function createProfileForSignup(params: {
   }
 
   return { error: null as string | null };
+}
+
+export async function upsertCurrentUserRole(role: ProfileRole) {
+  const user = await getCurrentUser();
+
+  if (!user || DEV_MODE || user.email === ADMIN_USER.email) {
+    return { error: "not-authenticated" as string | null };
+  }
+
+  const supabase = await createClient();
+  const profilesTable = supabase.from("profiles") as never as ProfilesTable;
+  const existingProfile = await getCurrentProfile(user);
+  const userMetadata =
+    "user_metadata" in user && user.user_metadata && typeof user.user_metadata === "object"
+      ? (user.user_metadata as { full_name?: unknown; username?: unknown })
+      : null;
+  const fullName =
+    existingProfile?.full_name ??
+    (typeof userMetadata?.full_name === "string" && userMetadata.full_name.trim()
+      ? userMetadata.full_name.trim()
+      : typeof userMetadata?.username === "string" && userMetadata.username.trim()
+        ? userMetadata.username.trim()
+        : user.email?.split("@")[0] ?? `user_${user.id.slice(0, 8)}`);
+  const username =
+    existingProfile?.username ??
+    (typeof userMetadata?.username === "string" && userMetadata.username.trim()
+      ? userMetadata.username.trim()
+      : fullName);
+
+  const payload: Database["public"]["Tables"]["profiles"]["Insert"] = {
+    id: user.id,
+    email: existingProfile?.email ?? user.email ?? "",
+    full_name: fullName,
+    username,
+    role,
+    streak_days: existingProfile?.streak_days ?? 0,
+    points: existingProfile?.points ?? 0,
+    avatar_url: existingProfile?.avatar_url ?? null,
+    bio: existingProfile?.bio ?? null,
+  };
+
+  const { error } = await profilesTable.upsert(payload, { onConflict: "id" });
+  return { error: error?.message ?? null, user };
 }
 
 /**

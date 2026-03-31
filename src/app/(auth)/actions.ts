@@ -221,8 +221,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
 // ── Social OAuth ─────────────────────────────────────────────────────────────
 
 export async function socialLogin(
-  provider: "google" | "apple",
-  role: ProfileRole = "student"
+  provider: "google" | "apple"
 ): Promise<AuthResult> {
   if (DEV_MODE) {
     redirect("/student");
@@ -237,11 +236,10 @@ export async function socialLogin(
   const supabase = await createClient();
   const siteUrl = getPublicSiteUrl();
 
-  // Store role in redirect URL so callback can pick it up
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${siteUrl}/callback?role=${role}`,
+      redirectTo: `${siteUrl}/callback?provider=${provider}`,
     },
   });
 

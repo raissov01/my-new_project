@@ -50,6 +50,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       : new Date().toISOString());
   const username = profile?.username ?? fallbackUsername ?? user.email?.split("@")[0] ?? "User";
   const rankLabel = `${t("profile.rankLevel", { level: stats.xpLevel })} • ${stats.levelName}`;
+  const currentRole = profile?.role === "teacher" ? t("auth.roleTeacher") : t("auth.roleStudent");
 
   const metricCards = [
     { label: t("profile.totalCardsStudied"), value: stats.totalStudied },
@@ -79,6 +80,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 </span>
                 <span className="rounded-full border border-[rgba(99,91,255,0.18)] bg-indigo-500/10 px-3 py-1.5 text-indigo-400">
                   {t("profile.joined")} {formatDate(joinDate, locale)}
+                </span>
+                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
+                  {t("settings.currentRole")}: {currentRole}
                 </span>
                 <span className="rounded-full border border-amber-500/15 bg-amber-500/10 px-3 py-1.5 text-amber-400">
                   {stats.points} XP
