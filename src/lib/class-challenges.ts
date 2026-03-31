@@ -1,6 +1,17 @@
 import { cache } from "react";
+import {
+  getAvailableSetsForClassChallengesFromGo,
+  getMyClassChallengesFromGo,
+  getOwnedGroupsFromGo,
+} from "@/lib/backend/class-challenges";
+import { isGoBackendBridgeConfigured } from "@/lib/backend/env";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { buildChallengeRankingEntries, getCurrentUserRank } from "@/lib/challenge-rankings";
+import type {
+  AvailableClassChallengeSet,
+  MyClassChallenge,
+  OwnedGroup,
+} from "@/lib/class-challenges-types";
 import type {
   ClassChallenge,
   ClassChallengeAttempt,
@@ -30,21 +41,42 @@ export const getClassChallengeById = cache(async (challengeId: string) => {
     | null) ?? null;
 });
 
-export async function getOwnedGroups() {
+async function getOwnedGroupsFromSupabase(
+  userId: string
+): Promise<OwnedGroup[]> {
   const supabase = await createClient();
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return [];
-  }
 
   const { data } = await supabase
     .from("class_groups")
     .select("*")
-    .eq("owner_id", user.id)
+    .eq("owner_id", userId)
     .order("created_at", { ascending: false });
 
-  return (data as ClassGroup[] | null) ?? [];
+  return (((data as ClassGroup[] | null) ?? [])).map((group) => ({
+    id: group.id,
+    name: group.name,
+    ownerId: group.owner_id,
+    joinCode: group.join_code,
+    createdAt: group.created_at,
+  }));
+}
+
+export async function getOwnedGroups(preloadedUserId?: string) {
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
+
+  if (!userId) {
+    return [];
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      return await getOwnedGroupsFromGo(userId);
+    } catch (error) {
+      console.warn("[getOwnedGroups] Falling back to Supabase:", error);
+    }
+  }
+
+  return getOwnedGroupsFromSupabase(userId);
 }
 
 export async function getGroupMembers(groupId: string) {
@@ -76,13 +108,10 @@ export async function getGroupMembers(groupId: string) {
   }));
 }
 
-export async function getAvailableSetsForClassChallenges() {
+async function getAvailableSetsForClassChallengesFromSupabase(
+  userId: string
+): Promise<AvailableClassChallengeSet[]> {
   const supabase = await createClient();
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return [];
-  }
 
   const { data } = await supabase
     .from("flashcard_sets")
@@ -99,16 +128,40 @@ export async function getAvailableSetsForClassChallenges() {
       created_at: string;
     }[] | null) ?? [];
 
-  return sets.filter((set) => set.user_id === user.id);
+  return sets
+    .filter((set) => set.user_id === userId)
+    .map((set) => ({
+      id: set.id,
+      title: set.title,
+      description: set.description,
+      isPublic: set.is_public,
+      userId: set.user_id,
+      createdAt: set.created_at,
+    }));
 }
 
-export async function getMyClassChallenges() {
-  const supabase = await createClient();
-  const user = await getCurrentUser();
+export async function getAvailableSetsForClassChallenges(preloadedUserId?: string) {
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
 
-  if (!user) {
+  if (!userId) {
     return [];
   }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      return await getAvailableSetsForClassChallengesFromGo(userId);
+    } catch (error) {
+      console.warn("[getAvailableSetsForClassChallenges] Falling back to Supabase:", error);
+    }
+  }
+
+  return getAvailableSetsForClassChallengesFromSupabase(userId);
+}
+
+async function getMyClassChallengesFromSupabase(
+  userId: string
+): Promise<MyClassChallenge[]> {
+  const supabase = await createClient();
 
   const { data } = await supabase
     .from("class_challenges")
@@ -140,7 +193,7 @@ export async function getMyClassChallenges() {
       row.challenge_id,
       (participantCountByChallenge.get(row.challenge_id) ?? 0) + 1
     );
-    if (row.user_id === user.id) {
+    if (row.user_id === userId) {
       joinedChallengeIds.add(row.challenge_id);
     }
   }
@@ -152,10 +205,28 @@ export async function getMyClassChallenges() {
     createdAt: challenge.created_at,
     groupName: challenge.class_groups?.name ?? "Class",
     setTitle: challenge.flashcard_sets?.title ?? "Set",
-    isOwner: challenge.class_groups?.owner_id === user.id,
+    isOwner: challenge.class_groups?.owner_id === userId,
     joined: joinedChallengeIds.has(challenge.id),
     participantCount: participantCountByChallenge.get(challenge.id) ?? 0,
   }));
+}
+
+export async function getMyClassChallenges(preloadedUserId?: string) {
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
+
+  if (!userId) {
+    return [];
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      return await getMyClassChallengesFromGo(userId);
+    } catch (error) {
+      console.warn("[getMyClassChallenges] Falling back to Supabase:", error);
+    }
+  }
+
+  return getMyClassChallengesFromSupabase(userId);
 }
 
 export async function getClassChallengeRanking(challengeId: string) {

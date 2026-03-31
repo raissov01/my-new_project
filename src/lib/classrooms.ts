@@ -1,4 +1,8 @@
-import { getStudentDashboardSummaryFromGo, getTeacherDashboardSummaryFromGo } from "@/lib/backend/classrooms";
+import {
+  getStudentDashboardSummaryFromGo,
+  getTeacherClassroomDetailFromGo,
+  getTeacherDashboardSummaryFromGo,
+} from "@/lib/backend/classrooms";
 import { isGoBackendBridgeConfigured } from "@/lib/backend/env";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import type {
@@ -11,6 +15,7 @@ import type {
 } from "@/types/database";
 import type {
   StudentDashboardSummary,
+  TeacherClassroomDetail,
   TeacherDashboardSummary,
 } from "@/lib/classrooms-types";
 
@@ -336,11 +341,14 @@ export async function getStudentDashboardSummary(
   return getStudentDashboardSummaryFromSupabase(userId);
 }
 
-export async function getTeacherClassroomDetail(groupId: string) {
+async function getTeacherClassroomDetailFromSupabase(
+  groupId: string,
+  preloadedUserId?: string
+): Promise<TeacherClassroomDetail | null> {
   const supabase = await createClient();
-  const user = await getCurrentUser();
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
 
-  if (!user) {
+  if (!userId) {
     return null;
   }
 
@@ -348,7 +356,7 @@ export async function getTeacherClassroomDetail(groupId: string) {
     .from("class_groups")
     .select("*")
     .eq("id", groupId)
-    .eq("owner_id", user.id)
+    .eq("owner_id", userId)
     .maybeSingle();
   const group = (groupData as ClassGroup | null) ?? null;
 
@@ -435,7 +443,13 @@ export async function getTeacherClassroomDetail(groupId: string) {
   }
 
   return {
-    group,
+    group: {
+      id: group.id,
+      name: group.name,
+      ownerId: group.owner_id,
+      joinCode: group.join_code,
+      createdAt: group.created_at,
+    },
     members: members.map((member) => ({
       userId: member.user_id,
       role: member.role,
@@ -476,4 +490,25 @@ export async function getTeacherClassroomDetail(groupId: string) {
       })
       .sort((a, b) => b.accuracy - a.accuracy || b.studiedCards - a.studiedCards),
   };
+}
+
+export async function getTeacherClassroomDetail(
+  groupId: string,
+  preloadedUserId?: string
+): Promise<TeacherClassroomDetail | null> {
+  const userId = preloadedUserId ?? (await getCurrentUser())?.id;
+
+  if (!userId) {
+    return null;
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      return await getTeacherClassroomDetailFromGo(userId, groupId);
+    } catch (error) {
+      console.warn("[getTeacherClassroomDetail] Falling back to Supabase:", error);
+    }
+  }
+
+  return getTeacherClassroomDetailFromSupabase(groupId, userId);
 }

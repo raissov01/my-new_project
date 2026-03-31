@@ -29,8 +29,8 @@ export default async function TeacherClassDetailPage({
 
   const { id } = await params;
   const [detail, sets] = await Promise.all([
-    getTeacherClassroomDetail(id),
-    getAvailableSetsForClassChallenges(),
+    getTeacherClassroomDetail(id, access.user?.id),
+    getAvailableSetsForClassChallenges(access.user?.id),
   ]);
 
   if (!detail) {
@@ -56,7 +56,7 @@ export default async function TeacherClassDetailPage({
               {detail.group.name}
             </h1>
             <p className="mt-3 text-sm text-[var(--text-secondary)]">
-              {t("teacher.classCodeLabel", { code: detail.group.join_code })}
+              {t("teacher.classCodeLabel", { code: detail.group.joinCode })}
             </p>
           </div>
           <Link href="/teacher/challenges">

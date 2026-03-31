@@ -23,9 +23,9 @@ export default async function TeacherChallengesPage() {
   }
 
   const [groups, sets, challenges] = await Promise.all([
-    getOwnedGroups(),
-    getAvailableSetsForClassChallenges(),
-    getMyClassChallenges(),
+    getOwnedGroups(access.user?.id),
+    getAvailableSetsForClassChallenges(access.user?.id),
+    getMyClassChallenges(access.user?.id),
   ]);
 
   return (

@@ -16,7 +16,9 @@ export default async function StudentChallengesPage() {
     redirect(access.redirectTo);
   }
 
-  const challenges = (await getMyClassChallenges()).filter((challenge) => !challenge.isOwner);
+  const challenges = (await getMyClassChallenges(access.user?.id)).filter(
+    (challenge) => !challenge.isOwner
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">

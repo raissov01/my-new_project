@@ -83,9 +83,9 @@ type TeacherClassroomProgress struct {
 
 // TeacherClassroomDetail is the teacher classroom detail payload.
 type TeacherClassroomDetail struct {
-	Group       TeacherClassroomGroup       `json:"group"`
-	Members     []TeacherClassroomMember    `json:"members"`
+	Group       TeacherClassroomGroup        `json:"group"`
+	Members     []TeacherClassroomMember     `json:"members"`
 	Assignments []TeacherClassroomAssignment `json:"assignments"`
-	Challenges  []TeacherClassroomChallenge `json:"challenges"`
-	Progress    []TeacherClassroomProgress  `json:"progress"`
+	Challenges  []TeacherClassroomChallenge  `json:"challenges"`
+	Progress    []TeacherClassroomProgress   `json:"progress"`
 }

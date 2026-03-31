@@ -3,6 +3,7 @@ import "server-only";
 import { fetchBackendJson } from "./server";
 import type {
   StudentDashboardSummary,
+  TeacherClassroomDetail,
   TeacherDashboardSummary,
 } from "@/lib/classrooms-types";
 
@@ -20,6 +21,16 @@ export async function getStudentDashboardSummaryFromGo(
 ): Promise<StudentDashboardSummary> {
   return fetchBackendJson<StudentDashboardSummary>({
     path: "/api/v1/dashboard/student",
+    userId,
+  });
+}
+
+export async function getTeacherClassroomDetailFromGo(
+  userId: string,
+  groupId: string
+): Promise<TeacherClassroomDetail> {
+  return fetchBackendJson<TeacherClassroomDetail>({
+    path: `/api/v1/classroom/groups/${groupId}`,
     userId,
   });
 }
