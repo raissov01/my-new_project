@@ -47,12 +47,31 @@ const ERROR_MAP: Record<string, string> = {
   FILE_TOO_LARGE: "ai.errorTooLarge",
   INSUFFICIENT_TEXT: "ai.errorNoText",
   EXTRACTION_FAILED: "ai.errorExtraction",
-  GEMINI_API_ERROR: "ai.errorAI",
+  GEMINI_API_HTTP_ERROR: "ai.errorAI",
   GEMINI_EMPTY_RESPONSE: "ai.errorAI",
   GEMINI_NO_CARDS_GENERATED: "ai.errorNoCards",
   GEMINI_INVALID_JSON: "ai.errorAI",
+  GEMINI_INVALID_FORMAT: "ai.errorAI",
+  GEMINI_PROMPT_BLOCKED: "ai.errorAI",
+  GEMINI_RATE_LIMITED: "ai.errorAI",
+  GEMINI_TIMEOUT: "ai.errorAI",
   NOT_AUTHENTICATED: "action.notAuthenticated",
+  INVALID_MODE: "ai.errorGeneric",
+  INVALID_LANGUAGE: "ai.errorGeneric",
+  INVALID_CARD_COUNT: "ai.errorGeneric",
+  AI_CONFIG_MISSING_API_KEY: "ai.errorAI",
+  GENERATION_FAILED: "ai.errorGeneric",
 };
+
+function buildUiError(
+  t: (key: string, vars?: Record<string, string | number>) => string,
+  code?: string,
+  detail?: string
+) {
+  const messageKey = code ? ERROR_MAP[code] ?? "ai.errorGeneric" : "ai.errorGeneric";
+  const baseMessage = t(messageKey);
+  return detail ? `${baseMessage} ${detail}` : baseMessage;
+}
 
 export function AIGeneratorClient() {
   const { t, locale } = useLocale();
@@ -149,20 +168,27 @@ export function AIGeneratorClient() {
 
       clearTimeout(messageTimer);
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        const errorKey = ERROR_MAP[data.error] ?? "ai.errorGeneric";
-        setError(t(errorKey));
+        setError(buildUiError(t, data?.error, data?.detail));
+        setStep("upload");
+        return;
+      }
+
+      if (!data || !Array.isArray(data.cards) || data.cards.length === 0) {
+        setError(t("ai.errorNoCards"));
         setStep("upload");
         return;
       }
 
       setCards(data.cards);
-      setMeta(data.meta);
+      setMeta(data.meta ?? null);
       setStep("preview");
-    } catch {
-      setError(t("ai.errorGeneric"));
+    } catch (error) {
+      setError(
+        error instanceof Error ? `${t("ai.errorGeneric")} ${error.message}` : t("ai.errorGeneric")
+      );
       setStep("upload");
     } finally {
       setGenerating(false);

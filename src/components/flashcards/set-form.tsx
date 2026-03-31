@@ -62,11 +62,16 @@ const AI_ERROR_MAP: Record<string, string> = {
   FILE_TOO_LARGE: "ai.errorTooLarge",
   INSUFFICIENT_TEXT: "ai.errorNoText",
   EXTRACTION_FAILED: "ai.errorExtraction",
-  GEMINI_API_ERROR: "ai.errorAI",
+  GEMINI_API_HTTP_ERROR: "ai.errorAI",
   GEMINI_EMPTY_RESPONSE: "ai.errorAI",
   GEMINI_NO_CARDS_GENERATED: "ai.errorNoCards",
   GEMINI_INVALID_JSON: "ai.errorAI",
+  GEMINI_INVALID_FORMAT: "ai.errorAI",
+  GEMINI_PROMPT_BLOCKED: "ai.errorAI",
+  GEMINI_RATE_LIMITED: "ai.errorAI",
+  GEMINI_TIMEOUT: "ai.errorAI",
   GENERATION_FAILED: "ai.errorGeneric",
+  AI_CONFIG_MISSING_API_KEY: "ai.errorAI",
 };
 
 function createInitialEntries(initialCards?: FlashcardInput[]) {
@@ -195,14 +200,15 @@ export function SetForm({
         body: formData,
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
       if (!response.ok) {
-        const errorKey = AI_ERROR_MAP[data.error] ?? "ai.errorGeneric";
-        setImportError(t(errorKey));
+        const errorKey = AI_ERROR_MAP[data?.error] ?? "ai.errorGeneric";
+        const detail = data?.detail ? ` ${String(data.detail)}` : "";
+        setImportError(`${t(errorKey)}${detail}`);
         return;
       }
 
-      const importedCards = (data.cards ?? [])
+      const importedCards = ((data?.cards ?? []) as { front?: string; back?: string }[])
         .map((card: { front?: string; back?: string }) => ({
           term: String(card.front ?? "").trim(),
           definition: String(card.back ?? "").trim(),
