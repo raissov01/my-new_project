@@ -52,3 +52,35 @@ func (s *Classroom) CreateGroup(
 ) (*model.CreateGroupResponse, error) {
 	return s.repo.CreateGroup(ctx, userID, req)
 }
+
+func (s *Classroom) JoinByCode(
+	ctx context.Context,
+	userID string,
+	code string,
+) (string, error) {
+	return s.repo.JoinByCode(ctx, userID, code)
+}
+
+func (s *Classroom) AssignSet(
+	ctx context.Context,
+	userID string,
+	req model.AssignSetRequest,
+) error {
+	return s.repo.AssignSet(ctx, userID, req)
+}
+
+func (s *Classroom) CreateChallenge(
+	ctx context.Context,
+	userID string,
+	req model.CreateClassChallengeRequest,
+) (string, error) {
+	return s.repo.CreateChallenge(ctx, userID, req)
+}
+
+func (s *Classroom) JoinChallenge(
+	ctx context.Context,
+	userID string,
+	challengeID string,
+) error {
+	return s.repo.JoinChallenge(ctx, userID, challengeID)
+}

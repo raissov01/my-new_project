@@ -9,6 +9,12 @@ import { getAccessibleSetById, resolveInviteProfiles } from "@/lib/set-access";
 import { getClassChallengeById } from "@/lib/class-challenges";
 import { createClassGroupViaGo } from "@/lib/backend/classroom-write";
 import { isGoBackendBridgeConfigured } from "@/lib/backend/env";
+import {
+  assignClassSetViaGo,
+  createClassChallengeViaGo,
+  joinClassByCodeViaGo,
+  joinClassChallengeViaGo,
+} from "@/lib/backend/classroom-actions";
 import type { Database } from "@/types/database";
 
 type TableError = { message: string } | null;
@@ -85,11 +91,14 @@ function formatClassroomError(message: string) {
 
   if (
     normalized.includes("public.class_groups") ||
+    normalized.includes("public.class_set_assignments") ||
     normalized.includes("public.class_group_members") ||
     normalized.includes("public.class_challenges") ||
+    normalized.includes("public.class_challenge_participants") ||
+    normalized.includes("public.class_challenge_attempts") ||
     normalized.includes("schema cache")
   ) {
-    return "Supabase classroom tables are missing. Run migrations 011_class_private_rankings.sql, 012_teacher_mode.sql, and 015_class_group_join_code_default.sql.";
+    return "Supabase classroom schema is missing or outdated. Run migration 016_classroom_schema_repair.sql.";
   }
 
   return message;
@@ -320,6 +329,31 @@ export async function createClassChallenge(formData: FormData) {
     return { error: "You can only create challenges for your own classes." };
   }
 
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      const result = await createClassChallengeViaGo(access.user.id, {
+        groupId,
+        setId,
+        title,
+        deadline: deadline ? new Date(deadline).toISOString() : null,
+      });
+
+      revalidatePath("/teacher/challenges");
+      revalidatePath(`/teacher/classes/${groupId}`);
+      revalidatePath("/student/challenges");
+
+      return { error: null, challengeId: result.challengeId };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create class challenge.";
+      console.error("[createClassChallenge] Go backend create failed, falling back to Supabase:", {
+        teacherId: access.user.id,
+        groupId,
+        setId,
+        message,
+      });
+    }
+  }
+
   const supabase = await createClient();
   const challengesTable = supabase.from("class_challenges") as never as ClassChallengesTable;
 
@@ -360,6 +394,20 @@ export async function joinClassChallenge(challengeId: string) {
     return { error: "Challenge not found." };
   }
 
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      await joinClassChallengeViaGo(access.user.id, challengeId);
+      return { error: null };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to join challenge.";
+      console.error("[joinClassChallenge] Go backend join failed, falling back to Supabase:", {
+        userId: access.user.id,
+        challengeId,
+        message,
+      });
+    }
+  }
+
   const supabase = await createClient();
   const participantsTable =
     supabase.from("class_challenge_participants") as never as ChallengeParticipantsTable;
@@ -385,6 +433,29 @@ export async function joinClassByCode(formData: FormData) {
   const joinCode = String(formData.get("join_code") ?? "").trim().toUpperCase();
   if (!joinCode) {
     return { error: "Class code is required." };
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      const result = await joinClassByCodeViaGo(access.user.id, joinCode);
+
+      revalidatePath("/student/classes");
+      revalidatePath("/student/dashboard");
+
+      return { error: null, groupId: result.groupId };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to join class.";
+      console.error("[joinClassByCode] Go backend join failed, falling back to Supabase:", {
+        userId: access.user.id,
+        joinCode,
+        message,
+      });
+
+      const normalized = message.replace(/^\[Go backend\]\s*\d+\s*/i, "").trim();
+      if (normalized.toLowerCase().includes("class not found")) {
+        return { error: normalized };
+      }
+    }
   }
 
   const supabase = await createClient();
@@ -425,6 +496,31 @@ export async function assignClassSet(formData: FormData) {
   const set = await getAccessibleSetById(setId);
   if (!set || set.user_id !== access.user.id) {
     return { error: "You can only assign your own flashcard sets." };
+  }
+
+  if (isGoBackendBridgeConfigured()) {
+    try {
+      await assignClassSetViaGo(access.user.id, {
+        groupId,
+        setId,
+        deadline: deadline ? new Date(deadline).toISOString() : null,
+      });
+
+      revalidatePath(`/teacher/classes/${groupId}`);
+      revalidatePath("/teacher/dashboard");
+      revalidatePath("/student/classes");
+      revalidatePath("/student/dashboard");
+
+      return { error: null };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to assign flashcard set.";
+      console.error("[assignClassSet] Go backend assign failed, falling back to Supabase:", {
+        teacherId: access.user.id,
+        groupId,
+        setId,
+        message,
+      });
+    }
   }
 
   const supabase = await createClient();

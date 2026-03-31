@@ -98,6 +98,10 @@ func main() {
 	mux.HandleFunc("GET /api/v1/classroom/my-challenges", internalAuth(classroomH.GetMyChallenges))
 	mux.HandleFunc("GET /api/v1/classroom/groups/{groupID}", internalAuth(classroomH.GetTeacherClassroomDetail))
 	mux.HandleFunc("POST /api/v1/classroom/groups", internalAuth(classroomH.CreateGroup))
+	mux.HandleFunc("POST /api/v1/classroom/join-by-code", internalAuth(classroomH.JoinByCode))
+	mux.HandleFunc("POST /api/v1/classroom/assign-set", internalAuth(classroomH.AssignSet))
+	mux.HandleFunc("POST /api/v1/classroom/challenges", internalAuth(classroomH.CreateChallenge))
+	mux.HandleFunc("POST /api/v1/classroom/challenges/join", internalAuth(classroomH.JoinChallenge))
 
 	// ── WRITE endpoints (new) ──────────────────────────────────────────────
 
