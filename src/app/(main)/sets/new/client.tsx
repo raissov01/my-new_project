@@ -11,6 +11,7 @@ export function NewSetClient() {
 
   return (
     <SetForm
+      importVariant="cta"
       submitLabel={t("form.createSet")}
       cancelHref="/sets"
       cancelLabel={t("set.cancel")}

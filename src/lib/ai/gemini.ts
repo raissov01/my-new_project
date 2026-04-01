@@ -13,13 +13,13 @@ export type GeneratedCard = {
   source: string;
 };
 
-export type GenerationMode = "generation" | "extraction";
+export type GenerationMode = "generation" | "definition" | "vocabulary";
 export type GenerationModeInput =
   | GenerationMode
+  | "extraction"
   | "mixed"
-  | "definition"
   | "qa"
-  | "vocabulary";
+  | "definition";
 export type GenerationLanguage = "kk" | "ru" | "en";
 
 export type GenerateOptions = {
@@ -141,8 +141,10 @@ function getLanguageInstruction(language: GenerationLanguage) {
 
 function getModeInstruction(mode: GenerationMode) {
   switch (mode) {
-    case "extraction":
-      return "Only extract explicit word/term pairs from the text.";
+    case "definition":
+      return "Prefer concise term-definition cards for the key concepts in the text.";
+    case "vocabulary":
+      return "Prefer vocabulary-style cards. Use explicit pairs when present, or generate clear meanings, definitions, or translations based on the document.";
     case "generation":
     default:
       return "Choose the most useful study card structure automatically.";
@@ -151,13 +153,14 @@ function getModeInstruction(mode: GenerationMode) {
 
 export function normalizeGenerationMode(mode: GenerationModeInput): GenerationMode {
   switch (mode) {
-    case "vocabulary":
-      return "extraction";
     case "mixed":
-    case "definition":
     case "qa":
-      return "generation";
     case "extraction":
+      return "generation";
+    case "definition":
+      return "definition";
+    case "vocabulary":
+      return "vocabulary";
     case "generation":
     default:
       return mode;
@@ -165,10 +168,11 @@ export function normalizeGenerationMode(mode: GenerationModeInput): GenerationMo
 }
 
 function buildPrompt(chunk: TextChunk, options: GenerateOptions) {
-  const basePrompt = options.mode === "extraction" ? STRICT_PROMPT : GENERATION_PROMPT;
+  const basePrompt = GENERATION_PROMPT;
   const limitInstruction = `Generate up to ${options.cardCount} cards from this chunk if the content supports it.`;
   const modeInstruction = getModeInstruction(options.mode);
-  const languageInstruction = getLanguageInstruction(options.language);
+  const languageInstruction =
+    options.mode === "vocabulary" ? getLanguageInstruction(options.language) : "";
 
   return `${basePrompt}
 

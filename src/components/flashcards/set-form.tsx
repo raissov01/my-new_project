@@ -13,6 +13,8 @@ import {
   Loader2,
   Upload,
   CheckCircle2,
+  Sparkles,
+  Languages,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,7 @@ interface SetFormProps {
   submitLabel: string;
   cancelHref: string;
   cancelLabel: string;
+  importVariant?: "full" | "cta";
 }
 
 // Each card in the form gets a stable key for React rendering,
@@ -59,7 +62,8 @@ type ImportStage =
 
 const AI_MODES: { value: GenerationMode; labelKey: string }[] = [
   { value: "generation", labelKey: "ai.modeGeneration" },
-  { value: "extraction", labelKey: "ai.modeExtraction" },
+  { value: "definition", labelKey: "ai.modeDefinition" },
+  { value: "vocabulary", labelKey: "ai.modeVocabulary" },
 ];
 
 const AI_LANGUAGES: { value: GenerationLanguage; label: string }[] = [
@@ -90,6 +94,7 @@ const AI_ERROR_MAP: Record<string, string> = {
   OPENAI_RATE_LIMITED: "ai.errorAI",
   OPENAI_TIMEOUT: "ai.errorAI",
   NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoExplicitPairs",
+  GENERATION_NO_CARDS: "ai.errorNoCards",
   NOT_AUTHENTICATED: "action.notAuthenticated",
   NON_JSON_ERROR: "ai.errorExtraction",
   GENERATION_FAILED: "ai.errorGeneric",
@@ -126,6 +131,7 @@ export function SetForm({
   submitLabel,
   cancelHref,
   cancelLabel,
+  importVariant = "full",
 }: SetFormProps) {
   const { t, locale } = useLocale();
   const nextKey = useRef(
@@ -490,6 +496,30 @@ export function SetForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+      {importVariant === "cta" ? (
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(99,91,255,0.18)] bg-[rgba(99,91,255,0.08)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-200">
+                <Sparkles className="h-3.5 w-3.5" />
+                {t("form.aiGeneratorEyebrow")}
+              </div>
+              <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
+                {t("form.aiGeneratorCtaTitle")}
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+                {t("form.aiGeneratorCtaBody")}
+              </p>
+            </div>
+            <Link href="/sets/new/ai">
+              <Button type="button" size="sm">
+                <Brain className="h-4 w-4" />
+                {t("form.openFullAIAssistant")}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      ) : null}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
         <h2 className="mb-3 text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mb-4 sm:text-xl">
           {t("form.setDetails")}
@@ -587,7 +617,7 @@ export function SetForm({
           </div>
         </div>
       </div>
-
+      {importVariant === "full" ? (
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -636,25 +666,35 @@ export function SetForm({
                   ))}
                 </select>
               </label>
-              <label className="text-sm">
-                <span className="mb-1.5 block text-[var(--text-secondary)]">
-                  {t("ai.cardLanguage")}
-                </span>
-                <select
-                  value={aiLanguage}
-                  onChange={(event) =>
-                    setAiLanguage(event.target.value as GenerationLanguage)
-                  }
-                  className="h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-sm text-[var(--text-primary)] outline-none"
-                  disabled={isGeneratingImport || isImportingCsv || isPending}
-                >
-                  {AI_LANGUAGES.map((language) => (
-                    <option key={language.value} value={language.value}>
-                      {language.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {aiMode === "vocabulary" ? (
+                <div className="text-sm">
+                  <span className="mb-1.5 flex items-center gap-2 text-[var(--text-secondary)]">
+                    <Languages className="h-4 w-4" />
+                    {t("ai.translationLanguage")}
+                  </span>
+                  <div className="flex gap-2">
+                    {AI_LANGUAGES.map((language) => (
+                      <button
+                        key={language.value}
+                        type="button"
+                        onClick={() => setAiLanguage(language.value)}
+                        disabled={isGeneratingImport || isImportingCsv || isPending}
+                        className={`flex-1 rounded-2xl border px-3 py-2.5 text-sm font-medium transition-all ${
+                          aiLanguage === language.value
+                            ? "border-indigo-500 bg-indigo-500/10 text-indigo-200"
+                            : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]"
+                        } disabled:cursor-not-allowed disabled:opacity-50`}
+                      >
+                        {language.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+                  {t("ai.modeAutoFormatHint")}
+                </div>
+              )}
             </div>
 
             <input
@@ -769,6 +809,7 @@ export function SetForm({
           </div>
         ) : null}
       </div>
+      ) : null}
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">

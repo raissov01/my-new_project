@@ -19,11 +19,11 @@ import {
 
 const VALID_MODES = new Set<GenerationModeInput>([
   "generation",
+  "definition",
+  "vocabulary",
   "extraction",
   "mixed",
-  "definition",
   "qa",
-  "vocabulary",
 ]);
 const VALID_LANGUAGES = new Set<GenerationLanguage>(["kk", "ru", "en"]);
 const VALID_MIME_TYPES = new Set([
@@ -119,6 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     const mode = normalizeGenerationMode(modeInput as GenerationModeInput);
+    const strictExtraction = modeInput === "extraction";
 
     if (!VALID_LANGUAGES.has(language as GenerationLanguage)) {
       return NextResponse.json(
@@ -211,9 +212,11 @@ export async function POST(request: NextRequest) {
 
     const extractionChunks = buildVocabularyChunks(extraction.text);
     const heuristicCards =
-      mode === "extraction" ? extractExplicitVocabularyPairs(extraction.text, file.name) : [];
+      strictExtraction || mode === "vocabulary"
+        ? extractExplicitVocabularyPairs(extraction.text, file.name)
+        : [];
     const heuristicCardsByChunk =
-      mode === "extraction"
+      strictExtraction || mode === "vocabulary"
         ? extractionChunks.map((chunk) =>
             extractExplicitVocabularyPairs(chunk.text, chunk.source)
           )
@@ -221,7 +224,7 @@ export async function POST(request: NextRequest) {
     const heuristicLimitedCards = heuristicCards.slice(0, cardCount);
     const remainingCardBudget = Math.max(0, cardCount - heuristicLimitedCards.length);
     const rankedAiCandidates =
-      mode === "extraction"
+      strictExtraction || mode === "vocabulary"
         ? extractionChunks
             .map((chunk, index) => {
               const chunkHeuristicCount = heuristicCardsByChunk[index].length;
@@ -252,10 +255,12 @@ export async function POST(request: NextRequest) {
             isCandidate: true,
           }));
     const maxAiChunkCount =
-      remainingCardBudget > 0
+      strictExtraction
+        ? 0
+        : remainingCardBudget > 0
         ? Math.min(
             rankedAiCandidates.length,
-            mode === "extraction"
+            mode === "vocabulary"
               ? Math.max(18, Math.ceil(remainingCardBudget / 20))
               : Math.max(24, Math.ceil(remainingCardBudget / 12))
           )
@@ -269,6 +274,7 @@ export async function POST(request: NextRequest) {
       console.log("[AI Generate] Heuristic extraction:", {
           requestedMode: modeInput,
           mode,
+          strictExtraction,
         heuristicCount: heuristicCards.length,
         heuristicLimitedCount: heuristicLimitedCards.length,
         remainingCardBudget,
@@ -301,7 +307,7 @@ export async function POST(request: NextRequest) {
         });
 
         const mergedCards =
-          mode === "extraction"
+          mode === "vocabulary"
             ? dedupeVocabularyCards([
                 ...heuristicLimitedCards,
                 ...aiCards.map((card) => ({
@@ -331,9 +337,9 @@ export async function POST(request: NextRequest) {
       }
     } else if (!aiConfig) {
       warnings.push("AI provider key missing, heuristic extraction only.");
-    } else if (mode === "extraction" && remainingCardBudget <= 0) {
+    } else if ((strictExtraction || mode === "vocabulary") && remainingCardBudget <= 0) {
       warnings.push("Heuristic extraction already satisfied the requested card count.");
-    } else if (mode === "extraction" && heuristicCards.length > 0) {
+    } else if ((strictExtraction || mode === "vocabulary") && heuristicCards.length > 0) {
       warnings.push("Heuristic extraction covered the document; AI fallback was skipped.");
     }
 
@@ -342,8 +348,12 @@ export async function POST(request: NextRequest) {
     if (cards.length === 0) {
       return NextResponse.json(
         {
-          error: "NO_EXPLICIT_VOCAB_PAIRS",
-          detail: warnings[0] ?? "No explicit pairs were found. Try Generation mode.",
+          error: strictExtraction ? "NO_EXPLICIT_VOCAB_PAIRS" : "GENERATION_NO_CARDS",
+          detail:
+            warnings[0] ??
+            (strictExtraction
+              ? "No explicit pairs were found. Try Generation mode."
+              : "No useful cards could be generated from this document."),
         },
         { status: 422 }
       );

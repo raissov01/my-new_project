@@ -7,6 +7,7 @@ import {
   Brain,
   Check,
   FileText,
+  Languages,
   Loader2,
   PenLine,
   Plus,
@@ -34,7 +35,8 @@ type Step = "upload" | "generating" | "preview";
 
 const MODES: { key: GenerationMode; labelKey: string; icon: typeof Brain }[] = [
   { key: "generation", labelKey: "ai.modeGeneration", icon: Sparkles },
-  { key: "extraction", labelKey: "ai.modeExtraction", icon: FileText },
+  { key: "definition", labelKey: "ai.modeDefinition", icon: FileText },
+  { key: "vocabulary", labelKey: "ai.modeVocabulary", icon: PenLine },
 ];
 
 const LANGUAGES: { key: GenerationLanguage; label: string }[] = [
@@ -66,6 +68,7 @@ const ERROR_MAP: Record<string, string> = {
   OPENAI_RATE_LIMITED: "ai.errorAI",
   OPENAI_TIMEOUT: "ai.errorAI",
   NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoExplicitPairs",
+  GENERATION_NO_CARDS: "ai.errorNoCards",
   NOT_AUTHENTICATED: "action.notAuthenticated",
   NON_JSON_ERROR: "ai.errorExtraction",
   INVALID_MODE: "ai.errorGeneric",
@@ -441,33 +444,40 @@ export function AIGeneratorClient() {
               </div>
             </div>
 
-            {/* Language + count */}
+            {/* Language + hint */}
             <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
-                  {t("ai.cardLanguage")}
-                </label>
-                <div className="flex gap-2">
-                  {LANGUAGES.map(({ key, label }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setLanguage(key)}
-                      className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
-                        language === key
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
-                          : "border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+              {mode === "vocabulary" ? (
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
+                    <Languages className="h-4 w-4" />
+                    {t("ai.translationLanguage")}
+                  </label>
+                  <div className="flex gap-2">
+                    {LANGUAGES.map(({ key, label }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setLanguage(key)}
+                        className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
+                          language === key
+                            ? "border-indigo-500 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
+                            : "border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
 
               <div>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  {t("ai.autoCountHint")}
+                  {mode === "vocabulary"
+                    ? t("ai.vocabularyModeHint")
+                    : mode === "definition"
+                      ? t("ai.definitionModeHint")
+                      : t("ai.modeAutoFormatHint")}
                 </p>
               </div>
             </div>
