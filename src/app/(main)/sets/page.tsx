@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Search, SlidersHorizontal, GraduationCap } from "lucide-react";
+import { GraduationCap, LibraryBig, Plus, Search, SlidersHorizontal, Sparkles, Target } from "lucide-react";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { getServerLocale } from "@/lib/i18n/server";
 import { createTranslator } from "@/lib/i18n/shared";
@@ -75,71 +75,99 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
       : `/sets/${quickStartSet.id}`
     : "/sets";
 
+  const masteryCount = user
+    ? sets.filter((set) => set.accuracy >= 80 && set.cardCount > 0).length
+    : sets.length;
+  const reviewReadyCount = user
+    ? sets.filter((set) => set.reviewCount > 0 || set.weakCount > 0 || set.dueCount > 0).length
+    : 0;
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
-            {t("nav.flashcardLibrary")}
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
-            {t("sets.title")}
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-            {user ? t("sets.subtitle") : t("guest.librarySubtitle")}
-          </p>
-        </div>
+    <div className="page-shell py-5 sm:py-8 lg:py-10">
+      <section className="overflow-hidden rounded-[1.9rem] border border-white/8 bg-[linear-gradient(135deg,rgba(99,91,255,0.16),rgba(15,23,42,0.94)_42%,rgba(79,124,255,0.1))] p-4 shadow-[var(--surface-shadow-strong)] sm:rounded-[2.2rem] sm:p-8">
+        <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+              <LibraryBig className="h-3.5 w-3.5 text-indigo-300" />
+              {t("nav.flashcardLibrary")}
+            </div>
+            <h1 className="mt-4 max-w-[12ch] text-3xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] sm:text-5xl">
+              {t("sets.title")}
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] sm:text-base">
+              {user ? t("sets.subtitle") : t("guest.librarySubtitle")}
+            </p>
 
-        <div className="flex flex-wrap gap-3">
-          {user ? (
-            <Link href="/collections">
-              <Button size="lg" variant="outline">
-                {t("nav.myCollections")}
-              </Button>
-            </Link>
-          ) : (
-            <AuthRequiredPrompt
-              triggerLabel={t("nav.myCollections")}
-              title={t("guest.authRequiredTitle")}
-              description={t("guest.collectionsPrompt")}
-              signupLabel={t("guest.signUpToContinue")}
-              loginLabel={t("guest.logInToUnlock")}
-              cancelLabel={t("set.cancel")}
-              variant="outline"
-            />
-          )}
-          <Link href={quickStartHref}>
-            <Button size="lg" variant="outline">
-              <GraduationCap className="h-4 w-4" />
-              {user ? t("nav.startStudy") : t("guest.previewSet")}
-            </Button>
-          </Link>
-          {user ? (
-            <Link href="/sets/new">
-              <Button size="lg">
-                <Plus className="h-4 w-4" />
-                {t("dashboard.createNewSet")}
-              </Button>
-            </Link>
-          ) : (
-            <AuthRequiredPrompt
-              triggerLabel={t("dashboard.createNewSet")}
-              title={t("guest.authRequiredTitle")}
-              description={t("guest.createPrompt")}
-              signupLabel={t("guest.signUpToContinue")}
-              loginLabel={t("guest.logInToUnlock")}
-              cancelLabel={t("set.cancel")}
-              icon={<Plus className="h-4 w-4" />}
-            />
-          )}
-        </div>
-      </div>
-      </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {user ? (
+                <Link href="/collections">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    {t("nav.myCollections")}
+                  </Button>
+                </Link>
+              ) : (
+                <AuthRequiredPrompt
+                  triggerLabel={t("nav.myCollections")}
+                  title={t("guest.authRequiredTitle")}
+                  description={t("guest.collectionsPrompt")}
+                  signupLabel={t("guest.signUpToContinue")}
+                  loginLabel={t("guest.logInToUnlock")}
+                  cancelLabel={t("set.cancel")}
+                  variant="outline"
+                />
+              )}
 
-      <form className="mt-8 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)]">
-        <div className="grid gap-4 lg:grid-cols-[1.6fr_0.7fr_0.7fr_auto]">
-          <label className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4">
+              <Link href={quickStartHref}>
+                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                  <GraduationCap className="h-4 w-4" />
+                  {user ? t("nav.startStudy") : t("guest.previewSet")}
+                </Button>
+              </Link>
+
+              {user ? (
+                <Link href="/sets/new">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    <Plus className="h-4 w-4" />
+                    {t("dashboard.createNewSet")}
+                  </Button>
+                </Link>
+              ) : (
+                <AuthRequiredPrompt
+                  triggerLabel={t("dashboard.createNewSet")}
+                  title={t("guest.authRequiredTitle")}
+                  description={t("guest.createPrompt")}
+                  signupLabel={t("guest.signUpToContinue")}
+                  loginLabel={t("guest.logInToUnlock")}
+                  cancelLabel={t("set.cancel")}
+                  icon={<Plus className="h-4 w-4" />}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <LibrarySignal
+              label={user ? "Library scale" : "Public sets"}
+              value={sets.length}
+              body={user ? "All your available decks in one calm workspace." : "Guests can preview open study resources before registering."}
+            />
+            <LibrarySignal
+              label={user ? "Review ready" : "Visible now"}
+              value={user ? reviewReadyCount : filtered.length}
+              body={user ? "Sets that need attention, review, or weak-card recovery." : "Currently filtered results ready for exploration."}
+            />
+            <LibrarySignal
+              label={user ? "High accuracy" : "Structured decks"}
+              value={masteryCount}
+              body={user ? "Sets already showing strong performance." : "Curated resources that reinforce platform quality."}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-[1.7rem] border border-white/8 bg-[rgba(255,255,255,0.04)] p-4 shadow-[var(--surface-shadow)] backdrop-blur-sm sm:p-5">
+        <div className="grid gap-4 lg:grid-cols-[1.5fr_0.7fr_0.7fr_auto]">
+          <label className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] px-4">
             <Search className="h-4 w-4 text-[var(--text-muted)]" />
             <input
               type="search"
@@ -150,8 +178,8 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
             />
           </label>
 
-          <label className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4">
-            <span className="mb-1 block pt-2 text-xs font-medium text-[var(--text-muted)]">
+          <label className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] px-4">
+            <span className="mb-1 block pt-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
               {t("sets.filter")}
             </span>
             <select
@@ -166,8 +194,8 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
             </select>
           </label>
 
-          <label className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4">
-            <span className="mb-1 block pt-2 text-xs font-medium text-[var(--text-muted)]">
+          <label className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] px-4">
+            <span className="mb-1 block pt-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
               {t("sets.sort")}
             </span>
             <select
@@ -187,13 +215,23 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
             {t("sets.apply")}
           </Button>
         </div>
-      </form>
+      </section>
 
-      <div className="mt-8 flex items-center justify-between">
-        <p className="text-sm text-[var(--text-secondary)]">
-          {filtered.length} {filtered.length === 1 ? t("dashboard.set") : t("dashboard.sets")}
-        </p>
-      </div>
+      <section className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-[var(--text-primary)]">
+            {filtered.length} {filtered.length === 1 ? t("dashboard.set") : t("dashboard.sets")}
+          </p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            {query ? `Search matched "${q}" across your library.` : "Scan, filter, and jump into any deck from one premium workspace."}
+          </p>
+        </div>
+
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[rgba(255,255,255,0.04)] px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+          <Sparkles className="h-3.5 w-3.5 text-indigo-300" />
+          {user ? "Study ecosystem" : "Guest preview mode"}
+        </div>
+      </section>
 
       {filtered.length > 0 ? (
         <div className="mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
@@ -214,15 +252,34 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
           ))}
         </div>
       ) : (
-        <div className="mt-10 rounded-[1.75rem] border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-16 text-center shadow-[var(--surface-shadow)]">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            {t("sets.emptyTitle")}
-          </h2>
-          <p className="mt-3 text-sm text-[var(--text-secondary)]">
+        <div className="mt-8 rounded-[1.8rem] border border-dashed border-white/10 bg-[rgba(255,255,255,0.03)] px-6 py-16 text-center shadow-[var(--surface-shadow)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] text-indigo-300">
+            <Target className="h-5 w-5" />
+          </div>
+          <h2 className="mt-5 text-xl font-semibold text-[var(--text-primary)]">{t("sets.emptyTitle")}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">
             {t("sets.emptyBody")}
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function LibrarySignal({
+  label,
+  value,
+  body,
+}: {
+  label: string;
+  value: number;
+  body: string;
+}) {
+  return (
+    <div className="rounded-[1.45rem] border border-white/8 bg-[rgba(255,255,255,0.05)] p-4 shadow-[var(--surface-shadow)]">
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--text-muted)]">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{body}</p>
     </div>
   );
 }
