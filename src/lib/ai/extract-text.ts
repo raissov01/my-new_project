@@ -451,15 +451,15 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
       provider: aiConfig?.provider ?? "tesseract",
     });
 
+    const imagePaths = files.map((file) => join(tempDir, file));
+    const preparedImagePaths = await preprocessOcrImages(imagePaths);
+
     let pages: string[] = [];
     let ocrDetail = "";
 
     if (aiConfig) {
       try {
-        pages = await ocrWithVision(
-          files.map((file) => join(tempDir, file)),
-          aiConfig
-        );
+        pages = await ocrWithVision(preparedImagePaths, aiConfig);
       } catch (error) {
         ocrDetail =
           error instanceof Error ? error.message : "Vision OCR failed unexpectedly";
@@ -468,9 +468,7 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
     }
 
     if (pages.every((page) => cleanText(page).length === 0)) {
-      const tesseractResult = await ocrWithTesseract(
-        files.map((file) => join(tempDir, file))
-      );
+      const tesseractResult = await ocrWithTesseract(preparedImagePaths);
       pages = tesseractResult.pages;
       worker = tesseractResult.worker;
       if (!ocrDetail && tesseractResult.detail) {
@@ -533,16 +531,27 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
 
 async function ocrWithVision(imagePaths: string[], aiConfig: AIConfig) {
   const pages: string[] = [];
+  const pageErrors: string[] = [];
 
   for (let index = 0; index < imagePaths.length; index += 1) {
     const imagePath = imagePaths[index];
     const imageBuffer = await readFile(imagePath);
 
     let pageText = "";
-    if (aiConfig.provider === "openai") {
-      pageText = await openAIVisionOcr(imageBuffer, aiConfig);
-    } else {
-      pageText = await geminiVisionOcr(imageBuffer, aiConfig);
+    try {
+      if (aiConfig.provider === "openai") {
+        pageText = await openAIVisionOcr(imageBuffer, aiConfig);
+      } else {
+        pageText = await geminiVisionOcr(imageBuffer, aiConfig);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown vision OCR error";
+      pageErrors.push(`page ${index + 1}: ${message}`);
+      console.error("[extract-text][ocr] Vision OCR page failed:", {
+        page: index + 1,
+        provider: aiConfig.provider,
+        error: message,
+      });
     }
 
     const cleaned = cleanText(pageText);
@@ -555,7 +564,45 @@ async function ocrWithVision(imagePaths: string[], aiConfig: AIConfig) {
     pages.push(cleaned);
   }
 
+  if (pages.every((page) => page.length === 0) && pageErrors.length > 0) {
+    throw new Error(pageErrors.slice(0, 3).join(" | "));
+  }
+
   return pages;
+}
+
+async function preprocessOcrImages(imagePaths: string[]) {
+  const preparedPaths: string[] = [];
+
+  for (let index = 0; index < imagePaths.length; index += 1) {
+    const sourcePath = imagePaths[index];
+    const targetPath = sourcePath.replace(/\.png$/i, ".ocr.jpg");
+
+    try {
+      await execFileAsync("convert", [
+        sourcePath,
+        "-colorspace",
+        "Gray",
+        "-auto-level",
+        "-sharpen",
+        "0x1",
+        "-resize",
+        "1800x1800>",
+        "-quality",
+        "88",
+        targetPath,
+      ]);
+      preparedPaths.push(targetPath);
+    } catch (error) {
+      console.error("[extract-text][ocr] Image preprocess failed:", {
+        page: index + 1,
+        error: error instanceof Error ? error.message : "Unknown convert failure",
+      });
+      preparedPaths.push(sourcePath);
+    }
+  }
+
+  return preparedPaths;
 }
 
 async function ocrWithTesseract(imagePaths: string[]) {
