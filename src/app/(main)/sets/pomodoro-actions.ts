@@ -1,12 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
+import { fetchBackendJson } from "@/lib/backend/server";
 import { DEV_MODE } from "@/lib/dev-mode";
 import { ADMIN_EMAIL } from "@/lib/admin-auth";
-import { createTranslator } from "@/lib/i18n/shared";
-import { getServerLocale } from "@/lib/i18n/server";
-import type { Database } from "@/types/database";
 import {
   POMODORO_DEFAULTS,
   normalizePomodoroSettings,
@@ -25,143 +23,77 @@ export type SavePomodoroInput = {
   correctAnswers: number;
 };
 
-type TableError = { message: string } | null;
+async function requireUser() {
+  const user = await getCurrentUser();
+  if (!user || DEV_MODE || user.email === ADMIN_EMAIL) return null;
+  return user;
+}
 
-type PomodoroPreferencesRow =
-  Database["public"]["Tables"]["pomodoro_preferences"]["Row"];
-type PomodoroPreferencesInsert =
-  Database["public"]["Tables"]["pomodoro_preferences"]["Insert"];
-type PomodoroSessionInsert =
-  Database["public"]["Tables"]["pomodoro_sessions"]["Insert"];
-
-type PomodoroPreferencesTable = {
-  select: (columns: string) => {
-    eq: (column: string, value: string) => {
-      maybeSingle: () => Promise<{
-        data: Pick<PomodoroPreferencesRow, "work_minutes" | "break_minutes"> | null;
-      }>;
-    };
-  };
-  upsert: (values: PomodoroPreferencesInsert) => Promise<{ error: TableError }>;
-};
-
-type PomodoroSessionsTable = {
-  insert: (values: PomodoroSessionInsert) => Promise<{ error: TableError }>;
-};
+// ── Get preferences → Go backend ────────────────────────────────────────────
 
 export async function getPomodoroPreferences(): Promise<PomodoroSettings> {
-  if (DEV_MODE) return POMODORO_DEFAULTS;
+  const user = await requireUser();
+  if (!user) return POMODORO_DEFAULTS;
 
-  const supabase = await createClient();
-  const user = await getCurrentUser();
-  const preferencesTable =
-    supabase.from("pomodoro_preferences") as never as PomodoroPreferencesTable;
-
-  if (!user || user.email === ADMIN_EMAIL) {
+  try {
+    const prefs = await fetchBackendJson<{ workMinutes: number; breakMinutes: number }>({
+      path: "/api/v1/pomodoro/preferences",
+      userId: user.id,
+    });
+    return normalizePomodoroSettings(prefs);
+  } catch {
     return POMODORO_DEFAULTS;
   }
-
-  const { data: preferenceData } = await preferencesTable
-    .select("work_minutes, break_minutes")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  const data = preferenceData as Pick<
-    Database["public"]["Tables"]["pomodoro_preferences"]["Row"],
-    "work_minutes" | "break_minutes"
-  > | null;
-
-  if (!data) {
-    return POMODORO_DEFAULTS;
-  }
-
-  return normalizePomodoroSettings({
-    workMinutes: data.work_minutes,
-    breakMinutes: data.break_minutes,
-  });
 }
+
+// ── Save preferences → Go backend ──────────────────────────────────────────
 
 export async function savePomodoroPreferences(
   settings: PomodoroSettings
 ): Promise<{ error: string | null; settings: PomodoroSettings | null }> {
-  const t = createTranslator(await getServerLocale());
+  const user = await requireUser();
+  if (!user) return { error: null, settings: null };
+
   const normalized = normalizePomodoroSettings(settings);
-  const validation = validatePomodoroSettings(normalized);
+  const { workValid, breakValid } = validatePomodoroSettings(normalized);
+  if (!workValid || !breakValid) return { error: "Invalid pomodoro settings.", settings: null };
 
-  if (!validation.workValid) {
-    return { error: t("pomodoro.studyValidation"), settings: null };
-  }
-
-  if (!validation.breakValid) {
-    return { error: t("pomodoro.breakValidation"), settings: null };
-  }
-
-  if (DEV_MODE) {
+  try {
+    await fetchBackendJson({
+      path: "/api/v1/pomodoro/preferences",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify(normalized),
+      headers: { "Content-Type": "application/json" },
+    });
     return { error: null, settings: normalized };
+  } catch (err) {
+    console.error("[savePomodoroPreferences] error:", err);
+    return { error: "Failed to save preferences.", settings: null };
   }
-
-  const supabase = await createClient();
-  const user = await getCurrentUser();
-  const preferencesTable =
-    supabase.from("pomodoro_preferences") as never as PomodoroPreferencesTable;
-
-  if (!user) return { error: t("action.notAuthenticated"), settings: null };
-  if (user.email === ADMIN_EMAIL) return { error: null, settings: normalized };
-
-  const { error } = await preferencesTable.upsert({
-    user_id: user.id,
-    work_minutes: normalized.workMinutes,
-    break_minutes: normalized.breakMinutes,
-    updated_at: new Date().toISOString(),
-  });
-
-  if (error) {
-    return { error: error.message, settings: null };
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/sets");
-  return { error: null, settings: normalized };
 }
+
+// ── Save session → Go backend ──────────────────────────────────────────────
 
 export async function savePomodoroSession(
   input: SavePomodoroInput
 ): Promise<{ error: string | null }> {
-  const t = createTranslator(await getServerLocale());
+  const user = await requireUser();
+  if (!user) return { error: null };
 
-  if (DEV_MODE) return { error: null };
+  try {
+    await fetchBackendJson({
+      path: "/api/v1/pomodoro/session",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify(input),
+      headers: { "Content-Type": "application/json" },
+    });
 
-  const supabase = await createClient();
-  const user = await getCurrentUser();
-  const sessionsTable =
-    supabase.from("pomodoro_sessions") as never as PomodoroSessionsTable;
-
-  if (!user) return { error: t("action.notAuthenticated") };
-  if (user.email === ADMIN_EMAIL) return { error: null };
-
-  const normalized = normalizePomodoroSettings({
-    preset: input.preset,
-    workMinutes: input.workMinutes,
-    breakMinutes: input.breakMinutes,
-  });
-
-  const { error } = await sessionsTable.insert({
-    user_id: user.id,
-    set_id: input.setId,
-    study_mode: input.studyMode,
-    preset: normalized.preset,
-    work_minutes: normalized.workMinutes,
-    break_minutes: normalized.breakMinutes,
-    cards_reviewed: input.cardsReviewed,
-    correct_answers: input.correctAnswers,
-    completed: true,
-    finished_at: new Date().toISOString(),
-  });
-
-  if (error) return { error: error.message };
-
-  // Attempt to refresh leaderboard views (best-effort, ignore errors)
-  await supabase.rpc("refresh_leaderboard_views");
-
-  revalidatePath("/dashboard");
-  return { error: null };
+    revalidatePath("/dashboard");
+    return { error: null };
+  } catch (err) {
+    console.error("[savePomodoroSession] error:", err);
+    return { error: "Failed to save session." };
+  }
 }

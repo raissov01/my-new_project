@@ -11,6 +11,7 @@ import { createTranslator } from "@/lib/i18n/shared";
 import { getServerLocale } from "@/lib/i18n/server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { PreferencesPanel } from "@/components/settings/preferences-panel";
 import { DeleteAccountSection } from "@/components/settings/delete-account-section";
 import { RoleSection } from "@/components/settings/role-section";
@@ -136,17 +137,19 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 </div>
               </div>
 
-              <Input
+              <PasswordInput
                 name="password"
-                type="password"
                 label={t("settings.newPassword")}
                 required
+                showLabel={t("auth.showPassword")}
+                hideLabel={t("auth.hidePassword")}
               />
-              <Input
+              <PasswordInput
                 name="confirm_password"
-                type="password"
                 label={t("settings.confirmPassword")}
                 required
+                showLabel={t("auth.showPassword")}
+                hideLabel={t("auth.hidePassword")}
               />
               <Button type="submit">{t("settings.updatePassword")}</Button>
             </form>

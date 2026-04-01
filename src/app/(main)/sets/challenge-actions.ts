@@ -1,17 +1,8 @@
 "use server";
 
-import { createClient, getCurrentUser } from "@/lib/supabase/server";
-import { buildChallengeRankingEntries } from "@/lib/challenge-rankings";
-import { getAccessibleSetById } from "@/lib/set-access";
-import type { ChallengeAttempt, Database } from "@/types/database";
-
-type TableError = { message: string } | null;
-
-type ChallengeAttemptsTable = {
-  insert: (
-    values: Database["public"]["Tables"]["challenge_attempts"]["Insert"]
-  ) => Promise<{ error: TableError }>;
-};
+import { getCurrentUser } from "@/lib/supabase/server";
+import { fetchBackendJson } from "@/lib/backend/server";
+import type { ChallengeRankingEntry } from "@/lib/challenge-rankings";
 
 export type SaveChallengeAttemptInput = {
   setId: string;
@@ -22,68 +13,44 @@ export type SaveChallengeAttemptInput = {
 };
 
 export async function saveChallengeAttempt(input: SaveChallengeAttemptInput) {
-  const supabase = await createClient();
   const user = await getCurrentUser();
-  const set = await getAccessibleSetById(input.setId);
-
   if (!user) {
     return { error: "You need to log in before your challenge result can be ranked." };
   }
 
-  if (!set) {
-    return { error: "This challenge is no longer available." };
+  try {
+    await fetchBackendJson({
+      path: "/api/v1/challenges/attempt",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify(input),
+      headers: { "Content-Type": "application/json" },
+    });
+    return { error: null };
+  } catch (err) {
+    console.error("[saveChallengeAttempt] error:", err);
+    return { error: "Failed to save challenge result." };
   }
-
-  const attemptsTable =
-    supabase.from("challenge_attempts") as never as ChallengeAttemptsTable;
-
-  const { error } = await attemptsTable.insert({
-    user_id: user.id,
-    set_id: input.setId,
-    completion_time: Math.max(0, Math.round(input.completionTime)),
-    accuracy: Number(input.accuracy.toFixed(2)),
-    total_correct: input.totalCorrect,
-    total_incorrect: input.totalIncorrect,
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  return { error: null };
 }
 
 export async function getChallengeRanking(setId: string) {
-  const supabase = await createClient();
-  const set = await getAccessibleSetById(setId);
+  try {
+    // Ranking is a public read — no auth required
+    const user = await getCurrentUser();
+    const data = await fetchBackendJson<{
+      setTitle: string;
+      isPublic: boolean;
+      rows: ChallengeRankingEntry[];
+    }>({
+      path: `/api/v1/challenges/ranking/${encodeURIComponent(setId)}`,
+      userId: user?.id ?? "anonymous",
+    });
 
-  if (!set) {
+    return {
+      set: { title: data.setTitle, is_public: data.isPublic },
+      rows: data.rows ?? [],
+    };
+  } catch {
     return null;
   }
-
-  const { data: attemptsData } = await supabase
-    .from("challenge_attempts")
-    .select("*")
-    .eq("set_id", setId)
-    .order("completed_at", { ascending: false });
-  const attempts = (attemptsData as ChallengeAttempt[] | null) ?? [];
-
-  const participantIds = Array.from(new Set(attempts.map((attempt) => attempt.user_id)));
-  const { data: profilesData } =
-    participantIds.length > 0
-      ? await supabase
-          .from("profiles")
-          .select("id, username, avatar_url")
-          .in("id", participantIds)
-      : { data: [] as const };
-
-  return {
-    set,
-    attempts,
-    rows: buildChallengeRankingEntries(attempts, (profilesData as {
-      id: string;
-      username: string;
-      avatar_url: string | null;
-    }[] | null) ?? []),
-  };
 }

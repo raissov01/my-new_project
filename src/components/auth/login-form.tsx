@@ -7,6 +7,7 @@ import { login, socialLogin } from "@/app/(auth)/actions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -97,15 +98,16 @@ export function LoginForm() {
           autoComplete="email"
           disabled={isDisabled}
         />
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           label={t("auth.password")}
           placeholder={t("auth.passwordPlaceholder")}
           required
           autoComplete="current-password"
           disabled={isDisabled}
+          showLabel={t("auth.showPassword")}
+          hideLabel={t("auth.hidePassword")}
         />
 
         {error && (

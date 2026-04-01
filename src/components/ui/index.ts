@@ -1,5 +1,6 @@
 export { Button, type ButtonProps } from "./button";
 export { Input, type InputProps } from "./input";
+export { PasswordInput, type PasswordInputProps } from "./password-input";
 export { Card, CardHeader, CardContent } from "./card";
 export { Modal } from "./modal";
 export { ToastProvider, useToast } from "./toast";

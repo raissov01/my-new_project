@@ -7,6 +7,7 @@ import { signup, socialLogin } from "@/app/(auth)/actions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import type { ProfileRole } from "@/types/database";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -171,7 +172,18 @@ export function SignupForm() {
         <Input id="full_name" name="full_name" type="text" label={t("auth.fullName")} placeholder={t("auth.fullNamePlaceholder")} required autoComplete="name" disabled={isDisabled} />
         <Input id="username" name="username" type="text" label={t("auth.username")} placeholder={t("auth.usernamePlaceholder")} required autoComplete="username" disabled={isDisabled} />
         <Input id="email" name="email" type="email" label={t("auth.email")} placeholder={t("auth.emailPlaceholder")} required autoComplete="email" disabled={isDisabled} />
-        <Input id="password" name="password" type="password" label={t("auth.password")} placeholder={t("auth.passwordNewPlaceholder")} required minLength={6} autoComplete="new-password" disabled={isDisabled} />
+        <PasswordInput
+          id="password"
+          name="password"
+          label={t("auth.password")}
+          placeholder={t("auth.passwordNewPlaceholder")}
+          required
+          minLength={6}
+          autoComplete="new-password"
+          disabled={isDisabled}
+          showLabel={t("auth.showPassword")}
+          hideLabel={t("auth.hidePassword")}
+        />
 
         {/* Hidden role field for form submission */}
         <input type="hidden" name="role" value={selectedRole} />
