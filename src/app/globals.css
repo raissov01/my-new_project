@@ -91,6 +91,49 @@ body {
   box-shadow: var(--surface-shadow);
 }
 
+.home-shell-grid {
+  position: relative;
+}
+
+.home-shell-grid::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.28), transparent 76%);
+  opacity: 0.18;
+}
+
+.home-floating-nav {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.64)),
+    rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow:
+    0 24px 70px -44px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.home-float-panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top right, rgba(99, 91, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(13, 18, 31, 0.9), rgba(13, 18, 31, 0.72));
+  box-shadow:
+    0 28px 80px -40px rgba(0, 0, 0, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.home-rail {
+  align-items: center;
+}
+
 /* ── Flashcard 3D flip ────────────────────────────────────────────────────── */
 
 .perspective-1000 { perspective: 1000px; }
