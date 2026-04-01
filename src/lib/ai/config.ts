@@ -1,5 +1,5 @@
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
-const DEFAULT_OPENAI_MODEL = "gpt-4.1-mini";
+const DEFAULT_OPENAI_MODEL = "gpt-5-mini";
 const DEFAULT_MAX_UPLOAD_MB = 20;
 
 export type AIConfig = {

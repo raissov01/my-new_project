@@ -93,26 +93,33 @@ function buildPrompt(options: GenerateOptions) {
   const langName = LANGUAGE_NAMES[options.language];
   const modeInstr = MODE_INSTRUCTIONS[options.mode];
 
-  return `You are an expert educational content analyzer. Your task is to generate high-quality flashcards from the following study material.
+  return `You are a strict information extraction system.
 
-## Requirements
-- Generate exactly ${options.cardCount} flashcards.
-- Output language: ${langName}. All card text MUST be in ${langName}.
+Your task is to parse a vocabulary or glossary document and convert it into flashcards.
+
+IMPORTANT RULES:
+- DO NOT generate or invent anything
+- DO NOT add examples
+- DO NOT explain anything
+- USE ONLY the information explicitly written in the text
+- If a word-definition pair is not clearly present -> SKIP it
+- Do not merge multiple entries
+- Do not guess meanings
+- Generate up to ${options.cardCount} flashcards, but fewer is allowed if the document contains fewer clear pairs
+- Output language: ${langName}. Keep the extracted content in ${langName} when the source supports it
 - ${modeInstr}
 
-## Card quality rules
-- Each card must be self-contained and understandable without external context.
-- "front" is the question/term side.
-- "back" is the answer/definition side.
-- Prefer meaningful study pairs where the model correctly infers which part is the term and which part is the definition.
-- Avoid duplicate or near-duplicate cards.
-- Avoid filler content.
-- Assign difficulty: "easy", "medium", or "hard".
-- Assign a short category label (1-3 words).
-- Include the source reference from the chunk metadata.
+A flashcard must contain:
+- front: the word or term
+- back: its exact translation, meaning, or definition from the document
 
-## Output format
-Return ONLY a valid JSON array. No markdown, no prose, no code fences.
+Return ONLY valid JSON in this format:
+[
+  {
+    "front": "",
+    "back": ""
+  }
+]
 `;
 }
 
@@ -213,17 +220,11 @@ async function requestGemini(
             responseSchema: {
               type: "ARRAY",
               items: {
-                type: "OBJECT",
-                required: ["front", "back", "category", "difficulty", "source"],
+              type: "OBJECT",
+                required: ["front", "back"],
                 properties: {
                   front: { type: "STRING" },
                   back: { type: "STRING" },
-                  category: { type: "STRING" },
-                  difficulty: {
-                    type: "STRING",
-                    enum: ["easy", "medium", "hard"],
-                  },
-                  source: { type: "STRING" },
                 },
               },
             },
@@ -290,17 +291,11 @@ async function requestOpenAI(
               type: "array",
               items: {
                 type: "object",
-                required: ["front", "back", "category", "difficulty", "source"],
+                required: ["front", "back"],
                 additionalProperties: false,
                 properties: {
                   front: { type: "string" },
                   back: { type: "string" },
-                  category: { type: "string" },
-                  difficulty: {
-                    type: "string",
-                    enum: ["easy", "medium", "hard"],
-                  },
-                  source: { type: "string" },
                 },
               },
             },
