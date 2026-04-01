@@ -80,9 +80,11 @@ const AI_ERROR_MAP: Record<string, string> = {
   OPENAI_TIMEOUT: "ai.errorAI",
   NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoCards",
   NOT_AUTHENTICATED: "action.notAuthenticated",
-  NON_JSON_ERROR: "ai.errorGeneric",
+  NON_JSON_ERROR: "ai.errorExtraction",
   GENERATION_FAILED: "ai.errorGeneric",
   AI_CONFIG_MISSING_API_KEY: "ai.errorAI",
+  PDF_PARSER_UNAVAILABLE: "ai.errorExtraction",
+  DOCX_PARSER_UNAVAILABLE: "ai.errorExtraction",
 };
 
 function createInitialEntries(initialCards?: FlashcardInput[]) {
@@ -142,7 +144,6 @@ export function SetForm({
   const [aiLanguage, setAiLanguage] = useState<GenerationLanguage>(
     locale === "kk" || locale === "ru" || locale === "en" ? locale : "kk"
   );
-  const [aiCardCount, setAiCardCount] = useState(15);
   const [isGeneratingImport, setIsGeneratingImport] = useState(false);
   const [isImportingCsv, setIsImportingCsv] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -204,7 +205,7 @@ export function SetForm({
       formData.append("file", file);
       formData.append("mode", aiMode);
       formData.append("language", aiLanguage);
-      formData.append("cardCount", String(aiCardCount));
+      formData.append("cardCount", "999");
 
       const { response, data } = await requestAIGeneration(formData);
       if (!response.ok) {
@@ -561,27 +562,6 @@ export function SetForm({
                 </select>
               </label>
             </div>
-
-            <label className="mt-3 block text-sm">
-              <span className="mb-1.5 block text-[var(--text-secondary)]">
-                {t("ai.cardCount")}
-              </span>
-              <input
-                type="range"
-                min={5}
-                max={50}
-                step={5}
-                value={aiCardCount}
-                onChange={(event) => setAiCardCount(Number(event.target.value))}
-                className="w-full accent-indigo-600"
-                disabled={isGeneratingImport || isImportingCsv || isPending}
-              />
-              <div className="mt-1 flex justify-between text-xs text-[var(--text-muted)]">
-                <span>5</span>
-                <span>{aiCardCount}</span>
-                <span>50</span>
-              </div>
-            </label>
 
             <input
               ref={aiFileInputRef}

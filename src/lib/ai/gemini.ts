@@ -85,43 +85,31 @@ const MODE_INSTRUCTIONS: Record<GenerationMode, string> = {
   vocabulary: "Focus on word/term -> meaning/translation pairs only.",
 };
 
-function buildPrompt(options: GenerateOptions, chunk: TextChunk, chunkCardCount: number) {
+function buildPrompt(options: GenerateOptions, chunk: TextChunk) {
   const langName = LANGUAGE_NAMES[options.language];
   const modeInstr = MODE_INSTRUCTIONS[options.mode];
 
   return `You are a strict information extraction system.
 
-Your task is to parse a vocabulary or glossary document and convert it into flashcards.
+Your task is to parse a vocabulary or glossary document and extract ALL explicit pairs into flashcards.
 
-IMPORTANT RULES:
-- DO NOT generate or invent anything
-- DO NOT add examples
-- DO NOT explain anything
-- USE ONLY the information explicitly written in the text
-- If a word-definition pair is not clearly present -> SKIP it
-- Do not merge multiple entries
-- Do not guess meanings
-- Generate up to ${chunkCardCount} flashcards from this chunk, but fewer is allowed if the chunk contains fewer clear pairs
-- Output language: ${langName}. Keep the extracted content in ${langName} when the source supports it
+CRITICAL RULES:
+- Extract EVERY clear vocabulary pair you find. Do not skip valid pairs.
+- Do NOT generate, invent, or guess anything.
+- Do NOT add examples or explanations.
+- USE ONLY information explicitly written in the text.
+- If a pair is unclear or ambiguous, skip it.
+- Do not merge entries. Each pair = one flashcard.
+- The number of cards must equal the number of valid pairs found. No more, no less.
+- Output language: ${langName}. Preserve the original content language.
 - ${modeInstr}
-- Chunk source label: ${chunk.source}
 
 A flashcard must contain:
-- front: the word or term
-- back: its exact translation, meaning, or definition from the document
+- front: the word, term, or question
+- back: its exact translation, meaning, definition, or answer from the document
 
-Return ONLY valid JSON.
-Preferred format:
-{
-  "cards": [
-    {
-      "front": "",
-      "back": ""
-    }
-  ]
-}
-
-If your system does not support an object wrapper, a plain JSON array is also acceptable.
+Return ONLY a valid JSON array:
+[{"front": "...", "back": "..."}]
 
 Text:
 ${chunk.text}
@@ -410,15 +398,11 @@ export async function generateFlashcardsWithAI(
     });
   }
 
-  const chunkTarget = Math.max(
-    2,
-    Math.min(8, Math.ceil(options.cardCount / Math.max(options.chunks.length, 1)) + 1)
-  );
   const collectedCards: GeneratedCard[] = [];
   const chunkErrors: string[] = [];
 
   for (const [index, chunk] of options.chunks.entries()) {
-    const prompt = buildPrompt(options, chunk, chunkTarget);
+    const prompt = buildPrompt(options, chunk);
 
     try {
       if (config.provider === "openai") {
@@ -598,7 +582,6 @@ export async function generateFlashcardsWithAI(
       source: card.source,
     }))
   )
-    .slice(0, options.cardCount)
     .map((card) => ({
       front: card.front,
       back: card.back,

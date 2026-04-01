@@ -161,13 +161,14 @@ export async function POST(request: NextRequest) {
 
     let cards = heuristicCards;
 
-    if (cards.length < cardCount && aiConfig && extractionChunks.length > 0) {
+    // Always run AI extraction if available — it catches pairs the heuristic misses
+    if (aiConfig && extractionChunks.length > 0) {
       try {
         const aiCards = await generateFlashcardsWithAI({
           chunks: extractionChunks,
           mode: mode as GenerationMode,
           language: language as GenerationLanguage,
-          cardCount,
+          cardCount: 999, // no artificial limit — extract all found pairs
         });
 
         cards = dedupeVocabularyCards([
@@ -192,7 +193,8 @@ export async function POST(request: NextRequest) {
       warnings.push("AI provider key missing, heuristic extraction only.");
     }
 
-    cards = dedupeVocabularyCards(cards).slice(0, cardCount);
+    // No artificial limit — return exactly as many pairs as found
+    cards = dedupeVocabularyCards(cards);
 
     if (cards.length === 0) {
       return NextResponse.json(

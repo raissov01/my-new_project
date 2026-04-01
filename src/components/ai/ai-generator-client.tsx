@@ -65,12 +65,14 @@ const ERROR_MAP: Record<string, string> = {
   OPENAI_TIMEOUT: "ai.errorAI",
   NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoCards",
   NOT_AUTHENTICATED: "action.notAuthenticated",
-  NON_JSON_ERROR: "ai.errorGeneric",
+  NON_JSON_ERROR: "ai.errorExtraction",
   INVALID_MODE: "ai.errorGeneric",
   INVALID_LANGUAGE: "ai.errorGeneric",
   INVALID_CARD_COUNT: "ai.errorGeneric",
   AI_CONFIG_MISSING_API_KEY: "ai.errorAI",
   GENERATION_FAILED: "ai.errorGeneric",
+  PDF_PARSER_UNAVAILABLE: "ai.errorExtraction",
+  DOCX_PARSER_UNAVAILABLE: "ai.errorExtraction",
 };
 
 function buildUiError(
@@ -95,7 +97,7 @@ export function AIGeneratorClient() {
   const [language, setLanguage] = useState<GenerationLanguage>(
     (locale as GenerationLanguage) ?? "kk"
   );
-  const [cardCount, setCardCount] = useState(15);
+  // Card count is determined by document content — no user override
   const [generating, setGenerating] = useState(false);
   const [generatingMessage, setGeneratingMessage] = useState("");
   const [cards, setCards] = useState<GeneratedCard[]>([]);
@@ -165,7 +167,7 @@ export function AIGeneratorClient() {
       formData.append("file", file);
       formData.append("mode", mode);
       formData.append("language", language);
-      formData.append("cardCount", String(cardCount));
+      formData.append("cardCount", "999");
 
       // After a delay, update the message to show AI is working
       messageTimer = setTimeout(() => {
@@ -460,23 +462,9 @@ export function AIGeneratorClient() {
               </div>
 
               <div>
-                <label htmlFor="cardCount" className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
-                  {t("ai.cardCount")}: {cardCount}
-                </label>
-                <input
-                  id="cardCount"
-                  type="range"
-                  min={5}
-                  max={50}
-                  step={5}
-                  value={cardCount}
-                  onChange={(e) => setCardCount(Number(e.target.value))}
-                  className="w-full accent-indigo-600"
-                />
-                <div className="flex justify-between text-xs text-[var(--text-muted)]">
-                  <span>5</span>
-                  <span>50</span>
-                </div>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {t("ai.autoCountHint")}
+                </p>
               </div>
             </div>
           </div>
