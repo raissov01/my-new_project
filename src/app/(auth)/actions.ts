@@ -188,22 +188,25 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     }));
 
   if (error) {
+    const rawMsg = (error.message ?? "").toLowerCase();
     console.error("[signup] Supabase auth error:", {
       clientRequestId,
       message: error.message,
       status: error.status,
       code: error.code,
-      name: "name" in error ? error.name : null,
       email,
       role,
-      fullError: error,
     });
-    return {
-      error:
-        process.env.NODE_ENV !== "production"
-          ? `${friendlyAuthError(error, t)} (${error.message}${error.code ? ` | ${error.code}` : ""}${error.status ? ` | ${error.status}` : ""})`
-          : friendlyAuthError(error, t),
-    };
+
+    // "email rate limit exceeded" on signup almost always means the user
+    // already registered but hasn't confirmed their email yet. Supabase
+    // won't resend the confirmation within its cooldown window, so the
+    // raw error is misleading. Give a specific, helpful message.
+    if (rawMsg.includes("email rate limit exceeded") || rawMsg.includes("rate limit")) {
+      return { error: t("action.rateLimitSignupHint") };
+    }
+
+    return { error: friendlyAuthError(error, t) };
   }
 
   // Supabase returns identities=[] when user already exists + email confirmation is on
