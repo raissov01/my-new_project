@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/midoriya/flashlearn-backend/internal/model"
 )
@@ -18,6 +20,11 @@ func NewFlashcard(pool *pgxpool.Pool) *Flashcard {
 
 // CreateSet inserts a new flashcard_set and its cards.
 func (r *Flashcard) CreateSet(ctx context.Context, userID string, req model.CreateSetRequest) (string, error) {
+	userID = strings.TrimSpace(userID)
+	if userID == "" {
+		return "", fmt.Errorf("authentication required")
+	}
+
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return "", fmt.Errorf("begin tx: %w", err)
@@ -31,6 +38,9 @@ func (r *Flashcard) CreateSet(ctx context.Context, userID string, req model.Crea
 		userID, req.Title, req.Description, req.IsPublic,
 	).Scan(&setID)
 	if err != nil {
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			return "", fmt.Errorf("insert set: %s (%s)", pgErr.Message, pgErr.Code)
+		}
 		return "", fmt.Errorf("insert set: %w", err)
 	}
 
@@ -40,11 +50,17 @@ func (r *Flashcard) CreateSet(ctx context.Context, userID string, req model.Crea
 			setID, card.Term, card.Definition, i,
 		)
 		if err != nil {
+			if pgErr, ok := err.(*pgconn.PgError); ok {
+				return "", fmt.Errorf("insert card %d: %s (%s)", i, pgErr.Message, pgErr.Code)
+			}
 			return "", fmt.Errorf("insert card %d: %w", i, err)
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			return "", fmt.Errorf("commit: %s (%s)", pgErr.Message, pgErr.Code)
+		}
 		return "", fmt.Errorf("commit: %w", err)
 	}
 	return setID, nil

@@ -18,18 +18,41 @@ func NewFlashcard(repo *repository.Flashcard) *Flashcard {
 }
 
 func (s *Flashcard) CreateSet(ctx context.Context, userID string, req model.CreateSetRequest) (string, error) {
+	if strings.TrimSpace(userID) == "" {
+		return "", fmt.Errorf("authentication required")
+	}
+
 	if strings.TrimSpace(req.Title) == "" {
 		return "", fmt.Errorf("title is required")
 	}
-	filled := 0
+
+	normalizedCards := make([]model.FlashcardInput, 0, len(req.Cards))
 	for _, c := range req.Cards {
-		if strings.TrimSpace(c.Term) != "" && strings.TrimSpace(c.Definition) != "" {
-			filled++
+		term := strings.TrimSpace(c.Term)
+		definition := strings.TrimSpace(c.Definition)
+
+		if term == "" && definition == "" {
+			continue
 		}
+
+		if term == "" || definition == "" {
+			return "", fmt.Errorf("both term and definition are required for each saved card")
+		}
+
+		normalizedCards = append(normalizedCards, model.FlashcardInput{
+			Term:       term,
+			Definition: definition,
+		})
 	}
-	if filled == 0 {
+
+	if len(normalizedCards) == 0 {
 		return "", fmt.Errorf("at least one card with term and definition is required")
 	}
+
+	req.Title = strings.TrimSpace(req.Title)
+	req.Description = strings.TrimSpace(req.Description)
+	req.Cards = normalizedCards
+
 	return s.repo.CreateSet(ctx, userID, req)
 }
 

@@ -46,6 +46,7 @@ export async function createSet(
 ): Promise<SetFormState> {
   const t = createTranslator(await getServerLocale());
   const user = await requireUser();
+  const isDev = process.env.NODE_ENV !== "production";
 
   if (!user) return { error: t("action.notAuthenticated") };
   if (!title.trim()) return { error: t("action.titleRequired") };
@@ -72,11 +73,37 @@ export async function createSet(
     revalidatePath("/sets");
     redirect(`/sets/${resp.id}`);
   } catch (err) {
-    console.error("[createSet] error:", err);
+    console.error("[createSet] error:", {
+      userId: user.id,
+      title: title.trim(),
+      totalCards: cards.length,
+      filledCards: filledCards.length,
+      isPublic: visibility.isPublic,
+      invitedUsers: visibility.invitedUsers,
+      error: err,
+    });
     const msg = err instanceof Error ? err.message : "";
     if (msg.includes("title is required")) return { error: t("action.titleRequired") };
     if (msg.includes("at least one card")) return { error: t("action.addOneFlashcard") };
-    return { error: t("action.failedCreateSet") };
+    if (msg.includes("both term and definition")) {
+      return { error: t("action.cardBothRequired", { index: 1 }) };
+    }
+    if (msg.includes("missing x-user-id") || msg.includes("authentication required")) {
+      return { error: t("action.notAuthenticated") };
+    }
+    if (msg.includes("insert set:")) {
+      return {
+        error: isDev ? msg.replace("[Go backend] 500 ", "") : t("action.failedCreateSet"),
+      };
+    }
+    if (msg.includes("insert card")) {
+      return {
+        error: isDev ? msg.replace("[Go backend] 500 ", "") : t("action.failedSaveCards"),
+      };
+    }
+    return {
+      error: isDev && msg ? msg.replace(/^\[Go backend\]\s+\d+\s+/, "") : t("action.failedCreateSet"),
+    };
   }
 }
 

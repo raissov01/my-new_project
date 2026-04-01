@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/model"
@@ -17,9 +19,17 @@ func NewFlashcard(svc *service.Flashcard, env string) *FlashcardHandler {
 	return &FlashcardHandler{svc: svc, env: env}
 }
 
+func (h *FlashcardHandler) isDev() bool {
+	return h.env == "development"
+}
+
 // CreateSet handles POST /api/v1/sets
 func (h *FlashcardHandler) CreateSet(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || strings.TrimSpace(userID) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
 
 	var req model.CreateSetRequest
 	if err := decodeJSON(r, &req); err != nil {
@@ -27,9 +37,29 @@ func (h *FlashcardHandler) CreateSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("create set request received: user_id=%s title=%q cards=%d public=%t", userID, req.Title, len(req.Cards), req.IsPublic)
+
 	setID, err := h.svc.CreateSet(r.Context(), userID, req)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error(), nil)
+		log.Printf("create set failed: user_id=%s error=%v", userID, err)
+
+		status := http.StatusInternalServerError
+		message := "failed to create set"
+
+		switch {
+		case strings.Contains(err.Error(), "title is required"),
+			strings.Contains(err.Error(), "at least one card"),
+			strings.Contains(err.Error(), "both term and definition"),
+			strings.Contains(err.Error(), "authentication required"):
+			status = http.StatusBadRequest
+			message = err.Error()
+		}
+
+		if h.isDev() {
+			message = err.Error()
+		}
+
+		writeError(w, status, message, err)
 		return
 	}
 
