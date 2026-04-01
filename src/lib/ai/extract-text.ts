@@ -49,7 +49,7 @@ export async function extractText(
 
 async function extractFromPdf(buffer: Buffer): Promise<ExtractionResult> {
   // Dynamic import avoids Turbopack bundling issues with native deps
-  let pdfModule: { PDFParse?: new (opts: { data: Buffer }) => PdfParserInstance };
+  let pdfModule: unknown;
   try {
     pdfModule = await import("pdf-parse");
   } catch (importErr) {
@@ -57,42 +57,35 @@ async function extractFromPdf(buffer: Buffer): Promise<ExtractionResult> {
     throw new Error("PDF_PARSER_UNAVAILABLE");
   }
 
-  const PDFParse = pdfModule.PDFParse;
-  if (!PDFParse) {
-    // Fallback: the module might export differently
-    const mod = pdfModule as Record<string, unknown>;
-    const FallbackClass =
-      (mod.default as typeof PDFParse) ?? (mod as unknown as typeof PDFParse);
-    if (typeof FallbackClass !== "function") {
-      throw new Error("PDF_PARSER_UNAVAILABLE");
-    }
-    return extractPdfWithClass(FallbackClass as new (opts: { data: Buffer }) => PdfParserInstance, buffer);
+  const mod = pdfModule as Record<string, unknown>;
+  const pdfParse =
+    (typeof mod.default === "function" ? mod.default : null) ??
+    (typeof pdfModule === "function" ? pdfModule : null);
+
+  if (typeof pdfParse !== "function") {
+    throw new Error("PDF_PARSER_UNAVAILABLE");
   }
 
-  return extractPdfWithClass(PDFParse, buffer);
-}
-
-type PdfParserInstance = {
-  getText: () => Promise<{ text?: string; pages?: { text?: string }[] }>;
-  destroy: () => Promise<void>;
-};
-
-async function extractPdfWithClass(
-  PDFParse: new (opts: { data: Buffer }) => PdfParserInstance,
-  buffer: Buffer
-): Promise<ExtractionResult> {
-  const parser = new PDFParse({ data: buffer });
-
   try {
-    const data = await parser.getText();
+    const data = await (
+      pdfParse as (buffer: Buffer) => Promise<{
+        text?: string;
+        numpages?: number;
+      }>
+    )(buffer);
+
     const rawText = data.text ?? "";
     const cleaned = cleanText(rawText);
-    const pageCount = Array.isArray(data.pages) ? data.pages.length : null;
+    const pageCount =
+      typeof data.numpages === "number" && Number.isFinite(data.numpages)
+        ? data.numpages
+        : null;
     const chunks = splitIntoChunks(cleaned, "pdf", pageCount);
 
     return { text: cleaned, pageCount, chunks };
-  } finally {
-    await parser.destroy().catch(() => {});
+  } catch (error) {
+    console.error("[extract-text] PDF extraction failed:", error);
+    throw new Error("PDF_EXTRACTION_FAILED");
   }
 }
 
