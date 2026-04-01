@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { DEV_MODE } from "@/lib/dev-mode";
-import { extractText } from "@/lib/ai/extract-text";
+import { extractText, TextExtractionError } from "@/lib/ai/extract-text";
 import {
   AIProviderError,
   generateFlashcardsWithAI,
@@ -113,15 +113,32 @@ export async function POST(request: NextRequest) {
     try {
       extraction = await extractText(buffer, file.type, file.name);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "EXTRACTION_FAILED";
+      const extractionError =
+        err instanceof TextExtractionError
+          ? err
+          : new TextExtractionError(
+              "EXTRACTION_FAILED",
+              err instanceof Error ? err.message : "Document text extraction failed."
+            );
       console.error("[AI Generate] Text extraction failed:", {
-        message,
+        code: extractionError.code,
+        detail: extractionError.detail,
         fileName: file.name,
         mimeType: file.type,
         size: file.size,
+        ocrAttempted: extractionError.ocrAttempted,
+        methodsTried: extractionError.methodsTried,
       });
       return NextResponse.json(
-        { error: message, detail: "Document text extraction failed." },
+        {
+          error: extractionError.code,
+          detail: extractionError.detail,
+          meta: {
+            fileName: file.name,
+            ocrAttempted: extractionError.ocrAttempted,
+            methodsTried: extractionError.methodsTried,
+          },
+        },
         { status: 422 }
       );
     }
@@ -142,6 +159,9 @@ export async function POST(request: NextRequest) {
         chunkCount: extraction.chunks.length,
         pageCount: extraction.pageCount,
         textLength: extraction.text.length,
+        method: extraction.method,
+        methodsTried: extraction.methodsTried,
+        ocrAttempted: extraction.ocrAttempted,
         preview: extraction.text.slice(0, 500),
         provider: aiConfig?.provider ?? "heuristic-only",
         model: aiConfig?.model ?? null,
@@ -228,6 +248,9 @@ export async function POST(request: NextRequest) {
         pageCount: extraction.pageCount,
         chunkCount: extractionChunks.length,
         textLength: extraction.text.length,
+        extractionMethod: extraction.method,
+        methodsTried: extraction.methodsTried,
+        ocrAttempted: extraction.ocrAttempted,
         provider: aiConfig?.provider ?? "heuristic-only",
         model: aiConfig?.model ?? null,
         heuristicCount: heuristicCards.length,

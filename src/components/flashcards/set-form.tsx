@@ -85,6 +85,8 @@ const AI_ERROR_MAP: Record<string, string> = {
   AI_CONFIG_MISSING_API_KEY: "ai.errorAI",
   PDF_PARSER_UNAVAILABLE: "ai.errorExtraction",
   DOCX_PARSER_UNAVAILABLE: "ai.errorExtraction",
+  PDF_EXTRACTION_FAILED: "ai.errorExtraction",
+  DOCX_EXTRACTION_FAILED: "ai.errorExtraction",
 };
 
 function createInitialEntries(initialCards?: FlashcardInput[]) {
