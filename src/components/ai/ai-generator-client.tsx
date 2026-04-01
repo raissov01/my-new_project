@@ -65,6 +65,7 @@ const ERROR_MAP: Record<string, string> = {
   OPENAI_TIMEOUT: "ai.errorAI",
   NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoCards",
   NOT_AUTHENTICATED: "action.notAuthenticated",
+  NON_JSON_ERROR: "ai.errorGeneric",
   INVALID_MODE: "ai.errorGeneric",
   INVALID_LANGUAGE: "ai.errorGeneric",
   INVALID_CARD_COUNT: "ai.errorGeneric",
@@ -177,7 +178,13 @@ export function AIGeneratorClient() {
         if (process.env.NODE_ENV !== "production") {
           console.error("[AIGeneratorClient] API error:", data);
         }
-        setError(buildUiError(t, data?.error, data?.detail));
+        setError(
+          buildUiError(
+            t,
+            typeof data?.error === "string" ? data.error : undefined,
+            typeof data?.detail === "string" ? data.detail : undefined
+          )
+        );
         setStep("upload");
         return;
       }
@@ -188,8 +195,31 @@ export function AIGeneratorClient() {
         return;
       }
 
-      setCards(data.cards);
-      setMeta(data.meta ?? null);
+      setCards(
+        data.cards.map((card) => ({
+          front: String(card.front ?? "").trim(),
+          back: String(card.back ?? "").trim(),
+          category: String(card.category ?? "General"),
+          difficulty:
+            card.difficulty === "easy" || card.difficulty === "hard"
+              ? card.difficulty
+              : "medium",
+          source: String(card.source ?? "Document"),
+        }))
+      );
+      setMeta(
+        data.meta && typeof data.meta.fileName === "string"
+          ? {
+              fileName: data.meta.fileName,
+              pageCount:
+                typeof data.meta.pageCount === "number" || data.meta.pageCount === null
+                  ? data.meta.pageCount
+                  : null,
+              chunkCount:
+                typeof data.meta.chunkCount === "number" ? data.meta.chunkCount : 0,
+            }
+          : null
+      );
       setStep("preview");
     } catch (error) {
       if (process.env.NODE_ENV !== "production") {

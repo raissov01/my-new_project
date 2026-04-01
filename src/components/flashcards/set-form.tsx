@@ -79,6 +79,8 @@ const AI_ERROR_MAP: Record<string, string> = {
   OPENAI_RATE_LIMITED: "ai.errorAI",
   OPENAI_TIMEOUT: "ai.errorAI",
   NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoCards",
+  NOT_AUTHENTICATED: "action.notAuthenticated",
+  NON_JSON_ERROR: "ai.errorGeneric",
   GENERATION_FAILED: "ai.errorGeneric",
   AI_CONFIG_MISSING_API_KEY: "ai.errorAI",
 };
@@ -209,8 +211,10 @@ export function SetForm({
         if (process.env.NODE_ENV !== "production") {
           console.error("[SetForm] AI import API error:", data);
         }
-        const errorKey = AI_ERROR_MAP[data?.error] ?? "ai.errorGeneric";
-        const detail = data?.detail ? ` ${String(data.detail)}` : "";
+        const errorCode =
+          typeof data?.error === "string" ? data.error : "GENERATION_FAILED";
+        const errorKey = AI_ERROR_MAP[errorCode] ?? "ai.errorGeneric";
+        const detail = typeof data?.detail === "string" ? ` ${data.detail}` : "";
         setImportError(`${t(errorKey)}${detail}`);
         return;
       }

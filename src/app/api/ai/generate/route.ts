@@ -25,15 +25,14 @@ const VALID_MIME_TYPES = new Set([
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  // Auth check
-  if (!DEV_MODE) {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
-    }
-  }
-
   try {
+    if (!DEV_MODE) {
+      const user = await getCurrentUser();
+      if (!user) {
+        return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
+      }
+    }
+
     const aiConfig = getAIConfigSafe();
     const formData = await request.formData();
     const file = formData.get("file");
@@ -248,10 +247,6 @@ export async function POST(request: NextRequest) {
 
     const message = err instanceof Error ? err.message : "UNKNOWN_ERROR";
     console.error("[AI Generate] Unhandled error:", err);
-
-    return NextResponse.json(
-      { error: "GENERATION_FAILED", detail: message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "GENERATION_FAILED", detail: message }, { status: 500 });
   }
 }

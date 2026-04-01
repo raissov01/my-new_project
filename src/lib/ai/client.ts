@@ -20,7 +20,24 @@ export async function requestAIGeneration(formData: FormData) {
       signal: controller.signal,
     });
 
-    const data = await response.json().catch(() => null);
+    const rawText = await response.text().catch(() => "");
+    let data: {
+      error?: string;
+      detail?: string;
+      cards?: Array<Record<string, unknown>>;
+      meta?: Record<string, unknown> | null;
+      warnings?: string[];
+    } | null = null;
+
+    try {
+      data = rawText ? JSON.parse(rawText) : null;
+    } catch {
+      data = {
+        error: "NON_JSON_ERROR",
+        detail: rawText.slice(0, 400) || `Server returned ${response.status}`,
+      };
+    }
+
     return { response, data };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
