@@ -54,16 +54,14 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/teacher/") ||
     pathname === "/student" ||
     pathname.startsWith("/student/") ||
-    pathname === "/sets" ||
-    pathname.startsWith("/sets/") ||
+    pathname === "/sets/new" ||
+    pathname === "/sets/new/ai" ||
+    /^\/sets\/[^/]+\/edit$/.test(pathname) ||
+    /^\/sets\/[^/]+\/study$/.test(pathname) ||
     pathname === "/profile" ||
     pathname.startsWith("/profile/") ||
     pathname === "/settings" ||
     pathname.startsWith("/settings/") ||
-    pathname === "/guide" ||
-    pathname.startsWith("/guide/") ||
-    pathname === "/leaderboard" ||
-    pathname.startsWith("/leaderboard/") ||
     pathname === "/classes" ||
     pathname.startsWith("/classes/");
 

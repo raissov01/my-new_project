@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Plus, Search, SlidersHorizontal, GraduationCap } from "lucide-react";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { getServerLocale } from "@/lib/i18n/server";
 import { createTranslator } from "@/lib/i18n/shared";
 import { Button } from "@/components/ui/button";
 import { SetCard } from "@/components/flashcards";
-import { getUserSetsOverview } from "@/lib/sets-overview";
+import { AuthRequiredPrompt } from "@/components/auth/auth-required-prompt";
+import { getPublicSetsOverview, getUserSetsOverview } from "@/lib/sets-overview";
 
 interface SetsPageProps {
   searchParams: Promise<{
@@ -18,13 +18,11 @@ interface SetsPageProps {
 
 export default async function SetsPage({ searchParams }: SetsPageProps) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
-
   const locale = await getServerLocale();
   const t = createTranslator(locale);
   const { q = "", filter = "all", sort = "recent" } = await searchParams;
 
-  const sets = await getUserSetsOverview();
+  const sets = user ? await getUserSetsOverview() : await getPublicSetsOverview();
   const query = q.trim().toLowerCase();
 
   let filtered = sets.filter((set) => {
@@ -35,15 +33,15 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
 
     if (!matchesQuery) return false;
 
-    if (filter === "review") {
+    if (filter === "review" && user) {
       return set.reviewCount > 0 || set.weakCount > 0 || set.dueCount > 0;
     }
 
-    if (filter === "recent") {
+    if (filter === "recent" && user) {
       return Boolean(set.lastStudiedAt);
     }
 
-    if (filter === "mastered") {
+    if (filter === "mastered" && user) {
       return set.accuracy >= 80 && set.cardCount > 0;
     }
 
@@ -60,17 +58,22 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
     return new Date(bDate).getTime() - new Date(aDate).getTime();
   });
 
-  const quickStartSet =
-    sets.find((set) => set.reviewCount > 0 || set.weakCount > 0 || set.dueCount > 0) ??
-    sets[0] ??
-    null;
+  const quickStartSet = user
+    ? sets.find((set) => set.reviewCount > 0 || set.weakCount > 0 || set.dueCount > 0) ??
+      sets[0] ??
+      null
+    : sets[0] ?? null;
   const quickStartHref = quickStartSet
-    ? `/sets/${quickStartSet.id}/study${
-        quickStartSet.reviewCount > 0 || quickStartSet.weakCount > 0 || quickStartSet.dueCount > 0
-          ? "?mode=review"
-          : ""
-      }`
-    : "/sets/new";
+    ? user
+      ? `/sets/${quickStartSet.id}/study${
+          quickStartSet.reviewCount > 0 ||
+          quickStartSet.weakCount > 0 ||
+          quickStartSet.dueCount > 0
+            ? "?mode=review"
+            : ""
+        }`
+      : `/sets/${quickStartSet.id}`
+    : "/sets";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -84,28 +87,52 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
             {t("sets.title")}
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-            {t("sets.subtitle")}
+            {user ? t("sets.subtitle") : t("guest.librarySubtitle")}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Link href="/collections">
-            <Button size="lg" variant="outline">
-              {t("nav.myCollections")}
-            </Button>
-          </Link>
+          {user ? (
+            <Link href="/collections">
+              <Button size="lg" variant="outline">
+                {t("nav.myCollections")}
+              </Button>
+            </Link>
+          ) : (
+            <AuthRequiredPrompt
+              triggerLabel={t("nav.myCollections")}
+              title={t("guest.authRequiredTitle")}
+              description={t("guest.collectionsPrompt")}
+              signupLabel={t("guest.signUpToContinue")}
+              loginLabel={t("guest.logInToUnlock")}
+              cancelLabel={t("set.cancel")}
+              variant="outline"
+            />
+          )}
           <Link href={quickStartHref}>
             <Button size="lg" variant="outline">
               <GraduationCap className="h-4 w-4" />
-              {t("nav.startStudy")}
+              {user ? t("nav.startStudy") : t("guest.previewSet")}
             </Button>
           </Link>
-          <Link href="/sets/new">
-            <Button size="lg">
-              <Plus className="h-4 w-4" />
-              {t("dashboard.createNewSet")}
-            </Button>
-          </Link>
+          {user ? (
+            <Link href="/sets/new">
+              <Button size="lg">
+                <Plus className="h-4 w-4" />
+                {t("dashboard.createNewSet")}
+              </Button>
+            </Link>
+          ) : (
+            <AuthRequiredPrompt
+              triggerLabel={t("dashboard.createNewSet")}
+              title={t("guest.authRequiredTitle")}
+              description={t("guest.createPrompt")}
+              signupLabel={t("guest.signUpToContinue")}
+              loginLabel={t("guest.logInToUnlock")}
+              cancelLabel={t("set.cancel")}
+              icon={<Plus className="h-4 w-4" />}
+            />
+          )}
         </div>
       </div>
       </div>
@@ -179,8 +206,10 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
               cardCount={set.cardCount}
               createdAt={set.createdAt}
               lastStudiedAt={set.lastStudiedAt}
-              accuracy={set.accuracy}
+              accuracy={"accuracy" in set ? set.accuracy : 0}
               locale={locale}
+              showManageActions={Boolean(user)}
+              requireAuthForStudy={!user}
             />
           ))}
         </div>

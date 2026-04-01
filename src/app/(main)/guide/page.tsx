@@ -18,15 +18,18 @@ import {
 } from "lucide-react";
 import { createTranslator } from "@/lib/i18n/shared";
 import { getServerLocale } from "@/lib/i18n/server";
+import { getCurrentUser } from "@/lib/supabase/server";
+import { AuthRequiredPrompt } from "@/components/auth/auth-required-prompt";
 
 export default async function GuidePage() {
+  const user = await getCurrentUser();
   const locale = await getServerLocale();
   const t = createTranslator(locale);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
       <Link
-        href="/dashboard"
+        href={user ? "/dashboard" : "/"}
         className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -229,17 +232,30 @@ export default async function GuidePage() {
         <p className="mt-2 text-sm text-indigo-200">{t("guide.ctaBody")}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
-            href="/dashboard"
+            href={user ? "/dashboard" : "/sets"}
             className="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
           >
-            {t("guide.ctaStart")}
+            {user ? t("guide.ctaStart") : t("guest.exploreLibrary")}
           </Link>
-          <Link
-            href="/sets/new"
-            className="rounded-xl border border-white/30 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            {t("guide.ctaCreate")}
-          </Link>
+          {user ? (
+            <Link
+              href="/sets/new"
+              className="rounded-xl border border-white/30 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              {t("guide.ctaCreate")}
+            </Link>
+          ) : (
+            <AuthRequiredPrompt
+              triggerLabel={t("guide.ctaCreate")}
+              title={t("guest.authRequiredTitle")}
+              description={t("guest.createPrompt")}
+              signupLabel={t("guest.signUpToContinue")}
+              loginLabel={t("guest.logInToUnlock")}
+              cancelLabel={t("set.cancel")}
+              variant="outline"
+              className="border-white/30 bg-transparent text-white hover:bg-white/10"
+            />
+          )}
         </div>
       </div>
     </div>

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { AvatarMenu } from "@/components/layout/avatar-menu";
 import { BrandLogo } from "@/components/layout";
 import { DEV_MODE } from "@/lib/dev-mode";
+import { AuthRequiredPrompt } from "@/components/auth/auth-required-prompt";
 
 export function Navbar() {
   const { user, loading } = useAuth();
@@ -46,7 +47,22 @@ export function Navbar() {
         },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
       ]
-    : [{ href: homeHref, label: t("nav.home"), icon: Home, exact: true }];
+    : [
+        { href: "/", label: t("nav.home"), icon: Home, exact: true },
+        {
+          href: "/sets",
+          label: t("nav.flashcardLibrary"),
+          icon: LibraryBig,
+          exact: false,
+        },
+        {
+          href: "/leaderboard",
+          label: t("nav.leaderboard"),
+          icon: Layers3,
+          exact: false,
+        },
+        { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
+      ];
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -130,6 +146,19 @@ export function Navbar() {
                 <>
                   {!DEV_MODE ? (
                     <>
+                      <Link href="/sets">
+                        <Button variant="outline">{t("guest.exploreLibrary")}</Button>
+                      </Link>
+                      <AuthRequiredPrompt
+                        triggerLabel={t("nav.newSet")}
+                        title={t("guest.authRequiredTitle")}
+                        description={t("guest.createPrompt")}
+                        signupLabel={t("guest.signUpToContinue")}
+                        loginLabel={t("guest.logInToUnlock")}
+                        cancelLabel={t("set.cancel")}
+                        icon={<Plus className="h-4 w-4" />}
+                        variant="secondary"
+                      />
                       <Link
                         href="/login"
                         className="rounded-2xl px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
@@ -235,6 +264,15 @@ export function Navbar() {
 
                 {!user && !DEV_MODE && (
                   <div className="mt-5 space-y-2.5">
+                    <Link
+                      href="/sets"
+                      onClick={() => setDrawerOpen(false)}
+                      className="block"
+                    >
+                      <Button variant="outline" className="w-full">
+                        {t("guest.exploreLibrary")}
+                      </Button>
+                    </Link>
                     <Link
                       href="/login"
                       onClick={() => setDrawerOpen(false)}

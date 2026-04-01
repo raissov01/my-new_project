@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/utils";
 import { type Locale, createTranslator } from "@/lib/i18n/shared";
 import { DeleteSetButton } from "./delete-set-button";
 import { StudyRoutePrefetch } from "./study-route-prefetch";
+import { AuthRequiredPrompt } from "@/components/auth/auth-required-prompt";
 
 interface SetCardProps {
   id: string;
@@ -16,6 +17,7 @@ interface SetCardProps {
   locale: Locale;
   showManageActions?: boolean;
   compact?: boolean;
+  requireAuthForStudy?: boolean;
 }
 
 export function SetCard({
@@ -29,6 +31,7 @@ export function SetCard({
   locale,
   showManageActions = true,
   compact = false,
+  requireAuthForStudy = false,
 }: SetCardProps) {
   const t = createTranslator(locale);
   return (
@@ -79,12 +82,25 @@ export function SetCard({
       )}
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link href={`/sets/${id}/study`} className="inline-flex">
-          <span className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,var(--primary-from),var(--primary-to))] px-4 text-sm font-medium text-white shadow-[0_18px_32px_-24px_rgba(79,124,255,0.82)] transition-transform hover:-translate-y-0.5">
-            <GraduationCap className="h-4 w-4" />
-            {t("nav.startStudy")}
-          </span>
-        </Link>
+        {requireAuthForStudy ? (
+          <AuthRequiredPrompt
+            triggerLabel={t("nav.startStudy")}
+            title={t("guest.authRequiredTitle")}
+            description={t("guest.studyPrompt")}
+            signupLabel={t("guest.signUpToContinue")}
+            loginLabel={t("guest.logInToUnlock")}
+            cancelLabel={t("set.cancel")}
+            icon={<GraduationCap className="h-4 w-4" />}
+            className="h-11 px-4"
+          />
+        ) : (
+          <Link href={`/sets/${id}/study`} className="inline-flex">
+            <span className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,var(--primary-from),var(--primary-to))] px-4 text-sm font-medium text-white shadow-[0_18px_32px_-24px_rgba(79,124,255,0.82)] transition-transform hover:-translate-y-0.5">
+              <GraduationCap className="h-4 w-4" />
+              {t("nav.startStudy")}
+            </span>
+          </Link>
+        )}
         <Link href={`/sets/${id}`} className="inline-flex">
           <span className="inline-flex h-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]">
             {t("recommend.openSet")}

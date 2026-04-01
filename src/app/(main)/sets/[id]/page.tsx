@@ -48,6 +48,7 @@ export default async function SetDetailPage({
   const t = createTranslator(locale);
   const supabase = await createClient();
   const user = await getCurrentUser();
+  const backHref = user ? "/dashboard" : "/sets";
 
   // Fetch set + flashcards in parallel, then use card IDs for progress (avoids
   // getSetProgress re-fetching the same flashcard IDs)
@@ -91,7 +92,7 @@ export default async function SetDetailPage({
       {cards.length > 0 && <StudyRoutePrefetch setId={id} />}
 
       <Link
-        href="/dashboard"
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
       >
         <ArrowLeft className="h-4 w-4" />

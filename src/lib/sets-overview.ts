@@ -16,6 +16,8 @@ export type UserSetOverview = {
   dueCount: number;
 };
 
+export type PublicSetOverview = UserSetOverview;
+
 function isDueToday(value: string) {
   return new Date(value).getTime() <= Date.now();
 }
@@ -124,4 +126,50 @@ export async function getUserSetsOverview(): Promise<UserSetOverview[]> {
     console.warn("[sets-overview] Falling back to Supabase:", error);
     return await getUserSetsOverviewFromSupabase(user.id);
   }
+}
+
+export async function getPublicSetsOverview(): Promise<PublicSetOverview[]> {
+  const supabase = await createClient();
+
+  const { data: setsData } = await supabase
+    .from("flashcard_sets")
+    .select("id, title, description, created_at, updated_at")
+    .eq("is_public", true)
+    .order("updated_at", { ascending: false });
+
+  const publicSets =
+    (setsData as
+      | Pick<FlashcardSet, "id" | "title" | "description" | "created_at" | "updated_at">[]
+      | null) ?? [];
+
+  if (publicSets.length === 0) {
+    return [];
+  }
+
+  const setIds = publicSets.map((set) => set.id);
+  const { data: cardsData } = await supabase
+    .from("flashcards")
+    .select("set_id")
+    .in("set_id", setIds);
+
+  const cardCounts = new Map<string, number>();
+  for (const row of ((cardsData as { set_id: string }[] | null) ?? [])) {
+    cardCounts.set(row.set_id, (cardCounts.get(row.set_id) ?? 0) + 1);
+  }
+
+  return publicSets
+    .map((set) => ({
+      id: set.id,
+      title: set.title,
+      description: set.description,
+      createdAt: set.created_at,
+      updatedAt: set.updated_at,
+      cardCount: cardCounts.get(set.id) ?? 0,
+      lastStudiedAt: null,
+      accuracy: 0,
+      reviewCount: 0,
+      weakCount: 0,
+      dueCount: 0,
+    }))
+    .filter((set) => set.cardCount > 0);
 }

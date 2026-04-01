@@ -9,10 +9,10 @@ export const config = {
   matcher: [
     "/classes/:path*",
     "/dashboard/:path*",
-    "/guide/:path*",
-    "/leaderboard/:path*",
     "/profile/:path*",
-    "/sets/:path*",
+    "/sets/new",
+    "/sets/:id/edit",
+    "/sets/:id/study",
     "/settings/:path*",
     "/student/:path*",
     "/teacher/:path*",
