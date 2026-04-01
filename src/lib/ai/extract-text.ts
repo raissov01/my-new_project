@@ -9,7 +9,7 @@ import { getAIConfigSafe, type AIConfig } from "./config";
 const requireCjs = createRequire(import.meta.url);
 const execFileAsync = promisify(execFile);
 const OCR_TEXT_MIN_LENGTH = 20;
-const FALLBACK_TEXT_MIN_LENGTH = 200;
+const FALLBACK_TEXT_MIN_LENGTH = 80;
 
 export type ExtractionMethod =
   | "pdf-parse"
@@ -467,9 +467,14 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
       }
     }
 
-    if (pages.every((page) => cleanText(page).length === 0)) {
+    const visionPages = pages.map((page) => cleanText(page));
+    const visionText = cleanText(visionPages.filter(Boolean).join("\n\n"));
+
+    if (visionText.length < OCR_TEXT_MIN_LENGTH) {
       const tesseractResult = await ocrWithTesseract(preparedImagePaths);
-      pages = tesseractResult.pages;
+      const tesseractPages = tesseractResult.pages.map((page) => cleanText(page));
+      const tesseractText = cleanText(tesseractPages.filter(Boolean).join("\n\n"));
+      pages = tesseractText.length > visionText.length ? tesseractPages : visionPages;
       worker = tesseractResult.worker;
       if (!ocrDetail && tesseractResult.detail) {
         ocrDetail = tesseractResult.detail;
