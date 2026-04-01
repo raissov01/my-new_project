@@ -93,8 +93,71 @@ Return only valid JSON:
   { "front": "", "back": "" }
 ]`;
 
-function buildPrompt(chunk: TextChunk) {
-  return `${STRICT_PROMPT}
+const GENERATION_PROMPT = `You are a smart flashcard generation system.
+
+Your task is to read the provided document text and generate useful flashcards from its content.
+
+IMPORTANT:
+- This mode is GENERATION mode, so you may create definitions, explanations, translations, or answers based on the document content
+- Use only the document as the source of truth
+- Do not invent unrelated information
+- Keep cards accurate, concise, and useful for study
+- Adapt to the type of content automatically
+
+RULES:
+- If the document contains isolated words or terms, generate clear meanings, definitions, or translations
+- If the document contains concepts, generate term/definition flashcards
+- If the document contains questions or prompts, generate question/answer flashcards
+- Choose the most suitable flashcard structure automatically
+- Do not return mixed messy formats
+- Keep each card clean and easy to study
+
+Return only valid JSON in one consistent format:
+[
+  {
+    "front": "",
+    "back": ""
+  }
+]`;
+
+function getLanguageInstruction(language: GenerationLanguage) {
+  switch (language) {
+    case "kk":
+      return "Prefer Kazakh wording when the document supports it.";
+    case "ru":
+      return "Prefer Russian wording when the document supports it.";
+    case "en":
+      return "Prefer English wording when the document supports it.";
+    default:
+      return "";
+  }
+}
+
+function getModeInstruction(mode: GenerationMode) {
+  switch (mode) {
+    case "vocabulary":
+      return "Only extract explicit word/term pairs from the text.";
+    case "definition":
+      return "Prefer concise term-definition cards.";
+    case "qa":
+      return "Prefer clean question-answer cards when the content supports that structure.";
+    case "mixed":
+    default:
+      return "Choose the most useful study card structure automatically.";
+  }
+}
+
+function buildPrompt(chunk: TextChunk, options: GenerateOptions) {
+  const basePrompt = options.mode === "vocabulary" ? STRICT_PROMPT : GENERATION_PROMPT;
+  const limitInstruction = `Generate up to ${options.cardCount} cards from this chunk if the content supports it.`;
+  const modeInstruction = getModeInstruction(options.mode);
+  const languageInstruction = getLanguageInstruction(options.language);
+
+  return `${basePrompt}
+
+${modeInstruction}
+${languageInstruction}
+${limitInstruction}
 
 Text:
 ${chunk.text}`;
@@ -564,7 +627,7 @@ async function processChunkWithRecovery({
   stats,
   errors,
 }: ChunkRecoveryOptions): Promise<GeneratedCard[]> {
-  const prompt = buildPrompt(chunk);
+  const prompt = buildPrompt(chunk, options);
 
   try {
     const result = await executeChunk(chunk, prompt, config, preferredModel);
