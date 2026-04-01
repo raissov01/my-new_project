@@ -33,11 +33,19 @@ export function SignupForm() {
     e.preventDefault();
     setError(null);
     setMessage(null);
+    setSocialPending(null);
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
-      const result = await signup(formData);
-      if (result?.error) setError(result.error);
-      else if (result?.message) setMessage(result.message);
+      try {
+        const result = await signup(formData);
+        if (result?.error) setError(result.error);
+        else if (result?.message) setMessage(result.message);
+      } catch {
+        // redirect() throws NEXT_REDIRECT — that's normal on success.
+        // Any other throw means something broke; reset the form state.
+      } finally {
+        setSocialPending(null);
+      }
     });
   }
 
@@ -45,15 +53,21 @@ export function SignupForm() {
     setError(null);
     setSocialPending(provider);
     startTransition(async () => {
-      const result = await socialLogin(provider);
-      if (result?.error) {
-        setError(result.error);
+      try {
+        const result = await socialLogin(provider);
+        if (result?.error) {
+          setError(result.error);
+        }
+      } catch {
+        // redirect() throws on success — that's expected
+      } finally {
         setSocialPending(null);
       }
     });
   }
 
-  const isDisabled = isPending || !!socialPending;
+  // Only disable during active request. Never leave permanently disabled.
+  const isDisabled = isPending;
 
   // Success message screen
   if (message) {

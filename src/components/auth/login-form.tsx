@@ -29,10 +29,17 @@ export function LoginForm() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setSocialPending(null);
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
-      const result = await login(formData);
-      if (result?.error) setError(result.error);
+      try {
+        const result = await login(formData);
+        if (result?.error) setError(result.error);
+      } catch {
+        // redirect() throws NEXT_REDIRECT on success — expected
+      } finally {
+        setSocialPending(null);
+      }
     });
   }
 
@@ -40,15 +47,20 @@ export function LoginForm() {
     setError(null);
     setSocialPending(provider);
     startTransition(async () => {
-      const result = await socialLogin(provider);
-      if (result?.error) {
-        setError(result.error);
+      try {
+        const result = await socialLogin(provider);
+        if (result?.error) {
+          setError(result.error);
+        }
+      } catch {
+        // redirect() throws on success — expected
+      } finally {
         setSocialPending(null);
       }
     });
   }
 
-  const isDisabled = isPending || !!socialPending;
+  const isDisabled = isPending;
 
   return (
     <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
