@@ -63,6 +63,7 @@ const ERROR_MAP: Record<string, string> = {
   OPENAI_INVALID_FORMAT: "ai.errorAI",
   OPENAI_RATE_LIMITED: "ai.errorAI",
   OPENAI_TIMEOUT: "ai.errorAI",
+  NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoCards",
   NOT_AUTHENTICATED: "action.notAuthenticated",
   INVALID_MODE: "ai.errorGeneric",
   INVALID_LANGUAGE: "ai.errorGeneric",

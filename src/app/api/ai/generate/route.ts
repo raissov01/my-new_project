@@ -8,7 +8,12 @@ import {
   type GenerationMode,
   type GenerationLanguage,
 } from "@/lib/ai/gemini";
-import { getAIConfig } from "@/lib/ai/config";
+import { getAIConfigSafe } from "@/lib/ai/config";
+import {
+  buildVocabularyChunks,
+  dedupeVocabularyCards,
+  extractExplicitVocabularyPairs,
+} from "@/lib/ai/vocabulary-extractor";
 
 const VALID_MODES = new Set<GenerationMode>(["mixed", "definition", "qa", "vocabulary"]);
 const VALID_LANGUAGES = new Set<GenerationLanguage>(["kk", "ru", "en"]);
@@ -29,7 +34,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const aiConfig = getAIConfig();
+    const aiConfig = getAIConfigSafe();
     const formData = await request.formData();
     const file = formData.get("file");
     const mode = String(formData.get("mode") ?? "mixed");
@@ -39,10 +44,14 @@ export async function POST(request: NextRequest) {
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[AI Generate] Incoming request:", {
+        fileName: file instanceof File ? file.name : null,
+        fileType: file instanceof File ? file.type : null,
         mode,
         language,
         requestedCardCount,
         cardCount,
+        provider: aiConfig?.provider ?? "heuristic-only",
+        model: aiConfig?.model ?? null,
       });
     }
 
@@ -85,11 +94,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (file.size > aiConfig.maxUploadBytes) {
+    const maxUploadBytes = aiConfig?.maxUploadBytes ?? 20 * 1024 * 1024;
+
+    if (file.size > maxUploadBytes) {
       return NextResponse.json(
         {
           error: "FILE_TOO_LARGE",
-          detail: `File size ${file.size} exceeds ${aiConfig.maxUploadBytes} bytes.`,
+          detail: `File size ${file.size} exceeds ${maxUploadBytes} bytes.`,
         },
         { status: 400 }
       );
@@ -132,35 +143,93 @@ export async function POST(request: NextRequest) {
         chunkCount: extraction.chunks.length,
         pageCount: extraction.pageCount,
         textLength: extraction.text.length,
-        provider: aiConfig.provider,
-        model: aiConfig.model,
+        preview: extraction.text.slice(0, 500),
+        provider: aiConfig?.provider ?? "heuristic-only",
+        model: aiConfig?.model ?? null,
       });
     }
 
-    // Step 2: Generate flashcards with AI
-    const cards = await generateFlashcardsWithAI({
-      chunks: extraction.chunks,
-      mode: mode as GenerationMode,
-      language: language as GenerationLanguage,
-      cardCount,
-    });
+    const heuristicCards = extractExplicitVocabularyPairs(extraction.text, file.name);
+    const extractionChunks = buildVocabularyChunks(extraction.text);
+    const warnings: string[] = [];
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[AI Generate] Heuristic extraction:", {
+        heuristicCount: heuristicCards.length,
+        chunkCount: extractionChunks.length,
+      });
+    }
+
+    let cards = heuristicCards;
+
+    if (cards.length < cardCount && aiConfig && extractionChunks.length > 0) {
+      try {
+        const aiCards = await generateFlashcardsWithAI({
+          chunks: extractionChunks,
+          mode: mode as GenerationMode,
+          language: language as GenerationLanguage,
+          cardCount,
+        });
+
+        cards = dedupeVocabularyCards([
+          ...heuristicCards,
+          ...aiCards.map((card) => ({
+            front: card.front,
+            back: card.back,
+            source: card.source,
+          })),
+        ]);
+      } catch (error) {
+        const detail =
+          error instanceof AIProviderError
+            ? `${error.code}: ${error.detail ?? error.message}`
+            : error instanceof Error
+              ? error.message
+              : "Unknown AI extraction failure";
+        warnings.push(detail);
+        console.error("[AI Generate] AI chunk extraction failed:", detail);
+      }
+    } else if (!aiConfig) {
+      warnings.push("AI provider key missing, heuristic extraction only.");
+    }
+
+    cards = dedupeVocabularyCards(cards).slice(0, cardCount);
+
+    if (cards.length === 0) {
+      return NextResponse.json(
+        {
+          error: "NO_EXPLICIT_VOCAB_PAIRS",
+          detail:
+            warnings[0] ??
+            "No explicit word-definition or word-translation pairs were found in the document.",
+        },
+        { status: 422 }
+      );
+    }
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[AI Generate] Generation complete:", {
         fileName: file.name,
         cards: cards.length,
+        warnings,
       });
     }
 
     return NextResponse.json({
-      cards,
+      cards: cards.map((card) => ({
+        front: card.front,
+        back: card.back,
+        source: card.source ?? file.name,
+      })),
+      warnings,
       meta: {
         fileName: file.name,
         pageCount: extraction.pageCount,
-        chunkCount: extraction.chunks.length,
+        chunkCount: extractionChunks.length,
         textLength: extraction.text.length,
-        provider: aiConfig.provider,
-        model: aiConfig.model,
+        provider: aiConfig?.provider ?? "heuristic-only",
+        model: aiConfig?.model ?? null,
+        heuristicCount: heuristicCards.length,
       },
     });
   } catch (err) {
@@ -179,16 +248,6 @@ export async function POST(request: NextRequest) {
 
     const message = err instanceof Error ? err.message : "UNKNOWN_ERROR";
     console.error("[AI Generate] Unhandled error:", err);
-
-    if (message === "AI_CONFIG_MISSING_API_KEY") {
-      return NextResponse.json(
-        {
-          error: "AI_CONFIG_MISSING_API_KEY",
-          detail: "OPENAI_API_KEY or GEMINI_API_KEY is not configured on the server.",
-        },
-        { status: 500 }
-      );
-    }
 
     return NextResponse.json(
       { error: "GENERATION_FAILED", detail: message },

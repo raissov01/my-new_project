@@ -78,6 +78,7 @@ const AI_ERROR_MAP: Record<string, string> = {
   OPENAI_INVALID_FORMAT: "ai.errorAI",
   OPENAI_RATE_LIMITED: "ai.errorAI",
   OPENAI_TIMEOUT: "ai.errorAI",
+  NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoCards",
   GENERATION_FAILED: "ai.errorGeneric",
   AI_CONFIG_MISSING_API_KEY: "ai.errorAI",
 };
