@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition, useRef } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import {
   Plus,
   Trash2,
@@ -12,6 +12,7 @@ import {
   FileSpreadsheet,
   Loader2,
   Upload,
+  CheckCircle2,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,14 @@ interface SetFormProps {
 // Each card in the form gets a stable key for React rendering,
 // separate from the database ID.
 type CardEntry = FlashcardInput & { _key: number };
+type ImportStage =
+  | "idle"
+  | "uploading"
+  | "reading"
+  | "extracting"
+  | "generating"
+  | "success"
+  | "error";
 
 const AI_MODES: { value: GenerationMode; labelKey: string }[] = [
   { value: "mixed", labelKey: "ai.modeMixed" },
@@ -122,6 +131,7 @@ export function SetForm({
   );
   const aiFileInputRef = useRef<HTMLInputElement>(null);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
+  const importStageTimersRef = useRef<number[]>([]);
 
   function makeEntry(card?: FlashcardInput): CardEntry {
     return {
@@ -142,6 +152,8 @@ export function SetForm({
   const [error, setError] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
+  const [importStage, setImportStage] = useState<ImportStage>("idle");
+  const [importSuccessMessage, setImportSuccessMessage] = useState<string | null>(null);
   const [aiMode, setAiMode] = useState<GenerationMode>("mixed");
   const [aiLanguage, setAiLanguage] = useState<GenerationLanguage>(
     locale === "kk" || locale === "ru" || locale === "en" ? locale : "kk"
@@ -149,6 +161,68 @@ export function SetForm({
   const [isGeneratingImport, setIsGeneratingImport] = useState(false);
   const [isImportingCsv, setIsImportingCsv] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  function clearImportStageTimers() {
+    for (const timerId of importStageTimersRef.current) {
+      window.clearTimeout(timerId);
+    }
+    importStageTimersRef.current = [];
+  }
+
+  function startImportStageSequence() {
+    clearImportStageTimers();
+    setImportStage("uploading");
+
+    importStageTimersRef.current = [
+      window.setTimeout(() => setImportStage("reading"), 350),
+      window.setTimeout(() => setImportStage("extracting"), 1400),
+      window.setTimeout(() => setImportStage("generating"), 3200),
+    ];
+  }
+
+  function getImportStageMessage(stage: ImportStage) {
+    switch (stage) {
+      case "uploading":
+        return t("form.importStageUploading");
+      case "reading":
+        return t("form.importStageReading");
+      case "extracting":
+        return t("form.importStageExtracting");
+      case "generating":
+        return t("form.importStageGenerating");
+      case "success":
+        return importSuccessMessage ?? t("form.importStageSuccess");
+      case "error":
+        return importError ?? t("form.importStageError");
+      default:
+        return null;
+    }
+  }
+
+  function getImportButtonLabel() {
+    if (!isGeneratingImport) {
+      return t("form.importPdfDocx");
+    }
+
+    switch (importStage) {
+      case "uploading":
+        return t("form.importButtonUploading");
+      case "reading":
+        return t("form.importButtonReading");
+      case "extracting":
+        return t("form.importButtonExtracting");
+      case "generating":
+        return t("form.importButtonGenerating");
+      default:
+        return t("form.importPdfDocx");
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      clearImportStageTimers();
+    };
+  }, []);
 
   function updateCard(
     index: number,
@@ -198,9 +272,11 @@ export function SetForm({
 
   async function handleAIDocument(file: File) {
     setImportError(null);
+    setImportSuccessMessage(null);
     setImportFileName(file.name);
     inferTitleFromFile(file.name);
     setIsGeneratingImport(true);
+    startImportStageSequence();
 
     try {
       const formData = new FormData();
@@ -218,6 +294,8 @@ export function SetForm({
           typeof data?.error === "string" ? data.error : "GENERATION_FAILED";
         const errorKey = AI_ERROR_MAP[errorCode] ?? "ai.errorGeneric";
         const detail = typeof data?.detail === "string" ? ` ${data.detail}` : "";
+        clearImportStageTimers();
+        setImportStage("error");
         setImportError(`${t(errorKey)}${detail}`);
         return;
       }
@@ -232,16 +310,25 @@ export function SetForm({
         );
 
       if (importedCards.length === 0) {
+        clearImportStageTimers();
+        setImportStage("error");
         setImportError(t("ai.errorNoCards"));
         return;
       }
 
       mergeImportedCards(importedCards);
+      clearImportStageTimers();
+      setImportStage("success");
+      setImportSuccessMessage(
+        t("form.importStageSuccessCount", { count: importedCards.length })
+      );
     } catch (error) {
       if (process.env.NODE_ENV !== "production") {
         console.error("[SetForm] AI import request failed:", error);
       }
 
+      clearImportStageTimers();
+      setImportStage("error");
       setImportError(
         error instanceof AIClientRequestError
           ? `${t("ai.errorAI")} ${error.message}`
@@ -250,6 +337,7 @@ export function SetForm({
             : t("ai.errorGeneric")
       );
     } finally {
+      clearImportStageTimers();
       setIsGeneratingImport(false);
     }
   }
@@ -585,14 +673,41 @@ export function SetForm({
               variant="outline"
               onClick={() => aiFileInputRef.current?.click()}
               disabled={isGeneratingImport || isImportingCsv || isPending}
+              aria-busy={isGeneratingImport}
             >
               {isGeneratingImport ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Upload className="h-4 w-4" />
               )}
-              {t("form.importPdfDocx")}
+              {getImportButtonLabel()}
             </Button>
+
+            {(isGeneratingImport || importStage === "success") && getImportStageMessage(importStage) ? (
+              <div
+                className={`mt-3 flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${
+                  importStage === "success"
+                    ? "border-emerald-500/20 bg-emerald-500/8 text-emerald-300"
+                    : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
+                }`}
+              >
+                {importStage === "success" ? (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                ) : (
+                  <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-indigo-300" />
+                )}
+                <div className="space-y-1">
+                  <p className="font-medium text-[var(--text-primary)]">
+                    {getImportStageMessage(importStage)}
+                  </p>
+                  {importFileName ? (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {t("form.lastImportedFile")}: {importFileName}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
@@ -638,7 +753,7 @@ export function SetForm({
           </div>
         </div>
 
-        {importFileName ? (
+        {importFileName && !isGeneratingImport && importStage !== "success" ? (
           <p className="mt-4 text-sm text-[var(--text-muted)]">
             {t("form.lastImportedFile")}: {importFileName}
           </p>
