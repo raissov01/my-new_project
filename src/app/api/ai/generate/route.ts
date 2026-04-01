@@ -5,7 +5,9 @@ import { extractText, TextExtractionError } from "@/lib/ai/extract-text";
 import {
   AIProviderError,
   generateFlashcardsWithAI,
+  normalizeGenerationMode,
   type GenerationMode,
+  type GenerationModeInput,
   type GenerationLanguage,
 } from "@/lib/ai/gemini";
 import { getAIConfigSafe } from "@/lib/ai/config";
@@ -15,7 +17,14 @@ import {
   extractExplicitVocabularyPairs,
 } from "@/lib/ai/vocabulary-extractor";
 
-const VALID_MODES = new Set<GenerationMode>(["mixed", "definition", "qa", "vocabulary"]);
+const VALID_MODES = new Set<GenerationModeInput>([
+  "generation",
+  "extraction",
+  "mixed",
+  "definition",
+  "qa",
+  "vocabulary",
+]);
 const VALID_LANGUAGES = new Set<GenerationLanguage>(["kk", "ru", "en"]);
 const VALID_MIME_TYPES = new Set([
   "application/pdf",
@@ -66,7 +75,7 @@ export async function POST(request: NextRequest) {
     const aiConfig = getAIConfigSafe();
     const formData = await request.formData();
     const file = formData.get("file");
-    const mode = String(formData.get("mode") ?? "mixed");
+    const modeInput = String(formData.get("mode") ?? "generation");
     const language = String(formData.get("language") ?? "kk");
     const requestedCardCount = Number(formData.get("cardCount") ?? 15);
     const cardCount = Math.min(MAX_FLASHCARDS_PER_IMPORT, Math.max(5, requestedCardCount));
@@ -75,7 +84,7 @@ export async function POST(request: NextRequest) {
       console.log("[AI Generate] Incoming request:", {
         fileName: file instanceof File ? file.name : null,
         fileType: file instanceof File ? file.type : null,
-        mode,
+        mode: modeInput,
         language,
         requestedCardCount,
         cardCount,
@@ -102,12 +111,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!VALID_MODES.has(mode as GenerationMode)) {
+    if (!VALID_MODES.has(modeInput as GenerationModeInput)) {
       return NextResponse.json(
-        { error: "INVALID_MODE", detail: `Unsupported generation mode: ${mode}` },
+        { error: "INVALID_MODE", detail: `Unsupported generation mode: ${modeInput}` },
         { status: 400 }
       );
     }
+
+    const mode = normalizeGenerationMode(modeInput as GenerationModeInput);
 
     if (!VALID_LANGUAGES.has(language as GenerationLanguage)) {
       return NextResponse.json(
@@ -200,9 +211,9 @@ export async function POST(request: NextRequest) {
 
     const extractionChunks = buildVocabularyChunks(extraction.text);
     const heuristicCards =
-      mode === "vocabulary" ? extractExplicitVocabularyPairs(extraction.text, file.name) : [];
+      mode === "extraction" ? extractExplicitVocabularyPairs(extraction.text, file.name) : [];
     const heuristicCardsByChunk =
-      mode === "vocabulary"
+      mode === "extraction"
         ? extractionChunks.map((chunk) =>
             extractExplicitVocabularyPairs(chunk.text, chunk.source)
           )
@@ -210,7 +221,7 @@ export async function POST(request: NextRequest) {
     const heuristicLimitedCards = heuristicCards.slice(0, cardCount);
     const remainingCardBudget = Math.max(0, cardCount - heuristicLimitedCards.length);
     const rankedAiCandidates =
-      mode === "vocabulary"
+      mode === "extraction"
         ? extractionChunks
             .map((chunk, index) => {
               const chunkHeuristicCount = heuristicCardsByChunk[index].length;
@@ -244,7 +255,7 @@ export async function POST(request: NextRequest) {
       remainingCardBudget > 0
         ? Math.min(
             rankedAiCandidates.length,
-            mode === "vocabulary"
+            mode === "extraction"
               ? Math.max(18, Math.ceil(remainingCardBudget / 20))
               : Math.max(24, Math.ceil(remainingCardBudget / 12))
           )
@@ -256,7 +267,8 @@ export async function POST(request: NextRequest) {
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[AI Generate] Heuristic extraction:", {
-        mode,
+          requestedMode: modeInput,
+          mode,
         heuristicCount: heuristicCards.length,
         heuristicLimitedCount: heuristicLimitedCards.length,
         remainingCardBudget,
@@ -289,7 +301,7 @@ export async function POST(request: NextRequest) {
         });
 
         const mergedCards =
-          mode === "vocabulary"
+          mode === "extraction"
             ? dedupeVocabularyCards([
                 ...heuristicLimitedCards,
                 ...aiCards.map((card) => ({
@@ -319,9 +331,9 @@ export async function POST(request: NextRequest) {
       }
     } else if (!aiConfig) {
       warnings.push("AI provider key missing, heuristic extraction only.");
-    } else if (mode === "vocabulary" && remainingCardBudget <= 0) {
+    } else if (mode === "extraction" && remainingCardBudget <= 0) {
       warnings.push("Heuristic extraction already satisfied the requested card count.");
-    } else if (mode === "vocabulary" && heuristicCards.length > 0) {
+    } else if (mode === "extraction" && heuristicCards.length > 0) {
       warnings.push("Heuristic extraction covered the document; AI fallback was skipped.");
     }
 
@@ -331,9 +343,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "NO_EXPLICIT_VOCAB_PAIRS",
-          detail:
-            warnings[0] ??
-            "No explicit word-definition or word-translation pairs were found in the document.",
+          detail: warnings[0] ?? "No explicit pairs were found. Try Generation mode.",
         },
         { status: 422 }
       );
@@ -367,6 +377,7 @@ export async function POST(request: NextRequest) {
         provider: aiConfig?.provider ?? "heuristic-only",
         model: aiConfig?.model ?? null,
         heuristicCount: heuristicCards.length,
+        mode,
       },
     });
   } catch (err) {

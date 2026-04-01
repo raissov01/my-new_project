@@ -13,7 +13,13 @@ export type GeneratedCard = {
   source: string;
 };
 
-export type GenerationMode = "mixed" | "definition" | "qa" | "vocabulary";
+export type GenerationMode = "generation" | "extraction";
+export type GenerationModeInput =
+  | GenerationMode
+  | "mixed"
+  | "definition"
+  | "qa"
+  | "vocabulary";
 export type GenerationLanguage = "kk" | "ru" | "en";
 
 export type GenerateOptions = {
@@ -135,20 +141,31 @@ function getLanguageInstruction(language: GenerationLanguage) {
 
 function getModeInstruction(mode: GenerationMode) {
   switch (mode) {
-    case "vocabulary":
+    case "extraction":
       return "Only extract explicit word/term pairs from the text.";
-    case "definition":
-      return "Prefer concise term-definition cards.";
-    case "qa":
-      return "Prefer clean question-answer cards when the content supports that structure.";
-    case "mixed":
+    case "generation":
     default:
       return "Choose the most useful study card structure automatically.";
   }
 }
 
+export function normalizeGenerationMode(mode: GenerationModeInput): GenerationMode {
+  switch (mode) {
+    case "vocabulary":
+      return "extraction";
+    case "mixed":
+    case "definition":
+    case "qa":
+      return "generation";
+    case "extraction":
+    case "generation":
+    default:
+      return mode;
+  }
+}
+
 function buildPrompt(chunk: TextChunk, options: GenerateOptions) {
-  const basePrompt = options.mode === "vocabulary" ? STRICT_PROMPT : GENERATION_PROMPT;
+  const basePrompt = options.mode === "extraction" ? STRICT_PROMPT : GENERATION_PROMPT;
   const limitInstruction = `Generate up to ${options.cardCount} cards from this chunk if the content supports it.`;
   const modeInstruction = getModeInstruction(options.mode);
   const languageInstruction = getLanguageInstruction(options.language);

@@ -58,10 +58,8 @@ type ImportStage =
   | "error";
 
 const AI_MODES: { value: GenerationMode; labelKey: string }[] = [
-  { value: "mixed", labelKey: "ai.modeMixed" },
-  { value: "definition", labelKey: "ai.modeDefinition" },
-  { value: "qa", labelKey: "ai.modeQA" },
-  { value: "vocabulary", labelKey: "ai.modeVocabulary" },
+  { value: "generation", labelKey: "ai.modeGeneration" },
+  { value: "extraction", labelKey: "ai.modeExtraction" },
 ];
 
 const AI_LANGUAGES: { value: GenerationLanguage; label: string }[] = [
@@ -91,7 +89,7 @@ const AI_ERROR_MAP: Record<string, string> = {
   OPENAI_INVALID_FORMAT: "ai.errorAI",
   OPENAI_RATE_LIMITED: "ai.errorAI",
   OPENAI_TIMEOUT: "ai.errorAI",
-  NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoCards",
+  NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoExplicitPairs",
   NOT_AUTHENTICATED: "action.notAuthenticated",
   NON_JSON_ERROR: "ai.errorExtraction",
   GENERATION_FAILED: "ai.errorGeneric",
@@ -158,7 +156,7 @@ export function SetForm({
   const [importFileName, setImportFileName] = useState<string | null>(null);
   const [importStage, setImportStage] = useState<ImportStage>("idle");
   const [importSuccessMessage, setImportSuccessMessage] = useState<string | null>(null);
-  const [aiMode, setAiMode] = useState<GenerationMode>("mixed");
+  const [aiMode, setAiMode] = useState<GenerationMode>("generation");
   const [aiLanguage, setAiLanguage] = useState<GenerationLanguage>(
     locale === "kk" || locale === "ru" || locale === "en" ? locale : "kk"
   );

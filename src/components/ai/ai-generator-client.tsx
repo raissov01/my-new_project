@@ -33,10 +33,8 @@ import type { GeneratedCard, GenerationMode, GenerationLanguage } from "@/lib/ai
 type Step = "upload" | "generating" | "preview";
 
 const MODES: { key: GenerationMode; labelKey: string; icon: typeof Brain }[] = [
-  { key: "mixed", labelKey: "ai.modeMixed", icon: Sparkles },
-  { key: "definition", labelKey: "ai.modeDefinition", icon: FileText },
-  { key: "qa", labelKey: "ai.modeQA", icon: Brain },
-  { key: "vocabulary", labelKey: "ai.modeVocabulary", icon: PenLine },
+  { key: "generation", labelKey: "ai.modeGeneration", icon: Sparkles },
+  { key: "extraction", labelKey: "ai.modeExtraction", icon: FileText },
 ];
 
 const LANGUAGES: { key: GenerationLanguage; label: string }[] = [
@@ -67,7 +65,7 @@ const ERROR_MAP: Record<string, string> = {
   OPENAI_INVALID_FORMAT: "ai.errorAI",
   OPENAI_RATE_LIMITED: "ai.errorAI",
   OPENAI_TIMEOUT: "ai.errorAI",
-  NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoCards",
+  NO_EXPLICIT_VOCAB_PAIRS: "ai.errorNoExplicitPairs",
   NOT_AUTHENTICATED: "action.notAuthenticated",
   NON_JSON_ERROR: "ai.errorExtraction",
   INVALID_MODE: "ai.errorGeneric",
@@ -97,7 +95,7 @@ export function AIGeneratorClient() {
 
   const [step, setStep] = useState<Step>("upload");
   const [file, setFile] = useState<File | null>(null);
-  const [mode, setMode] = useState<GenerationMode>("mixed");
+  const [mode, setMode] = useState<GenerationMode>("generation");
   const [language, setLanguage] = useState<GenerationLanguage>(
     (locale as GenerationLanguage) ?? "kk"
   );
