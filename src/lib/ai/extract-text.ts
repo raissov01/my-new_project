@@ -11,7 +11,12 @@ const execFileAsync = promisify(execFile);
 const OCR_TEXT_MIN_LENGTH = 60;
 const FALLBACK_TEXT_MIN_LENGTH = 200;
 
-export type ExtractionMethod = "pdf-parse" | "pdfjs" | "ocr" | "mammoth";
+export type ExtractionMethod =
+  | "pdf-parse"
+  | "pdfjs"
+  | "pdftotext"
+  | "ocr"
+  | "mammoth";
 
 export type TextChunk = {
   text: string;
@@ -119,6 +124,23 @@ async function extractFromPdf(
       pdfjsResult.text,
       pdfjsResult.pageCount,
       "pdfjs",
+      attempts,
+      false
+    );
+  }
+
+  const pdftotextResult = await tryPdfToText(buffer, fileName);
+  attempts.push(pdftotextResult.attempt);
+  if (pdftotextResult.text.length > bestText.length) {
+    bestText = pdftotextResult.text;
+    bestPageCount = pdftotextResult.pageCount;
+  }
+
+  if (isUsableText(pdftotextResult.text, FALLBACK_TEXT_MIN_LENGTH)) {
+    return buildExtractionResult(
+      pdftotextResult.text,
+      pdftotextResult.pageCount,
+      "pdftotext",
       attempts,
       false
     );
@@ -337,6 +359,57 @@ async function tryPdfJs(buffer: Buffer) {
   }
 }
 
+async function tryPdfToText(buffer: Buffer, fileName: string) {
+  const tempDir = await mkdtemp(join(tmpdir(), "studywithraissov-pdftotext-"));
+  const inputPdfPath = join(tempDir, sanitizeFileName(fileName));
+  const outputTxtPath = join(tempDir, "out.txt");
+
+  try {
+    await writeFile(inputPdfPath, buffer);
+    const info = await getPdfInfo(inputPdfPath);
+
+    await execFileAsync("pdftotext", [
+      "-layout",
+      "-enc",
+      "UTF-8",
+      inputPdfPath,
+      outputTxtPath,
+    ]);
+
+    const rawText = await readFile(outputTxtPath, "utf8");
+    const cleaned = cleanText(rawText);
+
+    return {
+      text: cleaned,
+      pageCount: info.pageCount,
+      attempt: {
+        method: "pdftotext" as const,
+        success: cleaned.length > 0,
+        textLength: cleaned.length,
+        detail: cleaned.length > 0 ? undefined : "pdftotext returned empty text",
+      },
+    };
+  } catch (error) {
+    console.error("[extract-text] pdftotext extraction failed:", error);
+    return {
+      text: "",
+      pageCount: null,
+      attempt: {
+        method: "pdftotext" as const,
+        success: false,
+        textLength: 0,
+        detail: error instanceof Error ? error.message : "Unknown pdftotext failure",
+      },
+    };
+  } finally {
+    try {
+      await rm(tempDir, { recursive: true, force: true });
+    } catch (cleanupError) {
+      console.error("[extract-text] pdftotext temp cleanup failed:", cleanupError);
+    }
+  }
+}
+
 async function tryPdfOcr(buffer: Buffer, fileName: string) {
   const tempDir = await mkdtemp(join(tmpdir(), "studywithraissov-ocr-"));
   const inputPdfPath = join(tempDir, sanitizeFileName(fileName));
@@ -397,7 +470,7 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
       };
     }
 
-    worker = await tesseractModule.createWorker("eng+rus+kaz", 1, {
+    worker = await tesseractModule.createWorker("eng", 1, {
       logger:
         process.env.NODE_ENV !== "production"
           ? (message: unknown) => console.log("[extract-text][ocr]", message)
@@ -452,6 +525,19 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
     } catch (cleanupError) {
       console.error("[extract-text] OCR temp cleanup failed:", cleanupError);
     }
+  }
+}
+
+async function getPdfInfo(filePath: string) {
+  try {
+    const { stdout } = await execFileAsync("pdfinfo", [filePath]);
+    const pageMatch = stdout.match(/^Pages:\s+(\d+)/m);
+    return {
+      pageCount: pageMatch ? Number(pageMatch[1]) : null,
+    };
+  } catch (error) {
+    console.error("[extract-text] pdfinfo failed:", error);
+    return { pageCount: null };
   }
 }
 
