@@ -4,7 +4,7 @@ import { join } from "path";
 import { mkdtemp, readdir, readFile, rm, writeFile } from "fs/promises";
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { getAIConfigSafe } from "./config";
+import { getAIConfigSafe, type AIConfig } from "./config";
 
 const requireCjs = createRequire(import.meta.url);
 const execFileAsync = promisify(execFile);
@@ -37,6 +37,13 @@ export type ExtractionResult = {
   method: ExtractionMethod;
   methodsTried: ExtractionAttempt[];
   ocrAttempted: boolean;
+};
+
+type OCRWorker = {
+  recognize: (
+    image: string
+  ) => Promise<{ data: { text?: string | null } }>;
+  terminate: () => Promise<void>;
 };
 
 export class TextExtractionError extends Error {
@@ -175,7 +182,7 @@ async function extractFromPdf(
 
   throw new TextExtractionError(
     "PDF_EXTRACTION_FAILED",
-    "This PDF appears to be scanned or unreadable. OCR attempted.",
+    "OCR failed to extract readable text from this PDF.",
     attempts,
     true
   );
@@ -414,18 +421,12 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
   const tempDir = await mkdtemp(join(tmpdir(), "studywithraissov-ocr-"));
   const inputPdfPath = join(tempDir, sanitizeFileName(fileName));
   const outputPrefix = join(tempDir, "page");
-  let worker:
-    | {
-        recognize: (
-          image: string
-        ) => Promise<{ data: { text?: string | null } }>;
-        terminate: () => Promise<void>;
-      }
-    | undefined;
+  const aiConfig = getAIConfigSafe();
+  let worker: OCRWorker | undefined;
 
   try {
     await writeFile(inputPdfPath, buffer);
-    await execFileAsync("pdftoppm", ["-png", inputPdfPath, outputPrefix]);
+    await execFileAsync("pdftoppm", ["-r", "300", "-gray", "-png", inputPdfPath, outputPrefix]);
 
     const files = (await readdir(tempDir))
       .filter((entry) => /^page-\d+\.png$/i.test(entry))
@@ -444,50 +445,52 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
       };
     }
 
-    const tesseractModule = requireCjs("tesseract.js") as {
-      createWorker?: (
-        langs?: string,
-        oem?: number,
-        options?: Record<string, unknown>
-      ) => Promise<{
-        recognize: (
-          image: string
-        ) => Promise<{ data: { text?: string | null } }>;
-        terminate: () => Promise<void>;
-      }>;
-    };
-
-    if (typeof tesseractModule.createWorker !== "function") {
-      return {
-        text: "",
-        pageCount: files.length,
-        attempt: {
-          method: "ocr" as const,
-          success: false,
-          textLength: 0,
-          detail: "tesseract.js createWorker unavailable",
-        },
-      };
-    }
-
-    worker = await tesseractModule.createWorker("eng", 1, {
-      logger:
-        process.env.NODE_ENV !== "production"
-          ? (message: unknown) => console.log("[extract-text][ocr]", message)
-          : undefined,
+    console.log("[extract-text][ocr] OCR rendering complete:", {
+      fileName,
+      pages: files.length,
+      provider: aiConfig?.provider ?? "tesseract",
     });
 
-    const pages: string[] = [];
-    for (const file of files) {
-      const imagePath = join(tempDir, file);
-      const { data } = await worker.recognize(imagePath);
-      const pageText = cleanText(data.text ?? "");
-      if (pageText) {
-        pages.push(pageText);
+    let pages: string[] = [];
+    let ocrDetail = "";
+
+    if (aiConfig) {
+      try {
+        pages = await ocrWithVision(
+          files.map((file) => join(tempDir, file)),
+          aiConfig
+        );
+      } catch (error) {
+        ocrDetail =
+          error instanceof Error ? error.message : "Vision OCR failed unexpectedly";
+        console.error("[extract-text][ocr] Vision OCR failed:", error);
       }
     }
 
-    const cleaned = cleanText(pages.join("\n\n"));
+    if (pages.every((page) => cleanText(page).length === 0)) {
+      const tesseractResult = await ocrWithTesseract(
+        files.map((file) => join(tempDir, file))
+      );
+      pages = tesseractResult.pages;
+      worker = tesseractResult.worker;
+      if (!ocrDetail && tesseractResult.detail) {
+        ocrDetail = tesseractResult.detail;
+      }
+    }
+
+    const cleanedPages = pages.map((page) => cleanText(page));
+    cleanedPages.forEach((pageText, index) => {
+      console.log("[extract-text][ocr] Page OCR result:", {
+        page: index + 1,
+        textLength: pageText.length,
+      });
+    });
+
+    const cleaned = cleanText(cleanedPages.filter(Boolean).join("\n\n"));
+    console.log("[extract-text][ocr] Combined OCR text:", {
+      totalLength: cleaned.length,
+      preview: cleaned.slice(0, 500),
+    });
 
     return {
       text: cleaned,
@@ -496,7 +499,7 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
         method: "ocr" as const,
         success: cleaned.length > 0,
         textLength: cleaned.length,
-        detail: cleaned.length > 0 ? undefined : "OCR returned empty text",
+        detail: cleaned.length > 0 ? undefined : ocrDetail || "OCR returned empty text",
       },
     };
   } catch (error) {
@@ -526,6 +529,183 @@ async function tryPdfOcr(buffer: Buffer, fileName: string) {
       console.error("[extract-text] OCR temp cleanup failed:", cleanupError);
     }
   }
+}
+
+async function ocrWithVision(imagePaths: string[], aiConfig: AIConfig) {
+  const pages: string[] = [];
+
+  for (let index = 0; index < imagePaths.length; index += 1) {
+    const imagePath = imagePaths[index];
+    const imageBuffer = await readFile(imagePath);
+
+    let pageText = "";
+    if (aiConfig.provider === "openai") {
+      pageText = await openAIVisionOcr(imageBuffer, aiConfig);
+    } else {
+      pageText = await geminiVisionOcr(imageBuffer, aiConfig);
+    }
+
+    const cleaned = cleanText(pageText);
+    console.log("[extract-text][ocr] Vision page OCR:", {
+      page: index + 1,
+      provider: aiConfig.provider,
+      textLength: cleaned.length,
+      preview: cleaned.slice(0, 200),
+    });
+    pages.push(cleaned);
+  }
+
+  return pages;
+}
+
+async function ocrWithTesseract(imagePaths: string[]) {
+  const tesseractModule = requireCjs("tesseract.js") as {
+    createWorker?: (
+      langs?: string,
+      oem?: number,
+      options?: Record<string, unknown>
+    ) => Promise<OCRWorker>;
+  };
+
+  if (typeof tesseractModule.createWorker !== "function") {
+    return {
+      pages: [] as string[],
+      detail: "tesseract.js createWorker unavailable",
+      worker: undefined as OCRWorker | undefined,
+    };
+  }
+
+  let worker: OCRWorker | undefined;
+
+  try {
+    worker = await tesseractModule.createWorker("eng", 1, {
+      logger:
+        process.env.NODE_ENV !== "production"
+          ? (message: unknown) => console.log("[extract-text][ocr][tesseract]", message)
+          : undefined,
+    });
+
+    const pages: string[] = [];
+    for (let index = 0; index < imagePaths.length; index += 1) {
+      const { data } = await worker.recognize(imagePaths[index]);
+      const pageText = cleanText(data.text ?? "");
+      console.log("[extract-text][ocr] Tesseract page OCR:", {
+        page: index + 1,
+        textLength: pageText.length,
+        preview: pageText.slice(0, 200),
+      });
+      pages.push(pageText);
+    }
+
+    return { pages, detail: "", worker };
+  } catch (error) {
+    console.error("[extract-text][ocr] Tesseract OCR failed:", error);
+    return {
+      pages: [] as string[],
+      detail: error instanceof Error ? error.message : "Tesseract OCR failed",
+      worker,
+    };
+  }
+}
+
+async function openAIVisionOcr(imageBuffer: Buffer, aiConfig: AIConfig) {
+  const model = process.env.OPENAI_OCR_MODEL?.trim() || "gpt-4o-mini";
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${aiConfig.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a strict OCR system. Return only the visible text from the image. Do not summarize. Do not explain. Preserve line breaks when possible.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Transcribe all visible text from this page exactly. Return plain text only.",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/png;base64,${imageBuffer.toString("base64")}`,
+              },
+            },
+          ],
+        },
+      ],
+      temperature: 0,
+      max_completion_tokens: 4096,
+    }),
+  });
+
+  const rawText = await response.text();
+  if (!response.ok) {
+    throw new Error(`OpenAI OCR HTTP ${response.status}: ${rawText.slice(0, 500)}`);
+  }
+
+  const data = JSON.parse(rawText) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  return data.choices?.[0]?.message?.content?.trim() ?? "";
+}
+
+async function geminiVisionOcr(imageBuffer: Buffer, aiConfig: AIConfig) {
+  const model = process.env.GEMINI_OCR_MODEL?.trim() || aiConfig.model;
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": aiConfig.apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text:
+                  "You are a strict OCR system. Extract only the visible text from this image. Return plain text only. Do not explain or summarize.",
+              },
+              {
+                inlineData: {
+                  mimeType: "image/png",
+                  data: imageBuffer.toString("base64"),
+                },
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0,
+          maxOutputTokens: 4096,
+        },
+      }),
+    }
+  );
+
+  const rawText = await response.text();
+  if (!response.ok) {
+    throw new Error(`Gemini OCR HTTP ${response.status}: ${rawText.slice(0, 500)}`);
+  }
+
+  const data = JSON.parse(rawText) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+
+  return (
+    data.candidates?.[0]?.content?.parts
+      ?.map((part) => (typeof part.text === "string" ? part.text : ""))
+      .join("")
+      .trim() ?? ""
+  );
 }
 
 async function getPdfInfo(filePath: string) {
