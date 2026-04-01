@@ -129,11 +129,11 @@ Return only valid JSON in one consistent format:
 function getLanguageInstruction(language: GenerationLanguage) {
   switch (language) {
     case "kk":
-      return "Prefer Kazakh wording when the document supports it.";
+      return "The back side of every card must be written in Kazakh.";
     case "ru":
-      return "Prefer Russian wording when the document supports it.";
+      return "The back side of every card must be written in Russian.";
     case "en":
-      return "Prefer English wording when the document supports it.";
+      return "The back side of every card must be written in English.";
     default:
       return "";
   }
@@ -142,12 +142,12 @@ function getLanguageInstruction(language: GenerationLanguage) {
 function getModeInstruction(mode: GenerationMode) {
   switch (mode) {
     case "definition":
-      return "Prefer concise term-definition cards for the key concepts in the text.";
+      return "Prefer concise term-definition cards for the key concepts in the text. Do not output headings, lesson names, section names, or generic topic labels as cards.";
     case "vocabulary":
-      return "Prefer vocabulary-style cards. Use explicit pairs when present, or generate clear meanings, definitions, or translations based on the document.";
+      return "Prefer vocabulary-style cards. Keep the original word or term on the front. The back must be a direct translation if possible, or a very short meaning in the requested language. Do not output long definitions. Do not output headings, lesson names, section names, topic titles, or generic labels as cards.";
     case "generation":
     default:
-      return "Choose the most useful study card structure automatically.";
+      return "Choose the most useful study card structure automatically. Do not output headings, lesson names, section names, or generic topic labels as cards.";
   }
 }
 
@@ -182,6 +182,42 @@ ${limitInstruction}
 
 Text:
 ${chunk.text}`;
+}
+
+const HEADING_PATTERNS = [
+  /\b(topic|topics|unit|units|lesson|lessons|chapter|chapters|section|sections|module|modules|overview|summary|contents|vocabulary|grammar|review|exercise|appendix|introduction)\b/i,
+  /\b(listening|reading|speaking|writing)\s+(words|vocabulary|topics|practice)\b/i,
+  /\b(тақырып|сабақ|тарау|бөлім|кіріспе|қорытынды|мазмұны|жаттығу|қайталау)\b/i,
+  /\b(тема|урок|глава|раздел|введение|итоги|содержание|упражнение|повторение)\b/i,
+];
+
+function wordCount(value: string) {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function isHeadingLike(value: string) {
+  const normalized = value.trim();
+  if (!normalized) return true;
+  if (HEADING_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
+  if (/^[A-ZА-ЯӘІҢҒҮҰҚӨҺ\s\d-]+$/.test(normalized) && wordCount(normalized) <= 8) return true;
+  if (/[:\-–—]$/.test(normalized)) return true;
+  return false;
+}
+
+function sanitizeGeneratedCards(cards: GeneratedCard[], mode: GenerationMode) {
+  return cards.filter((card) => {
+    if (isHeadingLike(card.front) || isHeadingLike(card.back)) {
+      return false;
+    }
+
+    if (mode === "vocabulary") {
+      if (wordCount(card.front) > 6) return false;
+      if (wordCount(card.back) > 12) return false;
+      if (card.back.length > 120) return false;
+    }
+
+    return true;
+  });
 }
 
 function parseGeneratedCards(raw: string, provider: "openai" | "gemini"): GeneratedCard[] {
@@ -652,6 +688,7 @@ async function processChunkWithRecovery({
 
   try {
     const result = await executeChunk(chunk, prompt, config, preferredModel);
+    const sanitizedCards = sanitizeGeneratedCards(result.cards, options.mode);
     stats.successfulChunks += 1;
 
     if (process.env.NODE_ENV !== "production") {
@@ -661,11 +698,12 @@ async function processChunkWithRecovery({
         modelUsed: result.modelUsed,
         durationMs: result.durationMs,
         cards: result.cards.length,
+        sanitizedCards: sanitizedCards.length,
         depth,
       });
     }
 
-    return result.cards.map((card) => ({
+    return sanitizedCards.map((card) => ({
       ...card,
       source: chunk.source,
     }));

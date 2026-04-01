@@ -211,12 +211,11 @@ export async function POST(request: NextRequest) {
     }
 
     const extractionChunks = buildVocabularyChunks(extraction.text);
-    const heuristicCards =
-      strictExtraction || mode === "vocabulary"
-        ? extractExplicitVocabularyPairs(extraction.text, file.name)
-        : [];
+    const heuristicCards = strictExtraction
+      ? extractExplicitVocabularyPairs(extraction.text, file.name)
+      : [];
     const heuristicCardsByChunk =
-      strictExtraction || mode === "vocabulary"
+      strictExtraction
         ? extractionChunks.map((chunk) =>
             extractExplicitVocabularyPairs(chunk.text, chunk.source)
           )
@@ -224,7 +223,7 @@ export async function POST(request: NextRequest) {
     const heuristicLimitedCards = heuristicCards.slice(0, cardCount);
     const remainingCardBudget = Math.max(0, cardCount - heuristicLimitedCards.length);
     const rankedAiCandidates =
-      strictExtraction || mode === "vocabulary"
+      strictExtraction
         ? extractionChunks
             .map((chunk, index) => {
               const chunkHeuristicCount = heuristicCardsByChunk[index].length;
@@ -261,7 +260,7 @@ export async function POST(request: NextRequest) {
         ? Math.min(
             rankedAiCandidates.length,
             mode === "vocabulary"
-              ? Math.max(18, Math.ceil(remainingCardBudget / 20))
+              ? Math.max(24, Math.ceil(remainingCardBudget / 15))
               : Math.max(24, Math.ceil(remainingCardBudget / 12))
           )
         : 0;
@@ -307,22 +306,13 @@ export async function POST(request: NextRequest) {
         });
 
         const mergedCards =
-          mode === "vocabulary"
-            ? dedupeVocabularyCards([
-                ...heuristicLimitedCards,
-                ...aiCards.map((card) => ({
-                  front: card.front,
-                  back: card.back,
-                  source: card.source,
-                })),
-              ])
-            : dedupeVocabularyCards(
-                aiCards.map((card) => ({
-                  front: card.front,
-                  back: card.back,
-                  source: card.source,
-                }))
-              );
+          dedupeVocabularyCards(
+            aiCards.map((card) => ({
+              front: card.front,
+              back: card.back,
+              source: card.source,
+            }))
+          );
 
         cards = mergedCards.slice(0, cardCount);
       } catch (error) {
@@ -337,9 +327,9 @@ export async function POST(request: NextRequest) {
       }
     } else if (!aiConfig) {
       warnings.push("AI provider key missing, heuristic extraction only.");
-    } else if ((strictExtraction || mode === "vocabulary") && remainingCardBudget <= 0) {
+    } else if (strictExtraction && remainingCardBudget <= 0) {
       warnings.push("Heuristic extraction already satisfied the requested card count.");
-    } else if ((strictExtraction || mode === "vocabulary") && heuristicCards.length > 0) {
+    } else if (strictExtraction && heuristicCards.length > 0) {
       warnings.push("Heuristic extraction covered the document; AI fallback was skipped.");
     }
 

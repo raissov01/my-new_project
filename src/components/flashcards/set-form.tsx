@@ -692,7 +692,9 @@ export function SetForm({
                 </div>
               ) : (
                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
-                  {t("ai.modeAutoFormatHint")}
+                  {aiMode === "definition"
+                    ? t("ai.definitionModeHint")
+                    : t("ai.modeAutoFormatHint")}
                 </div>
               )}
             </div>
