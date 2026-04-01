@@ -76,6 +76,19 @@ type FlashcardSetAccessTable = {
   };
 };
 
+function isFlashcardAccessSchemaMissing(message?: string | null) {
+  if (!message) return false;
+  return (
+    message.includes("Could not find the table 'public.flashcard_set_access'") ||
+    message.includes('relation "public.flashcard_set_access" does not exist') ||
+    message.includes('relation "flashcard_set_access" does not exist')
+  );
+}
+
+function getFlashcardAccessSchemaError() {
+  return "Private set access schema is missing. Run migration 018_flashcard_access_schema_repair.sql.";
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function getAuthenticatedUser() {
@@ -127,6 +140,12 @@ async function syncSetAccess(
 
   const { error: deleteError } = await accessTable.delete().eq("set_id", setId);
   if (deleteError) {
+    if (isFlashcardAccessSchemaMissing(deleteError.message)) {
+      if (visibility.isPublic) {
+        return { error: null };
+      }
+      return { error: getFlashcardAccessSchemaError() };
+    }
     return { error: deleteError.message };
   }
 
@@ -141,6 +160,10 @@ async function syncSetAccess(
       granted_by: ownerId,
     }))
   );
+
+  if (insertError && isFlashcardAccessSchemaMissing(insertError.message)) {
+    return { error: getFlashcardAccessSchemaError() };
+  }
 
   return { error: insertError?.message ?? null };
 }
