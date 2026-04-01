@@ -137,7 +137,7 @@ export function extractExplicitVocabularyPairs(
   return dedupeVocabularyCards(results);
 }
 
-export function buildVocabularyChunks(text: string, maxChars = 2600): TextChunk[] {
+export function buildVocabularyChunks(text: string, maxChars = 1600): TextChunk[] {
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -175,4 +175,43 @@ export function buildVocabularyChunks(text: string, maxChars = 2600): TextChunk[
   pushChunk(lines.length);
 
   return chunks;
+}
+
+export function splitChunkForRetry(chunk: TextChunk, maxChars = 900): TextChunk[] {
+  const lines = chunk.text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length <= 1 || chunk.text.length <= maxChars) {
+    return [chunk];
+  }
+
+  const parts: TextChunk[] = [];
+  let current: string[] = [];
+  let currentLength = 0;
+  let partIndex = 1;
+
+  const pushPart = () => {
+    if (current.length === 0) return;
+    parts.push({
+      text: current.join("\n"),
+      source: `${chunk.source} part ${partIndex}`,
+    });
+    partIndex += 1;
+    current = [];
+    currentLength = 0;
+  };
+
+  for (const line of lines) {
+    const nextLength = currentLength + line.length + 1;
+    if (current.length > 0 && nextLength > maxChars) {
+      pushPart();
+    }
+    current.push(line);
+    currentLength += line.length + 1;
+  }
+
+  pushPart();
+  return parts.length > 0 ? parts : [chunk];
 }

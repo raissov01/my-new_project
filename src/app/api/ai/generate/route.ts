@@ -176,6 +176,14 @@ export async function POST(request: NextRequest) {
       console.log("[AI Generate] Heuristic extraction:", {
         heuristicCount: heuristicCards.length,
         chunkCount: extractionChunks.length,
+        chunkSizes: extractionChunks.map((chunk) => chunk.text.length),
+        averageChunkSize:
+          extractionChunks.length > 0
+            ? Math.round(
+                extractionChunks.reduce((sum, chunk) => sum + chunk.text.length, 0) /
+                  extractionChunks.length
+              )
+            : 0,
       });
     }
 

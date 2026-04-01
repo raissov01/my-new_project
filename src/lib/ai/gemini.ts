@@ -1,6 +1,9 @@
-import { getAIConfig } from "./config";
+import { getAIConfig, type AIConfig } from "./config";
 import type { TextChunk } from "./extract-text";
-import { dedupeVocabularyCards } from "./vocabulary-extractor";
+import {
+  dedupeVocabularyCards,
+  splitChunkForRetry,
+} from "./vocabulary-extractor";
 
 export type GeneratedCard = {
   front: string;
@@ -21,6 +24,13 @@ export type GenerateOptions = {
 };
 
 const FALLBACK_GEMINI_MODEL = "gemini-2.5-flash";
+const OPENAI_MODEL_COMPAT_FALLBACKS: Record<string, string> = {
+  "gpt-5.4-mini": "gpt-5-mini",
+  "gpt-5.4": "gpt-5",
+};
+const OPENAI_CHUNK_TIMEOUT_MS = 25_000;
+const GEMINI_CHUNK_TIMEOUT_MS = 30_000;
+const MAX_RETRY_DEPTH = 2;
 
 export class AIProviderError extends Error {
   constructor(
@@ -49,74 +59,97 @@ export class AIProviderError extends Error {
   }
 }
 
-function shouldRetryWithFallbackModel(
-  configuredModel: string,
-  responseStatus: number,
-  errorBody: string
-) {
-  if (configuredModel === FALLBACK_GEMINI_MODEL) {
-    return false;
-  }
-
-  if (responseStatus !== 400 && responseStatus !== 404) {
-    return false;
-  }
-
-  const body = errorBody.toLowerCase();
-  return (
-    body.includes("not found") ||
-    body.includes("deprecated") ||
-    body.includes("unsupported") ||
-    body.includes("is not found") ||
-    body.includes("models/")
-  );
-}
-
-const LANGUAGE_NAMES: Record<GenerationLanguage, string> = {
-  kk: "Kazakh",
-  ru: "Russian",
-  en: "English",
+type ChunkExecutionResult = {
+  cards: GeneratedCard[];
+  modelUsed: string;
+  durationMs: number;
 };
 
-const MODE_INSTRUCTIONS: Record<GenerationMode, string> = {
-  mixed: "Extract any explicit term-meaning or word-translation pair exactly as written.",
-  definition: "Focus on explicit term -> definition pairs only.",
-  qa: "Only keep question -> answer pairs if both are explicitly written in the source.",
-  vocabulary: "Focus on word/term -> meaning/translation pairs only.",
+type ChunkRecoveryOptions = {
+  chunk: TextChunk;
+  options: GenerateOptions;
+  config: AIConfig;
+  preferredModel: string;
+  depth: number;
+  escalated: boolean;
+  stats: {
+    successfulChunks: number;
+    failedChunks: number;
+  };
+  errors: string[];
 };
 
-function buildPrompt(options: GenerateOptions, chunk: TextChunk) {
-  const langName = LANGUAGE_NAMES[options.language];
-  const modeInstr = MODE_INSTRUCTIONS[options.mode];
+const STRICT_PROMPT = `You are a strict information extraction system.
+Extract only explicit vocabulary pairs from the provided text.
+Do not invent anything.
+Do not explain anything.
+Use only the provided text.
+Recognize formats like:
+- word — translation
+- word: definition
+- 2-column vocabulary tables
+Return only valid JSON:
+[
+  { "front": "", "back": "" }
+]`;
 
-  return `You are a strict information extraction system.
-
-Your task is to parse a vocabulary or glossary document and extract ALL explicit pairs into flashcards.
-
-CRITICAL RULES:
-- Extract EVERY clear vocabulary pair you find. Do not skip valid pairs.
-- Do NOT generate, invent, or guess anything.
-- Do NOT add examples or explanations.
-- USE ONLY information explicitly written in the text.
-- If a pair is unclear or ambiguous, skip it.
-- Do not merge entries. Each pair = one flashcard.
-- The number of cards must equal the number of valid pairs found. No more, no less.
-- Output language: ${langName}. Preserve the original content language.
-- ${modeInstr}
-
-A flashcard must contain:
-- front: the word, term, or question
-- back: its exact translation, meaning, definition, or answer from the document
-
-Return ONLY a valid JSON array:
-[{"front": "...", "back": "..."}]
+function buildPrompt(chunk: TextChunk) {
+  return `${STRICT_PROMPT}
 
 Text:
-${chunk.text}
-`;
+${chunk.text}`;
 }
 
-function extractTextResponse(data: unknown) {
+function parseGeneratedCards(raw: string, provider: "openai" | "gemini"): GeneratedCard[] {
+  let cleaned = raw.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new AIProviderError(
+      provider === "openai" ? "OPENAI_INVALID_JSON" : "GEMINI_INVALID_JSON",
+      `${provider} returned invalid JSON.`,
+      502,
+      cleaned.slice(0, 400)
+    );
+  }
+
+  const normalized = Array.isArray(parsed)
+    ? parsed
+    : parsed &&
+        typeof parsed === "object" &&
+        Array.isArray((parsed as { cards?: unknown }).cards)
+      ? (parsed as { cards: unknown[] }).cards
+      : null;
+
+  if (!normalized) {
+    throw new AIProviderError(
+      provider === "openai" ? "OPENAI_INVALID_FORMAT" : "GEMINI_INVALID_FORMAT",
+      `${provider} returned a payload without a cards array.`,
+      502
+    );
+  }
+
+  return normalized
+    .filter(
+      (card): card is Record<string, unknown> =>
+        card !== null && typeof card === "object"
+    )
+    .map((card) => ({
+      front: String(card.front ?? "").trim(),
+      back: String(card.back ?? "").trim(),
+      category: "General",
+      difficulty: "medium" as const,
+      source: "",
+    }))
+    .filter((card) => card.front.length > 0 && card.back.length > 0);
+}
+
+function extractGeminiTextResponse(data: unknown) {
   if (!data || typeof data !== "object") return "";
 
   const candidate = (data as {
@@ -131,229 +164,6 @@ function extractTextResponse(data: unknown) {
   );
 }
 
-function parseGeneratedCards(raw: string): GeneratedCard[] {
-  let cleaned = raw.trim();
-  if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    console.error("[Gemini] Failed to parse JSON:", cleaned.slice(0, 200));
-    throw new AIProviderError(
-      "GEMINI_INVALID_JSON",
-      "Gemini returned invalid JSON.",
-      502,
-      cleaned.slice(0, 200)
-    );
-  }
-
-  const normalized = Array.isArray(parsed)
-    ? parsed
-    : parsed && typeof parsed === "object" && Array.isArray((parsed as { cards?: unknown }).cards)
-      ? (parsed as { cards: unknown[] }).cards
-      : null;
-
-  if (!normalized) {
-    throw new AIProviderError(
-      "GEMINI_INVALID_FORMAT",
-      "Model returned a payload without a cards array.",
-      502
-    );
-  }
-
-  const validDifficulties = new Set(["easy", "medium", "hard"]);
-
-  return normalized
-    .filter(
-      (card): card is Record<string, unknown> =>
-        card !== null && typeof card === "object"
-    )
-    .map((card) => ({
-      front: String(card.front ?? "").trim(),
-      back: String(card.back ?? "").trim(),
-      category: String(card.category ?? "General").trim(),
-      difficulty: validDifficulties.has(String(card.difficulty).toLowerCase())
-        ? (String(card.difficulty).toLowerCase() as GeneratedCard["difficulty"])
-        : "medium",
-      source: String(card.source ?? "").trim(),
-    }))
-    .filter((card) => card.front.length > 0 && card.back.length > 0);
-}
-
-function normalizeProviderCards(cards: GeneratedCard[], fallbackSource: string) {
-  return cards.map((card) => ({
-    front: card.front.trim(),
-    back: card.back.trim(),
-    category: card.category || "General",
-    difficulty: card.difficulty || "medium",
-    source: card.source || fallbackSource,
-  }));
-}
-
-function mapOpenAIParseError(error: unknown) {
-  if (error instanceof AIProviderError && error.code === "GEMINI_INVALID_JSON") {
-    return new AIProviderError(
-      "OPENAI_INVALID_JSON",
-      error.message,
-      error.status,
-      error.detail
-    );
-  }
-
-  if (error instanceof AIProviderError && error.code === "GEMINI_INVALID_FORMAT") {
-    return new AIProviderError(
-      "OPENAI_INVALID_FORMAT",
-      error.message,
-      error.status,
-      error.detail
-    );
-  }
-
-  return error;
-}
-
-async function requestGemini(
-  prompt: string,
-  geminiApiKey: string,
-  model: string
-) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45_000);
-
-  let response: Response;
-  try {
-    response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "x-goog-api-key": geminiApiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.4,
-            topP: 0.9,
-            maxOutputTokens: 8192,
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "ARRAY",
-              items: {
-              type: "OBJECT",
-                required: ["front", "back"],
-                properties: {
-                  front: { type: "STRING" },
-                  back: { type: "STRING" },
-                },
-              },
-            },
-          },
-        }),
-        signal: controller.signal,
-      }
-      );
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new AIProviderError(
-        "GEMINI_TIMEOUT",
-        "Gemini request timed out.",
-        504
-      );
-    }
-    throw new AIProviderError(
-      "GEMINI_API_HTTP_ERROR",
-      "Failed to reach Gemini API.",
-      502,
-      error instanceof Error ? error.message : "Unknown fetch failure"
-    );
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  return response;
-}
-
-async function requestOpenAI(
-  prompt: string,
-  openaiApiKey: string,
-  model: string
-) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45_000);
-
-  try {
-    return await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert educational content analyzer. Return only valid JSON.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "flashcards",
-            strict: true,
-            schema: {
-              type: "object",
-              required: ["cards"],
-              additionalProperties: false,
-              properties: {
-                cards: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    required: ["front", "back"],
-                    additionalProperties: false,
-                    properties: {
-                      front: { type: "string" },
-                      back: { type: "string" },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
-      signal: controller.signal,
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new AIProviderError(
-        "OPENAI_TIMEOUT",
-        "OpenAI request timed out.",
-        504
-      );
-    }
-
-    throw new AIProviderError(
-      "OPENAI_API_HTTP_ERROR",
-      "Failed to reach OpenAI API.",
-      502,
-      error instanceof Error ? error.message : "Unknown fetch failure"
-    );
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 function extractOpenAITextResponse(data: unknown) {
   if (!data || typeof data !== "object") return "";
 
@@ -361,7 +171,6 @@ function extractOpenAITextResponse(data: unknown) {
     choices?: Array<{
       message?: {
         content?: string | Array<{ type?: string; text?: string }>;
-        refusal?: string | null;
       };
     }>;
   }).choices?.[0];
@@ -382,197 +191,513 @@ function extractOpenAITextResponse(data: unknown) {
   return "";
 }
 
-export async function generateFlashcardsWithAI(
-  options: GenerateOptions
-): Promise<GeneratedCard[]> {
-  const config = getAIConfig();
-
-  if (process.env.NODE_ENV !== "production") {
-    console.log("[AI] Starting generation:", {
-      provider: config.provider,
-      model: config.model,
-      chunkCount: options.chunks.length,
-      mode: options.mode,
-      language: options.language,
-      cardCount: options.cardCount,
-    });
+function getChunkRetrySize(length: number, depth: number) {
+  if (depth === 0) {
+    return Math.max(700, Math.floor(length / 2));
   }
 
-  const collectedCards: GeneratedCard[] = [];
-  const chunkErrors: string[] = [];
+  return Math.max(450, Math.floor(length / 2));
+}
 
-  for (const [index, chunk] of options.chunks.entries()) {
-    const prompt = buildPrompt(options, chunk);
+function shouldSplitChunk(error: unknown, chunk: TextChunk, depth: number) {
+  if (depth >= MAX_RETRY_DEPTH) return false;
+  if (chunk.text.length < 700) return false;
 
-    try {
-      if (config.provider === "openai") {
-        const response = await requestOpenAI(prompt, config.apiKey, config.model);
+  if (!(error instanceof AIProviderError)) {
+    return true;
+  }
 
-        if (!response.ok) {
-          const errorBody = await response.text().catch(() => "");
-          console.error("[OpenAI] API error:", {
-            chunk: chunk.source,
-            status: response.status,
-            body: errorBody.slice(0, 600),
-          });
+  return (
+    error.code.endsWith("_TIMEOUT") ||
+    error.code.endsWith("_EMPTY_RESPONSE") ||
+    error.code.endsWith("_INVALID_JSON") ||
+    error.code.endsWith("_API_HTTP_ERROR")
+  );
+}
 
-          if (response.status === 429) {
-            throw new AIProviderError(
-              "OPENAI_RATE_LIMITED",
-              "OpenAI rate limit exceeded.",
-              429,
-              errorBody.slice(0, 300)
-            );
+function shouldEscalateChunk(
+  error: unknown,
+  config: AIConfig,
+  preferredModel: string,
+  escalated: boolean
+) {
+  if (config.provider !== "openai") return false;
+  if (escalated) return false;
+  if (!config.escalationModel) return false;
+  if (preferredModel !== config.model) return false;
+
+  if (!(error instanceof AIProviderError)) {
+    return true;
+  }
+
+  return (
+    error.code === "OPENAI_TIMEOUT" ||
+    error.code === "OPENAI_EMPTY_RESPONSE" ||
+    error.code === "OPENAI_INVALID_JSON" ||
+    error.code === "OPENAI_API_HTTP_ERROR"
+  );
+}
+
+function formatChunkError(error: unknown) {
+  if (error instanceof AIProviderError) {
+    return `${error.code}: ${error.detail ?? error.message}`;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Unknown chunk failure";
+}
+
+function isModelCompatibilityError(status: number, bodyText: string) {
+  if (status !== 400 && status !== 404) {
+    return false;
+  }
+
+  const body = bodyText.toLowerCase();
+  return (
+    body.includes("model") &&
+    (body.includes("does not exist") ||
+      body.includes("not found") ||
+      body.includes("unsupported") ||
+      body.includes("unavailable"))
+  );
+}
+
+async function requestGeminiChunk(
+  prompt: string,
+  apiKey: string,
+  model: string
+): Promise<ChunkExecutionResult> {
+  const startedAt = Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), GEMINI_CHUNK_TIMEOUT_MS);
+
+  try {
+    let response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0,
+            topP: 0.1,
+            maxOutputTokens: 3072,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                required: ["front", "back"],
+                properties: {
+                  front: { type: "STRING" },
+                  back: { type: "STRING" },
+                },
+              },
+            },
+          },
+        }),
+        signal: controller.signal,
+      }
+    );
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      if (isModelCompatibilityError(response.status, body) && model !== FALLBACK_GEMINI_MODEL) {
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${FALLBACK_GEMINI_MODEL}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "x-goog-api-key": apiKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0,
+                topP: 0.1,
+                maxOutputTokens: 3072,
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    required: ["front", "back"],
+                    properties: {
+                      front: { type: "STRING" },
+                      back: { type: "STRING" },
+                    },
+                  },
+                },
+              },
+            }),
+            signal: controller.signal,
           }
-
-          throw new AIProviderError(
-            "OPENAI_API_HTTP_ERROR",
-            `OpenAI API returned ${response.status}.`,
-            502,
-            errorBody.slice(0, 300)
-          );
-        }
-
-        const data = await response.json();
-        const textContent = extractOpenAITextResponse(data);
-
-        if (process.env.NODE_ENV !== "production") {
-          console.log("[OpenAI] Raw model output:", {
-            chunk: chunk.source,
-            preview: textContent.slice(0, 500),
-            index,
-          });
-        }
-
-        if (!textContent) {
-          throw new AIProviderError(
-            "OPENAI_EMPTY_RESPONSE",
-            "OpenAI returned an empty response.",
-            502,
-            JSON.stringify(data).slice(0, 300)
-          );
-        }
-
-        const cards = normalizeProviderCards(
-          parseGeneratedCards(textContent),
-          chunk.source
         );
-
-        if (process.env.NODE_ENV !== "production") {
-          console.log("[OpenAI] Parsed chunk result:", {
-            chunk: chunk.source,
-            count: cards.length,
-            index,
-          });
-        }
-
-        collectedCards.push(...cards);
-        continue;
-      }
-
-      let response = await requestGemini(prompt, config.apiKey, config.model);
-
-      if (!response.ok) {
-        const errorBody = await response.text().catch(() => "");
-        if (shouldRetryWithFallbackModel(config.model, response.status, errorBody)) {
-          console.warn("[Gemini] Retrying with fallback model:", {
-            configuredModel: config.model,
-            fallbackModel: FALLBACK_GEMINI_MODEL,
-            status: response.status,
-            chunk: chunk.source,
-          });
-          response = await requestGemini(prompt, config.apiKey, FALLBACK_GEMINI_MODEL);
-        } else {
-          console.error("[Gemini] API error:", {
-            chunk: chunk.source,
-            status: response.status,
-            body: errorBody.slice(0, 600),
-          });
-        }
-      }
-
-      if (!response.ok) {
-        const errorBody = await response.text().catch(() => "");
-        if (response.status === 429) {
-          throw new AIProviderError(
-            "GEMINI_RATE_LIMITED",
-            "Gemini rate limit exceeded.",
-            429,
-            errorBody.slice(0, 300)
-          );
-        }
-
+        model = FALLBACK_GEMINI_MODEL;
+      } else if (response.status === 429) {
+        throw new AIProviderError("GEMINI_RATE_LIMITED", "Gemini rate limit exceeded.", 429, body);
+      } else {
         throw new AIProviderError(
           "GEMINI_API_HTTP_ERROR",
           `Gemini API returned ${response.status}.`,
           502,
-          errorBody.slice(0, 300)
+          body.slice(0, 400)
         );
       }
-
-      const data = await response.json();
-      const blockedReason = (data as { promptFeedback?: { blockReason?: string } })
-        ?.promptFeedback?.blockReason;
-
-      if (blockedReason) {
-        throw new AIProviderError(
-          "GEMINI_PROMPT_BLOCKED",
-          "Gemini blocked the prompt.",
-          422,
-          blockedReason
-        );
-      }
-
-      const textContent = extractTextResponse(data);
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[Gemini] Raw model output:", {
-          chunk: chunk.source,
-          preview: textContent.slice(0, 500),
-          index,
-        });
-      }
-
-      if (!textContent) {
-        throw new AIProviderError(
-          "GEMINI_EMPTY_RESPONSE",
-          "Gemini returned an empty response.",
-          502,
-          JSON.stringify(data).slice(0, 300)
-        );
-      }
-
-      const cards = normalizeProviderCards(
-        parseGeneratedCards(textContent),
-        chunk.source
-      );
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[Gemini] Parsed chunk result:", {
-          chunk: chunk.source,
-          count: cards.length,
-          index,
-        });
-      }
-
-      collectedCards.push(...cards);
-    } catch (error) {
-      const mapped = config.provider === "openai" ? mapOpenAIParseError(error) : error;
-      const message =
-        mapped instanceof AIProviderError
-          ? `${mapped.code}: ${mapped.detail ?? mapped.message}`
-          : mapped instanceof Error
-            ? mapped.message
-            : "Unknown chunk failure";
-
-      console.error("[AI] Chunk extraction failed:", {
-        provider: config.provider,
-        chunk: chunk.source,
-        index,
-        message,
-      });
-      chunkErrors.push(`${chunk.source}: ${message}`);
     }
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new AIProviderError(
+        "GEMINI_API_HTTP_ERROR",
+        `Gemini API returned ${response.status}.`,
+        502,
+        body.slice(0, 400)
+      );
+    }
+
+    const data = await response.json();
+    const blockedReason = (data as { promptFeedback?: { blockReason?: string } })
+      ?.promptFeedback?.blockReason;
+
+    if (blockedReason) {
+      throw new AIProviderError(
+        "GEMINI_PROMPT_BLOCKED",
+        "Gemini blocked the prompt.",
+        422,
+        blockedReason
+      );
+    }
+
+    const rawOutput = extractGeminiTextResponse(data);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[AI][Gemini] Raw chunk output:", {
+        model,
+        durationMs: Date.now() - startedAt,
+        preview: rawOutput.slice(0, 500),
+      });
+    }
+
+    if (!rawOutput) {
+      throw new AIProviderError(
+        "GEMINI_EMPTY_RESPONSE",
+        "Gemini returned an empty response.",
+        502,
+        JSON.stringify(data).slice(0, 300)
+      );
+    }
+
+    const cards = parseGeneratedCards(rawOutput, "gemini");
+    return {
+      cards: cards.map((card) => ({ ...card, source: "" })),
+      modelUsed: model,
+      durationMs: Date.now() - startedAt,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new AIProviderError("GEMINI_TIMEOUT", "Gemini request timed out.", 504);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function requestOpenAIChunk(
+  prompt: string,
+  apiKey: string,
+  model: string
+): Promise<ChunkExecutionResult> {
+  const startedAt = Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), OPENAI_CHUNK_TIMEOUT_MS);
+
+  try {
+    let activeModel = model;
+
+    const send = async (targetModel: string) =>
+      fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: targetModel,
+          messages: [
+            {
+              role: "system",
+              content: STRICT_PROMPT,
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          temperature: 0,
+          max_completion_tokens: 2500,
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "flashcards",
+              strict: true,
+              schema: {
+                type: "object",
+                required: ["cards"],
+                additionalProperties: false,
+                properties: {
+                  cards: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["front", "back"],
+                      additionalProperties: false,
+                      properties: {
+                        front: { type: "string" },
+                        back: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+        signal: controller.signal,
+      });
+
+    let response = await send(activeModel);
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      const compatibilityFallback = OPENAI_MODEL_COMPAT_FALLBACKS[activeModel];
+      if (compatibilityFallback && isModelCompatibilityError(response.status, body)) {
+        activeModel = compatibilityFallback;
+        response = await send(activeModel);
+      } else if (response.status === 429) {
+        throw new AIProviderError("OPENAI_RATE_LIMITED", "OpenAI rate limit exceeded.", 429, body);
+      } else {
+        throw new AIProviderError(
+          "OPENAI_API_HTTP_ERROR",
+          `OpenAI API returned ${response.status}.`,
+          502,
+          body.slice(0, 400)
+        );
+      }
+    }
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new AIProviderError(
+        "OPENAI_API_HTTP_ERROR",
+        `OpenAI API returned ${response.status}.`,
+        502,
+        body.slice(0, 400)
+      );
+    }
+
+    const data = await response.json();
+    const rawOutput = extractOpenAITextResponse(data);
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[AI][OpenAI] Raw chunk output:", {
+        model: activeModel,
+        durationMs: Date.now() - startedAt,
+        preview: rawOutput.slice(0, 500),
+      });
+    }
+
+    if (!rawOutput) {
+      throw new AIProviderError(
+        "OPENAI_EMPTY_RESPONSE",
+        "OpenAI returned an empty response.",
+        502,
+        JSON.stringify(data).slice(0, 300)
+      );
+    }
+
+    const cards = parseGeneratedCards(rawOutput, "openai");
+    return {
+      cards: cards.map((card) => ({ ...card, source: "" })),
+      modelUsed: activeModel,
+      durationMs: Date.now() - startedAt,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new AIProviderError("OPENAI_TIMEOUT", "OpenAI request timed out.", 504);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function executeChunk(
+  chunk: TextChunk,
+  prompt: string,
+  config: AIConfig,
+  preferredModel: string
+): Promise<ChunkExecutionResult> {
+  if (config.provider === "openai") {
+    return requestOpenAIChunk(prompt, config.apiKey, preferredModel);
+  }
+
+  return requestGeminiChunk(prompt, config.apiKey, preferredModel);
+}
+
+async function processChunkWithRecovery({
+  chunk,
+  options,
+  config,
+  preferredModel,
+  depth,
+  escalated,
+  stats,
+  errors,
+}: ChunkRecoveryOptions): Promise<GeneratedCard[]> {
+  const prompt = buildPrompt(chunk);
+
+  try {
+    const result = await executeChunk(chunk, prompt, config, preferredModel);
+    stats.successfulChunks += 1;
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[AI] Chunk success:", {
+        chunk: chunk.source,
+        textLength: chunk.text.length,
+        modelUsed: result.modelUsed,
+        durationMs: result.durationMs,
+        cards: result.cards.length,
+        depth,
+      });
+    }
+
+    return result.cards.map((card) => ({
+      ...card,
+      source: chunk.source,
+    }));
+  } catch (error) {
+    if (shouldSplitChunk(error, chunk, depth)) {
+      const smallerChunks = splitChunkForRetry(chunk, getChunkRetrySize(chunk.text.length, depth));
+      if (smallerChunks.length > 1) {
+        if (process.env.NODE_ENV !== "production") {
+          console.log("[AI] Splitting failed chunk:", {
+            chunk: chunk.source,
+            originalLength: chunk.text.length,
+            splitInto: smallerChunks.length,
+            preferredModel,
+            depth,
+            reason: formatChunkError(error),
+          });
+        }
+
+        const nestedCards: GeneratedCard[] = [];
+        for (const smallerChunk of smallerChunks) {
+          nestedCards.push(
+            ...(await processChunkWithRecovery({
+              chunk: smallerChunk,
+              options,
+              config,
+              preferredModel,
+              depth: depth + 1,
+              escalated,
+              stats,
+              errors,
+            }))
+          );
+        }
+
+        if (nestedCards.length > 0) {
+          return nestedCards;
+        }
+      }
+    }
+
+    if (shouldEscalateChunk(error, config, preferredModel, escalated)) {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[AI] Escalating chunk model:", {
+          chunk: chunk.source,
+          fromModel: preferredModel,
+          toModel: config.escalationModel,
+          depth,
+          reason: formatChunkError(error),
+        });
+      }
+
+      return processChunkWithRecovery({
+        chunk,
+        options,
+        config,
+        preferredModel: config.escalationModel!,
+        depth,
+        escalated: true,
+        stats,
+        errors,
+      });
+    }
+
+    const message = formatChunkError(error);
+    stats.failedChunks += 1;
+    errors.push(`${chunk.source}: ${message}`);
+
+    console.error("[AI] Chunk extraction failed:", {
+      provider: config.provider,
+      chunk: chunk.source,
+      textLength: chunk.text.length,
+      modelTried: preferredModel,
+      depth,
+      message,
+    });
+
+    return [];
+  }
+}
+
+export async function generateFlashcardsWithAI(
+  options: GenerateOptions
+): Promise<GeneratedCard[]> {
+  const config = getAIConfig();
+  const stats = {
+    successfulChunks: 0,
+    failedChunks: 0,
+  };
+  const chunkErrors: string[] = [];
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[AI] Starting chunked extraction:", {
+      provider: config.provider,
+      model: config.model,
+      escalationModel: config.escalationModel ?? null,
+      chunkCount: options.chunks.length,
+      chunkSizes: options.chunks.map((chunk) => chunk.text.length),
+      totalTextLength: options.chunks.reduce((sum, chunk) => sum + chunk.text.length, 0),
+    });
+  }
+
+  const collectedCards: GeneratedCard[] = [];
+
+  for (const chunk of options.chunks) {
+    collectedCards.push(
+      ...(await processChunkWithRecovery({
+        chunk,
+        options,
+        config,
+        preferredModel: config.model,
+        depth: 0,
+        escalated: false,
+        stats,
+        errors: chunkErrors,
+      }))
+    );
   }
 
   const finalCards = dedupeVocabularyCards(
@@ -581,21 +706,23 @@ export async function generateFlashcardsWithAI(
       back: card.back,
       source: card.source,
     }))
-  )
-    .map((card) => ({
-      front: card.front,
-      back: card.back,
-      category: "General",
-      difficulty: "medium" as const,
-      source: card.source ?? "Document",
-    }));
+  ).map((card) => ({
+    front: card.front,
+    back: card.back,
+    category: "General",
+    difficulty: "medium" as const,
+    source: card.source ?? "Document",
+  }));
 
   if (process.env.NODE_ENV !== "production") {
-    console.log("[AI] Final merged cards:", {
+    console.log("[AI] Chunk extraction summary:", {
       provider: config.provider,
-      model: config.model,
-      count: finalCards.length,
-      chunkErrors,
+      defaultModel: config.model,
+      escalationModel: config.escalationModel ?? null,
+      successfulChunkCount: stats.successfulChunks,
+      failedChunkCount: stats.failedChunks,
+      finalCardCount: finalCards.length,
+      failedChunks: chunkErrors,
     });
   }
 

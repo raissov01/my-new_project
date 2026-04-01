@@ -1,11 +1,13 @@
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
-const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
+const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
+const DEFAULT_OPENAI_ESCALATION_MODEL = "gpt-5.4";
 const DEFAULT_MAX_UPLOAD_MB = 20;
 
 export type AIConfig = {
   provider: "openai" | "gemini";
   apiKey: string;
   model: string;
+  escalationModel?: string;
   maxUploadBytes: number;
 };
 
@@ -21,7 +23,12 @@ export function getAIConfig(): AIConfig {
   const openaiApiKey = process.env.OPENAI_API_KEY?.trim();
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
   const geminiModel = process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
-  const openaiModel = process.env.OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL;
+  const openaiModel =
+    process.env.OPENAI_EXTRACTION_MODEL?.trim() ||
+    process.env.OPENAI_MODEL?.trim() ||
+    DEFAULT_OPENAI_MODEL;
+  const openaiEscalationModel =
+    process.env.OPENAI_ESCALATION_MODEL?.trim() || DEFAULT_OPENAI_ESCALATION_MODEL;
   const maxUploadMb = parseMaxUploadMb(process.env.AI_MAX_UPLOAD_MB);
 
   if (openaiApiKey) {
@@ -29,6 +36,7 @@ export function getAIConfig(): AIConfig {
       provider: "openai",
       apiKey: openaiApiKey,
       model: openaiModel,
+      escalationModel: openaiEscalationModel,
       maxUploadBytes: maxUploadMb * 1024 * 1024,
     };
   }
