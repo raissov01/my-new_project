@@ -1,3 +1,4 @@
+import { createRequire } from "module";
 import { getAIConfigSafe } from "./config";
 
 export type ExtractionResult = {
@@ -10,6 +11,8 @@ export type TextChunk = {
   text: string;
   source: string;
 };
+
+const requireCjs = createRequire(import.meta.url);
 
 /**
  * Extract text from a PDF or DOCX file buffer.
@@ -48,19 +51,13 @@ export async function extractText(
 }
 
 async function extractFromPdf(buffer: Buffer): Promise<ExtractionResult> {
-  // Dynamic import avoids Turbopack bundling issues with native deps
-  let pdfModule: unknown;
+  let pdfParse: unknown;
   try {
-    pdfModule = await import("pdf-parse");
+    pdfParse = requireCjs("pdf-parse");
   } catch (importErr) {
     console.error("[extract-text] Failed to import pdf-parse:", importErr);
     throw new Error("PDF_PARSER_UNAVAILABLE");
   }
-
-  const mod = pdfModule as Record<string, unknown>;
-  const pdfParse =
-    (typeof mod.default === "function" ? mod.default : null) ??
-    (typeof pdfModule === "function" ? pdfModule : null);
 
   if (typeof pdfParse !== "function") {
     throw new Error("PDF_PARSER_UNAVAILABLE");
@@ -85,7 +82,8 @@ async function extractFromPdf(buffer: Buffer): Promise<ExtractionResult> {
     return { text: cleaned, pageCount, chunks };
   } catch (error) {
     console.error("[extract-text] PDF extraction failed:", error);
-    throw new Error("PDF_EXTRACTION_FAILED");
+    const detail = error instanceof Error ? error.message : "Unknown PDF parser failure";
+    throw new Error(`PDF_EXTRACTION_FAILED: ${detail}`);
   }
 }
 
@@ -106,12 +104,18 @@ async function extractFromDocx(buffer: Buffer): Promise<ExtractionResult> {
     throw new Error("DOCX_PARSER_UNAVAILABLE");
   }
 
-  const result = await extractFn({ buffer });
-  const rawText = result.value ?? "";
-  const cleaned = cleanText(rawText);
-  const chunks = splitIntoChunks(cleaned, "docx", null);
+  try {
+    const result = await extractFn({ buffer });
+    const rawText = result.value ?? "";
+    const cleaned = cleanText(rawText);
+    const chunks = splitIntoChunks(cleaned, "docx", null);
 
-  return { text: cleaned, pageCount: null, chunks };
+    return { text: cleaned, pageCount: null, chunks };
+  } catch (error) {
+    console.error("[extract-text] DOCX extraction failed:", error);
+    const detail = error instanceof Error ? error.message : "Unknown DOCX parser failure";
+    throw new Error(`DOCX_EXTRACTION_FAILED: ${detail}`);
+  }
 }
 
 /**
