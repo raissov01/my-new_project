@@ -110,13 +110,18 @@ A flashcard must contain:
 - front: the word or term
 - back: its exact translation, meaning, or definition from the document
 
-Return ONLY valid JSON in this format:
-[
-  {
-    "front": "",
-    "back": ""
-  }
-]
+Return ONLY valid JSON.
+Preferred format:
+{
+  "cards": [
+    {
+      "front": "",
+      "back": ""
+    }
+  ]
+}
+
+If your system does not support an object wrapper, a plain JSON array is also acceptable.
 
 Text:
 ${chunk.text}
@@ -157,17 +162,23 @@ function parseGeneratedCards(raw: string): GeneratedCard[] {
     );
   }
 
-  if (!Array.isArray(parsed)) {
+  const normalized = Array.isArray(parsed)
+    ? parsed
+    : parsed && typeof parsed === "object" && Array.isArray((parsed as { cards?: unknown }).cards)
+      ? (parsed as { cards: unknown[] }).cards
+      : null;
+
+  if (!normalized) {
     throw new AIProviderError(
       "GEMINI_INVALID_FORMAT",
-      "Gemini returned a non-array payload.",
+      "Model returned a payload without a cards array.",
       502
     );
   }
 
   const validDifficulties = new Set(["easy", "medium", "hard"]);
 
-  return parsed
+  return normalized
     .filter(
       (card): card is Record<string, unknown> =>
         card !== null && typeof card === "object"
@@ -312,14 +323,21 @@ async function requestOpenAI(
             name: "flashcards",
             strict: true,
             schema: {
-              type: "array",
-              items: {
-                type: "object",
-                required: ["front", "back"],
-                additionalProperties: false,
-                properties: {
-                  front: { type: "string" },
-                  back: { type: "string" },
+              type: "object",
+              required: ["cards"],
+              additionalProperties: false,
+              properties: {
+                cards: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    required: ["front", "back"],
+                    additionalProperties: false,
+                    properties: {
+                      front: { type: "string" },
+                      back: { type: "string" },
+                    },
+                  },
                 },
               },
             },
