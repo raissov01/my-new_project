@@ -95,7 +95,6 @@ export function SignupForm() {
           >
             <input
               type="radio"
-              name="role"
               value="student"
               checked={selectedRole === "student"}
               onChange={() => setSelectedRole("student")}
@@ -121,7 +120,6 @@ export function SignupForm() {
           >
             <input
               type="radio"
-              name="role"
               value="teacher"
               checked={selectedRole === "teacher"}
               onChange={() => setSelectedRole("teacher")}

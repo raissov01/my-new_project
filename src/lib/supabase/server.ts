@@ -120,7 +120,10 @@ export async function getCurrentUser() {
 
 export async function ensureProfile(
   user:
-    | (Pick<User, "id" | "email"> & { user_metadata?: User["user_metadata"] })
+    | (Pick<User, "id" | "email"> & {
+        user_metadata?: User["user_metadata"];
+        app_metadata?: User["app_metadata"];
+      })
     | null
     | undefined,
   roleOverride?: ProfileRole
@@ -131,6 +134,23 @@ export async function ensureProfile(
 
   const supabase = await createClient();
   const profilesTable = supabase.from("profiles") as never as ProfilesTable;
+
+  // Check if profile already exists — if it does, don't overwrite anything
+  const { data: existing } = await profilesTable
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    // Profile exists. Only update role if a new one is explicitly requested
+    // and the current one is missing.
+    if (roleOverride && !existing.role) {
+      await profilesTable.update({ role: roleOverride }).eq("id", user.id);
+    }
+    return;
+  }
+
+  // Profile does NOT exist — create it
   const fullName =
     typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()
       ? user.user_metadata.full_name.trim()
@@ -162,7 +182,7 @@ export async function ensureProfile(
   );
 
   if (error) {
-    console.error("[ensureProfile] Failed to upsert profile:", {
+    console.error("[ensureProfile] Failed to create profile:", {
       userId: user.id,
       email: user.email,
       role,

@@ -3,8 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
-  createProfileForSignup,
   createClient,
+  ensureProfile,
   getAppHomePath,
   getRoleRegistrationRedirect,
 } from "@/lib/supabase/server";
@@ -24,21 +24,12 @@ export type AuthResult = {
   message?: string | null;
 };
 
-type ProfileLookupTable = {
-  select: (columns: string) => {
-    eq: (column: string, value: string) => {
-      maybeSingle: () => Promise<{ data: { id: string } | null }>;
-    };
-  };
-};
-
 /**
  * Maps raw Supabase error messages to friendly localized messages.
- * Technical details are logged to console only.
  */
 function friendlyAuthError(
   rawMessage: string,
-  t: (key: string, vars?: Record<string, string | number>) => string
+  t: (key: string) => string
 ): string {
   const lower = rawMessage.toLowerCase();
 
@@ -52,7 +43,6 @@ function friendlyAuthError(
   if (lower.includes("network") || lower.includes("fetch")) return t("action.networkError");
   if (lower.includes("email") && lower.includes("format")) return t("action.invalidEmail");
 
-  // Fallback: generic friendly message, raw error in console only
   return t("action.genericError");
 }
 
@@ -106,6 +96,12 @@ export async function login(formData: FormData): Promise<AuthResult> {
     return { error: t("action.loginNoSession") };
   }
 
+  // Safety net: ensure profile exists for this user.
+  // This covers the case where signup created the auth user but profile insert failed.
+  if (data.user) {
+    await ensureProfile(data.user);
+  }
+
   redirect(await getAppHomePath(data.user));
 }
 
@@ -121,9 +117,6 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   if (!isSupabaseConfigured()) {
     return { error: t("action.supabaseNotConfigured") };
   }
-
-  const supabase = await createClient();
-  const profilesTable = supabase.from("profiles") as never as ProfileLookupTable;
 
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -143,26 +136,20 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     return { error: t("action.passwordMin") };
   }
 
-  // Check username uniqueness
-  const { data: existingProfile } = await profilesTable
-    .select("id")
-    .eq("username", username)
-    .maybeSingle();
+  const supabase = await createClient();
 
-  if (existingProfile) {
-    return { error: t("action.usernameTaken") };
-  }
+  // NOTE: Username uniqueness cannot be reliably checked via RLS-protected SELECT
+  // because the SELECT policy restricts to auth.uid() = id. The DB UNIQUE constraint
+  // on the username column will catch duplicates at insert time instead.
+  // If a Go backend endpoint for username checking exists, use that.
 
+  // Create the auth user
   const { data, error } = await supabase.auth
     .signUp({
       email,
       password,
       options: {
         data: { full_name: fullName, username, role },
-        // Allow immediate login without email confirmation.
-        // In Supabase dashboard, set "Enable email confirmations" to OFF,
-        // or this option is ignored and a confirmation email is still sent.
-        emailRedirectTo: undefined,
       },
     })
     .catch((authError: Error) => ({
@@ -184,27 +171,49 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     return { error: t("action.accountExists") };
   }
 
-  // Create profile in database
+  // Create profile using the SAME supabase client (has the new session).
+  // Use upsert directly — it's safe with onConflict:"id" and avoids the
+  // insert-then-fallback pattern that fails under RLS timing issues.
   if (data.user) {
-    const profileResult = await createProfileForSignup({
-      user: data.user,
-      email,
-      fullName,
-      username,
-      role: role as ProfileRole,
-    });
+    const profilesTable = supabase.from("profiles") as never as {
+      upsert: (
+        values: Record<string, unknown>,
+        options?: { onConflict?: string }
+      ) => Promise<{ error: { message: string } | null }>;
+    };
 
-    if (profileResult.error) {
-      console.error("[signup] profile insert failed:", {
-        error: profileResult.error,
+    const { error: profileError } = await profilesTable.upsert(
+      {
+        id: data.user.id,
+        email,
+        full_name: fullName,
+        username,
+        role,
+        streak_days: 0,
+        points: 0,
+      },
+      { onConflict: "id" }
+    );
+
+    if (profileError) {
+      const msg = profileError.message?.toLowerCase() ?? "";
+      console.error("[signup] Profile upsert failed:", {
+        message: profileError.message,
         userId: data.user.id,
+        email,
       });
-      return { error: t("action.profileCreateFailed") };
+
+      // If the username is taken (UNIQUE constraint violation), tell the user
+      if (msg.includes("duplicate") && msg.includes("username")) {
+        return { error: t("action.usernameTaken") };
+      }
+
+      // For other profile errors, log but don't block — ensureProfile on next login
+      // will retry. The auth user already exists in Supabase.
     }
   }
 
-  // If Supabase still requires email confirmation (session is null), show message.
-  // Otherwise, log in immediately.
+  // If Supabase requires email confirmation (session is null), show message.
   if (data.user && !data.session) {
     return {
       error: null,
@@ -212,6 +221,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     };
   }
 
+  // Session exists — user can log in immediately.
   redirect(getRoleRegistrationRedirect(role as ProfileRole));
 }
 

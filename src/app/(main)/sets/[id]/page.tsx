@@ -20,6 +20,7 @@ import {
   StudyRoutePrefetch,
   ShareSetPanel,
 } from "@/components/flashcards";
+import { AuthRequiredPrompt } from "@/components/auth/auth-required-prompt";
 import { formatDate } from "@/lib/utils";
 import { getSetProgress } from "@/app/(main)/sets/progress-actions";
 import {
@@ -89,7 +90,7 @@ export default async function SetDetailPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      {cards.length > 0 && <StudyRoutePrefetch setId={id} />}
+      {user && cards.length > 0 && <StudyRoutePrefetch setId={id} />}
 
       <Link
         href={backHref}
@@ -135,13 +136,64 @@ export default async function SetDetailPage({
 
           {cards.length > 0 && (
             <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <StudyModeButton href={buildStudyHref(id, reviewCount > 0 ? "review" : undefined, "flashcard")} icon={GraduationCap} label={primaryLabel} tone="primary" />
-              <StudyModeButton href={buildStudyHref(id, reviewCount > 0 ? "review" : undefined, "quiz")} icon={ListChecks} label={t("study.quiz")} />
-              <StudyModeButton href={buildStudyHref(id, reviewCount > 0 ? "review" : undefined, "write")} icon={PenLine} label={t("study.write")} />
+              <StudyModeButton
+                href={buildStudyHref(id, reviewCount > 0 ? "review" : undefined, "flashcard")}
+                icon={GraduationCap}
+                label={primaryLabel}
+                tone="primary"
+                requireAuth={!user}
+                authTitle={t("guest.authRequiredTitle")}
+                authDescription={t("guest.studyPrompt")}
+                authSignupLabel={t("guest.signUpToContinue")}
+                authLoginLabel={t("guest.logInToUnlock")}
+                authCancelLabel={t("set.cancel")}
+              />
+              <StudyModeButton
+                href={buildStudyHref(id, reviewCount > 0 ? "review" : undefined, "quiz")}
+                icon={ListChecks}
+                label={t("study.quiz")}
+                requireAuth={!user}
+                authTitle={t("guest.authRequiredTitle")}
+                authDescription={t("guest.studyPrompt")}
+                authSignupLabel={t("guest.signUpToContinue")}
+                authLoginLabel={t("guest.logInToUnlock")}
+                authCancelLabel={t("set.cancel")}
+              />
+              <StudyModeButton
+                href={buildStudyHref(id, reviewCount > 0 ? "review" : undefined, "write")}
+                icon={PenLine}
+                label={t("study.write")}
+                requireAuth={!user}
+                authTitle={t("guest.authRequiredTitle")}
+                authDescription={t("guest.studyPrompt")}
+                authSignupLabel={t("guest.signUpToContinue")}
+                authLoginLabel={t("guest.logInToUnlock")}
+                authCancelLabel={t("set.cancel")}
+              />
               {smartDeck.summary.totalCount > 0 ? (
-                <StudyModeButton href={`/sets/${id}/study?mode=smart`} icon={Zap} label={t("set.smartStudy")} />
+                <StudyModeButton
+                  href={`/sets/${id}/study?mode=smart`}
+                  icon={Zap}
+                  label={t("set.smartStudy")}
+                  requireAuth={!user}
+                  authTitle={t("guest.authRequiredTitle")}
+                  authDescription={t("guest.studyPrompt")}
+                  authSignupLabel={t("guest.signUpToContinue")}
+                  authLoginLabel={t("guest.logInToUnlock")}
+                  authCancelLabel={t("set.cancel")}
+                />
               ) : (
-                <StudyModeButton href={`/sets/${id}/study`} icon={Layers} label={t("study.flashcards")} />
+                <StudyModeButton
+                  href={`/sets/${id}/study`}
+                  icon={Layers}
+                  label={t("study.flashcards")}
+                  requireAuth={!user}
+                  authTitle={t("guest.authRequiredTitle")}
+                  authDescription={t("guest.studyPrompt")}
+                  authSignupLabel={t("guest.signUpToContinue")}
+                  authLoginLabel={t("guest.logInToUnlock")}
+                  authCancelLabel={t("set.cancel")}
+                />
               )}
             </div>
           )}
@@ -153,6 +205,12 @@ export default async function SetDetailPage({
                 icon={Zap}
                 label={t("challenge.startChallenge")}
                 tone="secondary"
+                requireAuth={!user}
+                authTitle={t("guest.authRequiredTitle")}
+                authDescription={t("guest.challengePrompt")}
+                authSignupLabel={t("guest.signUpToContinue")}
+                authLoginLabel={t("guest.logInToUnlock")}
+                authCancelLabel={t("set.cancel")}
               />
               <StudyModeButton
                 href={`/sets/${id}/ranking`}
@@ -237,13 +295,29 @@ export default async function SetDetailPage({
               <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                 {t("set.reviewTodaySubtitle")}
               </p>
-              <Link
-                href={`/sets/${id}/study?mode=review`}
-                prefetch
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-400 hover:text-indigo-300"
-              >
-                {t("set.reviewSession")}
-              </Link>
+              <div className="mt-4">
+                {user ? (
+                  <Link
+                    href={`/sets/${id}/study?mode=review`}
+                    prefetch
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-400 hover:text-indigo-300"
+                  >
+                    {t("set.reviewSession")}
+                  </Link>
+                ) : (
+                  <AuthRequiredPrompt
+                    triggerLabel={t("set.reviewSession")}
+                    title={t("guest.authRequiredTitle")}
+                    description={t("guest.studyPrompt")}
+                    signupLabel={t("guest.signUpToContinue")}
+                    loginLabel={t("guest.logInToUnlock")}
+                    cancelLabel={t("set.cancel")}
+                    variant="ghost"
+                    icon={<Zap className="h-4 w-4" />}
+                    className="px-0 text-indigo-400 hover:bg-transparent hover:text-indigo-300"
+                  />
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -282,12 +356,40 @@ function StudyModeButton({
   icon: Icon,
   label,
   tone = "secondary",
+  requireAuth = false,
+  authTitle,
+  authDescription,
+  authSignupLabel,
+  authLoginLabel,
+  authCancelLabel,
 }: {
   href: string;
   icon: typeof GraduationCap;
   label: string;
   tone?: "primary" | "secondary";
+  requireAuth?: boolean;
+  authTitle?: string;
+  authDescription?: string;
+  authSignupLabel?: string;
+  authLoginLabel?: string;
+  authCancelLabel?: string;
 }) {
+  if (requireAuth && authTitle && authDescription && authSignupLabel && authLoginLabel && authCancelLabel) {
+    return (
+      <AuthRequiredPrompt
+        triggerLabel={label}
+        title={authTitle}
+        description={authDescription}
+        signupLabel={authSignupLabel}
+        loginLabel={authLoginLabel}
+        cancelLabel={authCancelLabel}
+        variant={tone === "primary" ? "primary" : "secondary"}
+        icon={<Icon className="h-4 w-4" />}
+        className="w-full"
+      />
+    );
+  }
+
   return (
     <Link
       href={href}
