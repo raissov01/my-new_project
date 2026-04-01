@@ -686,6 +686,25 @@ export async function generateFlashcardsWithAI(
   const collectedCards: GeneratedCard[] = [];
 
   for (const chunk of options.chunks) {
+    const currentUniqueCount = dedupeVocabularyCards(
+      collectedCards.map((card) => ({
+        front: card.front,
+        back: card.back,
+        source: card.source,
+      }))
+    ).length;
+
+    if (currentUniqueCount >= options.cardCount) {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[AI] Early stop after reaching requested card budget:", {
+          requestedCardCount: options.cardCount,
+          currentUniqueCount,
+          remainingChunks: options.chunks.length - options.chunks.indexOf(chunk),
+        });
+      }
+      break;
+    }
+
     collectedCards.push(
       ...(await processChunkWithRecovery({
         chunk,
@@ -706,13 +725,15 @@ export async function generateFlashcardsWithAI(
       back: card.back,
       source: card.source,
     }))
-  ).map((card) => ({
-    front: card.front,
-    back: card.back,
-    category: "General",
-    difficulty: "medium" as const,
-    source: card.source ?? "Document",
-  }));
+  )
+    .slice(0, options.cardCount)
+    .map((card) => ({
+      front: card.front,
+      back: card.back,
+      category: "General",
+      difficulty: "medium" as const,
+      source: card.source ?? "Document",
+    }));
 
   if (process.env.NODE_ENV !== "production") {
     console.log("[AI] Chunk extraction summary:", {

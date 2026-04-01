@@ -1,4 +1,13 @@
-export const AI_REQUEST_TIMEOUT_MS = 60_000;
+const DEFAULT_AI_REQUEST_TIMEOUT_MS = 180_000;
+const MIN_AI_REQUEST_TIMEOUT_MS = 120_000;
+const MAX_AI_REQUEST_TIMEOUT_MS = 300_000;
+
+export function estimateAIRequestTimeoutMs(fileSizeBytes: number) {
+  const fileSizeMb = Math.max(1, Math.ceil(fileSizeBytes / (1024 * 1024)));
+  const computedTimeout = DEFAULT_AI_REQUEST_TIMEOUT_MS + (fileSizeMb - 1) * 15_000;
+
+  return Math.min(MAX_AI_REQUEST_TIMEOUT_MS, Math.max(MIN_AI_REQUEST_TIMEOUT_MS, computedTimeout));
+}
 
 export class AIClientRequestError extends Error {
   constructor(
@@ -9,9 +18,15 @@ export class AIClientRequestError extends Error {
   }
 }
 
-export async function requestAIGeneration(formData: FormData) {
+export async function requestAIGeneration(
+  formData: FormData,
+  options?: { timeoutMs?: number }
+) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(
+    () => controller.abort(),
+    options?.timeoutMs ?? DEFAULT_AI_REQUEST_TIMEOUT_MS
+  );
 
   try {
     const response = await fetch("/api/ai/generate", {

@@ -21,7 +21,11 @@ import type {
   FlashcardInput,
   SetVisibilityInput,
 } from "@/app/(main)/sets/actions";
-import { AIClientRequestError, requestAIGeneration } from "@/lib/ai/client";
+import {
+  AIClientRequestError,
+  estimateAIRequestTimeoutMs,
+  requestAIGeneration,
+} from "@/lib/ai/client";
 import type { GenerationLanguage, GenerationMode } from "@/lib/ai/gemini";
 
 interface SetFormProps {
@@ -285,7 +289,9 @@ export function SetForm({
       formData.append("language", aiLanguage);
       formData.append("cardCount", "999");
 
-      const { response, data } = await requestAIGeneration(formData);
+      const { response, data } = await requestAIGeneration(formData, {
+        timeoutMs: estimateAIRequestTimeoutMs(file.size),
+      });
       if (!response.ok) {
         if (process.env.NODE_ENV !== "production") {
           console.error("[SetForm] AI import API error:", data);

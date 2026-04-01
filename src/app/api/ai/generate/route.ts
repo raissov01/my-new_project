@@ -24,6 +24,35 @@ const VALID_MIME_TYPES = new Set([
 
 export const runtime = "nodejs";
 
+function countPotentialVocabularyLines(text: string) {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter(
+      (line) =>
+        /\t/.test(line) ||
+        /\s{3,}/.test(line) ||
+        /[—–:]/.test(line) ||
+        /\s-\s/.test(line) ||
+        /\s->\s/.test(line) ||
+        /\s=>\s/.test(line)
+    ).length;
+}
+
+function scoreChunkForAI(text: string, heuristicCount: number) {
+  const potentialLines = countPotentialVocabularyLines(text);
+  const densityBoost = Math.min(8, Math.ceil(text.length / 500));
+
+  return {
+    potentialLines,
+    score:
+      heuristicCount === 0
+        ? potentialLines + densityBoost
+        : potentialLines - heuristicCount * 2 + densityBoost,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!DEV_MODE) {
@@ -170,12 +199,47 @@ export async function POST(request: NextRequest) {
 
     const heuristicCards = extractExplicitVocabularyPairs(extraction.text, file.name);
     const extractionChunks = buildVocabularyChunks(extraction.text);
+    const heuristicCardsByChunk = extractionChunks.map((chunk) =>
+      extractExplicitVocabularyPairs(chunk.text, chunk.source)
+    );
+    const heuristicLimitedCards = heuristicCards.slice(0, cardCount);
+    const remainingCardBudget = Math.max(0, cardCount - heuristicLimitedCards.length);
+    const rankedAiCandidates = extractionChunks
+      .map((chunk, index) => {
+        const chunkHeuristicCount = heuristicCardsByChunk[index].length;
+        const { potentialLines, score } = scoreChunkForAI(chunk.text, chunkHeuristicCount);
+
+        const isCandidate =
+          (chunkHeuristicCount === 0 && potentialLines > 0) ||
+          (potentialLines >= 6 && chunkHeuristicCount < Math.ceil(potentialLines / 3));
+
+        return {
+          chunk,
+          chunkHeuristicCount,
+          potentialLines,
+          score,
+          isCandidate,
+        };
+      })
+      .filter((entry) => entry.isCandidate)
+      .sort((left, right) => right.score - left.score || left.chunk.text.length - right.chunk.text.length);
+    const maxAiChunkCount =
+      remainingCardBudget > 0 ? Math.max(4, Math.min(18, remainingCardBudget * 2)) : 0;
+    const aiCandidateChunks = rankedAiCandidates
+      .slice(0, maxAiChunkCount)
+      .map((entry) => entry.chunk);
     const warnings: string[] = [];
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[AI Generate] Heuristic extraction:", {
         heuristicCount: heuristicCards.length,
+        heuristicLimitedCount: heuristicLimitedCards.length,
+        remainingCardBudget,
         chunkCount: extractionChunks.length,
+        aiCandidateChunkCount: rankedAiCandidates.length,
+        selectedAiChunkCount: aiCandidateChunks.length,
+        skippedChunkCount: extractionChunks.length - rankedAiCandidates.length,
+        deferredAiChunkCount: Math.max(0, rankedAiCandidates.length - aiCandidateChunks.length),
         chunkSizes: extractionChunks.map((chunk) => chunk.text.length),
         averageChunkSize:
           extractionChunks.length > 0
@@ -187,26 +251,26 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    let cards = heuristicCards;
+    let cards = heuristicLimitedCards;
 
-    // Always run AI extraction if available — it catches pairs the heuristic misses
-    if (aiConfig && extractionChunks.length > 0) {
+    // Run AI only on chunks where heuristics likely missed structured pairs.
+    if (aiConfig && aiCandidateChunks.length > 0 && remainingCardBudget > 0) {
       try {
         const aiCards = await generateFlashcardsWithAI({
-          chunks: extractionChunks,
+          chunks: aiCandidateChunks,
           mode: mode as GenerationMode,
           language: language as GenerationLanguage,
-          cardCount: 999, // no artificial limit — extract all found pairs
+          cardCount: remainingCardBudget,
         });
 
         cards = dedupeVocabularyCards([
-          ...heuristicCards,
+          ...heuristicLimitedCards,
           ...aiCards.map((card) => ({
             front: card.front,
             back: card.back,
             source: card.source,
           })),
-        ]);
+        ]).slice(0, cardCount);
       } catch (error) {
         const detail =
           error instanceof AIProviderError
@@ -219,10 +283,14 @@ export async function POST(request: NextRequest) {
       }
     } else if (!aiConfig) {
       warnings.push("AI provider key missing, heuristic extraction only.");
+    } else if (remainingCardBudget <= 0) {
+      warnings.push("Heuristic extraction already satisfied the requested card count.");
+    } else if (heuristicCards.length > 0) {
+      warnings.push("Heuristic extraction covered the document; AI fallback was skipped.");
     }
 
     // No artificial limit — return exactly as many pairs as found
-    cards = dedupeVocabularyCards(cards);
+    cards = dedupeVocabularyCards(cards).slice(0, cardCount);
 
     if (cards.length === 0) {
       return NextResponse.json(
@@ -255,6 +323,8 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         pageCount: extraction.pageCount,
         chunkCount: extractionChunks.length,
+        aiChunkCount: aiCandidateChunks.length,
+        aiCandidateChunkCount: rankedAiCandidates.length,
         textLength: extraction.text.length,
         extractionMethod: extraction.method,
         methodsTried: extraction.methodsTried,

@@ -23,7 +23,11 @@ import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createSet, type FlashcardInput } from "@/app/(main)/sets/actions";
-import { AIClientRequestError, requestAIGeneration } from "@/lib/ai/client";
+import {
+  AIClientRequestError,
+  estimateAIRequestTimeoutMs,
+  requestAIGeneration,
+} from "@/lib/ai/client";
 import type { GeneratedCard, GenerationMode, GenerationLanguage } from "@/lib/ai/gemini";
 
 type Step = "upload" | "generating" | "preview";
@@ -174,7 +178,9 @@ export function AIGeneratorClient() {
         setGeneratingMessage(t("ai.analyzing"));
       }, 3000);
 
-      const { response, data } = await requestAIGeneration(formData);
+      const { response, data } = await requestAIGeneration(formData, {
+        timeoutMs: estimateAIRequestTimeoutMs(file.size),
+      });
 
       if (!response.ok) {
         if (process.env.NODE_ENV !== "production") {
