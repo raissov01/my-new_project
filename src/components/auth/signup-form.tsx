@@ -28,29 +28,46 @@ export function SignupForm() {
   const [isPending, startTransition] = useTransition();
   const [selectedRole, setSelectedRole] = useState<ProfileRole>("student");
   const [socialPending, setSocialPending] = useState<string | null>(null);
+  const [emailPending, setEmailPending] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (emailPending || socialPending) return;
     setError(null);
     setMessage(null);
     setSocialPending(null);
+    setEmailPending(true);
     const formData = new FormData(e.currentTarget);
+
+    if (process.env.NODE_ENV !== "production") {
+      console.debug("[signup-form] submit start", {
+        email: String(formData.get("email") ?? ""),
+        role: selectedRole,
+      });
+    }
+
     startTransition(async () => {
       try {
         const result = await signup(formData);
         if (result?.error) setError(result.error);
         else if (result?.message) setMessage(result.message);
-      } catch {
+      } catch (submitError) {
         // redirect() throws NEXT_REDIRECT — that's normal on success.
         // Any other throw means something broke; reset the form state.
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[signup-form] submit threw:", submitError);
+        }
       } finally {
+        setEmailPending(false);
         setSocialPending(null);
       }
     });
   }
 
   function handleSocial(provider: "google") {
+    if (emailPending || socialPending) return;
     setError(null);
+    setMessage(null);
     setSocialPending(provider);
     startTransition(async () => {
       try {
@@ -58,8 +75,11 @@ export function SignupForm() {
         if (result?.error) {
           setError(result.error);
         }
-      } catch {
+      } catch (socialError) {
         // redirect() throws on success — that's expected
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[signup-form] social submit threw:", socialError);
+        }
       } finally {
         setSocialPending(null);
       }
@@ -67,7 +87,7 @@ export function SignupForm() {
   }
 
   // Only disable during active request. Never leave permanently disabled.
-  const isDisabled = isPending;
+  const isDisabled = isPending || emailPending || !!socialPending;
 
   // Success message screen
   if (message) {

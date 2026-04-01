@@ -24,24 +24,44 @@ export type AuthResult = {
   message?: string | null;
 };
 
+type AuthErrorLike = {
+  message?: string | null;
+  status?: number | null;
+  code?: string | null;
+  name?: string | null;
+};
+
 /**
  * Maps raw Supabase error messages to friendly localized messages.
  */
 function friendlyAuthError(
-  rawMessage: string,
+  error: AuthErrorLike,
   t: (key: string) => string
 ): string {
+  const rawMessage = error.message ?? "";
   const lower = rawMessage.toLowerCase();
+  const code = (error.code ?? "").toLowerCase();
+  const name = (error.name ?? "").toLowerCase();
+  const status = error.status ?? 0;
 
   if (lower.includes("invalid login credentials")) return t("action.invalidCredentials");
   if (lower.includes("email not confirmed")) return t("action.emailNotConfirmed");
-  if (lower.includes("email rate limit exceeded")) return t("action.rateLimitEmail");
-  if (lower.includes("rate limit") || lower.includes("too many requests")) return t("action.rateLimitGeneral");
   if (lower.includes("user already registered")) return t("action.accountExists");
   if (lower.includes("signup is disabled")) return t("action.signupDisabled");
   if (lower.includes("password") && lower.includes("at least")) return t("action.passwordMin");
+  if (lower.includes("password should be at least")) return t("action.passwordMin");
   if (lower.includes("network") || lower.includes("fetch")) return t("action.networkError");
   if (lower.includes("email") && lower.includes("format")) return t("action.invalidEmail");
+  if (lower.includes("invalid email")) return t("action.invalidEmail");
+  if (
+    status === 429 ||
+    code.includes("rate") ||
+    code.includes("too_many") ||
+    name.includes("rate") ||
+    lower.includes("email rate limit exceeded")
+  ) {
+    return lower.includes("email") ? t("action.rateLimitEmail") : t("action.rateLimitGeneral");
+  }
 
   return t("action.genericError");
 }
@@ -85,10 +105,12 @@ export async function login(formData: FormData): Promise<AuthResult> {
   if (error) {
     console.error("[login] Supabase auth error:", {
       message: error.message,
+      status: error.status,
       code: error.code,
+      name: "name" in error ? error.name : null,
       email,
     });
-    return { error: friendlyAuthError(error.message, t) };
+    return { error: friendlyAuthError(error, t) };
   }
 
   if (!data.session) {
@@ -160,10 +182,18 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   if (error) {
     console.error("[signup] Supabase auth error:", {
       message: error.message,
+      status: error.status,
       code: error.code,
+      name: "name" in error ? error.name : null,
       email,
+      role,
     });
-    return { error: friendlyAuthError(error.message, t) };
+    return {
+      error:
+        process.env.NODE_ENV !== "production"
+          ? `${friendlyAuthError(error, t)} (${error.message}${error.code ? ` | ${error.code}` : ""}${error.status ? ` | ${error.status}` : ""})`
+          : friendlyAuthError(error, t),
+    };
   }
 
   // Supabase returns identities=[] when user already exists + email confirmation is on
@@ -252,7 +282,7 @@ export async function socialLogin(
 
   if (error) {
     console.error("[socialLogin] OAuth error:", { message: error.message, provider });
-    return { error: friendlyAuthError(error.message, t) };
+    return { error: friendlyAuthError(error, t) };
   }
 
   if (data.url) {
