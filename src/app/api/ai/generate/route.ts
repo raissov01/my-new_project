@@ -21,6 +21,7 @@ const VALID_MIME_TYPES = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
+const MAX_FLASHCARDS_PER_IMPORT = 1000;
 
 export const runtime = "nodejs";
 
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
     const mode = String(formData.get("mode") ?? "mixed");
     const language = String(formData.get("language") ?? "kk");
     const requestedCardCount = Number(formData.get("cardCount") ?? 15);
-    const cardCount = Math.min(50, Math.max(5, requestedCardCount));
+    const cardCount = Math.min(MAX_FLASHCARDS_PER_IMPORT, Math.max(5, requestedCardCount));
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[AI Generate] Incoming request:", {
@@ -224,7 +225,12 @@ export async function POST(request: NextRequest) {
       .filter((entry) => entry.isCandidate)
       .sort((left, right) => right.score - left.score || left.chunk.text.length - right.chunk.text.length);
     const maxAiChunkCount =
-      remainingCardBudget > 0 ? Math.max(4, Math.min(18, remainingCardBudget * 2)) : 0;
+      remainingCardBudget > 0
+        ? Math.min(
+            rankedAiCandidates.length,
+            Math.max(18, Math.ceil(remainingCardBudget / 20))
+          )
+        : 0;
     const aiCandidateChunks = rankedAiCandidates
       .slice(0, maxAiChunkCount)
       .map((entry) => entry.chunk);
