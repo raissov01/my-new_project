@@ -145,6 +145,14 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   const fullName = String(formData.get("full_name") ?? "").trim();
   const username = String(formData.get("username") ?? "").trim();
   const role = String(formData.get("role") ?? "").trim();
+  const clientRequestId = String(formData.get("client_request_id") ?? "").trim();
+
+  console.info("[signup] request start", {
+    clientRequestId,
+    email,
+    username,
+    role,
+  });
 
   if (!email || !password || !fullName || !username || !role) {
     return { error: t("action.allFieldsRequired") };
@@ -181,12 +189,14 @@ export async function signup(formData: FormData): Promise<AuthResult> {
 
   if (error) {
     console.error("[signup] Supabase auth error:", {
+      clientRequestId,
       message: error.message,
       status: error.status,
       code: error.code,
       name: "name" in error ? error.name : null,
       email,
       role,
+      fullError: error,
     });
     return {
       error:
@@ -198,6 +208,11 @@ export async function signup(formData: FormData): Promise<AuthResult> {
 
   // Supabase returns identities=[] when user already exists + email confirmation is on
   if (data.user && data.user.identities && data.user.identities.length === 0) {
+    console.warn("[signup] user already registered shortcut", {
+      clientRequestId,
+      email,
+      userId: data.user.id,
+    });
     return { error: t("action.accountExists") };
   }
 
@@ -228,6 +243,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     if (profileError) {
       const msg = profileError.message?.toLowerCase() ?? "";
       console.error("[signup] Profile upsert failed:", {
+        clientRequestId,
         message: profileError.message,
         userId: data.user.id,
         email,
@@ -245,6 +261,11 @@ export async function signup(formData: FormData): Promise<AuthResult> {
 
   // If Supabase requires email confirmation (session is null), show message.
   if (data.user && !data.session) {
+    console.info("[signup] confirmation required", {
+      clientRequestId,
+      userId: data.user.id,
+      email,
+    });
     return {
       error: null,
       message: t("action.checkEmailMessage"),
@@ -252,6 +273,12 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   }
 
   // Session exists — user can log in immediately.
+  console.info("[signup] request success", {
+    clientRequestId,
+    userId: data.user?.id,
+    email,
+    role,
+  });
   redirect(getRoleRegistrationRedirect(role as ProfileRole));
 }
 

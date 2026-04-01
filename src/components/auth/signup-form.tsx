@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, GraduationCap, ShieldCheck } from "lucide-react";
 import { signup, socialLogin } from "@/app/(auth)/actions";
@@ -29,18 +29,32 @@ export function SignupForm() {
   const [selectedRole, setSelectedRole] = useState<ProfileRole>("student");
   const [socialPending, setSocialPending] = useState<string | null>(null);
   const [emailPending, setEmailPending] = useState(false);
+  const submitLockRef = useRef(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (emailPending || socialPending) return;
+    if (submitLockRef.current || emailPending || socialPending) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[signup-form] duplicate submit blocked");
+      }
+      return;
+    }
+
+    submitLockRef.current = true;
     setError(null);
     setMessage(null);
     setSocialPending(null);
     setEmailPending(true);
     const formData = new FormData(e.currentTarget);
+    const clientRequestId =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `signup-${Date.now()}`;
+    formData.set("client_request_id", clientRequestId);
 
     if (process.env.NODE_ENV !== "production") {
       console.debug("[signup-form] submit start", {
+        clientRequestId,
         email: String(formData.get("email") ?? ""),
         role: selectedRole,
       });
@@ -58,6 +72,7 @@ export function SignupForm() {
           console.error("[signup-form] submit threw:", submitError);
         }
       } finally {
+        submitLockRef.current = false;
         setEmailPending(false);
         setSocialPending(null);
       }
