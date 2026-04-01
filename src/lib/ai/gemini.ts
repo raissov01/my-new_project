@@ -32,7 +32,14 @@ export class AIProviderError extends Error {
       | "GEMINI_INVALID_FORMAT"
       | "GEMINI_PROMPT_BLOCKED"
       | "GEMINI_RATE_LIMITED"
-      | "GEMINI_TIMEOUT",
+      | "GEMINI_TIMEOUT"
+      | "OPENAI_API_HTTP_ERROR"
+      | "OPENAI_EMPTY_RESPONSE"
+      | "OPENAI_NO_CARDS_GENERATED"
+      | "OPENAI_INVALID_JSON"
+      | "OPENAI_INVALID_FORMAT"
+      | "OPENAI_RATE_LIMITED"
+      | "OPENAI_TIMEOUT",
     message: string,
     public status = 500,
     public detail?: string
@@ -246,6 +253,110 @@ async function requestGemini(
   return response;
 }
 
+async function requestOpenAI(
+  prompt: string,
+  openaiApiKey: string,
+  model: string
+) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 45_000);
+
+  try {
+    return await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an expert educational content analyzer. Return only valid JSON.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "flashcards",
+            strict: true,
+            schema: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["front", "back", "category", "difficulty", "source"],
+                additionalProperties: false,
+                properties: {
+                  front: { type: "string" },
+                  back: { type: "string" },
+                  category: { type: "string" },
+                  difficulty: {
+                    type: "string",
+                    enum: ["easy", "medium", "hard"],
+                  },
+                  source: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+      }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new AIProviderError(
+        "OPENAI_TIMEOUT",
+        "OpenAI request timed out.",
+        504
+      );
+    }
+
+    throw new AIProviderError(
+      "OPENAI_API_HTTP_ERROR",
+      "Failed to reach OpenAI API.",
+      502,
+      error instanceof Error ? error.message : "Unknown fetch failure"
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function extractOpenAITextResponse(data: unknown) {
+  if (!data || typeof data !== "object") return "";
+
+  const firstChoice = (data as {
+    choices?: Array<{
+      message?: {
+        content?: string | Array<{ type?: string; text?: string }>;
+        refusal?: string | null;
+      };
+    }>;
+  }).choices?.[0];
+
+  if (!firstChoice?.message) return "";
+
+  if (typeof firstChoice.message.content === "string") {
+    return firstChoice.message.content.trim();
+  }
+
+  if (Array.isArray(firstChoice.message.content)) {
+    return firstChoice.message.content
+      .map((part) => (typeof part.text === "string" ? part.text : ""))
+      .join("")
+      .trim();
+  }
+
+  return "";
+}
+
 export async function generateFlashcardsWithAI(
   options: GenerateOptions
 ): Promise<GeneratedCard[]> {
@@ -253,8 +364,9 @@ export async function generateFlashcardsWithAI(
   const prompt = `${buildPrompt(options)}\n\n## Source material:\n${buildChunkText(options.chunks)}`;
 
   if (process.env.NODE_ENV !== "production") {
-    console.log("[Gemini] Starting generation:", {
-      model: config.geminiModel,
+    console.log("[AI] Starting generation:", {
+      provider: config.provider,
+      model: config.model,
       chunkCount: options.chunks.length,
       mode: options.mode,
       language: options.language,
@@ -262,17 +374,97 @@ export async function generateFlashcardsWithAI(
     });
   }
 
-  let response = await requestGemini(prompt, config.geminiApiKey, config.geminiModel);
+  if (config.provider === "openai") {
+    const response = await requestOpenAI(prompt, config.apiKey, config.model);
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error("[OpenAI] API error:", response.status, errorBody);
+
+      if (response.status === 429) {
+        throw new AIProviderError(
+          "OPENAI_RATE_LIMITED",
+          "OpenAI rate limit exceeded.",
+          429,
+          errorBody.slice(0, 300)
+        );
+      }
+
+      throw new AIProviderError(
+        "OPENAI_API_HTTP_ERROR",
+        `OpenAI API returned ${response.status}.`,
+        502,
+        errorBody.slice(0, 300)
+      );
+    }
+
+    const data = await response.json();
+    const textContent = extractOpenAITextResponse(data);
+
+    if (!textContent) {
+      console.error("[OpenAI] Empty response:", JSON.stringify(data).slice(0, 500));
+      throw new AIProviderError(
+        "OPENAI_EMPTY_RESPONSE",
+        "OpenAI returned an empty response.",
+        502,
+        JSON.stringify(data).slice(0, 300)
+      );
+    }
+
+    let cards: GeneratedCard[];
+    try {
+      cards = parseGeneratedCards(textContent);
+    } catch (error) {
+      if (error instanceof AIProviderError && error.code === "GEMINI_INVALID_JSON") {
+        throw new AIProviderError(
+          "OPENAI_INVALID_JSON",
+          error.message,
+          error.status,
+          error.detail
+        );
+      }
+
+      if (error instanceof AIProviderError && error.code === "GEMINI_INVALID_FORMAT") {
+        throw new AIProviderError(
+          "OPENAI_INVALID_FORMAT",
+          error.message,
+          error.status,
+          error.detail
+        );
+      }
+
+      throw error;
+    }
+
+    if (cards.length === 0) {
+      throw new AIProviderError(
+        "OPENAI_NO_CARDS_GENERATED",
+        "OpenAI returned no usable cards.",
+        422
+      );
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[OpenAI] Parsed cards:", {
+        count: cards.length,
+        model: config.model,
+      });
+    }
+
+    return cards;
+  }
+
+  let response = await requestGemini(prompt, config.apiKey, config.model);
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => "");
-    if (shouldRetryWithFallbackModel(config.geminiModel, response.status, errorBody)) {
+    if (shouldRetryWithFallbackModel(config.model, response.status, errorBody)) {
       console.warn("[Gemini] Retrying with fallback model:", {
-        configuredModel: config.geminiModel,
+        configuredModel: config.model,
         fallbackModel: FALLBACK_GEMINI_MODEL,
         status: response.status,
       });
-      response = await requestGemini(prompt, config.geminiApiKey, FALLBACK_GEMINI_MODEL);
+      response = await requestGemini(prompt, config.apiKey, FALLBACK_GEMINI_MODEL);
     } else {
       console.error("[Gemini] API error:", response.status, errorBody);
     }
@@ -335,7 +527,7 @@ export async function generateFlashcardsWithAI(
   if (process.env.NODE_ENV !== "production") {
     console.log("[Gemini] Parsed cards:", {
       count: cards.length,
-      model: config.geminiModel,
+      model: config.model,
     });
   }
 

@@ -132,7 +132,8 @@ export async function POST(request: NextRequest) {
         chunkCount: extraction.chunks.length,
         pageCount: extraction.pageCount,
         textLength: extraction.text.length,
-        model: aiConfig.geminiModel,
+        provider: aiConfig.provider,
+        model: aiConfig.model,
       });
     }
 
@@ -158,7 +159,8 @@ export async function POST(request: NextRequest) {
         pageCount: extraction.pageCount,
         chunkCount: extraction.chunks.length,
         textLength: extraction.text.length,
-        model: aiConfig.geminiModel,
+        provider: aiConfig.provider,
+        model: aiConfig.model,
       },
     });
   } catch (err) {
@@ -182,7 +184,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "AI_CONFIG_MISSING_API_KEY",
-          detail: "GEMINI_API_KEY is not configured on the server.",
+          detail: "OPENAI_API_KEY or GEMINI_API_KEY is not configured on the server.",
         },
         { status: 500 }
       );

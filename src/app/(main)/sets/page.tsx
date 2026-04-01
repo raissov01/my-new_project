@@ -6,7 +6,7 @@ import { createTranslator } from "@/lib/i18n/shared";
 import { Button } from "@/components/ui/button";
 import { SetCard } from "@/components/flashcards";
 import { AuthRequiredPrompt } from "@/components/auth/auth-required-prompt";
-import { getPublicSetsOverview, getUserSetsOverview } from "@/lib/sets-overview";
+import { getLibrarySetsOverview, getPublicSetsOverview } from "@/lib/sets-overview";
 
 interface SetsPageProps {
   searchParams: Promise<{
@@ -22,7 +22,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
   const t = createTranslator(locale);
   const { q = "", filter = "all", sort = "recent" } = await searchParams;
 
-  const sets = user ? await getUserSetsOverview() : await getPublicSetsOverview();
+  const sets = user ? await getLibrarySetsOverview() : await getPublicSetsOverview();
   const query = q.trim().toLowerCase();
 
   let filtered = sets.filter((set) => {
@@ -95,7 +95,9 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
               {t("sets.title")}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] sm:text-base">
-              {user ? t("sets.subtitle") : t("guest.librarySubtitle")}
+              {user
+                ? "Browse every public flashcard set on the platform alongside your own private and public decks."
+                : t("guest.librarySubtitle")}
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -147,9 +149,13 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
 
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
             <LibrarySignal
-              label={user ? "Library scale" : "Public sets"}
+              label={user ? "Platform library" : "Public sets"}
               value={sets.length}
-              body={user ? "All your available decks in one calm workspace." : "Guests can preview open study resources before registering."}
+              body={
+                user
+                  ? "Public decks from the whole platform, plus your own workspace, in one view."
+                  : "Guests can preview open study resources before registering."
+              }
             />
             <LibrarySignal
               label={user ? "Review ready" : "Visible now"}
