@@ -8,7 +8,7 @@ import { getAIConfigSafe, type AIConfig } from "./config";
 
 const requireCjs = createRequire(import.meta.url);
 const execFileAsync = promisify(execFile);
-const OCR_TEXT_MIN_LENGTH = 60;
+const OCR_TEXT_MIN_LENGTH = 20;
 const FALLBACK_TEXT_MIN_LENGTH = 200;
 
 export type ExtractionMethod =
@@ -535,15 +535,9 @@ async function ocrWithVision(imagePaths: string[], aiConfig: AIConfig) {
 
   for (let index = 0; index < imagePaths.length; index += 1) {
     const imagePath = imagePaths[index];
-    const imageBuffer = await readFile(imagePath);
-
     let pageText = "";
     try {
-      if (aiConfig.provider === "openai") {
-        pageText = await openAIVisionOcr(imageBuffer, aiConfig);
-      } else {
-        pageText = await geminiVisionOcr(imageBuffer, aiConfig);
-      }
+      pageText = await performVisionOcrWithTiling(imagePath, aiConfig);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown vision OCR error";
       pageErrors.push(`page ${index + 1}: ${message}`);
@@ -569,6 +563,45 @@ async function ocrWithVision(imagePaths: string[], aiConfig: AIConfig) {
   }
 
   return pages;
+}
+
+async function performVisionOcrWithTiling(imagePath: string, aiConfig: AIConfig) {
+  const fullPageBuffer = await readFile(imagePath);
+  const fullPageText = cleanText(await runVisionOcr(fullPageBuffer, aiConfig));
+
+  if (fullPageText.length >= 80) {
+    return fullPageText;
+  }
+
+  const tilePaths = await createOcrTiles(imagePath);
+  if (tilePaths.length === 0) {
+    return fullPageText;
+  }
+
+  const tileTexts: string[] = [];
+  for (const tilePath of tilePaths) {
+    try {
+      const tileBuffer = await readFile(tilePath);
+      const tileText = cleanText(await runVisionOcr(tileBuffer, aiConfig));
+      tileTexts.push(tileText);
+    } catch (error) {
+      console.error("[extract-text][ocr] Vision OCR tile failed:", {
+        tilePath,
+        error: error instanceof Error ? error.message : "Unknown tile OCR error",
+      });
+    }
+  }
+
+  const tiledText = cleanText(tileTexts.filter(Boolean).join("\n"));
+  return tiledText.length > fullPageText.length ? tiledText : fullPageText;
+}
+
+async function runVisionOcr(imageBuffer: Buffer, aiConfig: AIConfig) {
+  if (aiConfig.provider === "openai") {
+    return openAIVisionOcr(imageBuffer, aiConfig);
+  }
+
+  return geminiVisionOcr(imageBuffer, aiConfig);
 }
 
 async function preprocessOcrImages(imagePaths: string[]) {
@@ -603,6 +636,38 @@ async function preprocessOcrImages(imagePaths: string[]) {
   }
 
   return preparedPaths;
+}
+
+async function createOcrTiles(imagePath: string) {
+  const outputPattern = imagePath.replace(/\.(png|jpg|jpeg)$/i, "-tile-%d.jpg");
+
+  try {
+    await execFileAsync("convert", [
+      imagePath,
+      "-crop",
+      "2x2@",
+      "+repage",
+      "+adjoin",
+      outputPattern,
+    ]);
+
+    const baseDir = imagePath.slice(0, imagePath.lastIndexOf("/") + 1);
+    const baseName = imagePath
+      .split("/")
+      .pop()
+      ?.replace(/\.(png|jpg|jpeg)$/i, "") ?? "tile";
+
+    return (await readdir(baseDir))
+      .filter((entry) => entry.startsWith(`${baseName}-tile-`) && entry.endsWith(".jpg"))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
+      .map((entry) => join(baseDir, entry));
+  } catch (error) {
+    console.error("[extract-text][ocr] Tile creation failed:", {
+      imagePath,
+      error: error instanceof Error ? error.message : "Unknown tile creation error",
+    });
+    return [];
+  }
 }
 
 async function ocrWithTesseract(imagePaths: string[]) {
@@ -656,7 +721,7 @@ async function ocrWithTesseract(imagePaths: string[]) {
 }
 
 async function openAIVisionOcr(imageBuffer: Buffer, aiConfig: AIConfig) {
-  const model = process.env.OPENAI_OCR_MODEL?.trim() || "gpt-4o-mini";
+  const model = process.env.OPENAI_OCR_MODEL?.trim() || "gpt-4o";
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -682,6 +747,7 @@ async function openAIVisionOcr(imageBuffer: Buffer, aiConfig: AIConfig) {
               type: "image_url",
               image_url: {
                 url: `data:image/png;base64,${imageBuffer.toString("base64")}`,
+                detail: "high",
               },
             },
           ],
