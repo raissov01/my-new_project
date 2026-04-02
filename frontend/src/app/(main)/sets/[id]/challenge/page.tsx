@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { createClient } from "@/server/supabase/server";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import type { Database } from "@/lib/shared/types/database";
+import { getSetDetail } from "@/server/services/sets";
 import { ChallengeClient } from "./client";
 
 interface ChallengePageProps {
@@ -14,27 +13,16 @@ interface ChallengePageProps {
 export default async function ChallengePage({ params }: ChallengePageProps) {
   const { id } = await params;
   const t = createTranslator(await getServerLocale());
-  const supabase = await createClient();
-
-  const [setResult, cardsResult] = await Promise.all([
-    supabase
-      .from("flashcard_sets")
-      .select("id, title, description, is_public")
-      .eq("id", id)
-      .single(),
-    supabase
-      .from("flashcards")
-      .select("*")
-      .eq("set_id", id)
-      .order("position", { ascending: true }),
-  ]);
-
-  const set = setResult.data as Pick<
-    Database["public"]["Tables"]["flashcard_sets"]["Row"],
-    "id" | "title" | "description" | "is_public"
-  > | null;
-  const flashcards =
-    (cardsResult.data as Database["public"]["Tables"]["flashcards"]["Row"][] | null) ?? [];
+  const setDetail = await getSetDetail(id, "anonymous");
+  const set = setDetail
+    ? {
+        id: setDetail.id,
+        title: setDetail.title,
+        description: setDetail.description,
+        is_public: setDetail.isPublic,
+      }
+    : null;
+  const flashcards = setDetail?.flashcards ?? [];
 
   if (!set || flashcards.length === 0) {
     notFound();

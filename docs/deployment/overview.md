@@ -5,7 +5,7 @@
 - Frontend: Next.js container in `frontend/`
 - Backend: Go API server in `backend/`
 - Reverse proxy / TLS: Nginx in `docker/`
-- Authentication and database: Supabase
+- Authentication and database: Go backend + PostgreSQL
 - Orchestration: Docker Compose
 
 ## Before You Deploy
@@ -28,13 +28,11 @@ Set production values in:
 Important variables:
 
 - `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_API_URL`
 - `BACKEND_URL`
 - `BACKEND_INTERNAL_TOKEN`
 - `DATABASE_URL`
-- `DIRECT_URL`
+- `JWT_SECRET`
 - `OPENAI_API_KEY`
 - `GEMINI_API_KEY`
 
@@ -47,13 +45,11 @@ Important variables:
 5. Verify the containers with `docker compose -f docker/docker-compose.yml ps`.
 6. Put SSL in front of the stack with certbot on the host, Cloudflare, or your preferred edge layer.
 
-## Supabase Setup After Deploy
+## Database Setup After Deploy
 
-In your Supabase dashboard:
-
-1. Set the site URL to your production domain.
-2. Add callback URLs such as `https://studywithraissov.com/callback`.
-3. Run the SQL files in `supabase/migrations/` if the database is empty.
+1. Provision PostgreSQL.
+2. Set `DATABASE_URL` in `backend/.env`.
+3. Run `npm --prefix backend run migrate` once if the database is empty.
 
 ## Updating The App Later
 

@@ -2,8 +2,7 @@ package models
 
 import "time"
 
-// User replaces the Supabase auth.users + profiles tables.
-// This is the single source of truth for authentication and profile data.
+// User is the single source of truth for authentication and profile data.
 type User struct {
 	ID             string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Email          string    `gorm:"uniqueIndex;not null" json:"email"`

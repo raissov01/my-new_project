@@ -125,6 +125,10 @@ func (s *Progress) GetUserStats(ctx context.Context, userID string) (*model.User
 	return s.repo.GetUserStats(ctx, userID)
 }
 
+func (s *Progress) GetSetProgress(ctx context.Context, userID, setID string) (map[string]model.SetProgressRow, error) {
+	return s.repo.GetSetProgress(ctx, userID, setID)
+}
+
 // ToggleWeakCard sets or unsets the weak flag.
 func (s *Progress) ToggleWeakCard(ctx context.Context, userID, flashcardID string, isWeak bool) error {
 	return s.repo.ToggleWeakCard(ctx, userID, flashcardID, isWeak)

@@ -4,7 +4,7 @@ import { getServerLocale } from "@/server/i18n";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 
 export default async function NewSetPage() {
   const user = await getCurrentUser();

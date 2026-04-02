@@ -30,8 +30,6 @@ StudyWithRaissov is split into a dedicated Next.js frontend, a Go backend API, a
 │   ├── package.json
 │   ├── public/
 │   └── src/
-├── prisma/
-├── supabase/
 └── package.json
 ```
 

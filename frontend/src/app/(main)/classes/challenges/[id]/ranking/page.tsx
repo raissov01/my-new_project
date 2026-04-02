@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock } from "lucide-react";
-import { getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 import { getClassChallengeRanking } from "@/server/services/class-challenges";
 import { ChallengeRanking } from "@/features/sets/components/challenge-ranking";
 import { createTranslator } from "@/lib/shared/i18n";

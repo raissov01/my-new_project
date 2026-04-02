@@ -3,19 +3,12 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/midoriya/flashlearn-backend/internal/model"
 )
 
-// viewForPeriod maps the API period parameter to the materialized view name.
-var viewForPeriod = map[string]string{
-	"daily":   "leaderboard_daily",
-	"weekly":  "leaderboard_weekly",
-	"alltime": "leaderboard_stats",
-}
-
-// Leaderboard handles all leaderboard database queries.
 type Leaderboard struct {
 	pool *pgxpool.Pool
 }
@@ -24,16 +17,45 @@ func NewLeaderboard(pool *pgxpool.Pool) *Leaderboard {
 	return &Leaderboard{pool: pool}
 }
 
-// GetTopN returns the top N users from the given period's materialized view.
 func (r *Leaderboard) GetTopN(ctx context.Context, period string, limit int) ([]model.LeaderboardRow, error) {
-	view, ok := viewForPeriod[period]
-	if !ok {
-		view = "leaderboard_stats"
-	}
-
-	// Using fmt.Sprintf for the view name is safe here because it comes from
-	// our own allowlist above, not user input.
 	query := fmt.Sprintf(`
+		WITH progress_agg AS (
+			SELECT
+				user_id,
+				COALESCE(SUM(times_seen), 0)::int AS total_cards_reviewed,
+				COALESCE(SUM(times_correct), 0)::int AS total_correct
+			FROM study_progress
+			WHERE %s
+			GROUP BY user_id
+		),
+		pomodoro_agg AS (
+			SELECT
+				user_id,
+				COUNT(*)::int AS completed_sessions,
+				COALESCE(SUM(work_minutes), 0)::int AS total_study_minutes
+			FROM pomodoro_sessions
+			WHERE completed = true AND %s
+			GROUP BY user_id
+		),
+		leaderboard AS (
+			SELECT
+				u.id AS user_id,
+				u.username,
+				u.avatar_url,
+				COALESCE(p.total_cards_reviewed, 0)::int AS total_cards_reviewed,
+				COALESCE(p.total_correct, 0)::int AS total_correct,
+				COALESCE(ps.completed_sessions, 0)::int AS completed_sessions,
+				COALESCE(ps.total_study_minutes, 0)::int AS total_study_minutes,
+				(
+					COALESCE(p.total_correct, 0) * 5 +
+					COALESCE(p.total_cards_reviewed, 0) * 2 +
+					COALESCE(ps.completed_sessions, 0) * 10 +
+					COALESCE(ps.total_study_minutes, 0)
+				)::int AS ranking_score
+			FROM users u
+			LEFT JOIN progress_agg p ON p.user_id = u.id
+			LEFT JOIN pomodoro_agg ps ON ps.user_id = u.id
+		)
 		SELECT
 			user_id,
 			username,
@@ -43,15 +65,20 @@ func (r *Leaderboard) GetTopN(ctx context.Context, period string, limit int) ([]
 			completed_sessions,
 			total_study_minutes,
 			ranking_score
-		FROM %s
+		FROM leaderboard
 		WHERE ranking_score > 0
-		ORDER BY ranking_score DESC
+		ORDER BY
+			ranking_score DESC,
+			total_correct DESC,
+			total_cards_reviewed DESC,
+			total_study_minutes DESC,
+			username ASC
 		LIMIT $1
-	`, view)
+	`, leaderboardWindow("study_progress.last_studied_at", period), leaderboardWindow("pomodoro_sessions.finished_at", period))
 
 	rows, err := r.pool.Query(ctx, query, limit)
 	if err != nil {
-		return nil, fmt.Errorf("query %s: %w", view, err)
+		return nil, fmt.Errorf("leaderboard query: %w", err)
 	}
 	defer rows.Close()
 
@@ -60,7 +87,7 @@ func (r *Leaderboard) GetTopN(ctx context.Context, period string, limit int) ([]
 	for rows.Next() {
 		rank++
 		var row model.LeaderboardRow
-		err := rows.Scan(
+		if err := rows.Scan(
 			&row.UserID,
 			&row.Username,
 			&row.AvatarURL,
@@ -69,9 +96,8 @@ func (r *Leaderboard) GetTopN(ctx context.Context, period string, limit int) ([]
 			&row.CompletedSessions,
 			&row.TotalStudyMinutes,
 			&row.RankingScore,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scan: %w", err)
+		); err != nil {
+			return nil, fmt.Errorf("scan leaderboard row: %w", err)
 		}
 		row.Rank = rank
 		result = append(result, row)
@@ -80,28 +106,77 @@ func (r *Leaderboard) GetTopN(ctx context.Context, period string, limit int) ([]
 	return result, rows.Err()
 }
 
-// GetUserRank returns the rank (1-indexed) and score for a specific user.
-// Returns (0, 0, nil) if the user has no entry.
 func (r *Leaderboard) GetUserRank(ctx context.Context, period string, userID string) (int, int, error) {
-	view, ok := viewForPeriod[period]
-	if !ok {
-		view = "leaderboard_stats"
-	}
-
-	// Count how many users have a higher score, then +1 = user's rank
 	query := fmt.Sprintf(`
-		WITH user_score AS (
-			SELECT ranking_score FROM %s WHERE user_id = $1
+		WITH progress_agg AS (
+			SELECT
+				user_id,
+				COALESCE(SUM(times_seen), 0)::int AS total_cards_reviewed,
+				COALESCE(SUM(times_correct), 0)::int AS total_correct
+			FROM study_progress
+			WHERE %s
+			GROUP BY user_id
+		),
+		pomodoro_agg AS (
+			SELECT
+				user_id,
+				COUNT(*)::int AS completed_sessions,
+				COALESCE(SUM(work_minutes), 0)::int AS total_study_minutes
+			FROM pomodoro_sessions
+			WHERE completed = true AND %s
+			GROUP BY user_id
+		),
+		leaderboard AS (
+			SELECT
+				u.id AS user_id,
+				(
+					COALESCE(p.total_correct, 0) * 5 +
+					COALESCE(p.total_cards_reviewed, 0) * 2 +
+					COALESCE(ps.completed_sessions, 0) * 10 +
+					COALESCE(ps.total_study_minutes, 0)
+				)::int AS ranking_score,
+				COALESCE(p.total_correct, 0)::int AS total_correct,
+				COALESCE(p.total_cards_reviewed, 0)::int AS total_cards_reviewed,
+				COALESCE(ps.total_study_minutes, 0)::int AS total_study_minutes,
+				u.username
+			FROM users u
+			LEFT JOIN progress_agg p ON p.user_id = u.id
+			LEFT JOIN pomodoro_agg ps ON ps.user_id = u.id
+		),
+		ranked AS (
+			SELECT
+				user_id,
+				ranking_score,
+				ROW_NUMBER() OVER (
+					ORDER BY
+						ranking_score DESC,
+						total_correct DESC,
+						total_cards_reviewed DESC,
+						total_study_minutes DESC,
+						username ASC
+				)::int AS rank
+			FROM leaderboard
+			WHERE ranking_score > 0
 		)
 		SELECT
-			COALESCE((SELECT COUNT(*) + 1 FROM %s WHERE ranking_score > (SELECT ranking_score FROM user_score)), 0)::int AS rank,
-			COALESCE((SELECT ranking_score FROM user_score), 0)::int AS score
-	`, view, view)
+			COALESCE((SELECT rank FROM ranked WHERE user_id = $1), 0)::int,
+			COALESCE((SELECT ranking_score FROM ranked WHERE user_id = $1), 0)::int
+	`, leaderboardWindow("study_progress.last_studied_at", period), leaderboardWindow("pomodoro_sessions.finished_at", period))
 
 	var rank, score int
-	err := r.pool.QueryRow(ctx, query, userID).Scan(&rank, &score)
-	if err != nil {
-		return 0, 0, fmt.Errorf("user rank: %w", err)
+	if err := r.pool.QueryRow(ctx, query, userID).Scan(&rank, &score); err != nil {
+		return 0, 0, fmt.Errorf("leaderboard user rank: %w", err)
 	}
 	return rank, score, nil
+}
+
+func leaderboardWindow(column string, period string) string {
+	switch strings.ToLower(strings.TrimSpace(period)) {
+	case "daily":
+		return fmt.Sprintf("%s >= date_trunc('day', now())", column)
+	case "weekly":
+		return fmt.Sprintf("%s >= now() - interval '7 days'", column)
+	default:
+		return "1 = 1"
+	}
 }

@@ -12,7 +12,7 @@ import (
 type Config struct {
 	Port             string
 	DatabaseURL      string
-	JWTSecret        string // For signing/verifying our own JWTs (replaces Supabase auth)
+	JWTSecret        string
 	CORSOrigins      []string
 	InternalAPIToken string
 	Environment      string // "development" | "production"

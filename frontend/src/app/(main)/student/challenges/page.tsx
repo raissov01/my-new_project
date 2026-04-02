@@ -4,7 +4,7 @@ import { Trophy, Sparkles } from "lucide-react";
 import { getMyClassChallenges } from "@/server/services/class-challenges";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { requireRole } from "@/server/supabase/server";
+import { requireRole } from "@/server/auth";
 import { Button } from "@/components/ui/button";
 
 export default async function StudentChallengesPage() {

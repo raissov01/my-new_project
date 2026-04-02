@@ -8,7 +8,6 @@ import (
 )
 
 // AutoMigrate creates/updates all database tables from GORM models.
-// This replaces the Supabase migration files.
 func AutoMigrate(db *gorm.DB) error {
 	log.Println("Running GORM auto-migration...")
 
@@ -19,8 +18,11 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.StudyProgress{},
 		&models.ClassGroup{},
 		&models.ClassGroupMember{},
+		&models.ClassSetAssignment{},
 		&models.ClassChallenge{},
+		&models.ClassChallengeParticipant{},
 		&models.ChallengeAttempt{},
+		&models.ClassChallengeAttempt{},
 		&models.PomodoroPreference{},
 		&models.PomodoroSession{},
 	)

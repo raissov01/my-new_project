@@ -46,7 +46,7 @@ func (r *Challenge) GetRanking(ctx context.Context, setID string) (*model.Challe
 			ca.accuracy, ca.completion_time, ca.total_incorrect,
 			ca.completed_at::text
 		FROM challenge_attempts ca
-		JOIN profiles p ON p.id = ca.user_id
+		JOIN users p ON p.id = ca.user_id
 		WHERE ca.set_id = $1
 		ORDER BY ca.user_id, ca.accuracy DESC, ca.completion_time ASC, ca.total_incorrect ASC, ca.completed_at ASC
 	`, setID)

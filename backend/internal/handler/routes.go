@@ -58,20 +58,25 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/leaderboard", wrapHTTP(deps.Leaderboard.GetLeaderboard))
 		internal.GET("/me", wrapHTTP(deps.Profile.GetMe))
 		internal.GET("/sets/overview", wrapHTTP(deps.Set.GetOverview))
+		internal.GET("/sets/public", wrapHTTP(deps.Set.GetPublicOverview))
 		internal.GET("/dashboard/teacher", wrapHTTP(deps.Dashboard.GetTeacherSummary))
 		internal.GET("/dashboard/student", wrapHTTP(deps.Dashboard.GetStudentSummary))
 		internal.GET("/classroom/owned-groups", wrapHTTP(deps.Classroom.GetOwnedGroups))
 		internal.GET("/classroom/available-sets", wrapHTTP(deps.Classroom.GetAvailableSets))
 		internal.GET("/classroom/my-challenges", wrapHTTP(deps.Classroom.GetMyChallenges))
 		internal.GET("/classroom/groups/:groupID", wrapHTTP(deps.Classroom.GetTeacherClassroomDetail))
+		internal.GET("/classroom/challenges/:challengeID", wrapHTTP(deps.Classroom.GetChallengeDetail))
+		internal.GET("/classroom/challenges/:challengeID/ranking", wrapHTTP(deps.Classroom.GetChallengeRanking))
 		internal.POST("/classroom/groups", wrapHTTP(deps.Classroom.CreateGroup))
 		internal.POST("/classroom/join-by-code", wrapHTTP(deps.Classroom.JoinByCode))
 		internal.POST("/classroom/assign-set", wrapHTTP(deps.Classroom.AssignSet))
 		internal.POST("/classroom/challenges", wrapHTTP(deps.Classroom.CreateChallenge))
 		internal.POST("/classroom/challenges/join", wrapHTTP(deps.Classroom.JoinChallenge))
+		internal.DELETE("/classroom/groups/:groupID/members/:memberID", wrapHTTP(deps.Classroom.RemoveStudent))
 
 		internal.POST("/progress/session", wrapHTTP(deps.Progress.SaveSession))
 		internal.GET("/progress/stats", wrapHTTP(deps.Progress.GetStats))
+		internal.GET("/progress/set/:setID", wrapHTTP(deps.Progress.GetSetProgress))
 		internal.POST("/progress/toggle-weak", wrapHTTP(deps.Progress.ToggleWeak))
 
 		internal.GET("/pomodoro/preferences", wrapHTTP(deps.Progress.GetPomodoro))
@@ -88,6 +93,10 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/challenges/class-attempt", wrapHTTP(deps.Challenge.SaveClassAttempt))
 
 		internal.POST("/profile/role", wrapHTTP(deps.ProfileWrite.UpdateRole))
+		internal.PUT("/profile", deps.Auth.UpdateProfile)
+		internal.PUT("/account/email", deps.Auth.UpdateEmail)
+		internal.PUT("/account/password", deps.Auth.UpdatePassword)
+		internal.DELETE("/account", deps.Auth.DeleteAccount)
 		internal.POST("/ai/generate", wrapHTTP(deps.AI.Generate))
 	}
 

@@ -322,3 +322,101 @@ func (h *Classroom) JoinChallenge(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
+
+func (h *Classroom) RemoveStudent(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	req := model.RemoveStudentRequest{
+		GroupID: strings.TrimSpace(r.PathValue("groupID")),
+		UserID:  strings.TrimSpace(r.PathValue("memberID")),
+	}
+	if req.GroupID == "" || req.UserID == "" {
+		writeError(w, http.StatusBadRequest, "group id and member id are required", nil)
+		return
+	}
+
+	if err := h.svc.RemoveStudent(r.Context(), userID, req); err != nil {
+		log.Printf("remove student error: %v", err)
+		msg := "failed to remove student"
+		status := http.StatusInternalServerError
+		switch {
+		case strings.Contains(strings.ToLower(err.Error()), "access denied"):
+			msg = "access denied"
+			status = http.StatusForbidden
+		case h.isDev():
+			msg = err.Error()
+		}
+		writeError(w, status, msg, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (h *Classroom) GetChallengeDetail(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	challengeID := strings.TrimSpace(r.PathValue("challengeID"))
+	if challengeID == "" {
+		writeError(w, http.StatusBadRequest, "challenge id is required", nil)
+		return
+	}
+
+	resp, err := h.svc.GetChallengeDetail(r.Context(), userID, challengeID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "challenge not found", err)
+			return
+		}
+
+		log.Printf("challenge detail error: %v", err)
+		msg := "failed to load challenge detail"
+		if h.isDev() {
+			msg = err.Error()
+		}
+		writeError(w, http.StatusInternalServerError, msg, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Classroom) GetChallengeRanking(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	challengeID := strings.TrimSpace(r.PathValue("challengeID"))
+	if challengeID == "" {
+		writeError(w, http.StatusBadRequest, "challenge id is required", nil)
+		return
+	}
+
+	resp, err := h.svc.GetChallengeRanking(r.Context(), userID, challengeID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "challenge not found", err)
+			return
+		}
+
+		log.Printf("challenge ranking error: %v", err)
+		msg := "failed to load challenge ranking"
+		if h.isDev() {
+			msg = err.Error()
+		}
+		writeError(w, http.StatusInternalServerError, msg, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}

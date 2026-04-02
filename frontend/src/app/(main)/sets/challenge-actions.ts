@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import type { ChallengeRankingEntry } from "@/lib/shared/study/challenge-rankings";
 

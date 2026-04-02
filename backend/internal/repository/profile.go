@@ -32,7 +32,7 @@ func (r *Profile) GetByID(ctx context.Context, userID string) (*model.Profile, e
 			last_active_date,
 			points,
 			role
-		FROM public.profiles
+		FROM public.users
 		WHERE id = $1
 	`
 

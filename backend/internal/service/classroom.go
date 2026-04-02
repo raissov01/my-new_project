@@ -84,3 +84,27 @@ func (s *Classroom) JoinChallenge(
 ) error {
 	return s.repo.JoinChallenge(ctx, userID, challengeID)
 }
+
+func (s *Classroom) RemoveStudent(
+	ctx context.Context,
+	userID string,
+	req model.RemoveStudentRequest,
+) error {
+	return s.repo.RemoveStudent(ctx, userID, req)
+}
+
+func (s *Classroom) GetChallengeDetail(
+	ctx context.Context,
+	userID string,
+	challengeID string,
+) (*model.ClassChallengeDetail, error) {
+	return s.repo.GetChallengeDetail(ctx, userID, challengeID)
+}
+
+func (s *Classroom) GetChallengeRanking(
+	ctx context.Context,
+	userID string,
+	challengeID string,
+) (*model.ClassChallengeRankingResponse, error) {
+	return s.repo.GetChallengeRanking(ctx, userID, challengeID)
+}

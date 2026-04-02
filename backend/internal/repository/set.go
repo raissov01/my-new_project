@@ -115,3 +115,70 @@ func (r *Set) GetOverviewByUserID(ctx context.Context, userID string) ([]model.S
 
 	return items, nil
 }
+
+func (r *Set) GetPublicOverview(ctx context.Context) ([]model.SetOverview, error) {
+	query := `
+		WITH public_sets AS (
+			SELECT id, title, description, created_at, updated_at
+			FROM public.flashcard_sets
+			WHERE is_public = true
+		),
+		set_cards AS (
+			SELECT
+				f.set_id,
+				COUNT(*)::int AS card_count
+			FROM public.flashcards f
+			JOIN public_sets ps ON ps.id = f.set_id
+			GROUP BY f.set_id
+		)
+		SELECT
+			ps.id,
+			ps.title,
+			ps.description,
+			ps.created_at,
+			ps.updated_at,
+			COALESCE(sc.card_count, 0) AS card_count
+		FROM public_sets ps
+		LEFT JOIN set_cards sc ON sc.set_id = ps.id
+		WHERE COALESCE(sc.card_count, 0) > 0
+		ORDER BY ps.updated_at DESC
+	`
+
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("get public set overview: %w", err)
+	}
+	defer rows.Close()
+
+	var items []model.SetOverview
+	for rows.Next() {
+		var item model.SetOverview
+		var createdAt time.Time
+		var updatedAt time.Time
+
+		if err := rows.Scan(
+			&item.ID,
+			&item.Title,
+			&item.Description,
+			&createdAt,
+			&updatedAt,
+			&item.CardCount,
+		); err != nil {
+			return nil, fmt.Errorf("scan public set overview: %w", err)
+		}
+
+		item.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+		item.UpdatedAt = updatedAt.UTC().Format(time.RFC3339)
+		item.Accuracy = 0
+		item.ReviewCount = 0
+		item.WeakCount = 0
+		item.DueCount = 0
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate public set overview rows: %w", err)
+	}
+
+	return items, nil
+}

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Users, Sparkles } from "lucide-react";
-import { requireRole } from "@/server/supabase/server";
+import { requireRole } from "@/server/auth";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getTeacherDashboardSummary } from "@/server/services/classrooms";

@@ -33,8 +33,6 @@ cp backend/.env.example backend/.env
 
 ```env
 NEXT_PUBLIC_APP_URL=https://studywithraissov.com
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_API_URL=https://studywithraissov.com/api/v1
 BACKEND_INTERNAL_TOKEN=replace-with-a-long-random-secret
 ```
@@ -46,7 +44,7 @@ PORT=5000
 ENVIRONMENT=production
 CORS_ORIGINS=https://studywithraissov.com
 DATABASE_URL=postgresql://...
-DIRECT_URL=postgresql://...
+JWT_SECRET=replace-with-a-long-random-secret
 BACKEND_INTERNAL_TOKEN=replace-with-the-same-secret
 OPENAI_API_KEY=
 GEMINI_API_KEY=

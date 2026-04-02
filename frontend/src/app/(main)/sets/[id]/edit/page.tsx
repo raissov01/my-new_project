@@ -1,11 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { createClient, getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import type { Database } from "@/lib/shared/types/database";
-import { getAllowedProfilesForSet } from "@/server/services/set-access";
+import { getSetDetail } from "@/server/services/sets";
 import { EditSetClient } from "./client";
 
 interface EditSetPageProps {
@@ -15,42 +14,22 @@ interface EditSetPageProps {
 export default async function EditSetPage({ params }: EditSetPageProps) {
   const { id } = await params;
   const t = createTranslator(await getServerLocale());
-  const supabase = await createClient();
   const user = await getCurrentUser();
-
-  // Fetch set + flashcards in parallel
-  const [{ data }, { data: flashcardData }] = await Promise.all([
-    supabase
-      .from("flashcard_sets")
-      .select("*")
-      .eq("id", id)
-      .single(),
-    supabase
-      .from("flashcards")
-      .select("*")
-      .eq("set_id", id)
-      .order("position", { ascending: true }),
-  ]);
-  const set = data as Database["public"]["Tables"]["flashcard_sets"]["Row"] | null;
-
+  const set = await getSetDetail(id, user?.id);
   if (!set) {
     notFound();
   }
 
   // Only the owner can edit
-  if (set.user_id !== user?.id) {
+  if (set.userId !== user?.id) {
     redirect(`/sets/${id}`);
   }
 
-  const flashcards =
-    flashcardData as Database["public"]["Tables"]["flashcards"]["Row"][] | null;
-
-  const cards = (flashcards ?? []).map((fc) => ({
+  const cards = set.flashcards.map((fc) => ({
     id: fc.id,
     term: fc.term,
     definition: fc.definition,
   }));
-  const invitedProfiles = await getAllowedProfilesForSet(id);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -75,8 +54,8 @@ export default async function EditSetPage({ params }: EditSetPageProps) {
           initialTitle={set.title}
           initialDescription={set.description ?? ""}
           initialCards={cards}
-          initialIsPublic={set.is_public}
-          initialInvitedUsers={invitedProfiles.map((profile) => profile.username).join("\n")}
+          initialIsPublic={set.isPublic}
+          initialInvitedUsers=""
         />
       </div>
     </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { getCurrentProfile, getCurrentUser } from "@/server/supabase/server";
+import { getCurrentProfile, getCurrentUser } from "@/server/auth";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { EditProfileForm } from "@/features/profile/components/edit-profile-form";

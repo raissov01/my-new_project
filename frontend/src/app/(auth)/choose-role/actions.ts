@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import {
   getDefaultAppRoute,
   upsertCurrentUserRole,
-} from "@/server/supabase/server";
+} from "@/server/auth";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";

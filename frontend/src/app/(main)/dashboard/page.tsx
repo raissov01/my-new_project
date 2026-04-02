@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getAppHomePath, getCurrentUser } from "@/server/supabase/server";
+import { getAppHomePath, getCurrentUser } from "@/server/auth";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();

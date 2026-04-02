@@ -4,7 +4,7 @@ import {
   getCurrentProfile,
   getDefaultAppRoute,
   ensureProfile,
-} from "@/server/supabase/server";
+} from "@/server/auth";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { ChooseRoleClient } from "./client";
 

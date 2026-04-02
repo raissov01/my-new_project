@@ -1,13 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { type SmartStudyStats } from "@/lib/shared/study/spaced-repetition";
-import { type Achievement } from "@/lib/shared/study/gamification";
+import {
+  getAchievements,
+  getLevelPresentation,
+  getNewAchievements,
+  type Achievement,
+} from "@/lib/shared/study/gamification";
 import type { StudyProgress } from "@/lib/shared/types/database";
 import { ADMIN_EMAIL } from "@/lib/shared/auth/admin";
+import { createTranslator } from "@/lib/shared/i18n";
+import { getServerLocale } from "@/server/i18n";
 
 // ── Types (kept for frontend compatibility) ─────────────────────────────────
 
@@ -142,8 +149,24 @@ export async function saveSessionResults(
   if (!user) return { error: null, reward: null };
   if (results.length === 0) return { error: null, reward: null };
 
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  const beforeStats = await getUserStats();
+
   try {
-    const resp = await fetchBackendJson<{ error?: string; reward?: StudyReward }>({
+    const resp = await fetchBackendJson<{
+      error?: string;
+      reward?: {
+        pointsEarned: number;
+        streakDays: number;
+        previousPoints: number;
+        currentPoints: number;
+        previousLevel: number;
+        currentLevel: number;
+        levelName: string;
+        accuracy: number;
+      };
+    }>({
       path: "/api/v1/progress/session",
       userId: user.id,
       method: "POST",
@@ -152,7 +175,49 @@ export async function saveSessionResults(
     });
 
     revalidatePath("/dashboard");
-    return { error: resp.error ?? null, reward: resp.reward ?? null };
+    revalidatePath("/profile");
+
+    if (!resp.reward) {
+      return { error: resp.error ?? null, reward: null };
+    }
+
+    const correctResults = results.filter((result) => result.correct).length;
+    const level = getLevelPresentation(resp.reward.currentPoints, t);
+    const afterAchievements = getAchievements(
+      {
+        points: resp.reward.currentPoints,
+        streakDays: resp.reward.streakDays,
+        totalStudied: beforeStats.totalStudied + results.length,
+        totalCorrect: beforeStats.totalCorrect + correctResults,
+      },
+      t
+    );
+
+    const reward: StudyReward = {
+      pointsEarned: resp.reward.pointsEarned,
+      streakDays: resp.reward.streakDays,
+      unlockedAchievements: getNewAchievements(
+        beforeStats.achievements.map((achievement) => achievement.id),
+        afterAchievements.map((achievement) => achievement.id),
+        t
+      ),
+      rewardMessages: [
+        t("study.xpRewardMessage", { points: resp.reward.pointsEarned }),
+        t("study.streakRewardMessage", { days: resp.reward.streakDays }),
+      ],
+      previousAccuracy: beforeStats.accuracy,
+      currentAccuracy: resp.reward.accuracy,
+      accuracyDelta: resp.reward.accuracy - beforeStats.accuracy,
+      previousPoints: resp.reward.previousPoints,
+      currentPoints: resp.reward.currentPoints,
+      previousLevel: resp.reward.previousLevel,
+      currentLevel: resp.reward.currentLevel,
+      currentLevelName: level.name,
+      currentLevelReward: level.reward,
+      nextLevelReward: level.nextReward,
+    };
+
+    return { error: resp.error ?? null, reward };
   } catch (err) {
     console.error("[saveSessionResults] Go backend error:", err);
     return { error: "Failed to save session. Please try again.", reward: null };
@@ -194,10 +259,71 @@ export async function getUserStats(): Promise<UserStats> {
   if (!user) return EMPTY_STATS;
 
   try {
-    return await fetchBackendJson<UserStats>({
+    const locale = await getServerLocale();
+    const t = createTranslator(locale);
+    const raw = await fetchBackendJson<{
+      totalStudied: number;
+      totalCorrect: number;
+      totalIncorrect: number;
+      accuracy: number;
+      recentActivity: { date: string; count: number }[];
+      smart: SmartStudyStats;
+      streakDays: number;
+      points: number;
+      xpLevel: number;
+      xpProgress: number;
+      levelName: string;
+      studiedToday: boolean;
+      streakAtRisk: boolean;
+    }>({
       path: "/api/v1/progress/stats",
       userId: user.id,
     });
+
+    const level = getLevelPresentation(raw.points, t);
+    const achievements = getAchievements(
+      {
+        points: raw.points,
+        streakDays: raw.streakDays,
+        totalStudied: raw.totalStudied,
+        totalCorrect: raw.totalCorrect,
+      },
+      t
+    );
+    const currentWeekStudied = (raw.recentActivity ?? []).reduce(
+      (sum, day) => sum + day.count,
+      0
+    );
+    const lastActiveDate =
+      [...(raw.recentActivity ?? [])]
+        .reverse()
+        .find((day) => day.count > 0)?.date ?? null;
+
+    return {
+      totalStudied: raw.totalStudied,
+      totalCorrect: raw.totalCorrect,
+      totalIncorrect: raw.totalIncorrect,
+      accuracy: raw.accuracy,
+      recentActivity: raw.recentActivity ?? [],
+      smart: raw.smart,
+      streakDays: raw.streakDays,
+      points: raw.points,
+      xpLevel: level.level,
+      xpProgress: level.progressPercent,
+      xpCurrentLevelPoints: level.currentLevelPoints,
+      xpRequiredPoints: level.requiredPoints,
+      levelName: level.name,
+      levelMeaning: level.meaning,
+      levelReward: level.reward,
+      nextLevelReward: level.nextReward,
+      achievements,
+      previousWeekStudied: 0,
+      currentWeekStudied,
+      weeklyStudyDelta: currentWeekStudied,
+      lastActiveDate,
+      studiedToday: raw.studiedToday,
+      streakAtRisk: raw.streakAtRisk,
+    };
   } catch (err) {
     console.error("[getUserStats] Go backend error:", err);
     return EMPTY_STATS;

@@ -2,11 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Pencil, Sparkles, Trophy } from "lucide-react";
 import {
-  createClient,
   getCurrentProfile,
   getCurrentUser,
-} from "@/server/supabase/server";
+} from "@/server/auth";
 import { getUserStats } from "@/app/(main)/sets/progress-actions";
+import { getUserSetsOverview } from "@/server/services/sets-overview";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { ProfileAvatar } from "@/features/profile/components/profile-avatar";
@@ -26,17 +26,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     redirect("/login");
   }
 
-  const [{ status }, profile, stats] = await Promise.all([
+  const [{ status }, profile, stats, userSets] = await Promise.all([
     searchParams,
     getCurrentProfile(user),
     getUserStats(),
+    getUserSetsOverview(),
   ]);
-
-  const supabase = await createClient();
-  const { count: createdSets } = await supabase
-    .from("flashcard_sets")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id);
 
   const metadata =
     "user_metadata" in user && typeof user.user_metadata === "object"
@@ -57,7 +52,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     { label: t("profile.totalCardsStudied"), value: stats.totalStudied },
     { label: t("profile.totalCorrectAnswers"), value: stats.totalCorrect },
     { label: t("profile.accuracy"), value: `${stats.accuracy}%` },
-    { label: t("profile.createdSets"), value: createdSets ?? 0 },
+    { label: t("profile.createdSets"), value: userSets.length },
   ];
 
   return (

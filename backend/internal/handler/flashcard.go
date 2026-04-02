@@ -105,8 +105,9 @@ func (h *FlashcardHandler) DeleteSet(w http.ResponseWriter, r *http.Request) {
 // GetSet handles GET /api/v1/sets/{setID}
 func (h *FlashcardHandler) GetSet(w http.ResponseWriter, r *http.Request) {
 	setID := r.PathValue("setID")
+	userID, _ := middleware.UserIDFromContext(r.Context())
 
-	set, err := h.svc.GetSetByID(r.Context(), setID)
+	set, err := h.svc.GetSetByID(r.Context(), setID, userID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "set not found", err)
 		return

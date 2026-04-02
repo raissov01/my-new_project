@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { GraduationCap, LibraryBig, Plus, Search, SlidersHorizontal, Sparkles, Target } from "lucide-react";
-import { getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 import { Button } from "@/components/ui/button";

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getAppHomePath, getCurrentUser, getCurrentRole } from "@/server/supabase/server";
+import { getAppHomePath, getCurrentUser, getCurrentRole } from "@/server/auth";
 
 export default async function ClassChallengesPage({
   searchParams,

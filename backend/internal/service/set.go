@@ -19,3 +19,7 @@ func NewSet(repo *repository.Set) *Set {
 func (s *Set) GetOverview(ctx context.Context, userID string) ([]model.SetOverview, error) {
 	return s.repo.GetOverviewByUserID(ctx, userID)
 }
+
+func (s *Set) GetPublicOverview(ctx context.Context) ([]model.SetOverview, error) {
+	return s.repo.GetPublicOverview(ctx)
+}

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 
 export default async function GuidePage() {

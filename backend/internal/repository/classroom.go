@@ -227,7 +227,7 @@ func (r *Classroom) GetTeacherClassroomDetail(
 			p.avatar_url,
 			COALESCE(p.role, 'student') AS profile_role
 		FROM public.class_group_members m
-		LEFT JOIN public.profiles p ON p.id = m.user_id
+		LEFT JOIN public.users p ON p.id = m.user_id
 		WHERE m.group_id = $1
 		ORDER BY m.joined_at ASC
 	`
@@ -390,7 +390,7 @@ func (r *Classroom) GetTeacherClassroomDetail(
 			COALESCE(SUM(rp.times_correct), 0)::int AS total_correct,
 			COALESCE(SUM(rp.times_incorrect), 0)::int AS total_incorrect
 		FROM public.class_group_members m
-		LEFT JOIN public.profiles p ON p.id = m.user_id
+		LEFT JOIN public.users p ON p.id = m.user_id
 		LEFT JOIN relevant_progress rp ON rp.user_id = m.user_id
 		WHERE m.group_id = $1
 			AND m.role = 'student'
@@ -447,5 +447,185 @@ func (r *Classroom) GetTeacherClassroomDetail(
 		Assignments: assignments,
 		Challenges:  challenges,
 		Progress:    progress,
+	}, nil
+}
+
+func (r *Classroom) GetChallengeDetail(
+	ctx context.Context,
+	userID string,
+	challengeID string,
+) (*model.ClassChallengeDetail, error) {
+	query := `
+		SELECT
+			c.id,
+			c.title,
+			c.deadline,
+			c.created_at,
+			g.id,
+			g.name,
+			g.owner_id,
+			s.id,
+			s.title,
+			s.description,
+			s.is_public,
+			COALESCE(pc.participant_count, 0)::int AS participant_count,
+			EXISTS (
+				SELECT 1
+				FROM public.class_challenge_participants p
+				WHERE p.challenge_id = c.id
+					AND p.user_id = $2
+			) AS joined
+		FROM public.class_challenges c
+		JOIN public.class_groups g ON g.id = c.group_id
+		JOIN public.class_group_members m ON m.group_id = g.id AND m.user_id = $2
+		LEFT JOIN public.flashcard_sets s ON s.id = c.set_id
+		LEFT JOIN (
+			SELECT challenge_id, COUNT(*)::int AS participant_count
+			FROM public.class_challenge_participants
+			GROUP BY challenge_id
+		) pc ON pc.challenge_id = c.id
+		WHERE c.id = $1
+	`
+
+	var detail model.ClassChallengeDetail
+	var deadline *time.Time
+	var createdAt time.Time
+	if err := r.pool.QueryRow(ctx, query, challengeID, userID).Scan(
+		&detail.ID,
+		&detail.Title,
+		&deadline,
+		&createdAt,
+		&detail.Group.ID,
+		&detail.Group.Name,
+		&detail.Group.OwnerID,
+		&detail.Set.ID,
+		&detail.Set.Title,
+		&detail.Set.Description,
+		&detail.Set.IsPublic,
+		&detail.ParticipantCount,
+		&detail.Joined,
+	); err != nil {
+		return nil, fmt.Errorf("get class challenge detail: %w", err)
+	}
+
+	detail.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+	if deadline != nil {
+		value := deadline.UTC().Format(time.RFC3339)
+		detail.Deadline = &value
+	}
+
+	cardRows, err := r.pool.Query(ctx,
+		`SELECT id, term, definition, position
+		 FROM public.flashcards
+		 WHERE set_id = $1
+		 ORDER BY position ASC`,
+		detail.Set.ID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get class challenge cards: %w", err)
+	}
+	defer cardRows.Close()
+
+	for cardRows.Next() {
+		var card model.ClassChallengeCard
+		if err := cardRows.Scan(&card.ID, &card.Term, &card.Definition, &card.Position); err != nil {
+			return nil, fmt.Errorf("scan class challenge card: %w", err)
+		}
+		detail.Cards = append(detail.Cards, card)
+	}
+
+	if err := cardRows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate class challenge cards: %w", err)
+	}
+
+	return &detail, nil
+}
+
+func (r *Classroom) GetChallengeRanking(
+	ctx context.Context,
+	userID string,
+	challengeID string,
+) (*model.ClassChallengeRankingResponse, error) {
+	detail, err := r.GetChallengeDetail(ctx, userID, challengeID)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.pool.Query(ctx, `
+		WITH ranked_attempts AS (
+			SELECT
+				a.user_id,
+				u.username,
+				u.avatar_url,
+				a.accuracy,
+				a.completion_time,
+				a.total_incorrect,
+				a.completed_at,
+				ROW_NUMBER() OVER (
+					PARTITION BY a.user_id
+					ORDER BY
+						a.accuracy DESC,
+						a.completion_time ASC,
+						a.total_incorrect ASC,
+						a.completed_at ASC
+				) AS rn
+			FROM public.class_challenge_attempts a
+			JOIN public.users u ON u.id = a.user_id
+			WHERE a.challenge_id = $1
+		)
+		SELECT
+			user_id,
+			username,
+			avatar_url,
+			accuracy,
+			completion_time,
+			total_incorrect,
+			completed_at::text
+		FROM ranked_attempts
+		WHERE rn = 1
+		ORDER BY
+			accuracy DESC,
+			completion_time ASC,
+			total_incorrect ASC,
+			completed_at ASC
+	`, challengeID)
+	if err != nil {
+		return nil, fmt.Errorf("get class challenge ranking: %w", err)
+	}
+	defer rows.Close()
+
+	var entries []model.ChallengeRankingEntry
+	var currentUserRank *int
+	rank := 0
+	for rows.Next() {
+		rank++
+		var entry model.ChallengeRankingEntry
+		if err := rows.Scan(
+			&entry.UserID,
+			&entry.Username,
+			&entry.AvatarURL,
+			&entry.Accuracy,
+			&entry.CompletionTime,
+			&entry.TotalIncorrect,
+			&entry.CompletedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan class challenge ranking: %w", err)
+		}
+		entry.Rank = rank
+		if entry.UserID == userID {
+			value := rank
+			currentUserRank = &value
+		}
+		entries = append(entries, entry)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate class challenge ranking: %w", err)
+	}
+
+	return &model.ClassChallengeRankingResponse{
+		Challenge:       *detail,
+		Rows:            entries,
+		CurrentUserRank: currentUserRank,
 	}, nil
 }

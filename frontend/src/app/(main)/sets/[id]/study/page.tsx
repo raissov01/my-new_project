@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { createClient } from "@/server/supabase/server";
 import { getSetProgress } from "@/app/(main)/sets/progress-actions";
 import { getPomodoroPreferences } from "@/app/(main)/sets/pomodoro-actions";
 import {
@@ -15,7 +14,8 @@ import {
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { StudyClient } from "./client";
-import type { Database, StudyProgress } from "@/lib/shared/types/database";
+import type { StudyProgress } from "@/lib/shared/types/database";
+import { getSetDetail } from "@/server/services/sets";
 
 interface StudyPageProps {
   params: Promise<{ id: string }>;
@@ -29,28 +29,14 @@ export default async function StudyPage({
   const { id } = await params;
   const { mode, view } = await searchParams;
   const t = createTranslator(await getServerLocale());
-  const supabase = await createClient();
-
-  // Fetch set + cards + pomodoro in parallel, then pass card IDs to getSetProgress
-  const [setResult, cardsResult, pomodoroSettings] = await Promise.all([
-    supabase.from("flashcard_sets").select("id, title").eq("id", id).single(),
-    supabase
-      .from("flashcards")
-      .select("*")
-      .eq("set_id", id)
-      .order("position", { ascending: true }),
+  const [setDetail, pomodoroSettings] = await Promise.all([
+    getSetDetail(id, "anonymous"),
     getPomodoroPreferences(),
   ]);
+  if (!setDetail) notFound();
 
-  const set =
-    setResult.data as Pick<
-      Database["public"]["Tables"]["flashcard_sets"]["Row"],
-      "id" | "title"
-    > | null;
-  if (!set) notFound();
-
-  const allFlashcards =
-    (cardsResult.data as Database["public"]["Tables"]["flashcards"]["Row"][] | null) ?? [];
+  const set = { id: setDetail.id, title: setDetail.title };
+  const allFlashcards = setDetail.flashcards;
 
   // Pass pre-fetched card IDs so getSetProgress skips its flashcard query
   const progressMap = await getSetProgress(id, allFlashcards.map((c) => c.id));

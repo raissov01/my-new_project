@@ -44,3 +44,20 @@ func (h *Set) GetOverview(w http.ResponseWriter, r *http.Request) {
 		"items": resp,
 	})
 }
+
+func (h *Set) GetPublicOverview(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.svc.GetPublicOverview(r.Context())
+	if err != nil {
+		log.Printf("public set overview error: %v", err)
+		msg := "failed to load public sets"
+		if h.isDev() {
+			msg = err.Error()
+		}
+		writeError(w, http.StatusInternalServerError, msg, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"items": resp,
+	})
+}

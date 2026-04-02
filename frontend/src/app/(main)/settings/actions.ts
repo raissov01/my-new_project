@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient, getCurrentUser } from "@/server/supabase/server";
+import { clearAuthToken, getCurrentUser } from "@/server/auth";
+import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 
 function normalizeText(value: FormDataEntryValue | null) {
@@ -24,10 +25,15 @@ export async function updateEmail(formData: FormData) {
     redirect("/settings?error=email-required");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ email });
-
-  if (error) {
+  try {
+    await fetchBackendJson({
+      path: "/api/v1/account/email",
+      userId: user.id,
+      method: "PUT",
+      body: JSON.stringify({ email }),
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch {
     redirect("/settings?error=email-update-failed");
   }
 
@@ -56,10 +62,15 @@ export async function updatePassword(formData: FormData) {
     redirect("/settings?error=passwords-mismatch");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password });
-
-  if (error) {
+  try {
+    await fetchBackendJson({
+      path: "/api/v1/account/password",
+      userId: user.id,
+      method: "PUT",
+      body: JSON.stringify({ password }),
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch {
     redirect("/settings?error=password-update-failed");
   }
 
@@ -81,14 +92,17 @@ export async function deleteAccount(formData: FormData) {
     redirect("/settings?error=delete-confirmation-invalid");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("delete_current_user_account");
-
-  if (error) {
+  try {
+    await fetchBackendJson({
+      path: "/api/v1/account",
+      userId: user.id,
+      method: "DELETE",
+    });
+  } catch {
     redirect("/settings?error=delete-account-failed");
   }
 
-  await supabase.auth.signOut().catch(() => undefined);
+  await clearAuthToken();
   revalidatePath("/dashboard");
   redirect("/login?status=account-deleted");
 }

@@ -48,7 +48,7 @@ func (r *Classroom) CreateGroup(ctx context.Context, ownerID string, req model.C
 		usernames := parseUsernames(req.Members)
 		if len(usernames) > 0 {
 			rows, err := r.pool.Query(ctx,
-				`SELECT id, username FROM profiles WHERE username = ANY($1) AND id != $2`,
+				`SELECT id, username FROM users WHERE username = ANY($1) AND id != $2`,
 				usernames, ownerID,
 			)
 			if err != nil {
@@ -202,7 +202,7 @@ func (r *Classroom) RemoveStudent(ctx context.Context, ownerID string, req model
 
 // UpdateRole changes a user's role.
 func (r *Classroom) UpdateRole(ctx context.Context, userID, role string) error {
-	_, err := r.pool.Exec(ctx, `UPDATE profiles SET role = $2 WHERE id = $1`, userID, role)
+	_, err := r.pool.Exec(ctx, `UPDATE users SET role = $2 WHERE id = $1`, userID, role)
 	return err
 }
 

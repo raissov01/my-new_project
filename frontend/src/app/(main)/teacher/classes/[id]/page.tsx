@@ -9,7 +9,7 @@ import { getAvailableSetsForClassChallenges } from "@/server/services/class-chal
 import { getTeacherClassroomDetail } from "@/server/services/classrooms";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { requireRole } from "@/server/supabase/server";
+import { requireRole } from "@/server/auth";
 import { Button } from "@/components/ui/button";
 
 interface TeacherClassDetailPageProps {

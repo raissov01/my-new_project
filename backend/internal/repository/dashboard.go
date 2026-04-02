@@ -137,7 +137,7 @@ func (r *Dashboard) GetTeacherSummaryByUserID(
 			ba.total_incorrect,
 			ba.attempts
 		FROM best_attempts ba
-		LEFT JOIN public.profiles p ON p.id = ba.user_id
+		LEFT JOIN public.users p ON p.id = ba.user_id
 		WHERE ba.rank_in_user = 1
 		ORDER BY
 			ba.accuracy DESC,

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { ADMIN_EMAIL } from "@/lib/shared/auth/admin";

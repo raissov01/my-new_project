@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DEV_MODE, DEV_USER } from "@/lib/shared/auth/dev-mode";
 import { ADMIN_COOKIE_NAME, ADMIN_EMAIL, ADMIN_USER } from "@/lib/shared/auth/admin";
+import { fetchApiJson } from "@/lib/client/api";
 
 function hasAdminSessionCookie() {
   if (typeof document === "undefined") return false;
@@ -24,6 +25,15 @@ type SimpleUser = {
   user_metadata?: Record<string, unknown>;
 };
 
+type BackendUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  username: string;
+  avatarUrl: string | null;
+  role: string;
+};
+
 /**
  * Client-side auth hook. Checks for JWT token cookie (set by Go backend).
  * For user details, pages should use getCurrentUser() server-side.
@@ -42,12 +52,53 @@ export function useAuth() {
   useEffect(() => {
     if (DEV_MODE || adminSession) return;
 
-    // Check if token cookie exists — if so, user is logged in
-    if (hasAuthToken()) {
-      // We don't have the full user object client-side. Set a minimal marker.
-      setUser({ id: "authenticated", email: "" });
+    let cancelled = false;
+
+    async function loadUser() {
+      if (!hasAuthToken()) {
+        if (!cancelled) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const backendUser = await fetchApiJson<BackendUser>("/auth/me");
+        if (cancelled) return;
+
+        setUser({
+          id: backendUser.id,
+          email: backendUser.email,
+          user_metadata: {
+            full_name: backendUser.fullName,
+            username: backendUser.username,
+            avatar_url: backendUser.avatarUrl,
+            role: backendUser.role,
+          },
+        });
+      } catch {
+        if (!cancelled) {
+          setUser(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
-    setLoading(false);
+
+    void loadUser();
+
+    function handleProfileUpdated() {
+      void loadUser();
+    }
+
+    window.addEventListener("flashlearn-profile-updated", handleProfileUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("flashlearn-profile-updated", handleProfileUpdated);
+    };
   }, [adminSession]);
 
   if (user?.email === ADMIN_EMAIL) {

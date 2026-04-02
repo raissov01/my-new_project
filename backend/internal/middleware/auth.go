@@ -27,17 +27,14 @@ func extractBearerToken(value string) string {
 // It does NOT reject unauthenticated requests — it just annotates the context.
 //
 // Current implementation: reads a plain user-ID from "Bearer <user-id>".
-// TODO: Replace with Supabase JWT verification when ready:
-//  1. Parse the Bearer token as a JWT
-//  2. Verify signature using SUPABASE_JWT_SECRET
-//  3. Extract "sub" claim as the user ID
+// TODO: Replace this temporary plain-token compatibility path with the
+// first-party JWT helper once all callers send real session tokens.
 func OptionalAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if auth := r.Header.Get("Authorization"); auth != "" {
 			token := extractBearerToken(auth)
 			if token != "" {
-				// In production, verify JWT and extract sub claim here.
-				// For now, the frontend passes the Supabase user ID directly.
+				// Legacy compatibility path for internal bridge callers.
 				ctx := context.WithValue(r.Context(), userIDKey, token)
 				r = r.WithContext(ctx)
 			}

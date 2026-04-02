@@ -13,7 +13,7 @@ import {
   BarChart3,
   Trophy,
 } from "lucide-react";
-import { createClient, getCurrentUser } from "@/server/supabase/server";
+import { getCurrentUser } from "@/server/auth";
 import {
   FlashcardList,
   DeleteSetButton,
@@ -32,7 +32,7 @@ import {
 } from "@/lib/shared/study/spaced-repetition";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import type { Database } from "@/lib/shared/types/database";
+import { getSetDetail } from "@/server/services/sets";
 
 interface SetDetailPageProps {
   params: Promise<{ id: string }>;
@@ -47,29 +47,20 @@ export default async function SetDetailPage({
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const locale = await getServerLocale();
   const t = createTranslator(locale);
-  const supabase = await createClient();
   const user = await getCurrentUser();
   const backHref = user ? "/dashboard" : "/sets";
+  const setDetail = await getSetDetail(id, user?.id);
+  if (!setDetail) notFound();
 
-  // Fetch set + flashcards in parallel, then use card IDs for progress (avoids
-  // getSetProgress re-fetching the same flashcard IDs)
-  const [setResult, flashcardsResult] = await Promise.all([
-    supabase.from("flashcard_sets").select("*").eq("id", id).single(),
-    supabase
-      .from("flashcards")
-      .select("*")
-      .eq("set_id", id)
-      .order("position", { ascending: true }),
-  ]);
-
-  const set =
-    setResult.data as Database["public"]["Tables"]["flashcard_sets"]["Row"] | null;
-  if (!set) notFound();
-
-  const isOwner = user?.id === set.user_id;
-  const cards =
-    (flashcardsResult.data as Database["public"]["Tables"]["flashcards"]["Row"][] | null) ??
-    [];
+  const set = {
+    title: setDetail.title,
+    description: setDetail.description,
+    created_at: setDetail.createdAt,
+    is_public: setDetail.isPublic,
+    user_id: setDetail.userId,
+  };
+  const isOwner = user?.id === setDetail.userId;
+  const cards = setDetail.flashcards;
 
   // Pass pre-fetched IDs so getSetProgress skips its flashcard query
   const progressMap = await getSetProgress(id, cards.map((c) => c.id));

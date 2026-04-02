@@ -67,6 +67,6 @@ func (s *Flashcard) DeleteSet(ctx context.Context, userID, setID string) error {
 	return s.repo.DeleteSet(ctx, userID, setID)
 }
 
-func (s *Flashcard) GetSetByID(ctx context.Context, setID string) (*model.SetDetail, error) {
-	return s.repo.GetSetByID(ctx, setID)
+func (s *Flashcard) GetSetByID(ctx context.Context, setID, requesterUserID string) (*model.SetDetail, error) {
+	return s.repo.GetSetByID(ctx, setID, requesterUserID)
 }

@@ -1,11 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CalendarClock, Users } from "lucide-react";
-import { createClient, getCurrentProfile, getCurrentUser } from "@/server/supabase/server";
+import { getCurrentProfile, getCurrentUser } from "@/server/auth";
 import { getClassChallengeById, getClassChallengeParticipant } from "@/server/services/class-challenges";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import type { Database } from "@/lib/shared/types/database";
 import { JoinChallengeButton } from "./join-button";
 import { ClassChallengeClient } from "./client";
 
@@ -36,23 +35,8 @@ export default async function ClassChallengePage({
 
   const participant = await getClassChallengeParticipant(id, user.id);
   const joined = Boolean(participant);
-  const supabase = await createClient();
-  const { data: participantRows } = await supabase
-    .from("class_challenge_participants")
-    .select("id")
-    .eq("challenge_id", id);
-  const participantCount = ((participantRows as { id: string }[] | null) ?? []).length;
-
-  const { data: cardsData } =
-    joined && play === "1"
-      ? await supabase
-          .from("flashcards")
-          .select("*")
-          .eq("set_id", challenge.set_id)
-          .order("position", { ascending: true })
-      : { data: [] as const };
-  const flashcards =
-    (cardsData as Database["public"]["Tables"]["flashcards"]["Row"][] | null) ?? [];
+  const participantCount = challenge.participantCount;
+  const flashcards = joined && play === "1" ? challenge.cards : [];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">

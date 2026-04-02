@@ -7,7 +7,7 @@ import {
   getRoleRegistrationRedirect,
   setAuthToken,
   clearAuthToken,
-} from "@/server/supabase/server";
+} from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { createTranslator } from "@/lib/shared/i18n";

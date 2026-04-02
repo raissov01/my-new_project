@@ -77,3 +77,19 @@ type PomodoroSessionInput struct {
 	CardsReviewed int     `json:"cardsReviewed"`
 	CorrectCount  int     `json:"correctAnswers"`
 }
+
+// SetProgressRow mirrors the progress payload expected by the frontend.
+type SetProgressRow struct {
+	ID             string  `json:"id"`
+	UserID         string  `json:"user_id"`
+	FlashcardID    string  `json:"flashcard_id"`
+	TimesSeen      int     `json:"times_seen"`
+	TimesCorrect   int     `json:"times_correct"`
+	TimesIncorrect int     `json:"times_incorrect"`
+	IsWeak         bool    `json:"is_weak"`
+	ReviewInterval int     `json:"review_interval"`
+	NextReviewAt   string  `json:"next_review_at"`
+	LastReviewedAt *string `json:"last_reviewed_at"`
+	LastStudiedAt  string  `json:"last_studied_at"`
+	CreatedAt      string  `json:"created_at"`
+}

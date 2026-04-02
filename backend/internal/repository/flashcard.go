@@ -127,11 +127,14 @@ func (r *Flashcard) DeleteSet(ctx context.Context, userID, setID string) error {
 }
 
 // GetSetByID returns a set with its cards.
-func (r *Flashcard) GetSetByID(ctx context.Context, setID string) (*model.SetDetail, error) {
+func (r *Flashcard) GetSetByID(ctx context.Context, setID, requesterUserID string) (*model.SetDetail, error) {
 	var s model.SetDetail
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, title, description, is_public, user_id, created_at::text FROM flashcard_sets WHERE id = $1`,
-		setID,
+		`SELECT id, title, description, is_public, user_id, created_at::text
+		 FROM flashcard_sets
+		 WHERE id = $1
+		   AND (is_public = true OR user_id = $2)`,
+		setID, requesterUserID,
 	).Scan(&s.ID, &s.Title, &s.Description, &s.IsPublic, &s.UserID, &s.CreatedAt)
 	if err != nil {
 		return nil, err

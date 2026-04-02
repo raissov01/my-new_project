@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/model"
@@ -52,6 +53,23 @@ func (h *Progress) GetStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, stats)
+}
+
+func (h *Progress) GetSetProgress(w http.ResponseWriter, r *http.Request) {
+	userID, _ := middleware.UserIDFromContext(r.Context())
+	setID := strings.TrimSpace(r.PathValue("setID"))
+	if setID == "" {
+		writeError(w, http.StatusBadRequest, "set id is required", nil)
+		return
+	}
+
+	progress, err := h.svc.GetSetProgress(r.Context(), userID, setID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get set progress", err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, progress)
 }
 
 // ToggleWeak handles POST /api/v1/progress/toggle-weak

@@ -3,7 +3,7 @@ import { Mail, LockKeyhole, LogOut, ShieldCheck, UserCog } from "lucide-react";
 import {
   getCurrentProfile,
   getCurrentUser,
-} from "@/server/supabase/server";
+} from "@/server/auth";
 import { getPomodoroPreferences } from "@/app/(main)/sets/pomodoro-actions";
 import { logout } from "@/app/(auth)/actions";
 import { updateEmail, updatePassword } from "@/app/(main)/settings/actions";

@@ -40,7 +40,7 @@ type ClassChallenge struct {
 	GroupID   string    `gorm:"type:uuid;not null;index" json:"groupId"`
 	SetID     string    `gorm:"type:uuid;not null" json:"setId"`
 	Title     string    `gorm:"not null" json:"title"`
-	Deadline  *string   `json:"deadline"`
+	Deadline  *time.Time `json:"deadline"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"createdAt"`
 
 	Group ClassGroup   `gorm:"foreignKey:GroupID" json:"-"`
@@ -49,6 +49,32 @@ type ClassChallenge struct {
 
 func (ClassChallenge) TableName() string {
 	return "class_challenges"
+}
+
+// ClassChallengeParticipant tracks which students joined a class challenge.
+type ClassChallengeParticipant struct {
+	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	ChallengeID string    `gorm:"type:uuid;not null;uniqueIndex:idx_challenge_user" json:"challengeId"`
+	UserID      string    `gorm:"type:uuid;not null;uniqueIndex:idx_challenge_user" json:"userId"`
+	JoinedAt    time.Time `gorm:"autoCreateTime" json:"joinedAt"`
+}
+
+func (ClassChallengeParticipant) TableName() string {
+	return "class_challenge_participants"
+}
+
+// ClassSetAssignment stores a set assigned to a classroom.
+type ClassSetAssignment struct {
+	ID         string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	GroupID    string     `gorm:"type:uuid;not null;index" json:"groupId"`
+	SetID      string     `gorm:"type:uuid;not null;index" json:"setId"`
+	AssignedBy *string    `gorm:"type:uuid" json:"assignedBy"`
+	Deadline   *time.Time `json:"deadline"`
+	CreatedAt  time.Time  `gorm:"autoCreateTime" json:"createdAt"`
+}
+
+func (ClassSetAssignment) TableName() string {
+	return "class_set_assignments"
 }
 
 // ChallengeAttempt is a user's submission for a set challenge.
@@ -68,6 +94,23 @@ type ChallengeAttempt struct {
 
 func (ChallengeAttempt) TableName() string {
 	return "challenge_attempts"
+}
+
+// ClassChallengeAttempt records a student's challenge submission inside a class.
+type ClassChallengeAttempt struct {
+	ID             string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	ChallengeID    string    `gorm:"type:uuid;not null;index" json:"challengeId"`
+	UserID         string    `gorm:"type:uuid;not null;index" json:"userId"`
+	SetID          string    `gorm:"type:uuid;not null;index" json:"setId"`
+	CompletionTime int       `gorm:"not null" json:"completionTime"`
+	Accuracy       int       `gorm:"not null" json:"accuracy"`
+	TotalCorrect   int       `gorm:"not null" json:"totalCorrect"`
+	TotalIncorrect int       `gorm:"not null" json:"totalIncorrect"`
+	CompletedAt    time.Time `gorm:"autoCreateTime" json:"completedAt"`
+}
+
+func (ClassChallengeAttempt) TableName() string {
+	return "class_challenge_attempts"
 }
 
 // PomodoroPreference stores user's pomodoro settings.

@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/midoriya/flashlearn-backend/internal/model"
 )
@@ -16,13 +18,114 @@ func NewProgress(pool *pgxpool.Pool) *Progress {
 	return &Progress{pool: pool}
 }
 
-// UpsertCardResult calls the upsert_study_progress RPC for a single card answer.
 func (r *Progress) UpsertCardResult(ctx context.Context, userID, flashcardID string, correct bool) error {
-	_, err := r.pool.Exec(ctx,
-		`SELECT upsert_study_progress($1, $2, $3)`,
-		userID, flashcardID, correct,
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin progress tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var existing ProgressRow
+	var existingFound bool
+	err = tx.QueryRow(ctx,
+		`SELECT times_seen, times_correct, times_incorrect, is_weak, review_interval,
+		        next_review_at::text, last_studied_at::text
+		 FROM study_progress
+		 WHERE user_id = $1 AND flashcard_id = $2`,
+		userID, flashcardID,
+	).Scan(
+		&existing.TimesSeen,
+		&existing.TimesCorrect,
+		&existing.TimesIncorrect,
+		&existing.IsWeak,
+		&existing.ReviewInterval,
+		&existing.NextReviewAt,
+		&existing.LastStudiedAt,
 	)
-	return err
+	if err == nil {
+		existingFound = true
+	} else if err != nil && err != pgx.ErrNoRows {
+		return fmt.Errorf("load existing progress: %w", err)
+	}
+
+	now := time.Now().UTC()
+	nextInterval := 1
+	timesSeen := 1
+	timesCorrect := 0
+	timesIncorrect := 0
+	isWeak := !correct
+
+	if correct {
+		timesCorrect = 1
+	}
+	if !correct {
+		timesIncorrect = 1
+	}
+
+	if existingFound {
+		timesSeen = existing.TimesSeen + 1
+		timesCorrect += existing.TimesCorrect
+		timesIncorrect += existing.TimesIncorrect
+		if correct {
+			nextInterval = existing.ReviewInterval * 2
+			if nextInterval < 1 {
+				nextInterval = 1
+			}
+			if nextInterval > 30 {
+				nextInterval = 30
+			}
+			isWeak = existing.IsWeak && (timesCorrect < timesIncorrect)
+		} else {
+			nextInterval = 1
+			isWeak = true
+		}
+
+		_, err = tx.Exec(ctx,
+			`UPDATE study_progress
+			 SET times_seen = $3,
+			     times_correct = $4,
+			     times_incorrect = $5,
+			     is_weak = $6,
+			     review_interval = $7,
+			     next_review_at = $8,
+			     last_studied_at = $9,
+			     last_reviewed_at = $9
+			 WHERE user_id = $1 AND flashcard_id = $2`,
+			userID,
+			flashcardID,
+			timesSeen,
+			timesCorrect,
+			timesIncorrect,
+			isWeak,
+			nextInterval,
+			now.AddDate(0, 0, nextInterval),
+			now,
+		)
+		if err != nil {
+			return fmt.Errorf("update progress: %w", err)
+		}
+	} else {
+		_, err = tx.Exec(ctx,
+			`INSERT INTO study_progress (
+				user_id, flashcard_id, times_seen, times_correct, times_incorrect,
+				is_weak, review_interval, next_review_at, last_studied_at, last_reviewed_at
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`,
+			userID,
+			flashcardID,
+			timesSeen,
+			timesCorrect,
+			timesIncorrect,
+			isWeak,
+			nextInterval,
+			now.AddDate(0, 0, nextInterval),
+			now,
+		)
+		if err != nil {
+			return fmt.Errorf("insert progress: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
 // ProfileStats holds the profile fields needed for reward computation.
@@ -38,7 +141,7 @@ func (r *Progress) GetProfileStats(ctx context.Context, userID string) (ProfileS
 	var lastActive *string
 	err := r.pool.QueryRow(ctx,
 		`SELECT COALESCE(streak_days, 0), COALESCE(points, 0), last_active_date
-		 FROM profiles WHERE id = $1`, userID,
+		 FROM users WHERE id = $1`, userID,
 	).Scan(&s.StreakDays, &s.Points, &lastActive)
 	s.LastActiveDate = lastActive
 	return s, err
@@ -47,7 +150,7 @@ func (r *Progress) GetProfileStats(ctx context.Context, userID string) (ProfileS
 // UpdateProfileStats updates streak, points, and last active date.
 func (r *Progress) UpdateProfileStats(ctx context.Context, userID string, streak, points int, lastActive string) error {
 	_, err := r.pool.Exec(ctx,
-		`UPDATE profiles SET streak_days = $2, points = $3, last_active_date = $4 WHERE id = $1`,
+		`UPDATE users SET streak_days = $2, points = $3, last_active_date = $4 WHERE id = $1`,
 		userID, streak, points, lastActive,
 	)
 	return err
@@ -86,6 +189,61 @@ func (r *Progress) GetAllProgress(ctx context.Context, userID string) ([]Progres
 		result = append(result, p)
 	}
 	return result, rows.Err()
+}
+
+func (r *Progress) GetSetProgress(ctx context.Context, userID, setID string) (map[string]model.SetProgressRow, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT
+			sp.id,
+			sp.user_id,
+			sp.flashcard_id,
+			sp.times_seen,
+			sp.times_correct,
+			sp.times_incorrect,
+			sp.is_weak,
+			sp.review_interval,
+			sp.next_review_at::text,
+			sp.last_reviewed_at::text,
+			sp.last_studied_at::text,
+			sp.created_at::text
+		FROM study_progress sp
+		JOIN flashcards f ON f.id = sp.flashcard_id
+		WHERE sp.user_id = $1
+		  AND f.set_id = $2`,
+		userID, setID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get set progress: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[string]model.SetProgressRow)
+	for rows.Next() {
+		var row model.SetProgressRow
+		if err := rows.Scan(
+			&row.ID,
+			&row.UserID,
+			&row.FlashcardID,
+			&row.TimesSeen,
+			&row.TimesCorrect,
+			&row.TimesIncorrect,
+			&row.IsWeak,
+			&row.ReviewInterval,
+			&row.NextReviewAt,
+			&row.LastReviewedAt,
+			&row.LastStudiedAt,
+			&row.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan set progress: %w", err)
+		}
+		result[row.FlashcardID] = row
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate set progress rows: %w", err)
+	}
+
+	return result, nil
 }
 
 // GetUserStats aggregates study statistics for the dashboard.

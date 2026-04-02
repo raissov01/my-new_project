@@ -9,13 +9,7 @@ import { ProfileAvatar } from "@/features/profile/components/profile-avatar";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { createClient } from "@/lib/client/supabase";
 import { cn } from "@/lib/shared/utils";
-
-type ProfileSummary = {
-  username: string;
-  avatarUrl: string | null;
-};
 
 function getUserFallback(user: NonNullable<ReturnType<typeof useAuth>["user"]>) {
   const metadata =
@@ -40,58 +34,9 @@ export function AvatarMenu() {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [profile, setProfile] = useState<ProfileSummary | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const fallback = useMemo(() => (user ? getUserFallback(user) : null), [user]);
-
-  useEffect(() => {
-    if (!user || !open) {
-      return;
-    }
-
-    const currentUserId = user.id;
-    const supabase = createClient();
-    const profilesTable = supabase.from("profiles") as never as {
-      select: (columns: string) => {
-        eq: (column: string, value: string) => {
-          maybeSingle: () => Promise<{
-            data: { username: string | null; avatar_url: string | null } | null;
-          }>;
-        };
-      };
-    };
-    let isActive = true;
-
-    async function loadProfile() {
-      const { data } = await profilesTable
-        .select("username, avatar_url")
-        .eq("id", currentUserId)
-        .maybeSingle();
-
-      if (!isActive) {
-        return;
-      }
-
-      setProfile({
-        username: data?.username ?? fallback?.username ?? "User",
-        avatarUrl: data?.avatar_url ?? fallback?.avatarUrl ?? null,
-      });
-    }
-
-    void loadProfile();
-
-    function handleProfileUpdated() {
-      void loadProfile();
-    }
-
-    window.addEventListener("flashlearn-profile-updated", handleProfileUpdated);
-
-    return () => {
-      isActive = false;
-      window.removeEventListener("flashlearn-profile-updated", handleProfileUpdated);
-    };
-  }, [fallback?.avatarUrl, fallback?.username, open, user]);
 
   // Lock scroll when bottom sheet is open on mobile
   useEffect(() => {
@@ -134,8 +79,8 @@ export function AvatarMenu() {
     return null;
   }
 
-  const username = profile?.username ?? fallback?.username ?? "User";
-  const avatarUrl = profile?.avatarUrl ?? fallback?.avatarUrl ?? null;
+  const username = fallback?.username ?? "User";
+  const avatarUrl = fallback?.avatarUrl ?? null;
 
   async function handleLogout() {
     setLoggingOut(true);
