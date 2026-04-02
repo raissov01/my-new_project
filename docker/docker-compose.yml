@@ -45,7 +45,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:5000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
