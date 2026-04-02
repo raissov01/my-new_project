@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy (Swarm)
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +29,7 @@ jobs:
 
             cd /opt/studywithraissov
 
-            # Preserve env files across git reset
+            # Preserve env files
             cp backend/.env /tmp/backend.env.bak 2>/dev/null || true
             cp frontend/.env /tmp/frontend.env.bak 2>/dev/null || true
 
@@ -41,21 +41,38 @@ jobs:
             cp /tmp/backend.env.bak backend/.env 2>/dev/null || true
             cp /tmp/frontend.env.bak frontend/.env 2>/dev/null || true
 
-            # Rebuild and restart all containers (including Nginx)
-            docker compose -f docker/docker-compose.yml down --remove-orphans
-            docker compose -f docker/docker-compose.yml up -d --build
+            # Initialize swarm if not already
+            docker swarm init 2>/dev/null || true
 
-            # Clean up dangling images
+            # Create secrets if they don't exist
+            if ! docker secret inspect postgres_password >/dev/null 2>&1; then
+              echo "changeme" | docker secret create postgres_password -
+            fi
+            if ! docker secret inspect backend_env >/dev/null 2>&1; then
+              docker secret create backend_env backend/.env
+            fi
+            if ! docker secret inspect frontend_env >/dev/null 2>&1; then
+              docker secret create frontend_env frontend/.env
+            fi
+
+            # Build images
+            docker build -t swr-backend -f docker/backend.Dockerfile backend/
+            docker build -t swr-frontend \
+              --build-arg NEXT_PUBLIC_APP_URL=https://studywithraissov.com \
+              -f docker/frontend.Dockerfile frontend/
+
+            # Deploy/update the swarm stack
+            docker stack deploy -c docker/stack.yml swr
+
+            # Clean up old images
             docker image prune -f
 
-            # Wait for services to be healthy
-            echo ""
-            echo "=== Waiting for services ==="
+            # Wait for convergence
             sleep 15
 
             echo ""
-            echo "=== Container status ==="
-            docker compose -f docker/docker-compose.yml ps
+            echo "=== Stack services ==="
+            docker stack services swr
 
             echo ""
             echo "=== Health checks ==="

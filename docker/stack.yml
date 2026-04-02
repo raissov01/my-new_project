@@ -1,0 +1,156 @@
+# StudyWithRaissov — Docker Swarm Stack
+#
+# Initialize swarm (one-time):
+#   docker swarm init
+#
+# Create secrets (one-time):
+#   echo "changeme" | docker secret create postgres_password -
+#   docker secret create backend_env backend/.env
+#   docker secret create frontend_env frontend/.env
+#
+# Deploy:
+#   docker stack deploy -c docker/stack.yml swr
+#
+# Update after code change:
+#   docker build -t swr-backend backend/ -f docker/backend.Dockerfile
+#   docker build -t swr-frontend frontend/ -f docker/frontend.Dockerfile
+#   docker stack deploy -c docker/stack.yml swr
+#
+# Check status:
+#   docker stack services swr
+#   docker service logs swr_backend
+
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: studywithraissov
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: studywithraissov
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studywithraissov"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    image: swr-backend:latest
+    build:
+      context: ../backend
+      dockerfile: ../docker/backend.Dockerfile
+    environment:
+      PORT: 5000
+      ENVIRONMENT: production
+      DATABASE_URL: postgres://studywithraissov:changeme@postgres:5432/studywithraissov?sslmode=disable
+    secrets:
+      - backend_env
+    networks:
+      - internal
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    image: swr-frontend:latest
+    build:
+      context: ../frontend
+      dockerfile: ../docker/frontend.Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: https://studywithraissov.com
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      BACKEND_URL: http://backend:5000
+    secrets:
+      - frontend_env
+    networks:
+      - internal
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    configs:
+      - source: nginx_conf
+        target: /etc/nginx/conf.d/default.conf
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+networks:
+  internal:
+    driver: overlay
+
+volumes:
+  pgdata:
+    driver: local
+
+secrets:
+  postgres_password:
+    external: true
+  backend_env:
+    external: true
+  frontend_env:
+    external: true
+
+configs:
+  nginx_conf:
+    file: ./nginx.conf
