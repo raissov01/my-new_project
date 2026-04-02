@@ -59,6 +59,8 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
     env_file:
       - ../frontend/.env
+    ports:
+      - "127.0.0.1:3000:3000"
     environment:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
@@ -80,20 +82,9 @@ services:
       timeout: 5s
       retries: 5
 
-  nginx:
-    image: nginx:1.27-alpine
-    depends_on:
-      frontend:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    restart: unless-stopped
+  # Nginx runs on the host (systemd), not in Docker.
+  # It proxies :80/:443 → frontend:3000 and backend:5000.
+  # Config: docker/nginx.host.conf → /etc/nginx/sites-available/studywithraissov
 
 volumes:
   pgdata:
