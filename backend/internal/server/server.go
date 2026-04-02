@@ -1,0 +1,190 @@
+package server
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/midoriya/flashlearn-backend/internal/config"
+	"github.com/midoriya/flashlearn-backend/internal/database"
+	"github.com/midoriya/flashlearn-backend/internal/handler"
+	"github.com/midoriya/flashlearn-backend/internal/repository"
+	"github.com/midoriya/flashlearn-backend/internal/service"
+	"github.com/rs/cors"
+	"gorm.io/gorm"
+)
+
+type Server struct {
+	cfg        *config.Config
+	db         *pgxpool.Pool
+	gormDB     *gorm.DB
+	httpServer *http.Server
+}
+
+func New(cfg *config.Config) (*Server, error) {
+	// pgx pool (for existing repository layer — will be replaced incrementally)
+	pool, err := database.Connect(context.Background(), cfg.DatabaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("database (pgx): %w", err)
+	}
+
+	// GORM connection (for auth + new models)
+	gormDB, err := database.ConnectGorm(cfg.DatabaseURL, cfg.Environment)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("database (gorm): %w", err)
+	}
+
+	// Auto-migrate GORM models (creates/updates tables)
+	if err := database.AutoMigrate(gormDB); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("migration: %w", err)
+	}
+
+	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery())
+
+	handler.SetDependencies(buildDependencies(cfg, pool, gormDB))
+	handler.RegisterRoutes(router)
+
+	httpServer := &http.Server{
+		Addr:         fmt.Sprintf(":%s", cfg.Port),
+		Handler:      buildHTTPHandler(cfg, router),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 60 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	return &Server{
+		cfg:        cfg,
+		db:         pool,
+		gormDB:     gormDB,
+		httpServer: httpServer,
+	}, nil
+}
+
+func (s *Server) Run() error {
+	defer s.db.Close()
+	log.Println("database connected (pgx + GORM)")
+
+	errCh := make(chan error, 1)
+	go func() {
+		log.Printf("server listening on %s (%s)", s.httpServer.Addr, s.cfg.Environment)
+		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			errCh <- err
+			return
+		}
+		errCh <- nil
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case sig := <-quit:
+		log.Printf("shutting down on %s...", sig)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := s.httpServer.Shutdown(ctx); err != nil {
+			return fmt.Errorf("shutdown: %w", err)
+		}
+		log.Println("server stopped")
+		return nil
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("listen: %w", err)
+		}
+		return nil
+	}
+}
+
+func buildHTTPHandler(cfg *config.Config, router *gin.Engine) http.Handler {
+	c := cors.New(cors.Options{
+		AllowedOrigins:   cfg.CORSOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-User-ID"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	})
+	return c.Handler(router)
+}
+
+func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) handler.Dependencies {
+	leaderboardRepo := repository.NewLeaderboard(pool)
+	leaderboardSvc := service.NewLeaderboard(leaderboardRepo)
+
+	profileRepo := repository.NewProfile(pool)
+	profileSvc := service.NewProfile(profileRepo)
+
+	setRepo := repository.NewSet(pool)
+	setSvc := service.NewSet(setRepo)
+
+	dashboardRepo := repository.NewDashboard(pool)
+	dashboardSvc := service.NewDashboard(dashboardRepo)
+
+	classroomRepo := repository.NewClassroom(pool)
+	classroomSvc := service.NewClassroom(classroomRepo)
+
+	progressRepo := repository.NewProgress(pool)
+	progressSvc := service.NewProgress(progressRepo)
+
+	flashcardRepo := repository.NewFlashcard(pool)
+	flashcardSvc := service.NewFlashcard(flashcardRepo)
+
+	challengeRepo := repository.NewChallenge(pool)
+	challengeSvc := service.NewChallenge(challengeRepo)
+
+	return handler.Dependencies{
+		InternalAPIToken: cfg.InternalAPIToken,
+		JWTSecret:        cfg.JWTSecret,
+		Environment:      cfg.Environment,
+		Auth:             handler.NewAuth(gormDB, cfg.JWTSecret),
+		Leaderboard:      handler.NewLeaderboard(leaderboardSvc, cfg.Environment),
+		Profile:          handler.NewProfile(profileSvc, cfg.Environment),
+		Set:              handler.NewSet(setSvc, cfg.Environment),
+		Dashboard:        handler.NewDashboard(dashboardSvc, cfg.Environment),
+		Classroom:        handler.NewClassroom(classroomSvc, cfg.Environment),
+		Progress:         handler.NewProgress(progressSvc, cfg.Environment),
+		Flashcard:        handler.NewFlashcard(flashcardSvc, cfg.Environment),
+		Challenge:        handler.NewChallengeHandler(challengeSvc, cfg.Environment),
+		ProfileWrite:     handler.NewProfileWrite(classroomRepo, cfg.Environment),
+		AI:               handler.NewAI(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.MaxUploadBytes),
+		DebugDatabase:    buildDebugDatabaseHandler(pool),
+	}
+}
+
+func buildDebugDatabaseHandler(pool *pgxpool.Pool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		checks := []string{
+			"users", "flashcard_sets", "flashcards", "study_progress",
+			"class_groups", "class_group_members", "class_challenges",
+			"challenge_attempts", "pomodoro_preferences", "pomodoro_sessions",
+		}
+		results := make(map[string]string)
+		for _, name := range checks {
+			var exists bool
+			err := pool.QueryRow(r.Context(),
+				`SELECT EXISTS (
+					SELECT 1 FROM information_schema.tables
+					WHERE table_schema = 'public' AND table_name = $1
+				)`, name).Scan(&exists)
+			if err != nil {
+				results[name] = "error: " + err.Error()
+			} else if exists {
+				results[name] = "ok"
+			} else {
+				results[name] = "MISSING"
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(results)
+	}
+}

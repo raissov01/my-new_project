@@ -46,12 +46,9 @@ func OptionalAuth(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// InternalAuth allows trusted server-to-server requests from Next.js while the
-// frontend is being migrated away from Supabase. The caller must send:
-//
-//	Authorization: Bearer <internal-api-token>
-//	X-User-ID: <authenticated-user-id>
-func InternalAuth(internalToken string, next http.HandlerFunc) http.HandlerFunc {
+// InternalAuthHTTP is the http.HandlerFunc version of InternalAuth.
+// Used by legacy handlers that haven't been converted to Gin yet.
+func InternalAuthHTTP(internalToken string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if internalToken == "" {
 			w.Header().Set("Content-Type", "application/json")

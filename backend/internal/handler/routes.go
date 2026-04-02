@@ -1,0 +1,121 @@
+package handler
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/midoriya/flashlearn-backend/internal/middleware"
+)
+
+type Dependencies struct {
+	InternalAPIToken string
+	JWTSecret        string
+	Environment      string
+
+	Auth          *AuthHandler
+	Leaderboard   *Leaderboard
+	Profile       *Profile
+	Set           *Set
+	Dashboard     *Dashboard
+	Classroom     *Classroom
+	Progress      *Progress
+	Flashcard     *FlashcardHandler
+	Challenge     *ChallengeHandler
+	ProfileWrite  *ProfileWriteHandler
+	AI            *AIHandler
+	DebugDatabase http.HandlerFunc
+}
+
+var deps Dependencies
+
+func SetDependencies(next Dependencies) {
+	deps = next
+}
+
+func RegisterRoutes(router *gin.Engine) {
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
+	api := router.Group("/api/v1")
+
+	// ── Public auth routes (no token required) ──────────────────────────
+	api.POST("/auth/register", deps.Auth.Register)
+	api.POST("/auth/login", deps.Auth.Login)
+
+	// ── JWT-authenticated routes ────────────────────────────────────────
+	authed := api.Group("")
+	authed.Use(middleware.JWTAuth(deps.JWTSecret))
+	{
+		authed.GET("/auth/me", deps.Auth.Me)
+		authed.POST("/auth/role", deps.Auth.UpdateRole)
+	}
+
+	// ── Internal auth routes (Next.js bridge — migration compatibility) ─
+	internal := api.Group("")
+	internal.Use(middleware.InternalAuth(deps.InternalAPIToken))
+	{
+		internal.GET("/leaderboard", wrapHTTP(deps.Leaderboard.GetLeaderboard))
+		internal.GET("/me", wrapHTTP(deps.Profile.GetMe))
+		internal.GET("/sets/overview", wrapHTTP(deps.Set.GetOverview))
+		internal.GET("/dashboard/teacher", wrapHTTP(deps.Dashboard.GetTeacherSummary))
+		internal.GET("/dashboard/student", wrapHTTP(deps.Dashboard.GetStudentSummary))
+		internal.GET("/classroom/owned-groups", wrapHTTP(deps.Classroom.GetOwnedGroups))
+		internal.GET("/classroom/available-sets", wrapHTTP(deps.Classroom.GetAvailableSets))
+		internal.GET("/classroom/my-challenges", wrapHTTP(deps.Classroom.GetMyChallenges))
+		internal.GET("/classroom/groups/:groupID", wrapHTTP(deps.Classroom.GetTeacherClassroomDetail))
+		internal.POST("/classroom/groups", wrapHTTP(deps.Classroom.CreateGroup))
+		internal.POST("/classroom/join-by-code", wrapHTTP(deps.Classroom.JoinByCode))
+		internal.POST("/classroom/assign-set", wrapHTTP(deps.Classroom.AssignSet))
+		internal.POST("/classroom/challenges", wrapHTTP(deps.Classroom.CreateChallenge))
+		internal.POST("/classroom/challenges/join", wrapHTTP(deps.Classroom.JoinChallenge))
+
+		internal.POST("/progress/session", wrapHTTP(deps.Progress.SaveSession))
+		internal.GET("/progress/stats", wrapHTTP(deps.Progress.GetStats))
+		internal.POST("/progress/toggle-weak", wrapHTTP(deps.Progress.ToggleWeak))
+
+		internal.GET("/pomodoro/preferences", wrapHTTP(deps.Progress.GetPomodoro))
+		internal.POST("/pomodoro/preferences", wrapHTTP(deps.Progress.SavePomodoro))
+		internal.POST("/pomodoro/session", wrapHTTP(deps.Progress.SavePomodoroSession))
+
+		internal.POST("/sets", wrapHTTP(deps.Flashcard.CreateSet))
+		internal.GET("/sets/:setID", wrapHTTP(deps.Flashcard.GetSet))
+		internal.PUT("/sets/:setID", wrapHTTP(deps.Flashcard.UpdateSet))
+		internal.DELETE("/sets/:setID", wrapHTTP(deps.Flashcard.DeleteSet))
+
+		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
+		internal.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))
+		internal.POST("/challenges/class-attempt", wrapHTTP(deps.Challenge.SaveClassAttempt))
+
+		internal.POST("/profile/role", wrapHTTP(deps.ProfileWrite.UpdateRole))
+		internal.POST("/ai/generate", wrapHTTP(deps.AI.Generate))
+	}
+
+	// ── Public read routes ──────────────────────────────────────────────
+	api.GET("/leaderboard", func(c *gin.Context) {
+		middleware.OptionalJWTAuth(deps.JWTSecret)(c)
+		if !c.IsAborted() {
+			wrapHTTP(deps.Leaderboard.GetLeaderboard)(c)
+		}
+	})
+	api.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))
+
+	if deps.Environment == "development" && deps.DebugDatabase != nil {
+		router.GET("/debug/db", wrapHTTP(deps.DebugDatabase))
+	}
+}
+
+func wrapHTTP(next http.HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		req := cloneRequestWithParams(c)
+		next(c.Writer, req)
+	}
+}
+
+func cloneRequestWithParams(c *gin.Context) *http.Request {
+	req := c.Request.Clone(c.Request.Context())
+	for _, param := range c.Params {
+		req.SetPathValue(param.Key, param.Value)
+	}
+	return req
+}

@@ -10,15 +10,15 @@ import (
 
 // Config holds all runtime configuration.
 type Config struct {
-	Port              string
-	DatabaseURL       string
-	SupabaseJWTSecret string
-	CORSOrigins       []string
-	InternalAPIToken  string
-	Environment       string // "development" | "production"
-	GeminiAPIKey      string
-	GeminiModel       string
-	MaxUploadBytes    int64
+	Port             string
+	DatabaseURL      string
+	JWTSecret        string // For signing/verifying our own JWTs (replaces Supabase auth)
+	CORSOrigins      []string
+	InternalAPIToken string
+	Environment      string // "development" | "production"
+	GeminiAPIKey     string
+	GeminiModel      string
+	MaxUploadBytes   int64
 }
 
 // Load reads environment variables (with optional .env file) and returns Config.
@@ -27,9 +27,9 @@ func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		Port:              getEnv("PORT", "8080"),
+		Port:              getEnv("PORT", "5000"),
 		DatabaseURL:       os.Getenv("DATABASE_URL"),
-		SupabaseJWTSecret: os.Getenv("SUPABASE_JWT_SECRET"),
+		JWTSecret:         getEnv("JWT_SECRET", "change-me-in-production"),
 		InternalAPIToken:  os.Getenv("BACKEND_INTERNAL_TOKEN"),
 		Environment:       getEnv("ENVIRONMENT", "development"),
 		GeminiAPIKey:      os.Getenv("GEMINI_API_KEY"),
