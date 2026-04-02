@@ -39,4 +39,6 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+# outputFileTracingRoot nests the server under a subdirectory.
+# Find server.js wherever it is.
+CMD ["sh", "-c", "node $(find /app -name server.js -maxdepth 3 | head -1)"]
