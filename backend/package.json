@@ -1,0 +1,9 @@
+{
+  "name": "studywithraissov-backend",
+  "private": true,
+  "scripts": {
+    "dev": "mkdir -p ./.cache/go-build && GOTOOLCHAIN=local GOCACHE=$PWD/.cache/go-build go run ./cmd",
+    "build": "mkdir -p ./bin ./.cache/go-build && GOTOOLCHAIN=local GOCACHE=$PWD/.cache/go-build go build -o ./bin/server ./cmd",
+    "migrate": "mkdir -p ./.cache/go-build && GOTOOLCHAIN=local GOCACHE=$PWD/.cache/go-build go run ./cmd/migrate"
+  }
+}

@@ -1,11 +1,16 @@
 import "server-only";
 
-import { createServerClient } from "@supabase/ssr";
+/**
+ * Auth/profile module — calls the Go backend instead of Supabase.
+ *
+ * This file keeps the same exports as the old Supabase version so all
+ * pages/actions that import from "@/server/supabase/server" keep working.
+ * TODO: Rename this path to "@/server/auth" once migration is complete.
+ */
+
 import { cookies } from "next/headers";
-import type { User } from "@supabase/supabase-js";
-import type { Database, Profile, ProfileRole } from "@/lib/shared/types/database";
-import { getSupabaseEnv, getSupabaseEnvSafe } from "@/lib/shared/config/supabase";
-import { getCurrentProfileFromGo } from "@/server/integrations/go-backend/profile";
+import type { Profile, ProfileRole } from "@/lib/shared/types/database";
+import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { isGoBackendBridgeConfigured } from "@/server/integrations/go-backend/env";
 import {
   ADMIN_COOKIE_NAME,
@@ -14,57 +19,138 @@ import {
 } from "@/lib/shared/auth/admin";
 import { DEV_MODE, DEV_USER } from "@/lib/shared/auth/dev-mode";
 
-type TableError = { message: string } | null;
+// ── Constants ──────────────────────────────────────────────────────────────
 
-type ProfilesTable = {
-  upsert: (
-    values: Database["public"]["Tables"]["profiles"]["Insert"],
-    options?: { onConflict?: string }
-  ) => Promise<{ error: TableError }>;
-  insert: (
-    values: Database["public"]["Tables"]["profiles"]["Insert"]
-  ) => Promise<{ error: TableError }>;
-  select: (columns: string) => {
-    eq: (column: string, value: string) => {
-      maybeSingle: () => Promise<{ data: Profile | null }>;
-    };
+const VALID_ROLES = new Set<ProfileRole>(["student", "teacher"]);
+const TOKEN_COOKIE = "swr_token";
+
+// ── User type (matches Go backend /auth/me response) ───────────────────────
+
+type BackendUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  username: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  role: ProfileRole;
+  streakDays: number;
+  points: number;
+  lastActiveDate: string | null;
+  createdAt: string;
+};
+
+// ── Compat type: pages expect this shape from getCurrentUser() ─────────────
+
+type AppUser = {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    username?: string;
+    role?: string;
   };
-  update: (
-    values: Database["public"]["Tables"]["profiles"]["Update"]
-  ) => {
-    eq: (column: string, value: string) => Promise<{ error: TableError }>;
+  app_metadata?: {
+    provider?: string;
   };
 };
 
-const VALID_ROLES = new Set<ProfileRole>(["student", "teacher"]);
+// ── Token management ───────────────────────────────────────────────────────
 
-function getAuthProvider(
-  user:
-    | (Pick<User, "id" | "email"> & {
-        app_metadata?: User["app_metadata"];
-        user_metadata?: User["user_metadata"];
-      })
-    | null
-    | undefined
-) {
-  const provider =
-    typeof user?.app_metadata?.provider === "string"
-      ? user.app_metadata.provider
-      : null;
-
-  return provider;
+export async function getAuthToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get(TOKEN_COOKIE)?.value ?? null;
 }
 
-function getRoleFromMetadata(
-  user:
-    | (Pick<User, "id" | "email"> & { user_metadata?: User["user_metadata"] })
-    | null
-    | undefined
-): ProfileRole | null {
-  const role =
-    typeof user?.user_metadata?.role === "string" ? user.user_metadata.role : null;
-  return role && VALID_ROLES.has(role as ProfileRole) ? (role as ProfileRole) : null;
+export async function setAuthToken(token: string) {
+  const cookieStore = await cookies();
+  cookieStore.set(TOKEN_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60, // 7 days (matches JWT expiry)
+  });
 }
+
+export async function clearAuthToken() {
+  const cookieStore = await cookies();
+  cookieStore.set(TOKEN_COOKIE, "", { maxAge: 0, path: "/" });
+}
+
+// ── getCurrentUser ─────────────────────────────────────────────────────────
+
+export async function getCurrentUser(): Promise<AppUser | null> {
+  if (DEV_MODE) {
+    return DEV_USER as unknown as AppUser;
+  }
+
+  const cookieStore = await cookies();
+  if (isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME))) {
+    return ADMIN_USER as unknown as AppUser;
+  }
+
+  const token = await getAuthToken();
+  if (!token) return null;
+
+  if (!isGoBackendBridgeConfigured()) return null;
+
+  try {
+    const user = await fetchBackendJson<BackendUser>({
+      path: "/api/v1/auth/me",
+      userId: "",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      user_metadata: {
+        full_name: user.fullName,
+        username: user.username,
+        role: user.role,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ── getCurrentProfile ──────────────────────────────────────────────────────
+
+export async function getCurrentProfile(
+  _preloadedUser?: Awaited<ReturnType<typeof getCurrentUser>>
+): Promise<Profile | null> {
+  const token = await getAuthToken();
+  if (!token) return null;
+  if (!isGoBackendBridgeConfigured()) return null;
+
+  try {
+    const user = await fetchBackendJson<BackendUser>({
+      path: "/api/v1/auth/me",
+      userId: "",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      full_name: user.fullName,
+      username: user.username,
+      avatar_url: user.avatarUrl ?? null,
+      bio: user.bio ?? null,
+      role: user.role as ProfileRole,
+      streak_days: user.streakDays,
+      points: user.points,
+      last_active_date: user.lastActiveDate ?? null,
+      created_at: user.createdAt,
+    } as Profile;
+  } catch {
+    return null;
+  }
+}
+
+// ── Role helpers ───────────────────────────────────────────────────────────
 
 export function getDefaultAppRoute(role: ProfileRole) {
   return role === "teacher" ? "/teacher/dashboard" : "/student/dashboard";
@@ -74,275 +160,13 @@ export function getRoleRegistrationRedirect(role: ProfileRole) {
   return role === "teacher" ? "/teacher" : "/student";
 }
 
-export async function createClient() {
-  const { url, anonKey } = getSupabaseEnv();
-  if (!url || !anonKey) {
-    // Supabase not configured — return a dummy client that won't crash
-    // but will fail gracefully on any query. During migration to Go backend,
-    // callers should check isSupabaseConfigured() or use the Go bridge.
-    return createServerClient<Database>("https://placeholder.supabase.co", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIn0.placeholder", {
-      cookies: { getAll: () => [], setAll: () => {} },
-    });
-  }
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(url, anonKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
-        } catch {
-          // The `setAll` method is called from a Server Component.
-          // This can be ignored if middleware refreshes user sessions.
-        }
-      },
-    },
-  });
-}
-
-export async function getCurrentUser() {
-  if (DEV_MODE) {
-    return DEV_USER;
-  }
-
-  const cookieStore = await cookies();
-  if (isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME))) {
-    return ADMIN_USER;
-  }
-
-  const env = getSupabaseEnvSafe();
-  if (!env) {
-    return null;
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  return user;
-}
-
-export async function ensureProfile(
-  user:
-    | (Pick<User, "id" | "email"> & {
-        user_metadata?: User["user_metadata"];
-        app_metadata?: User["app_metadata"];
-      })
-    | null
-    | undefined,
-  roleOverride?: ProfileRole
-) {
-  if (!user || DEV_MODE || user.email === ADMIN_USER.email) {
-    return;
-  }
-
-  const supabase = await createClient();
-  const profilesTable = supabase.from("profiles") as never as ProfilesTable;
-
-  // Check if profile already exists — if it does, don't overwrite anything
-  const { data: existing } = await profilesTable
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (existing) {
-    // Profile exists. Only update role if a new one is explicitly requested
-    // and the current one is missing.
-    if (roleOverride && !existing.role) {
-      await profilesTable.update({ role: roleOverride }).eq("id", user.id);
-    }
-    return;
-  }
-
-  // Profile does NOT exist — create it
-  const fullName =
-    typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()
-      ? user.user_metadata.full_name.trim()
-      : typeof user.user_metadata?.username === "string" && user.user_metadata.username.trim()
-        ? user.user_metadata.username.trim()
-        : user.email?.split("@")[0] ?? `user_${user.id.slice(0, 8)}`;
-  const username =
-    typeof user.user_metadata?.username === "string" && user.user_metadata.username.trim()
-      ? user.user_metadata.username.trim()
-      : fullName;
-  const metadataRole = getRoleFromMetadata(user);
-  const authProvider = getAuthProvider(user);
-  const role =
-    roleOverride ??
-    metadataRole ??
-    (authProvider === "google" ? "student" : undefined);
-
-  const { error } = await profilesTable.upsert(
-    {
-      id: user.id,
-      email: user.email ?? "",
-      full_name: fullName,
-      username,
-      streak_days: 0,
-      points: 0,
-      ...(role ? { role } : {}),
-    },
-    { onConflict: "id" }
-  );
-
-  if (error) {
-    console.error("[ensureProfile] Failed to create profile:", {
-      userId: user.id,
-      email: user.email,
-      role,
-      message: error.message,
-    });
-  }
-}
-
-export async function createProfileForSignup(params: {
-  user:
-    | (Pick<User, "id" | "email"> & { user_metadata?: User["user_metadata"] })
-    | null
-    | undefined;
-  email: string;
-  fullName: string;
-  username: string;
-  role: ProfileRole;
-}) {
-  const { user, email, fullName, username, role } = params;
-
-  if (!user || DEV_MODE || user.email === ADMIN_USER.email) {
-    return { error: null as string | null };
-  }
-
-  const supabase = await createClient();
-  const profilesTable = supabase.from("profiles") as never as ProfilesTable;
-  const payload: Database["public"]["Tables"]["profiles"]["Insert"] = {
-    id: user.id,
-    email,
-    full_name: fullName,
-    username,
-    role,
-    streak_days: 0,
-    points: 0,
-  };
-
-  const { error: insertError } = await profilesTable.insert(payload);
-  if (insertError && !insertError.message.toLowerCase().includes("duplicate")) {
-    const { error: upsertError } = await profilesTable.upsert(payload, {
-      onConflict: "id",
-    });
-    return { error: upsertError?.message ?? null };
-  }
-
-  return { error: null as string | null };
-}
-
-export async function upsertCurrentUserRole(role: ProfileRole) {
-  const user = await getCurrentUser();
-
-  if (!user || DEV_MODE || user.email === ADMIN_USER.email) {
-    return { error: "not-authenticated" as string | null };
-  }
-
-  const supabase = await createClient();
-  const profilesTable = supabase.from("profiles") as never as ProfilesTable;
-  const { data: existingProfile } = await profilesTable
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-  const userMetadata =
-    "user_metadata" in user && user.user_metadata && typeof user.user_metadata === "object"
-      ? (user.user_metadata as { full_name?: unknown; username?: unknown })
-      : null;
-
-  if (existingProfile) {
-    const { error } = await profilesTable.update({ role }).eq("id", user.id);
-    return { error: error?.message ?? null, user };
-  }
-
-  const fullName =
-    typeof userMetadata?.full_name === "string" && userMetadata.full_name.trim()
-      ? userMetadata.full_name.trim()
-      : typeof userMetadata?.username === "string" && userMetadata.username.trim()
-        ? userMetadata.username.trim()
-        : user.email?.split("@")[0] ?? `user_${user.id.slice(0, 8)}`;
-  const username =
-    typeof userMetadata?.username === "string" && userMetadata.username.trim()
-      ? userMetadata.username.trim()
-      : fullName;
-
-  const payload: Database["public"]["Tables"]["profiles"]["Insert"] = {
-    id: user.id,
-    email: user.email ?? "",
-    full_name: fullName,
-    username,
-    role,
-    streak_days: 0,
-    points: 0,
-    avatar_url: null,
-    bio: null,
-  };
-
-  const { error } = await profilesTable.upsert(payload, { onConflict: "id" });
-  return { error: error?.message ?? null, user };
-}
-
-/**
- * Accepts an optional pre-fetched user to avoid a duplicate getCurrentUser() call.
- * The dashboard already calls getCurrentUser() at the top level — pass it in.
- */
-export async function getCurrentProfile(
-  preloadedUser?: Awaited<ReturnType<typeof getCurrentUser>>
-): Promise<Profile | null> {
-  const user = preloadedUser ?? (await getCurrentUser());
-
-  if (!user || DEV_MODE || user.email === ADMIN_USER.email) {
-    return null;
-  }
-
-  if (isGoBackendBridgeConfigured()) {
-    try {
-      return await getCurrentProfileFromGo(user.id);
-    } catch (error) {
-      console.warn("[getCurrentProfile] Falling back to Supabase:", error);
-    }
-  }
-
-  const supabase = await createClient();
-  const profilesTable = supabase.from("profiles") as never as ProfilesTable;
-  const { data } = await profilesTable
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (data) {
-    return data;
-  }
-
-  await ensureProfile(user);
-
-  const { data: ensuredProfile } = await profilesTable
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  return ensuredProfile ?? null;
-}
-
 export async function getCurrentRole(
   preloadedUser?: Awaited<ReturnType<typeof getCurrentUser>>
 ): Promise<ProfileRole | null> {
   const user = preloadedUser ?? (await getCurrentUser());
-
-  if (!user) {
-    return null;
-  }
-
-  const profile = await getCurrentProfile(user);
-  return profile?.role ?? getRoleFromMetadata(user) ?? "student";
+  if (!user) return null;
+  const role = user.user_metadata?.role;
+  return role && VALID_ROLES.has(role as ProfileRole) ? (role as ProfileRole) : "student";
 }
 
 export async function getAppHomePath(
@@ -360,15 +184,100 @@ export async function requireRole(role: ProfileRole) {
   }
 
   const profile = await getCurrentProfile(user);
-  const currentRole = profile?.role ?? getRoleFromMetadata(user) ?? "student";
+  const currentRole = (profile?.role as ProfileRole) ?? "student";
 
   if (currentRole !== role) {
-    return {
-      user,
-      profile,
-      redirectTo: getDefaultAppRoute(currentRole),
-    };
+    return { user, profile, redirectTo: getDefaultAppRoute(currentRole) };
   }
 
   return { user, profile, redirectTo: null };
+}
+
+// ── ensureProfile (no-op during Go migration — Go handles this) ────────────
+
+export async function ensureProfile(
+  _user: unknown,
+  _roleOverride?: ProfileRole
+) {
+  // The Go backend creates profiles on register.
+  // This is a no-op shim for backward compatibility.
+}
+
+// ── createClient (stub — pages that still call supabase.from() will get null) ─
+
+export async function createClient() {
+  // Return a stub that won't crash but won't return data.
+  // Pages should use the Go backend bridge instead.
+  return {
+    from: (_table: string) => ({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({ data: null, error: { message: "Supabase removed — use Go backend" } }),
+          maybeSingle: async () => ({ data: null, error: null }),
+          order: () => ({
+            then: (resolve: (v: unknown) => void) => resolve({ data: [], error: null }),
+          }),
+        }),
+        in: () => ({
+          then: (resolve: (v: unknown) => void) => resolve({ data: [], error: null }),
+        }),
+        order: () => ({
+          eq: () => ({
+            then: (resolve: (v: unknown) => void) => resolve({ data: [], error: null }),
+          }),
+          then: (resolve: (v: unknown) => void) => resolve({ data: [], error: null }),
+        }),
+        then: (resolve: (v: unknown) => void) => resolve({ data: [], error: null }),
+      }),
+      insert: async () => ({ data: null, error: { message: "Supabase removed" } }),
+      update: () => ({ eq: async () => ({ error: { message: "Supabase removed" } }) }),
+      delete: () => ({ eq: async () => ({ error: { message: "Supabase removed" } }) }),
+      upsert: async () => ({ error: { message: "Supabase removed" } }),
+    }),
+    auth: {
+      getUser: async () => ({ data: { user: null }, error: null }),
+      signInWithPassword: async () => ({ data: { user: null, session: null }, error: { message: "Use Go backend /auth/login" } }),
+      signUp: async () => ({ data: { user: null, session: null }, error: { message: "Use Go backend /auth/register" } }),
+      signOut: async () => {},
+      signInWithOAuth: async () => ({ data: { url: null }, error: { message: "OAuth not available" } }),
+      updateUser: async () => ({ data: { user: null }, error: { message: "Use Go backend" } }),
+    },
+    rpc: async () => ({ error: { message: "Supabase removed" } }),
+  } as any; // eslint-disable-line
+}
+
+// ── upsertCurrentUserRole ──────────────────────────────────────────────────
+
+export async function upsertCurrentUserRole(role: ProfileRole) {
+  const token = await getAuthToken();
+  if (!token) return { error: "not-authenticated", user: null };
+
+  try {
+    await fetchBackendJson({
+      path: "/api/v1/auth/role",
+      userId: "",
+      method: "POST",
+      body: JSON.stringify({ role }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const user = await getCurrentUser();
+    return { error: null, user };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to update role", user: null };
+  }
+}
+
+// ── createProfileForSignup (handled by Go /auth/register now) ──────────────
+
+export async function createProfileForSignup(_params: {
+  user: unknown;
+  email: string;
+  fullName: string;
+  username: string;
+  role: ProfileRole;
+}) {
+  return { error: null as string | null };
 }
