@@ -184,10 +184,12 @@ export default async function LandingPage() {
 
       <header className="sticky top-4 z-50 px-4 sm:px-5">
         <div className="page-shell">
-          <div className="home-floating-nav flex items-center justify-between gap-3 rounded-[1.7rem] px-3 py-3 sm:px-4 lg:gap-4 lg:px-5">
-            <Link href="/" className="min-w-0 shrink-0">
-              <BrandLogo compact />
-            </Link>
+          <div className="home-floating-nav flex flex-col gap-3 rounded-[1.7rem] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4 lg:gap-4 lg:px-5">
+            <div className="flex min-w-0 items-center justify-between gap-3">
+              <Link href="/" className="min-w-0">
+                <BrandLogo compact className="min-w-0" />
+              </Link>
+            </div>
 
             <nav className="hidden min-w-0 items-center justify-center gap-1 rounded-full border border-white/6 bg-black/10 p-1 lg:flex">
               {sectionLinks.map((item) => (
@@ -201,8 +203,30 @@ export default async function LandingPage() {
               ))}
             </nav>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <Link href="/sets" className="hidden sm:block">
+            <div className="grid gap-2 sm:hidden">
+              <Link href="/signup">
+                <Button size="sm" className="w-full">
+                  {t("landing.signUp")}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+
+              <div className="grid grid-cols-2 gap-2">
+                <Link href="/login" className="min-w-0">
+                  <Button variant="ghost" size="sm" className="w-full px-3">
+                    {t("landing.logIn")}
+                  </Button>
+                </Link>
+                <Link href="/sets" className="min-w-0">
+                  <Button variant="outline" size="sm" className="w-full px-3">
+                    Library
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="hidden shrink-0 items-center gap-2 sm:flex">
+              <Link href="/sets">
                 <Button variant="outline" size="sm">
                   Explore library
                 </Button>

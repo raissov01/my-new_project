@@ -239,6 +239,7 @@ body {
 }
 
 .page-shell {
+  box-sizing: border-box;
   width: 100%;
   max-width: 80rem;
   margin-inline: auto;
