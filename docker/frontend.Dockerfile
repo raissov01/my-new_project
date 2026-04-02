@@ -31,14 +31,18 @@ ENV PORT=3000
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+# Copy the standalone output (server.js may be nested under app/ due to outputFileTracingRoot)
 COPY --from=builder /app/.next/standalone ./
+
+# Copy static assets and public files into BOTH possible locations
+# so they're found regardless of where server.js runs from
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./app/public
+COPY --from=builder /app/.next/static ./app/.next/static
 
 USER nextjs
 
 EXPOSE 3000
 
-# outputFileTracingRoot nests the server under a subdirectory.
-# Find server.js wherever it is.
 CMD ["sh", "-c", "node $(find /app -name server.js -maxdepth 3 | head -1)"]
