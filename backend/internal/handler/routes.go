@@ -13,6 +13,7 @@ type Dependencies struct {
 	Environment      string
 
 	Auth          *AuthHandler
+	GoogleOAuth   *GoogleOAuthHandler
 	Leaderboard   *Leaderboard
 	Profile       *Profile
 	Set           *Set
@@ -42,6 +43,8 @@ func RegisterRoutes(router *gin.Engine) {
 	// ── Public auth routes (no token required) ──────────────────────────
 	api.POST("/auth/register", deps.Auth.Register)
 	api.POST("/auth/login", deps.Auth.Login)
+	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
+	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
 
 	// ── JWT-authenticated routes ────────────────────────────────────────
 	authed := api.Group("")

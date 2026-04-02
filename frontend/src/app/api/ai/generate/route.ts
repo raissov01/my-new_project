@@ -1,0 +1,136 @@
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/server/auth";
+import { fetchBackendJson } from "@/server/integrations/go-backend/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const MAX_FILE_BYTES = 20 * 1024 * 1024;
+const MIN_TEXT_LENGTH = 50;
+
+type AIResponse = {
+  cards: Array<Record<string, unknown>>;
+  meta?: Record<string, unknown>;
+};
+
+function normalizeWhitespace(value: string) {
+  return value.replace(/\r/g, "\n").replace(/\n{3,}/g, "\n\n").replace(/[ \t]+/g, " ").trim();
+}
+
+function estimateChunkCount(text: string) {
+  return Math.max(1, Math.ceil(text.length / 6000));
+}
+
+async function extractTextFromPdf(file: File) {
+  const { default: pdf } = await import("pdf-parse");
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const result = await pdf(buffer);
+
+  return {
+    text: normalizeWhitespace(result.text ?? ""),
+    pageCount: typeof result.numpages === "number" ? result.numpages : null,
+  };
+}
+
+async function extractTextFromDocx(file: File) {
+  const mammoth = await import("mammoth");
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const result = await mammoth.extractRawText({ buffer });
+
+  return {
+    text: normalizeWhitespace(result.value ?? ""),
+    pageCount: null,
+  };
+}
+
+function badRequest(error: string, detail?: string, status = 400) {
+  return NextResponse.json(
+    { error, ...(detail ? { detail } : {}) },
+    { status }
+  );
+}
+
+export async function POST(request: Request) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return badRequest("NOT_AUTHENTICATED", "Login required.", 401);
+  }
+
+  const formData = await request.formData();
+  const file = formData.get("file");
+  const mode = String(formData.get("mode") ?? "generation").trim() || "generation";
+  const language = String(formData.get("language") ?? "kk").trim() || "kk";
+  const cardCountRaw = Number.parseInt(String(formData.get("cardCount") ?? "15"), 10);
+  const cardCount = Number.isFinite(cardCountRaw) ? cardCountRaw : 15;
+
+  if (!(file instanceof File)) {
+    return badRequest("NO_FILE", "No upload received.");
+  }
+
+  const lowerName = file.name.toLowerCase();
+  const isPdf = file.type === "application/pdf" || lowerName.endsWith(".pdf");
+  const isDocx =
+    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    lowerName.endsWith(".docx");
+
+  if (!isPdf && !isDocx) {
+    return badRequest("UNSUPPORTED_FILE_TYPE", "Only PDF and DOCX files are supported.");
+  }
+
+  if (file.size > MAX_FILE_BYTES) {
+    return badRequest("FILE_TOO_LARGE", "Maximum file size is 20 MB.");
+  }
+
+  let extracted: { text: string; pageCount: number | null };
+  try {
+    extracted = isPdf
+      ? await extractTextFromPdf(file)
+      : await extractTextFromDocx(file);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected AI request failure";
+
+    if (isPdf) {
+      return badRequest("PDF_EXTRACTION_FAILED", message, 500);
+    }
+    if (isDocx) {
+      return badRequest("DOCX_EXTRACTION_FAILED", message, 500);
+    }
+
+    return badRequest("GENERATION_FAILED", message, 500);
+  }
+
+  if (extracted.text.length < MIN_TEXT_LENGTH) {
+    return badRequest("INSUFFICIENT_TEXT", "Not enough readable text was found in the file.");
+  }
+
+  try {
+    const response = await fetchBackendJson<AIResponse>({
+      path: "/api/v1/ai/generate",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify({
+        text: extracted.text,
+        mode,
+        language,
+        cardCount,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeoutMs: 180_000,
+    });
+
+    return NextResponse.json({
+      ...response,
+      meta: {
+        ...(response.meta ?? {}),
+        fileName: file.name,
+        pageCount: extracted.pageCount,
+        chunkCount: estimateChunkCount(extracted.text),
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected AI request failure";
+    return badRequest("GENERATION_FAILED", message, 500);
+  }
+}

@@ -16,25 +16,36 @@ type Config struct {
 	CORSOrigins      []string
 	InternalAPIToken string
 	Environment      string // "development" | "production"
+	OpenAIAPIKey     string
+	OpenAIModel      string
 	GeminiAPIKey     string
 	GeminiModel      string
-	MaxUploadBytes   int64
+	MaxUploadBytes     int64
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURL  string
+	FrontendURL        string
 }
 
 // Load reads environment variables (with optional .env file) and returns Config.
 func Load() (*Config, error) {
-	// Best-effort .env load — ignore error (file may not exist in prod)
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		Port:              getEnv("PORT", "5000"),
-		DatabaseURL:       os.Getenv("DATABASE_URL"),
-		JWTSecret:         getEnv("JWT_SECRET", "change-me-in-production"),
-		InternalAPIToken:  os.Getenv("BACKEND_INTERNAL_TOKEN"),
-		Environment:       getEnv("ENVIRONMENT", "development"),
-		GeminiAPIKey:      os.Getenv("GEMINI_API_KEY"),
-		GeminiModel:       getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
-		MaxUploadBytes:    20 * 1024 * 1024, // 20 MB
+		Port:               getEnv("PORT", "5000"),
+		DatabaseURL:        os.Getenv("DATABASE_URL"),
+		JWTSecret:          getEnv("JWT_SECRET", "change-me-in-production"),
+		InternalAPIToken:   os.Getenv("BACKEND_INTERNAL_TOKEN"),
+		Environment:        getEnv("ENVIRONMENT", "development"),
+		OpenAIAPIKey:       os.Getenv("OPENAI_API_KEY"),
+		OpenAIModel:        getEnv("OPENAI_MODEL", "gpt-4o-mini"),
+		GeminiAPIKey:       os.Getenv("GEMINI_API_KEY"),
+		GeminiModel:        getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
+		MaxUploadBytes:     20 * 1024 * 1024,
+		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", "http://localhost:5000/api/v1/auth/google/callback"),
+		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:3000"),
 	}
 
 	// Parse CORS origins

@@ -14,13 +14,21 @@ import (
 )
 
 type AIHandler struct {
-	apiKey   string
-	model    string
-	maxBytes int64
+	openAIKey   string
+	openAIModel string
+	geminiKey   string
+	geminiModel string
+	maxBytes    int64
 }
 
-func NewAI(apiKey, model string, maxBytes int64) *AIHandler {
-	return &AIHandler{apiKey: apiKey, model: model, maxBytes: maxBytes}
+func NewAI(openAIKey, openAIModel, geminiKey, geminiModel string, maxBytes int64) *AIHandler {
+	return &AIHandler{
+		openAIKey:   openAIKey,
+		openAIModel: openAIModel,
+		geminiKey:   geminiKey,
+		geminiModel: geminiModel,
+		maxBytes:    maxBytes,
+	}
 }
 
 type generatedCard struct {
@@ -41,7 +49,7 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.apiKey == "" {
+	if strings.TrimSpace(h.openAIKey) == "" && strings.TrimSpace(h.geminiKey) == "" {
 		writeError(w, http.StatusServiceUnavailable, "AI is not configured", nil)
 		return
 	}
@@ -83,7 +91,7 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 	prompt := buildPrompt(text, req.Mode, req.Language, req.CardCount)
 
-	cards, err := callGemini(h.apiKey, h.model, prompt)
+	cards, modelName, err := h.generateCards(prompt)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, "AI generation failed: "+err.Error(), err)
 		return
@@ -91,8 +99,26 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"cards": cards,
-		"meta":  map[string]any{"model": h.model, "textLength": len(req.Text)},
+		"meta":  map[string]any{"model": modelName, "textLength": len(req.Text)},
 	})
+}
+
+func (h *AIHandler) generateCards(prompt string) ([]generatedCard, string, error) {
+	if strings.TrimSpace(h.openAIKey) != "" {
+		cards, err := callOpenAI(h.openAIKey, h.openAIModel, prompt)
+		if err == nil {
+			return cards, h.openAIModel, nil
+		}
+		if strings.TrimSpace(h.geminiKey) == "" {
+			return nil, "", err
+		}
+	}
+
+	cards, err := callGemini(h.geminiKey, h.geminiModel, prompt)
+	if err != nil {
+		return nil, "", err
+	}
+	return cards, h.geminiModel, nil
 }
 
 func buildPrompt(text, mode, language string, count int) string {
@@ -186,6 +212,92 @@ func callGemini(apiKey, model, prompt string) ([]generatedCard, error) {
 	}
 
 	// Filter valid cards
+	var valid []generatedCard
+	for _, c := range cards {
+		if strings.TrimSpace(c.Front) != "" && strings.TrimSpace(c.Back) != "" {
+			if c.Difficulty != "easy" && c.Difficulty != "medium" && c.Difficulty != "hard" {
+				c.Difficulty = "medium"
+			}
+			valid = append(valid, c)
+		}
+	}
+
+	return valid, nil
+}
+
+func callOpenAI(apiKey, model, prompt string) ([]generatedCard, error) {
+	body := map[string]any{
+		"model":        model,
+		"instructions": "Return only a JSON array of flashcards. Do not include markdown or commentary.",
+		"input":        prompt,
+		"text": map[string]any{
+			"format": map[string]any{
+				"type": "text",
+			},
+		},
+	}
+
+	bodyBytes, _ := json.Marshal(body)
+	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/responses", bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("build openai request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	client := &http.Client{Timeout: 45 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("openai request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		errBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 200)]))
+	}
+
+	var openAIResp struct {
+		Output []struct {
+			Content []struct {
+				Type string `json:"type"`
+				Text string `json:"text"`
+			} `json:"content"`
+		} `json:"output"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&openAIResp); err != nil {
+		return nil, fmt.Errorf("decode openai response: %w", err)
+	}
+
+	raw := ""
+	for _, item := range openAIResp.Output {
+		for _, part := range item.Content {
+			if part.Type == "output_text" && strings.TrimSpace(part.Text) != "" {
+				raw = part.Text
+				break
+			}
+		}
+		if raw != "" {
+			break
+		}
+	}
+
+	if raw == "" {
+		return nil, fmt.Errorf("openai returned empty output")
+	}
+
+	raw = strings.TrimSpace(raw)
+	raw = strings.TrimPrefix(raw, "```json")
+	raw = strings.TrimPrefix(raw, "```")
+	raw = strings.TrimSuffix(raw, "```")
+	raw = strings.TrimSpace(raw)
+
+	var cards []generatedCard
+	if err := json.Unmarshal([]byte(raw), &cards); err != nil {
+		return nil, fmt.Errorf("parse cards: %w", err)
+	}
+
 	var valid []generatedCard
 	for _, c := range cards {
 		if strings.TrimSpace(c.Front) != "" && strings.TrimSpace(c.Back) != "" {

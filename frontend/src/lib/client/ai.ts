@@ -2,20 +2,6 @@ const DEFAULT_AI_REQUEST_TIMEOUT_MS = 180_000;
 const MIN_AI_REQUEST_TIMEOUT_MS = 120_000;
 const MAX_AI_REQUEST_TIMEOUT_MS = 300_000;
 
-/**
- * Resolves the API base URL for client-side requests.
- *
- * - When NEXT_PUBLIC_API_URL is unset: uses "/api/v1" through the reverse proxy.
- * - When NEXT_PUBLIC_API_URL is set: uses that backend URL directly
- *   (for example "https://api.studywithraissov.com/api/v1").
- *
- * This keeps the frontend deployable behind the same domain or against a
- * separate backend host without code changes.
- */
-function getApiBase(): string {
-  return process.env.NEXT_PUBLIC_API_URL || "/api/v1";
-}
-
 export function estimateAIRequestTimeoutMs(fileSizeBytes: number) {
   const fileSizeMb = Math.max(1, Math.ceil(fileSizeBytes / (1024 * 1024)));
   const computedTimeout = DEFAULT_AI_REQUEST_TIMEOUT_MS + (fileSizeMb - 1) * 15_000;
@@ -43,7 +29,7 @@ export async function requestAIGeneration(
   );
 
   try {
-    const response = await fetch(`${getApiBase()}/ai/generate`, {
+    const response = await fetch("/api/ai/generate", {
       method: "POST",
       body: formData,
       signal: controller.signal,

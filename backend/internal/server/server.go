@@ -147,6 +147,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		JWTSecret:        cfg.JWTSecret,
 		Environment:      cfg.Environment,
 		Auth:             handler.NewAuth(gormDB, cfg.JWTSecret),
+		GoogleOAuth:      handler.NewGoogleOAuth(gormDB, cfg.JWTSecret, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.FrontendURL),
 		Leaderboard:      handler.NewLeaderboard(leaderboardSvc, cfg.Environment),
 		Profile:          handler.NewProfile(profileSvc, cfg.Environment),
 		Set:              handler.NewSet(setSvc, cfg.Environment),
@@ -156,7 +157,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Flashcard:        handler.NewFlashcard(flashcardSvc, cfg.Environment),
 		Challenge:        handler.NewChallengeHandler(challengeSvc, cfg.Environment),
 		ProfileWrite:     handler.NewProfileWrite(classroomRepo, cfg.Environment),
-		AI:               handler.NewAI(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.MaxUploadBytes),
+		AI:               handler.NewAI(cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.MaxUploadBytes),
 		DebugDatabase:    buildDebugDatabaseHandler(pool),
 	}
 }
