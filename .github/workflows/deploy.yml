@@ -21,7 +21,7 @@ jobs:
           host: 209.38.247.103
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
+          port: 22
           script_stop: true
           command_timeout: 10m
           script: |
@@ -29,23 +29,35 @@ jobs:
 
             cd /opt/studywithraissov
 
+            # Preserve env files across git reset
+            cp backend/.env /tmp/backend.env.bak 2>/dev/null || true
+            cp frontend/.env /tmp/frontend.env.bak 2>/dev/null || true
+
             # Pull latest code
             git fetch origin main
             git reset --hard origin/main
 
-            # Rebuild and restart containers
+            # Restore env files
+            cp /tmp/backend.env.bak backend/.env 2>/dev/null || true
+            cp /tmp/frontend.env.bak frontend/.env 2>/dev/null || true
+
+            # Rebuild and restart all containers (including Nginx)
+            docker compose -f docker/docker-compose.yml down --remove-orphans
             docker compose -f docker/docker-compose.yml up -d --build
 
             # Clean up dangling images
             docker image prune -f
 
-            # Verify everything is running
+            # Wait for services to be healthy
+            echo ""
+            echo "=== Waiting for services ==="
+            sleep 15
+
             echo ""
             echo "=== Container status ==="
             docker compose -f docker/docker-compose.yml ps
 
             echo ""
             echo "=== Health checks ==="
-            sleep 5
             curl -sf http://127.0.0.1:5000/health && echo " [backend OK]" || echo " [backend FAIL]"
-            curl -sf http://127.0.0.1:3000 > /dev/null && echo " [frontend OK]" || echo " [frontend FAIL]"
+            curl -sf -o /dev/null https://studywithraissov.com && echo " [site OK]" || echo " [site FAIL]"
