@@ -91,14 +91,8 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/ai/generate", wrapHTTP(deps.AI.Generate))
 	}
 
-	// ── Public read routes ──────────────────────────────────────────────
-	api.GET("/leaderboard", func(c *gin.Context) {
-		middleware.OptionalJWTAuth(deps.JWTSecret)(c)
-		if !c.IsAborted() {
-			wrapHTTP(deps.Leaderboard.GetLeaderboard)(c)
-		}
-	})
-	api.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))
+	// Public read routes are registered above in the internal group.
+	// They accept the internal token OR no auth (the handlers are permissive).
 
 	if deps.Environment == "development" && deps.DebugDatabase != nil {
 		router.GET("/debug/db", wrapHTTP(deps.DebugDatabase))
