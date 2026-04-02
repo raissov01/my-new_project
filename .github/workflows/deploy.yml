@@ -76,5 +76,5 @@ jobs:
 
             echo ""
             echo "=== Health checks ==="
-            curl -sf https://studywithraissov.com/api/v1/health && echo " [backend OK]" || echo " [backend FAIL]"
+            curl -sf https://studywithraissov.com/api/v1/leaderboard && echo " [backend OK]" || echo " [backend FAIL]"
             curl -sf -o /dev/null https://studywithraissov.com && echo " [site OK]" || echo " [site FAIL]"
