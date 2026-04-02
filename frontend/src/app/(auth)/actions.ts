@@ -108,12 +108,30 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   }
 }
 
-// ── Social OAuth (placeholder — will be added later) ───────────────────────
+// ── Google OAuth ───────────────────────────────────────────────────────────
 
 export async function socialLogin(
-  _provider: "google" | "apple"
+  provider: "google" | "apple"
 ): Promise<AuthResult> {
-  return { error: "Social login is being migrated. Please use email/password." };
+  if (provider !== "google") {
+    return { error: "Only Google login is supported." };
+  }
+
+  try {
+    const resp = await fetchBackendJson<{ url: string }>({
+      path: "/api/v1/auth/google",
+      userId: "",
+    });
+
+    if (resp.url) {
+      redirect(resp.url);
+    }
+
+    return { error: "Failed to get Google login URL." };
+  } catch (err) {
+    if (err && typeof err === "object" && "digest" in err) throw err;
+    return { error: err instanceof Error ? err.message : "Google login failed." };
+  }
 }
 
 // ── Logout ─────────────────────────────────────────────────────────────────
