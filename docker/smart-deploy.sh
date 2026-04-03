@@ -71,13 +71,20 @@ get_nginx_config_version() {
     | head -n 1
 }
 
+get_service_replicas() {
+  local service_name="$1"
+
+  docker service ls --format '{{.Name}} {{.Replicas}}' 2>/dev/null \
+    | awk -v service="$service_name" '$1 == service { print $2; exit }'
+}
+
 wait_for_service() {
   local service_name="$1"
   local expected="$2"
 
   for _attempt in $(seq 1 36); do
     local current
-    current="$(docker service inspect "$service_name" --format '{{.ServiceStatus.RunningTasks}}/{{if .Spec.Mode.Replicated}}{{.Spec.Mode.Replicated.Replicas}}{{else}}1{{end}}' 2>/dev/null || true)"
+    current="$(get_service_replicas "$service_name")"
     if [[ "$current" == "$expected" ]]; then
       return 0
     fi
@@ -326,7 +333,8 @@ docker stack services "$STACK_NAME"
 
 echo ""
 echo "=== Service tasks ==="
-docker stack ps "$STACK_NAME" --no-trunc | head -20
+STACK_PS_OUTPUT="$(docker stack ps "$STACK_NAME" --no-trunc 2>&1 || true)"
+printf '%s\n' "$STACK_PS_OUTPUT" | sed -n '1,20p'
 
 echo ""
 echo "=== Health checks ==="
