@@ -7,11 +7,14 @@ import {
   BookOpenText,
   Bot,
   CheckCircle2,
+  ClipboardCheck,
   Compass,
   LayoutDashboard,
   LibraryBig,
   MessageSquareQuote,
+  Mic,
   NotebookPen,
+  PenLine,
   ShieldCheck,
   Sparkles,
   Target,
@@ -40,16 +43,16 @@ export default async function LandingPage() {
   ];
 
   const ecosystemCards: Array<{ title: string; body: string; icon: LucideIcon; tone: string }> = [
-    { title: t("landing.ecoFlashcards"), body: t("landing.ecoFlashcardsBody"), icon: BookOpenText, tone: "from-indigo-500/20 to-blue-500/10" },
-    { title: t("landing.ecoQuizzes"), body: t("landing.ecoQuizzesBody"), icon: Target, tone: "from-cyan-500/18 to-sky-500/10" },
-    { title: t("landing.ecoLibrary"), body: t("landing.ecoLibraryBody"), icon: LibraryBig, tone: "from-violet-500/18 to-fuchsia-500/10" },
-    { title: t("landing.ecoClasses"), body: t("landing.ecoClassesBody"), icon: Users, tone: "from-emerald-500/18 to-teal-500/10" },
-    { title: t("landing.ecoProgress"), body: t("landing.ecoProgressBody"), icon: BarChart3, tone: "from-blue-500/18 to-indigo-500/10" },
-    { title: t("landing.ecoChallenges"), body: t("landing.ecoChallengesBody"), icon: Trophy, tone: "from-amber-500/18 to-orange-500/10" },
+    { title: t("ielts.simulatorTitle"), body: t("ielts.simulatorBody"), icon: ClipboardCheck, tone: "from-indigo-500/20 to-blue-500/10" },
+    { title: t("ielts.writingTitle"), body: t("ielts.writingBody"), icon: PenLine, tone: "from-emerald-500/18 to-teal-500/10" },
+    { title: t("ielts.speakingTitle"), body: t("ielts.speakingBody"), icon: Mic, tone: "from-violet-500/18 to-fuchsia-500/10" },
+    { title: t("ielts.materialsTitle"), body: t("ielts.materialsBody"), icon: BookOpenText, tone: "from-cyan-500/18 to-sky-500/10" },
+    { title: t("ielts.tipsTitle"), body: t("ielts.tipsBody"), icon: Target, tone: "from-amber-500/18 to-orange-500/10" },
+    { title: t("landing.ecoFlashcards"), body: t("landing.ecoFlashcardsBody"), icon: LibraryBig, tone: "from-blue-500/18 to-indigo-500/10" },
     { title: t("landing.ecoAI"), body: t("landing.ecoAIBody"), icon: Bot, tone: "from-fuchsia-500/18 to-purple-500/10" },
-    { title: t("landing.ecoNotes"), body: t("landing.ecoNotesBody"), icon: NotebookPen, tone: "from-sky-500/18 to-cyan-500/10" },
-    { title: t("landing.ecoTeacher"), body: t("landing.ecoTeacherBody"), icon: ShieldCheck, tone: "from-emerald-500/18 to-lime-500/10" },
-    { title: t("landing.ecoStudent"), body: t("landing.ecoStudentBody"), icon: LayoutDashboard, tone: "from-indigo-500/18 to-violet-500/10" },
+    { title: t("landing.ecoProgress"), body: t("landing.ecoProgressBody"), icon: BarChart3, tone: "from-sky-500/18 to-cyan-500/10" },
+    { title: t("landing.ecoClasses"), body: t("landing.ecoClassesBody"), icon: Users, tone: "from-emerald-500/18 to-lime-500/10" },
+    { title: t("landing.ecoChallenges"), body: t("landing.ecoChallengesBody"), icon: Trophy, tone: "from-indigo-500/18 to-violet-500/10" },
   ];
 
   const previewColumns = [
@@ -205,13 +208,13 @@ export default async function LandingPage() {
                 </p>
 
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <Link href="/signup">
+                  <Link href="/ielts">
                     <Button size="lg" className="w-full sm:w-auto">
                       {t("landing.startWorkspace")}
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link href="/sets">
+                  <Link href="/flashcards">
                     <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                       {t("landing.exploreLibrary")}
                     </Button>

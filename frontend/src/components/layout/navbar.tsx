@@ -13,7 +13,7 @@ import {
   UserCircle2,
   Settings,
   LibraryBig,
-  Layers3,
+  BookMarked,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -34,14 +34,14 @@ export function Navbar() {
     ? [
         { href: homeHref, label: t("nav.home"), icon: Home, exact: false },
         {
-          href: "/collections",
-          label: t("nav.myCollections"),
-          icon: Layers3,
-          exact: true,
+          href: "/ielts",
+          label: t("nav.ieltsPrep"),
+          icon: BookMarked,
+          exact: false,
         },
         {
-          href: "/sets",
-          label: t("nav.flashcardLibrary"),
+          href: "/flashcards",
+          label: t("nav.flashcards"),
           icon: LibraryBig,
           exact: false,
         },
@@ -50,15 +50,15 @@ export function Navbar() {
     : [
         { href: "/", label: t("nav.home"), icon: Home, exact: true },
         {
-          href: "/sets",
-          label: t("nav.flashcardLibrary"),
-          icon: LibraryBig,
+          href: "/ielts",
+          label: t("nav.ieltsPrep"),
+          icon: BookMarked,
           exact: false,
         },
         {
-          href: "/leaderboard",
-          label: t("nav.leaderboard"),
-          icon: Layers3,
+          href: "/flashcards",
+          label: t("nav.flashcards"),
+          icon: LibraryBig,
           exact: false,
         },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
@@ -127,15 +127,15 @@ export function Navbar() {
               ) : user ? (
                 <>
                   <Link
-                    href="/dashboard#study-today"
-                    className="inline-flex h-11 items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]"
+                    href="/ielts"
+                    className="inline-flex h-11 items-center rounded-2xl bg-[linear-gradient(135deg,var(--primary-from),var(--primary-to))] px-4 text-sm font-medium text-white shadow-[0_18px_34px_-24px_rgba(79,124,255,0.8)] transition-transform hover:-translate-y-0.5"
                   >
                     <GraduationCap className="mr-1.5 h-4 w-4" />
-                    {t("nav.startStudy")}
+                    {t("nav.ieltsPrep")}
                   </Link>
                   <Link
                     href="/sets/new"
-                    className="inline-flex h-11 items-center rounded-2xl bg-[linear-gradient(135deg,var(--primary-from),var(--primary-to))] px-4 text-sm font-medium text-white shadow-[0_18px_34px_-24px_rgba(79,124,255,0.8)] transition-transform hover:-translate-y-0.5"
+                    className="inline-flex h-11 items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]"
                   >
                     <Plus className="mr-1.5 h-4 w-4" />
                     {t("nav.newSet")}
@@ -146,19 +146,9 @@ export function Navbar() {
                 <>
                   {!DEV_MODE ? (
                     <>
-                      <Link href="/sets">
-                        <Button variant="outline">{t("guest.exploreLibrary")}</Button>
+                      <Link href="/ielts">
+                        <Button variant="outline">{t("nav.ieltsPrep")}</Button>
                       </Link>
-                      <AuthRequiredPrompt
-                        triggerLabel={t("nav.newSet")}
-                        title={t("guest.authRequiredTitle")}
-                        description={t("guest.createPrompt")}
-                        signupLabel={t("guest.signUpToContinue")}
-                        loginLabel={t("guest.logInToUnlock")}
-                        cancelLabel={t("set.cancel")}
-                        icon={<Plus className="h-4 w-4" />}
-                        variant="secondary"
-                      />
                       <Link
                         href="/login"
                         className="rounded-2xl px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
@@ -228,13 +218,6 @@ export function Navbar() {
                   {user && (
                     <>
                       <DrawerLink
-                        href="/dashboard#study-today"
-                        icon={GraduationCap}
-                        label={t("nav.startStudy")}
-                        active={false}
-                        onClick={() => setDrawerOpen(false)}
-                      />
-                      <DrawerLink
                         href="/sets/new"
                         icon={Plus}
                         label={t("nav.newSet")}
@@ -264,15 +247,6 @@ export function Navbar() {
 
                 {!user && !DEV_MODE && (
                   <div className="mt-5 space-y-2.5">
-                    <Link
-                      href="/sets"
-                      onClick={() => setDrawerOpen(false)}
-                      className="block"
-                    >
-                      <Button variant="outline" className="w-full">
-                        {t("guest.exploreLibrary")}
-                      </Button>
-                    </Link>
                     <Link
                       href="/login"
                       onClick={() => setDrawerOpen(false)}

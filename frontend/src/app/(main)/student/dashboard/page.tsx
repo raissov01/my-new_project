@@ -57,22 +57,22 @@ export default async function StudentDashboardPage() {
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href="/student/classes">
+              <Link href="/ielts">
                 <Button size="lg" className="w-full sm:w-auto">
+                  <GraduationCap className="h-4 w-4" />
+                  {t("nav.ieltsPrep")}
+                </Button>
+              </Link>
+              <Link href="/student/classes">
+                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                   <Users className="h-4 w-4" />
                   {t("student.openClasses")}
                 </Button>
               </Link>
-              <Link href="/student/challenges">
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                  <Trophy className="h-4 w-4" />
-                  {t("student.openChallenges")}
-                </Button>
-              </Link>
-              <Link href="/sets">
+              <Link href="/flashcards">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   <BookOpen className="h-4 w-4" />
-                  {t("nav.flashcardLibrary")}
+                  {t("nav.flashcards")}
                 </Button>
               </Link>
             </div>

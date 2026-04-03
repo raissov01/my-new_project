@@ -8,7 +8,10 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/classes/:path*",
+    "/collections/:path*",
     "/dashboard/:path*",
+    "/flashcards/:path*",
+    "/ielts/:path*",
     "/profile/:path*",
     "/sets/new",
     "/sets/:id/edit",
