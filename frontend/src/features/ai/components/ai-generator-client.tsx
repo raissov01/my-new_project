@@ -173,7 +173,7 @@ export function AIGeneratorClient() {
       formData.append("file", file);
       formData.append("mode", mode);
       formData.append("language", language);
-      formData.append("cardCount", "1000");
+      formData.append("cardCount", "600");
 
       // After a delay, update the message to show AI is working
       messageTimer = setTimeout(() => {

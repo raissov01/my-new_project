@@ -4,23 +4,26 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
 
 // Config holds all runtime configuration.
 type Config struct {
-	Port             string
-	DatabaseURL      string
-	JWTSecret        string
-	CORSOrigins      []string
-	InternalAPIToken string
-	Environment      string // "development" | "production"
-	OpenAIAPIKey     string
-	OpenAIModel      string
-	GeminiAPIKey     string
-	GeminiModel      string
+	Port               string
+	DatabaseURL        string
+	JWTSecret          string
+	CORSOrigins        []string
+	InternalAPIToken   string
+	Environment        string // "development" | "production"
+	OpenAIAPIKey       string
+	OpenAIModel        string
+	GeminiAPIKey       string
+	GeminiModel        string
+	AIRequestTimeout   time.Duration
 	MaxUploadBytes     int64
 	GoogleClientID     string
 	GoogleClientSecret string
@@ -42,6 +45,7 @@ func Load() (*Config, error) {
 		OpenAIModel:        getEnv("OPENAI_MODEL", "gpt-4o-mini"),
 		GeminiAPIKey:       os.Getenv("GEMINI_API_KEY"),
 		GeminiModel:        getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
+		AIRequestTimeout:   time.Duration(maxInt(getEnvInt("AI_REQUEST_TIMEOUT_SECONDS", 90), 30)) * time.Second,
 		MaxUploadBytes:     20 * 1024 * 1024,
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
@@ -70,6 +74,20 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+func getEnvInt(key string, fallback int) int {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback
+	}
+
+	value, err := strconv.Atoi(raw)
+	if err != nil {
+		return fallback
+	}
+
+	return value
+}
+
 func parseOrigins(raw string) []string {
 	parts := strings.Split(raw, ",")
 	origins := make([]string, 0, len(parts))
@@ -81,4 +99,11 @@ func parseOrigins(raw string) []string {
 		origins = append(origins, origin)
 	}
 	return origins
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

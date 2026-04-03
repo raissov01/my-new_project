@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "application/json",
       },
-      timeoutMs: 180_000,
+      timeoutMs: 600_000,
     });
 
     return NextResponse.json({

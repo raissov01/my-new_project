@@ -19,6 +19,7 @@ StudyWithRaissov is split into a dedicated Next.js frontend, a Go backend API, a
 │   ├── deploy.sh
 │   ├── docker-compose.yml
 │   ├── frontend.Dockerfile
+│   ├── smart-deploy.sh
 │   ├── nginx.conf
 │   └── nginx.host.conf
 ├── docs/
@@ -30,7 +31,9 @@ StudyWithRaissov is split into a dedicated Next.js frontend, a Go backend API, a
 │   ├── package.json
 │   ├── public/
 │   └── src/
-└── package.json
+├── package.json
+└── scripts/
+    └── detect-smart-deploy.sh
 ```
 
 ## Key Areas
@@ -51,7 +54,10 @@ StudyWithRaissov is split into a dedicated Next.js frontend, a Go backend API, a
   Go handlers, services, repositories, middleware, and models.
 
 - `docker/`
-  Compose, Dockerfiles, and Nginx config for local and production deployment.
+  Swarm/Compose deployment files, Dockerfiles, smart deploy scripts, and Nginx config.
+
+- `scripts/`
+  Repository automation, including change detection for the smart deploy workflow.
 
 ## Local Setup
 
@@ -80,4 +86,5 @@ npm run docker:down
 ## Deployment Docs
 
 - [deployment/overview.md](./deployment/overview.md)
+- [deployment/smart-deploy.md](./deployment/smart-deploy.md)
 - [deployment/vps.md](./deployment/vps.md)

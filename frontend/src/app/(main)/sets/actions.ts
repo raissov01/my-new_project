@@ -65,8 +65,9 @@ export async function createSet(
   const filledCards = sanitizeCards(cards);
   if (filledCards.length === 0) return { error: t("action.addOneFlashcard") };
 
+  let response: { id: string };
   try {
-    const response = await fetchBackendJson<{ id: string }>({
+    response = await fetchBackendJson<{ id: string }>({
       path: "/api/v1/sets",
       userId: user.id,
       method: "POST",
@@ -78,16 +79,17 @@ export async function createSet(
         invitedUsers: visibility.invitedUsers,
       }),
       headers: { "Content-Type": "application/json" },
+      timeoutMs: 180_000,
     });
-
-    revalidateTag("public-sets", "max");
-    revalidatePath("/dashboard");
-    revalidatePath("/sets");
-    redirect(`/sets/${response.id}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     return { error: formatBackendError(message, t) };
   }
+
+  revalidateTag("public-sets", "max");
+  revalidatePath("/dashboard");
+  revalidatePath("/sets");
+  redirect(`/sets/${response.id}`);
 }
 
 export async function updateSet(
@@ -116,12 +118,8 @@ export async function updateSet(
         invitedUsers: visibility.invitedUsers,
       }),
       headers: { "Content-Type": "application/json" },
+      timeoutMs: 180_000,
     });
-
-    revalidateTag("public-sets", "max");
-    revalidatePath("/dashboard");
-    revalidatePath(`/sets/${setId}`);
-    redirect(`/sets/${setId}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.includes("access denied")) {
@@ -129,6 +127,11 @@ export async function updateSet(
     }
     return { error: t("action.failedSaveCards") };
   }
+
+  revalidateTag("public-sets", "max");
+  revalidatePath("/dashboard");
+  revalidatePath(`/sets/${setId}`);
+  redirect(`/sets/${setId}`);
 }
 
 export async function deleteSet(setId: string): Promise<SetFormState> {

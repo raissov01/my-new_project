@@ -292,7 +292,7 @@ export function SetForm({
       formData.append("file", file);
       formData.append("mode", aiMode);
       formData.append("language", aiLanguage);
-      formData.append("cardCount", "1000");
+      formData.append("cardCount", "600");
 
       const { response, data } = await requestAIGeneration(formData, {
         timeoutMs: estimateAIRequestTimeoutMs(file.size),

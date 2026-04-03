@@ -2,9 +2,12 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,20 +17,31 @@ import (
 )
 
 type AIHandler struct {
-	openAIKey   string
-	openAIModel string
-	geminiKey   string
-	geminiModel string
-	maxBytes    int64
+	openAIKey      string
+	openAIModel    string
+	geminiKey      string
+	geminiModel    string
+	requestTimeout time.Duration
+	maxBytes       int64
 }
 
-func NewAI(openAIKey, openAIModel, geminiKey, geminiModel string, maxBytes int64) *AIHandler {
+const (
+	defaultAICardCount      = 15
+	minAICardCount          = 5
+	maxAICardCount          = 600
+	maxCardsPerAIBatch      = 50
+	defaultAITextLimitRunes = 30000
+	maxAITextLimitRunes     = 120000
+)
+
+func NewAI(openAIKey, openAIModel, geminiKey, geminiModel string, requestTimeout time.Duration, maxBytes int64) *AIHandler {
 	return &AIHandler{
-		openAIKey:   openAIKey,
-		openAIModel: openAIModel,
-		geminiKey:   geminiKey,
-		geminiModel: geminiModel,
-		maxBytes:    maxBytes,
+		openAIKey:      openAIKey,
+		openAIModel:    openAIModel,
+		geminiKey:      geminiKey,
+		geminiModel:    geminiModel,
+		requestTimeout: requestTimeout,
+		maxBytes:       maxBytes,
 	}
 }
 
@@ -70,11 +84,11 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.CardCount < 5 {
-		req.CardCount = 15
+	if req.CardCount < minAICardCount {
+		req.CardCount = defaultAICardCount
 	}
-	if req.CardCount > 50 {
-		req.CardCount = 50
+	if req.CardCount > maxAICardCount {
+		req.CardCount = maxAICardCount
 	}
 	if req.Mode == "" {
 		req.Mode = "mixed"
@@ -83,15 +97,9 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		req.Language = "kk"
 	}
 
-	// Truncate text
-	text := req.Text
-	if len(text) > 30000 {
-		text = text[:30000]
-	}
+	text := limitTextForGeneration(req.Text, req.CardCount)
 
-	prompt := buildPrompt(text, req.Mode, req.Language, req.CardCount)
-
-	cards, modelName, err := h.generateCards(prompt)
+	cards, modelName, err := h.generateCards(text, req.Mode, req.Language, req.CardCount)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, "AI generation failed: "+err.Error(), err)
 		return
@@ -103,9 +111,36 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *AIHandler) generateCards(prompt string) ([]generatedCard, string, error) {
+func (h *AIHandler) generateCards(text, mode, language string, count int) ([]generatedCard, string, error) {
+	batches := buildGenerationBatches(text, mode, language, count)
+	allCards := make([]generatedCard, 0, count)
+	modelName := ""
+
+	for _, batch := range batches {
+		cards, batchModel, err := h.generateBatch(batch)
+		if err != nil {
+			return nil, "", err
+		}
+		if modelName == "" {
+			modelName = batchModel
+		}
+		allCards = append(allCards, cards...)
+		if len(allCards) >= count {
+			break
+		}
+	}
+
+	allCards = dedupeCards(allCards, count)
+	if len(allCards) == 0 {
+		return nil, "", fmt.Errorf("no flashcards were generated")
+	}
+
+	return allCards, modelName, nil
+}
+
+func (h *AIHandler) generateBatch(prompt string) ([]generatedCard, string, error) {
 	if strings.TrimSpace(h.openAIKey) != "" {
-		cards, err := callOpenAI(h.openAIKey, h.openAIModel, prompt)
+		cards, err := callOpenAI(h.openAIKey, h.openAIModel, prompt, h.requestTimeout)
 		if err == nil {
 			return cards, h.openAIModel, nil
 		}
@@ -114,11 +149,127 @@ func (h *AIHandler) generateCards(prompt string) ([]generatedCard, string, error
 		}
 	}
 
-	cards, err := callGemini(h.geminiKey, h.geminiModel, prompt)
+	cards, err := callGemini(h.geminiKey, h.geminiModel, prompt, h.requestTimeout)
 	if err != nil {
 		return nil, "", err
 	}
 	return cards, h.geminiModel, nil
+}
+
+func buildGenerationBatches(text, mode, language string, count int) []string {
+	if count <= maxCardsPerAIBatch {
+		return []string{buildPrompt(text, mode, language, count)}
+	}
+
+	batchCount := (count + maxCardsPerAIBatch - 1) / maxCardsPerAIBatch
+	chunks := splitTextIntoChunks(text, batchCount)
+	batches := make([]string, 0, len(chunks))
+	remainingCards := count
+
+	for idx, chunk := range chunks {
+		remainingBatches := len(chunks) - idx
+		batchCards := (remainingCards + remainingBatches - 1) / remainingBatches
+		if batchCards > maxCardsPerAIBatch {
+			batchCards = maxCardsPerAIBatch
+		}
+		if batchCards < minAICardCount && remainingCards > minAICardCount {
+			batchCards = minAICardCount
+		}
+
+		batches = append(batches, buildPrompt(chunk, mode, language, batchCards))
+		remainingCards -= batchCards
+	}
+
+	return batches
+}
+
+func splitTextIntoChunks(text string, chunkCount int) []string {
+	if chunkCount <= 1 {
+		return []string{text}
+	}
+
+	runes := []rune(text)
+	if len(runes) == 0 {
+		return []string{text}
+	}
+
+	chunks := make([]string, 0, chunkCount)
+	start := 0
+	for i := 0; i < chunkCount && start < len(runes); i++ {
+		remainingRunes := len(runes) - start
+		remainingChunks := chunkCount - i
+		size := (remainingRunes + remainingChunks - 1) / remainingChunks
+		end := start + size
+		if end > len(runes) {
+			end = len(runes)
+		}
+		chunk := strings.TrimSpace(string(runes[start:end]))
+		if chunk != "" {
+			chunks = append(chunks, chunk)
+		}
+		start = end
+	}
+
+	if len(chunks) == 0 {
+		return []string{text}
+	}
+
+	return chunks
+}
+
+func limitTextForGeneration(text string, requestedCount int) string {
+	clean := strings.TrimSpace(text)
+	if clean == "" {
+		return ""
+	}
+
+	maxRunes := defaultAITextLimitRunes
+	if requestedCount > maxCardsPerAIBatch {
+		maxRunes = requestedCount * 200
+	}
+	if maxRunes > maxAITextLimitRunes {
+		maxRunes = maxAITextLimitRunes
+	}
+	if maxRunes < defaultAITextLimitRunes {
+		maxRunes = defaultAITextLimitRunes
+	}
+
+	runes := []rune(clean)
+	if len(runes) <= maxRunes {
+		return clean
+	}
+
+	return strings.TrimSpace(string(runes[:maxRunes]))
+}
+
+func dedupeCards(cards []generatedCard, limit int) []generatedCard {
+	seen := make(map[string]struct{}, len(cards))
+	deduped := make([]generatedCard, 0, min(limit, len(cards)))
+
+	for _, card := range cards {
+		front := strings.TrimSpace(card.Front)
+		back := strings.TrimSpace(card.Back)
+		if front == "" || back == "" {
+			continue
+		}
+
+		key := strings.ToLower(front) + "\x00" + strings.ToLower(back)
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+
+		if card.Difficulty != "easy" && card.Difficulty != "medium" && card.Difficulty != "hard" {
+			card.Difficulty = "medium"
+		}
+
+		deduped = append(deduped, card)
+		if len(deduped) >= limit {
+			break
+		}
+	}
+
+	return deduped
 }
 
 func buildPrompt(text, mode, language string, count int) string {
@@ -155,7 +306,7 @@ Text:
 %s`, count, langName, mi, text)
 }
 
-func callGemini(apiKey, model, prompt string) ([]generatedCard, error) {
+func callGemini(apiKey, model, prompt string, timeout time.Duration) ([]generatedCard, error) {
 	body := map[string]any{
 		"contents": []map[string]any{
 			{"parts": []map[string]string{{"text": prompt}}},
@@ -171,9 +322,12 @@ func callGemini(apiKey, model, prompt string) ([]generatedCard, error) {
 	bodyBytes, _ := json.Marshal(body)
 	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 
-	client := &http.Client{Timeout: 45 * time.Second}
+	client := &http.Client{Timeout: timeout}
 	resp, err := client.Post(url, "application/json", bytes.NewReader(bodyBytes))
 	if err != nil {
+		if isTimeoutError(err) {
+			return nil, fmt.Errorf("gemini request timed out after %s: %w", timeout, err)
+		}
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
@@ -227,7 +381,7 @@ func callGemini(apiKey, model, prompt string) ([]generatedCard, error) {
 	return valid, nil
 }
 
-func callOpenAI(apiKey, model, prompt string) ([]generatedCard, error) {
+func callOpenAI(apiKey, model, prompt string, timeout time.Duration) ([]generatedCard, error) {
 	body := map[string]any{
 		"model":        model,
 		"instructions": "Return only a JSON array of flashcards. Do not include markdown or commentary.",
@@ -247,9 +401,12 @@ func callOpenAI(apiKey, model, prompt string) ([]generatedCard, error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 
-	client := &http.Client{Timeout: 45 * time.Second}
+	client := &http.Client{Timeout: timeout}
 	resp, err := client.Do(req)
 	if err != nil {
+		if isTimeoutError(err) {
+			return nil, fmt.Errorf("openai request timed out after %s: %w", timeout, err)
+		}
 		return nil, fmt.Errorf("openai request failed: %w", err)
 	}
 	defer resp.Body.Close()
@@ -311,6 +468,15 @@ func callOpenAI(apiKey, model, prompt string) ([]generatedCard, error) {
 	}
 
 	return valid, nil
+}
+
+func isTimeoutError(err error) bool {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+
+	var netErr net.Error
+	return errors.As(err, &netErr) && netErr.Timeout()
 }
 
 func min(a, b int) int {

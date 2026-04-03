@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   //   node .next/standalone/server.js
   output: "standalone",
   outputFileTracingRoot: workspaceRoot,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "8mb",
+    },
+  },
   turbopack: {
     root: workspaceRoot,
   },

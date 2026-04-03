@@ -10,10 +10,57 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy (Swarm)
+  detect:
+    name: Detect Deploy Scope
     runs-on: ubuntu-latest
+    outputs:
+      skip_deploy: ${{ steps.detect.outputs.skip_deploy }}
+      deploy_frontend: ${{ steps.detect.outputs.deploy_frontend }}
+      deploy_backend: ${{ steps.detect.outputs.deploy_backend }}
+      deploy_nginx: ${{ steps.detect.outputs.deploy_nginx }}
+      apply_stack: ${{ steps.detect.outputs.apply_stack }}
+      run_migrations: ${{ steps.detect.outputs.run_migrations }}
+      safe_fallback_full_deploy: ${{ steps.detect.outputs.safe_fallback_full_deploy }}
+      changed_files_b64: ${{ steps.detect.outputs.changed_files_b64 }}
+      summary_b64: ${{ steps.detect.outputs.summary_b64 }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      - name: Detect changed runtime areas
+        id: detect
+        run: |
+          chmod +x scripts/detect-smart-deploy.sh
+          bash scripts/detect-smart-deploy.sh \
+            --base "${{ github.event.before }}" \
+            --head "${{ github.sha }}" \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Publish deploy summary
+        run: |
+          {
+            echo "## Smart Deploy Decision"
+            echo
+            echo '```text'
+            printf '%s' '${{ steps.detect.outputs.summary_b64 }}' | base64 -d
+            echo
+            echo '```'
+            echo
+            echo "### Changed Files"
+            if [ -n '${{ steps.detect.outputs.changed_files_b64 }}' ]; then
+              printf '%s' '${{ steps.detect.outputs.changed_files_b64 }}' | base64 -d | sed 's/^/- /'
+            else
+              echo "- none"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy (Smart Swarm)
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.skip_deploy != 'true'
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -27,106 +74,28 @@ jobs:
           script: |
             set -euo pipefail
 
+            export DEPLOY_FRONTEND='${{ needs.detect.outputs.deploy_frontend }}'
+            export DEPLOY_BACKEND='${{ needs.detect.outputs.deploy_backend }}'
+            export DEPLOY_NGINX='${{ needs.detect.outputs.deploy_nginx }}'
+            export APPLY_STACK='${{ needs.detect.outputs.apply_stack }}'
+            export RUN_MIGRATIONS='${{ needs.detect.outputs.run_migrations }}'
+            export CHANGED_FILES_B64='${{ needs.detect.outputs.changed_files_b64 }}'
+            export DEPLOY_SUMMARY_B64='${{ needs.detect.outputs.summary_b64 }}'
+
             cd /opt/studywithraissov
 
-            # Preserve env files
-            cp backend/.env /tmp/backend.env.bak 2>/dev/null || true
-            cp frontend/.env /tmp/frontend.env.bak 2>/dev/null || true
+            BACKEND_ENV_BACKUP="$(mktemp /tmp/studywithraissov-backend-env.XXXXXX)"
+            FRONTEND_ENV_BACKUP="$(mktemp /tmp/studywithraissov-frontend-env.XXXXXX)"
 
-            # Pull latest code
+            cp backend/.env "$BACKEND_ENV_BACKUP" 2>/dev/null || true
+            cp frontend/.env "$FRONTEND_ENV_BACKUP" 2>/dev/null || true
+
             git fetch origin main
             git reset --hard origin/main
 
-            # Restore env files
-            cp /tmp/backend.env.bak backend/.env 2>/dev/null || true
-            cp /tmp/frontend.env.bak frontend/.env 2>/dev/null || true
+            cp "$BACKEND_ENV_BACKUP" backend/.env 2>/dev/null || true
+            cp "$FRONTEND_ENV_BACKUP" frontend/.env 2>/dev/null || true
+            rm -f "$BACKEND_ENV_BACKUP" "$FRONTEND_ENV_BACKUP"
 
-            # Initialize swarm if not already
-            docker swarm init 2>/dev/null || true
-
-            # Create secrets if they don't exist
-            if ! docker secret inspect postgres_password >/dev/null 2>&1; then
-              echo "changeme" | docker secret create postgres_password -
-            fi
-
-            # Export runtime/build variables from preserved env files
-            set -a
-            . frontend/.env
-            . backend/.env
-            STACK_DEPLOY_VERSION="$(date +%Y%m%d%H%M%S)-$(git rev-parse --short HEAD)"
-            BACKEND_IMAGE="swr-backend:${STACK_DEPLOY_VERSION}"
-            FRONTEND_IMAGE="swr-frontend:${STACK_DEPLOY_VERSION}"
-            export BACKEND_IMAGE
-            export FRONTEND_IMAGE
-            export STACK_DEPLOY_VERSION
-            set +a
-
-            DOCKER_BUILDKIT=1 docker build -t "$BACKEND_IMAGE" -f docker/backend.Dockerfile backend/
-            DOCKER_BUILDKIT=1 docker build \
-              --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
-              --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
-              -t "$FRONTEND_IMAGE" \
-              -f docker/frontend.Dockerfile \
-              frontend/
-
-            # Deploy/update the swarm stack with exported variables
-            docker stack deploy --resolve-image never -c docker/stack.yml swr
-
-            # Clean up old images
-            docker image prune -f
-
-            # Wait for services to settle
-            for attempt in $(seq 1 36); do
-              backend_replicas="$(docker service inspect swr_backend --format '{{.ServiceStatus.RunningTasks}}/{{.Spec.Mode.Replicated.Replicas}}' 2>/dev/null || true)"
-              frontend_replicas="$(docker service inspect swr_frontend --format '{{.ServiceStatus.RunningTasks}}/{{.Spec.Mode.Replicated.Replicas}}' 2>/dev/null || true)"
-              nginx_replicas="$(docker service inspect swr_nginx --format '{{.ServiceStatus.RunningTasks}}/{{if .Spec.Mode.Replicated}}{{.Spec.Mode.Replicated.Replicas}}{{else}}1{{end}}' 2>/dev/null || true)"
-              postgres_replicas="$(docker service inspect swr_postgres --format '{{.ServiceStatus.RunningTasks}}/{{if .Spec.Mode.Replicated}}{{.Spec.Mode.Replicated.Replicas}}{{else}}1{{end}}' 2>/dev/null || true)"
-
-              if [ "$backend_replicas" = "2/2" ] && [ "$frontend_replicas" = "2/2" ] && [ "$nginx_replicas" = "1/1" ] && [ "$postgres_replicas" = "1/1" ]; then
-                break
-              fi
-
-              sleep 5
-            done
-
-            echo ""
-            echo "=== Stack services ==="
-            docker stack services swr
-
-            echo ""
-            echo "=== Service tasks ==="
-            docker stack ps swr --no-trunc | head -20
-
-            echo ""
-            echo "=== Health checks ==="
-            backend_ok=0
-            site_ok=0
-
-            for attempt in $(seq 1 24); do
-              if curl -sf https://studywithraissov.com/health >/dev/null; then
-                backend_ok=1
-                break
-              fi
-              sleep 5
-            done
-
-            for attempt in $(seq 1 24); do
-              if curl -sf -o /dev/null https://studywithraissov.com; then
-                site_ok=1
-                break
-              fi
-              sleep 5
-            done
-
-            [ "$backend_ok" -eq 1 ] && echo " [backend OK]" || echo " [backend FAIL]"
-            [ "$site_ok" -eq 1 ] && echo " [site OK]" || echo " [site FAIL]"
-
-            if [ "$backend_ok" -ne 1 ] || [ "$site_ok" -ne 1 ]; then
-              echo ""
-              echo "=== Recent backend logs ==="
-              docker service logs swr_backend --tail 80 2>&1 || true
-              echo ""
-              echo "=== Recent nginx logs ==="
-              docker service logs swr_nginx --tail 80 2>&1 || true
-              exit 1
-            fi
+            chmod +x docker/smart-deploy.sh
+            bash docker/smart-deploy.sh

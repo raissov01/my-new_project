@@ -1,6 +1,6 @@
-const DEFAULT_AI_REQUEST_TIMEOUT_MS = 180_000;
-const MIN_AI_REQUEST_TIMEOUT_MS = 120_000;
-const MAX_AI_REQUEST_TIMEOUT_MS = 300_000;
+const DEFAULT_AI_REQUEST_TIMEOUT_MS = 420_000;
+const MIN_AI_REQUEST_TIMEOUT_MS = 300_000;
+const MAX_AI_REQUEST_TIMEOUT_MS = 600_000;
 
 export function estimateAIRequestTimeoutMs(fileSizeBytes: number) {
   const fileSizeMb = Math.max(1, Math.ceil(fileSizeBytes / (1024 * 1024)));

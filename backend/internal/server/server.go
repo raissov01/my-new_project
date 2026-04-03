@@ -66,7 +66,7 @@ func New(cfg *config.Config) (*Server, error) {
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
 		Handler:      buildHTTPHandler(cfg, router),
 		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 60 * time.Second,
+		WriteTimeout: 600 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
@@ -164,7 +164,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Flashcard:        handler.NewFlashcard(flashcardSvc, cfg.Environment),
 		Challenge:        handler.NewChallengeHandler(challengeSvc, cfg.Environment),
 		ProfileWrite:     handler.NewProfileWrite(classroomRepo, cfg.Environment),
-		AI:               handler.NewAI(cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.MaxUploadBytes),
+		AI:               handler.NewAI(cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.AIRequestTimeout, cfg.MaxUploadBytes),
 		DebugDatabase:    buildDebugDatabaseHandler(pool),
 	}
 }

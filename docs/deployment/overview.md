@@ -1,69 +1,48 @@
 # Deploy Notes
 
-## Recommended Hosting Setup
+## Production Architecture
 
-- Frontend: Next.js container in `frontend/`
-- Backend: Go API server in `backend/`
-- Reverse proxy / TLS: Nginx in `docker/`
-- Authentication and database: Go backend + PostgreSQL
-- Orchestration: Docker Compose
+- Orchestration: Docker Swarm
+- Frontend: Next.js service in `frontend/`
+- Backend: Go API service in `backend/`
+- Reverse proxy / TLS: Nginx container from `docker/nginx.conf`
+- Database: PostgreSQL service in the Swarm stack
+- CI/CD: GitHub Actions workflow in `.github/workflows/deploy.yml`
 
-## Before You Deploy
+## Current Production Flow
 
-Make sure these commands work locally:
+Production deploys happen on pushes to `main`.
+
+The workflow now uses a smart deploy pipeline:
+
+1. Detect which runtime areas changed.
+2. Skip deploy completely if only docs or deploy-tooling changed.
+3. Build and redeploy only the affected runtime services.
+4. Apply the Swarm stack only when stack-level runtime config changed.
+5. Run the dedicated migration step only when migration-related backend files changed.
+
+## Local Verification Before Push
 
 ```bash
 npm --prefix frontend run build
 npm --prefix backend run build
-npm run docker:up
 ```
 
-## Production Environment Files
+## Key Production Files
 
-Set production values in:
+- `.github/workflows/deploy.yml`
+- `scripts/detect-smart-deploy.sh`
+- `docker/smart-deploy.sh`
+- `docker/swarm-deploy.sh`
+- `docker/stack.yml`
 
-- `frontend/.env`
-- `backend/.env`
+## Manual Full Deploy
 
-Important variables:
-
-- `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_API_URL`
-- `BACKEND_URL`
-- `BACKEND_INTERNAL_TOKEN`
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `OPENAI_API_KEY`
-- `GEMINI_API_KEY`
-
-## DigitalOcean Deployment
-
-1. SSH into your droplet.
-2. Clone or update the repository on the server.
-3. Fill in `frontend/.env` and `backend/.env`.
-4. Run `npm run docker:up`.
-5. Verify the containers with `docker compose -f docker/docker-compose.yml ps`.
-6. Put SSL in front of the stack with certbot on the host, Cloudflare, or your preferred edge layer.
-
-## Database Setup After Deploy
-
-1. Provision PostgreSQL.
-2. Set `DATABASE_URL` in `backend/.env`.
-3. Run `npm --prefix backend run migrate` once if the database is empty.
-
-## Updating The App Later
+If you need a deliberate full Swarm rollout from the server:
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build
+cd /opt/studywithraissov
+bash docker/swarm-deploy.sh
 ```
 
-## AI Areas
-
-Frontend AI UI:
-
-- `frontend/src/features/ai/components/`
-- `frontend/src/lib/client/ai.ts`
-
-Backend AI processing:
-
-- `backend/internal/handler/ai.go`
+That wrapper now routes through the same smart deploy engine, but forces frontend, backend, nginx, stack apply, and migrations.

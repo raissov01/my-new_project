@@ -6,6 +6,7 @@
     "frontend:build": "npm --prefix frontend run build",
     "backend:dev": "npm --prefix backend run dev",
     "backend:build": "npm --prefix backend run build",
+    "deploy:detect": "bash scripts/detect-smart-deploy.sh --base HEAD^ --head HEAD",
     "docker:up": "docker compose --env-file frontend/.env --env-file backend/.env -f docker/docker-compose.yml up -d --build",
     "docker:down": "docker compose --env-file frontend/.env --env-file backend/.env -f docker/docker-compose.yml down",
     "docker:logs": "docker compose --env-file frontend/.env --env-file backend/.env -f docker/docker-compose.yml logs -f"
