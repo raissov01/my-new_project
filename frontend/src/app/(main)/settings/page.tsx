@@ -70,23 +70,24 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
+      {/* Header */}
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
           Workspace
         </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:mt-4 sm:text-4xl">
+        <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">
           {t("settings.title")}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
           {t("settings.subtitle")}
         </p>
 
         {feedback && (
           <div
-            className={`mt-6 rounded-2xl border px-4 py-3 text-sm ${
+            className={`mt-5 rounded-[var(--radius-lg)] border px-4 py-3 text-sm ${
               feedback.type === "error"
-                ? "border-red-500/20 bg-red-500/8 text-red-500 dark:text-red-300"
-                : "border-emerald-500/20 bg-emerald-500/8 text-emerald-600 dark:text-emerald-300"
+                ? "border-red-200 bg-[var(--danger-soft)] text-[var(--danger)] dark:border-red-500/20 dark:text-red-300"
+                : "border-emerald-200 bg-[var(--success-soft)] text-emerald-600 dark:border-emerald-500/20 dark:text-emerald-300"
             }`}
           >
             {feedback.text}
@@ -94,24 +95,25 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         )}
       </div>
 
-      <div className="mt-5 grid gap-4 sm:mt-8 sm:gap-6 xl:grid-cols-[1.05fr_1.2fr]">
-        <div className="space-y-4 sm:space-y-6">
-          <section className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+      <div className="mt-5 grid gap-4 sm:mt-8 sm:gap-5 xl:grid-cols-[1.05fr_1.2fr]">
+        <div className="space-y-4 sm:space-y-5">
+          {/* Account */}
+          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-[var(--bg-soft)] p-2.5 text-indigo-400 sm:p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-blue-500/10 text-blue-500">
                 <Mail className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
+                <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
                   {t("settings.account")}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
+                <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
                   {t("settings.accountDescription")}
                 </p>
               </div>
             </div>
 
-            <form action={updateEmail} className="mt-5 space-y-3.5 sm:mt-6 sm:space-y-4">
+            <form action={updateEmail} className="mt-5 space-y-3.5">
               <Input
                 name="email"
                 type="email"
@@ -122,16 +124,18 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <Button type="submit">{t("settings.updateEmail")}</Button>
             </form>
 
-            <form action={updatePassword} className="mt-5 space-y-3.5 border-t border-[var(--border)] pt-5 sm:mt-6 sm:space-y-4 sm:pt-6">
+            <div className="section-divider my-5" />
+
+            <form action={updatePassword} className="space-y-3.5">
               <div className="flex items-start gap-3">
-                <div className="rounded-2xl bg-[var(--bg-soft)] p-2.5 text-amber-400 sm:p-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-amber-500/10 text-amber-500">
                   <LockKeyhole className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-lg">
+                  <h3 className="text-base font-bold tracking-[-0.02em] text-[var(--text-primary)]">
                     {t("settings.changePassword")}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
+                  <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
                     {t("settings.passwordDescription")}
                   </p>
                 </div>
@@ -154,7 +158,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <Button type="submit">{t("settings.updatePassword")}</Button>
             </form>
 
-            <form action={logout} className="mt-5 border-t border-[var(--border)] pt-5 sm:mt-6 sm:pt-6">
+            <div className="section-divider my-5" />
+
+            <form action={logout}>
               <Button type="submit" variant="outline">
                 <LogOut className="h-4 w-4" />
                 {t("nav.logOut")}
@@ -162,63 +168,64 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             </form>
           </section>
 
-          {/* Role management */}
-          <section className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+          {/* Role */}
+          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-[var(--bg-soft)] p-2.5 text-violet-400 sm:p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-violet-500/10 text-violet-500">
                 <UserCog className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
+                <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
                   {t("settings.roleTitle")}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
+                <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
                   {t("settings.roleDescription")}
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 sm:mt-6">
+            <div className="mt-5">
               <RoleSection currentRole={(profile?.role as ProfileRole) ?? "student"} />
             </div>
           </section>
 
-          {/* Privacy & security */}
-          <section className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+          {/* Privacy */}
+          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-[var(--bg-soft)] p-2.5 text-slate-400 sm:p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-slate-500/10 text-slate-500">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
+                <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
                   {t("settings.privacySecurity")}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
+                <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
                   {t("settings.privacyDescription")}
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm text-[var(--text-secondary)] sm:mt-6">
-              <p>{profile?.username}</p>
+            <div className="mt-5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-4 text-sm text-[var(--text-secondary)]">
+              <p className="font-medium text-[var(--text-primary)]">{profile?.username}</p>
               <p className="mt-1">{user.email}</p>
             </div>
 
-            <div className="mt-5 sm:mt-6">
+            <div className="mt-5">
               <DeleteAccountSection />
             </div>
           </section>
         </div>
 
-        <section className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
-          <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
+        {/* Preferences */}
+        <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+          <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
             {t("settings.preferences")}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:leading-7">
+          <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
             {t("settings.preferencesDescription")}
           </p>
 
-          <div className="mt-5 sm:mt-6">
+          <div className="mt-5">
             <PreferencesPanel initialPomodoro={pomodoro} />
           </div>
         </section>

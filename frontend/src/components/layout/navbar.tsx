@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { AvatarMenu } from "@/components/layout/avatar-menu";
 import { BrandLogo } from "@/components/layout";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
-import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
+
 
 export function Navbar() {
   const { user, loading } = useAuth();
@@ -33,50 +33,26 @@ export function Navbar() {
   const userNavItems = user
     ? [
         { href: homeHref, label: t("nav.home"), icon: Home, exact: false },
-        {
-          href: "/ielts",
-          label: t("nav.ieltsPrep"),
-          icon: BookMarked,
-          exact: false,
-        },
-        {
-          href: "/flashcards",
-          label: t("nav.flashcards"),
-          icon: LibraryBig,
-          exact: false,
-        },
+        { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
+        { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
       ]
     : [
         { href: "/", label: t("nav.home"), icon: Home, exact: true },
-        {
-          href: "/ielts",
-          label: t("nav.ieltsPrep"),
-          icon: BookMarked,
-          exact: false,
-        },
-        {
-          href: "/flashcards",
-          label: t("nav.flashcards"),
-          icon: LibraryBig,
-          exact: false,
-        },
+        { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
+        { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
       ];
 
-  // Lock body scroll when drawer is open
   useEffect(() => {
     if (drawerOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
-  // Close drawer on Escape
   useEffect(() => {
     if (!drawerOpen) return;
     function handleEsc(e: KeyboardEvent) {
@@ -91,15 +67,12 @@ export function Navbar() {
       <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--glass-bg)] backdrop-blur-xl">
         <div className="page-shell">
           <div className="flex h-14 items-center justify-between gap-3 sm:h-16 sm:gap-4">
-            {/* Logo + nav links */}
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
-              <Link
-                href={homeHref}
-                className="shrink-0 rounded-2xl px-0.5 py-1 sm:px-1"
-              >
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <Link href={homeHref} className="shrink-0">
                 <BrandLogo compact />
               </Link>
-              <div className="hidden items-center gap-1 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-1 xl:flex">
+
+              <div className="hidden items-center gap-0.5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-1 xl:flex">
                 {userNavItems.map((item) => (
                   <DesktopNavLink
                     key={item.href}
@@ -110,35 +83,33 @@ export function Navbar() {
                   />
                 ))}
               </div>
+
               {DEV_MODE && (
-                <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-400">
+                <span className="badge-accent text-[10px] uppercase tracking-[0.14em]">
                   {t("nav.dev")}
                 </span>
               )}
             </div>
 
-            {/* Desktop actions */}
-            <div className="hidden items-center gap-3 lg:flex">
+            <div className="hidden items-center gap-2.5 lg:flex">
               {loading ? (
                 <>
-                  <div className="h-10 w-28 animate-pulse rounded-xl bg-[var(--border)]" />
-                  <div className="h-10 w-10 animate-pulse rounded-full bg-[var(--border)]" />
+                  <div className="h-10 w-28 animate-pulse rounded-[var(--radius-md)] bg-[var(--bg-muted)]" />
+                  <div className="h-10 w-10 animate-pulse rounded-full bg-[var(--bg-muted)]" />
                 </>
               ) : user ? (
                 <>
-                  <Link
-                    href="/ielts"
-                    className="inline-flex h-11 items-center rounded-2xl bg-[linear-gradient(135deg,var(--primary-from),var(--primary-to))] px-4 text-sm font-medium text-white shadow-[0_18px_34px_-24px_rgba(79,124,255,0.8)] transition-transform hover:-translate-y-0.5"
-                  >
-                    <GraduationCap className="mr-1.5 h-4 w-4" />
-                    {t("nav.ieltsPrep")}
+                  <Link href="/ielts">
+                    <Button size="sm">
+                      <GraduationCap className="h-4 w-4" />
+                      {t("nav.ieltsPrep")}
+                    </Button>
                   </Link>
-                  <Link
-                    href="/sets/new"
-                    className="inline-flex h-11 items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]"
-                  >
-                    <Plus className="mr-1.5 h-4 w-4" />
-                    {t("nav.newSet")}
+                  <Link href="/sets/new">
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4" />
+                      {t("nav.newSet")}
+                    </Button>
                   </Link>
                   <AvatarMenu />
                 </>
@@ -147,16 +118,16 @@ export function Navbar() {
                   {!DEV_MODE ? (
                     <>
                       <Link href="/ielts">
-                        <Button variant="outline">{t("nav.ieltsPrep")}</Button>
+                        <Button variant="outline" size="sm">{t("nav.ieltsPrep")}</Button>
                       </Link>
                       <Link
                         href="/login"
-                        className="rounded-2xl px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                        className="rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
                       >
                         {t("nav.logIn")}
                       </Link>
                       <Link href="/signup">
-                        <Button>{t("nav.signUp")}</Button>
+                        <Button size="sm">{t("nav.signUp")}</Button>
                       </Link>
                     </>
                   ) : null}
@@ -164,10 +135,9 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile: hamburger only */}
             <div className="flex items-center lg:hidden">
               <button
-                className="tap-target rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] shadow-[var(--surface-shadow)] transition-colors hover:text-[var(--text-primary)] active:scale-95 sm:p-2.5"
+                className="tap-target flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] shadow-[var(--shadow-xs)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
                 onClick={() => setDrawerOpen(true)}
                 aria-label={t("nav.toggleMenu")}
               >
@@ -178,23 +148,19 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile slide-in drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          {/* Drawer panel */}
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-[min(19rem,88vw)] animate-slide-in-drawer sm:max-w-[min(20rem,85vw)]">
-            <div className="flex h-full w-full flex-col border-l border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--surface-shadow-strong)]">
-              {/* Drawer header */}
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-[min(20rem,90vw)] animate-slide-in-drawer">
+            <div className="flex h-full w-full flex-col border-l border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)]">
               <div className="flex h-14 items-center justify-between border-b border-[var(--border)] px-4 sm:h-16 sm:px-5">
                 <BrandLogo compact />
                 <button
-                  className="tap-target rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
+                  className="tap-target flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
                   onClick={() => setDrawerOpen(false)}
                   aria-label={t("aria.closeMenu")}
                 >
@@ -202,9 +168,8 @@ export function Navbar() {
                 </button>
               </div>
 
-              {/* Drawer body */}
               <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   {userNavItems.map((item) => (
                     <DrawerLink
                       key={item.href}
@@ -225,7 +190,7 @@ export function Navbar() {
                         onClick={() => setDrawerOpen(false)}
                       />
 
-                      <div className="my-4 border-t border-[var(--border)]" />
+                      <div className="my-3 h-px bg-[var(--border)]" />
 
                       <DrawerLink
                         href="/profile"
@@ -247,27 +212,16 @@ export function Navbar() {
 
                 {!user && !DEV_MODE && (
                   <div className="mt-5 space-y-2.5">
-                    <Link
-                      href="/login"
-                      onClick={() => setDrawerOpen(false)}
-                      className="block"
-                    >
-                      <Button variant="outline" className="w-full">
-                        {t("nav.logIn")}
-                      </Button>
+                    <Link href="/login" onClick={() => setDrawerOpen(false)} className="block">
+                      <Button variant="outline" className="w-full">{t("nav.logIn")}</Button>
                     </Link>
-                    <Link
-                      href="/signup"
-                      onClick={() => setDrawerOpen(false)}
-                      className="block"
-                    >
+                    <Link href="/signup" onClick={() => setDrawerOpen(false)} className="block">
                       <Button className="w-full">{t("nav.signUp")}</Button>
                     </Link>
                   </div>
                 )}
               </div>
 
-              {/* Drawer footer - avatar menu area */}
               {user && (
                 <div className="safe-bottom border-t border-[var(--border)] px-4 py-4 sm:px-5">
                   <AvatarMenu />
@@ -302,9 +256,9 @@ function DesktopNavLink({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium tracking-[-0.01em] transition-all ${
+      className={`inline-flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-all ${
         active
-          ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--surface-shadow)]"
+          ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
           : "text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
       }`}
     >
@@ -332,13 +286,13 @@ function DrawerLink({
       href={href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`flex min-h-11 items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:bg-[var(--bg-surface)] ${
+      className={`flex min-h-11 items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3 text-sm font-medium transition-all active:bg-[var(--bg-soft)] ${
         active
-          ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] text-[var(--text-primary)]"
-          : "border-transparent text-[var(--text-primary)] hover:border-[var(--border)] hover:bg-[var(--bg-surface)]"
+          ? "bg-[var(--primary-soft)] text-[var(--primary)] border border-[rgba(37,99,235,0.15)]"
+          : "border border-transparent text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
       }`}
     >
-      <Icon className={`h-5 w-5 ${active ? "text-indigo-400" : "text-[var(--text-secondary)]"}`} />
+      <Icon className={`h-5 w-5 ${active ? "text-[var(--primary)]" : "text-[var(--text-secondary)]"}`} />
       {label}
     </Link>
   );

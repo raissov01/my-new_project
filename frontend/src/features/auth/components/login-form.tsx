@@ -57,12 +57,12 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
   const isDisabled = isPending || !!socialPending;
 
   return (
-    <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+    <div className="animate-scale-in rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-xl)] sm:p-8">
       <div className="mb-6 text-center sm:mb-8">
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] sm:h-12 sm:w-12">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
           <GoogleIcon className="h-5 w-5" />
         </div>
-        <h1 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:mt-5 sm:text-3xl">
+        <h1 className="mt-4 text-2xl font-bold tracking-[-0.03em] text-[var(--text-primary)] sm:mt-5 sm:text-3xl">
           {t("auth.welcomeBack")}
         </h1>
         <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
@@ -75,7 +75,7 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
           type="button"
           onClick={() => handleSocial("google")}
           disabled={isDisabled}
-          className="flex min-h-11 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12"
+          className="flex h-11 w-full items-center justify-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-semibold text-[var(--text-primary)] shadow-[var(--shadow-xs)] transition-all hover:bg-[var(--bg-soft)] hover:shadow-[var(--shadow-sm)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-12"
         >
           <GoogleIcon className="h-5 w-5" />
           {socialPending === "google" ? "..." : t("auth.continueWithGoogle")}
@@ -84,10 +84,10 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
 
       <div className="relative my-6 sm:my-7">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-[var(--border)]" />
+          <div className="section-divider w-full" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-[var(--bg-elevated)] px-3 text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
+          <span className="bg-[var(--bg-elevated)] px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
             {t("auth.orContinueWith")}
           </span>
         </div>
@@ -117,7 +117,7 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
         />
 
         {error && (
-          <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+          <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-200 bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)] dark:border-red-500/20 dark:text-red-300">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -128,9 +128,9 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
+      <p className="mt-6 text-center text-sm text-[var(--text-muted)] sm:mt-7">
         {t("auth.noAccount")}{" "}
-        <Link href="/signup" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
+        <Link href="/signup" className="font-semibold text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]">
           {t("auth.signUp")}
         </Link>
       </p>

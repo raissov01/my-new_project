@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GraduationCap, LibraryBig, Layers3, Plus, Search, Sparkles, Target } from "lucide-react";
+import { LibraryBig, Layers3, Plus, Search, Sparkles, Target } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
@@ -31,14 +31,16 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      {/* Header */}
+      <div className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">
+        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-[var(--primary)] opacity-[0.05]" style={{ filter: "blur(60px)" }} />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-300" />
+            <div className="badge-primary">
+              <Sparkles className="h-3.5 w-3.5" />
               {t("flashcards.eyebrow")}
             </div>
-            <h1 className="mt-4 text-3xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] sm:text-4xl">
+            <h1 className="mt-4 text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">
               {t("flashcards.title")}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
@@ -71,12 +73,12 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
       {/* Tab switcher + search */}
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {user && (
-          <div className="inline-flex rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-1">
+          <div className="inline-flex rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-1">
             <Link
               href="/flashcards?tab=my"
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-2 text-sm font-semibold transition-all ${
                 showMy
-                  ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--surface-shadow)]"
+                  ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
@@ -85,9 +87,9 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
             </Link>
             <Link
               href="/flashcards?tab=library"
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-2 text-sm font-semibold transition-all ${
                 !showMy
-                  ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--surface-shadow)]"
+                  ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
@@ -96,7 +98,7 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
             </Link>
           </div>
         )}
-        <form className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4">
+        <form className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 shadow-[var(--shadow-xs)]">
           <Search className="h-4 w-4 text-[var(--text-muted)]" />
           <input type="hidden" name="tab" value={tab} />
           <input
@@ -109,13 +111,13 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
         </form>
       </div>
 
-      {/* Results */}
-      <div className="mt-4 text-sm text-[var(--text-secondary)]">
+      {/* Results count */}
+      <div className="mt-4 text-sm font-medium text-[var(--text-secondary)]">
         {filtered.length} {filtered.length === 1 ? t("dashboard.set") : t("dashboard.sets")}
       </div>
 
       {filtered.length > 0 ? (
-        <div className="mt-4 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {filtered.map((set) => {
             const isOwner = Boolean(user && "userId" in set && set.userId === user.id);
             return (
@@ -137,9 +139,11 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
           })}
         </div>
       ) : (
-        <div className="mt-8 rounded-[1.8rem] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-16 text-center">
-          <Target className="mx-auto h-8 w-8 text-[var(--text-muted)]" />
-          <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">{t("sets.emptyTitle")}</h2>
+        <div className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-soft)] px-6 py-16 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--bg-muted)]">
+            <Target className="h-5 w-5 text-[var(--text-muted)]" />
+          </div>
+          <h2 className="mt-4 text-xl font-bold text-[var(--text-primary)]">{t("sets.emptyTitle")}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">{t("sets.emptyBody")}</p>
         </div>
       )}

@@ -9,11 +9,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className = "", label, error, id, ...props }, ref) => {
     return (
-      <div className="w-full space-y-1.5 sm:space-y-2">
+      <div className="w-full space-y-1.5">
         {label && (
           <label
             htmlFor={id}
-            className="block text-sm font-medium leading-6 tracking-[-0.01em] text-[var(--text-primary)]"
+            className="block text-sm font-medium text-[var(--text-primary)]"
           >
             {label}
           </label>
@@ -22,16 +22,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={id}
           className={cn(
-            "block min-h-11 w-full rounded-xl border bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all duration-200 placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:rounded-2xl sm:px-4",
+            "block h-11 w-full rounded-[var(--radius-md)] border bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] shadow-[var(--shadow-xs)] transition-all duration-200 placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:px-4",
             error
-              ? "border-red-400/70 focus:border-red-400 focus:ring-red-500/10"
+              ? "border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger-soft)]"
               : "border-[var(--border)]",
             className
           )}
           {...props}
         />
         {error && (
-          <p className="text-sm leading-6 text-red-500" role="alert">
+          <p className="text-sm text-[var(--danger)]" role="alert">
             {error}
           </p>
         )}
