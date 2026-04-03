@@ -43,9 +43,13 @@ BACKEND_INTERNAL_TOKEN=replace-with-a-long-random-secret
 PORT=5000
 ENVIRONMENT=production
 CORS_ORIGINS=https://studywithraissov.com
+FRONTEND_URL=https://studywithraissov.com
 DATABASE_URL=postgresql://...
 JWT_SECRET=replace-with-a-long-random-secret
 BACKEND_INTERNAL_TOKEN=replace-with-the-same-secret
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URL=https://studywithraissov.com/api/v1/auth/google/callback
 OPENAI_API_KEY=
 GEMINI_API_KEY=
 ```

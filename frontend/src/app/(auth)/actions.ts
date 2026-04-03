@@ -24,6 +24,20 @@ export type AuthResult = {
   message?: string | null;
 };
 
+function getPublicApiBaseUrl() {
+  const publicApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (publicApiUrl) {
+    return publicApiUrl.replace(/\/+$/, "");
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (appUrl) {
+    return `${appUrl.replace(/\/+$/, "")}/api/v1`;
+  }
+
+  return "/api/v1";
+}
+
 function friendlyError(rawMessage: string, t: (key: string) => string): string {
   const lower = rawMessage.toLowerCase();
   if (lower.includes("invalid") && (lower.includes("email") || lower.includes("password"))) return t("action.invalidCredentials");
@@ -118,16 +132,7 @@ export async function socialLogin(
   }
 
   try {
-    const resp = await fetchBackendJson<{ url: string }>({
-      path: "/api/v1/auth/google",
-      userId: "",
-    });
-
-    if (resp.url) {
-      redirect(resp.url);
-    }
-
-    return { error: "Failed to get Google login URL." };
+    redirect(`${getPublicApiBaseUrl()}/auth/google`);
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err) throw err;
     return { error: err instanceof Error ? err.message : "Google login failed." };

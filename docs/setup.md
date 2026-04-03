@@ -22,6 +22,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 BACKEND_URL=http://localhost:5000
 BACKEND_INTERNAL_TOKEN=replace-with-a-long-random-secret
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URL=http://localhost:5000/api/v1/auth/google/callback
 ```
 
 Edit `backend/.env`:
