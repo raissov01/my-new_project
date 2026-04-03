@@ -159,4 +159,5 @@ secrets:
 
 configs:
   nginx_conf:
+    name: swr_nginx_conf_${STACK_DEPLOY_VERSION:-latest}
     file: ./nginx.conf

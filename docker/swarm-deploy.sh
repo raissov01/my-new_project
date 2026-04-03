@@ -13,6 +13,8 @@ echo "=== Building images ==="
 set -a
 . frontend/.env
 . backend/.env
+STACK_DEPLOY_VERSION="$(date +%Y%m%d%H%M%S)-$(git rev-parse --short HEAD)"
+export STACK_DEPLOY_VERSION
 set +a
 
 mkdir -p .buildx-cache/backend-new
