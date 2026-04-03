@@ -10,12 +10,11 @@ import {
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GuestIELTSCta } from "@/features/auth/components/guest-ielts-cta";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { getCurrentUser } from "@/server/auth";
 
 export default async function IELTSHubPage() {
-  const user = await getCurrentUser();
   const locale = await getServerLocale();
   const t = createTranslator(locale);
 
@@ -129,25 +128,7 @@ export default async function IELTSHubPage() {
         })}
       </section>
 
-      {!user && (
-        <section className="mt-8 rounded-[1.75rem] border border-indigo-500/15 bg-indigo-500/5 p-6 text-center sm:p-8">
-          <Sparkles className="mx-auto h-8 w-8 text-indigo-400" />
-          <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)] sm:text-2xl">
-            {t("ielts.ctaTitle")}
-          </h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[var(--text-secondary)]">
-            {t("ielts.ctaBody")}
-          </p>
-          <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/signup">
-              <Button size="lg">{t("landing.signUp")}</Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline">{t("landing.logIn")}</Button>
-            </Link>
-          </div>
-        </section>
-      )}
+      <GuestIELTSCta />
     </div>
   );
 }
