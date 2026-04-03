@@ -22,7 +22,10 @@ function estimateChunkCount(text: string) {
 }
 
 async function extractTextFromPdf(file: File) {
-  const { default: pdf } = await import("pdf-parse");
+  // Import the parser implementation directly. The package root includes
+  // a debug-only side effect that can misfire under bundling in production.
+  const pdfModule = await import("pdf-parse/lib/pdf-parse.js");
+  const pdf = "default" in pdfModule ? pdfModule.default : pdfModule;
   const buffer = Buffer.from(await file.arrayBuffer());
   const result = await pdf(buffer);
 
