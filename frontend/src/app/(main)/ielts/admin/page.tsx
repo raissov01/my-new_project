@@ -1,15 +1,16 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/server/auth";
+import { cookies } from "next/headers";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
+import { isAdminSessionCookie, ADMIN_COOKIE_NAME } from "@/lib/shared/auth/admin";
 import { getMaterials } from "./actions";
 import { AdminPanelClient } from "./client";
 
 export default async function IELTSAdminPage() {
-  const user = await getCurrentUser();
-  const role = user?.user_metadata?.role;
+  const cookieStore = await cookies();
+  const isAdmin = isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME));
 
-  if (!user || role !== "teacher") {
+  if (!isAdmin) {
     redirect("/ielts");
   }
 

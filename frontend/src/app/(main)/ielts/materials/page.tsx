@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, BookOpen, BookOpenText, GraduationCap, Headphones, Languages, Lightbulb, Mic, PenLine, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cookies } from "next/headers";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { getCurrentUser } from "@/server/auth";
+import { isAdminSessionCookie, ADMIN_COOKIE_NAME } from "@/lib/shared/auth/admin";
 import { getMaterials, type IELTSMaterial } from "@/app/(main)/ielts/admin/actions";
 
 const categoryMeta = {
@@ -22,8 +23,8 @@ const typeMeta = {
 export default async function IELTSMaterialsPage() {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
-  const user = await getCurrentUser();
-  const isTeacher = user?.user_metadata?.role === "teacher";
+  const cookieStore = await cookies();
+  const isAdmin = isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME));
   const allMaterials = await getMaterials();
 
   // Group by category
@@ -53,7 +54,7 @@ export default async function IELTSMaterialsPage() {
           <ArrowLeft className="h-4 w-4" />
           {t("ielts.backToHub")}
         </Link>
-        {isTeacher && (
+        {isAdmin && (
           <Link href="/ielts/admin">
             <Button variant="outline" size="sm">
               <Settings className="h-4 w-4" />
