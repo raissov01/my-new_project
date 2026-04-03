@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getCurrentUser } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { DEV_MODE, DEV_USER } from "@/lib/shared/auth/dev-mode";
@@ -80,6 +80,7 @@ export async function createSet(
       headers: { "Content-Type": "application/json" },
     });
 
+    revalidateTag("public-sets", "max");
     revalidatePath("/dashboard");
     revalidatePath("/sets");
     redirect(`/sets/${response.id}`);
@@ -117,6 +118,7 @@ export async function updateSet(
       headers: { "Content-Type": "application/json" },
     });
 
+    revalidateTag("public-sets", "max");
     revalidatePath("/dashboard");
     revalidatePath(`/sets/${setId}`);
     redirect(`/sets/${setId}`);
@@ -142,6 +144,7 @@ export async function deleteSet(setId: string): Promise<SetFormState> {
       method: "DELETE",
     });
 
+    revalidateTag("public-sets", "max");
     revalidatePath("/dashboard");
     revalidatePath("/sets");
     redirect("/dashboard");

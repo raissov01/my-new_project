@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { cookies } from "next/headers";
 import type { Profile, ProfileRole } from "@/lib/shared/types/database";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
@@ -53,9 +54,55 @@ async function fetchCurrentBackendUser(token: string): Promise<BackendUser | nul
   }
 }
 
-export async function getAuthToken(): Promise<string | null> {
+const getAuthTokenCached = cache(async (): Promise<string | null> => {
   const cookieStore = await cookies();
   return cookieStore.get(TOKEN_COOKIE)?.value ?? null;
+});
+
+const getCurrentBackendUserCached = cache(async (): Promise<BackendUser | null> => {
+  if (DEV_MODE) {
+    return {
+      id: DEV_USER.id,
+      email: DEV_USER.email,
+      fullName: DEV_USER.email,
+      username: DEV_USER.user_metadata.username,
+      avatarUrl: null,
+      bio: null,
+      role: "student",
+      streakDays: 0,
+      points: 0,
+      lastActiveDate: null,
+      createdAt: new Date(0).toISOString(),
+    };
+  }
+
+  const cookieStore = await cookies();
+  if (isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME))) {
+    return {
+      id: ADMIN_USER.id,
+      email: ADMIN_USER.email,
+      fullName: "Admin",
+      username: "admin",
+      avatarUrl: null,
+      bio: null,
+      role: "teacher",
+      streakDays: 0,
+      points: 0,
+      lastActiveDate: null,
+      createdAt: new Date(0).toISOString(),
+    };
+  }
+
+  const token = await getAuthTokenCached();
+  if (!token) {
+    return null;
+  }
+
+  return fetchCurrentBackendUser(token);
+});
+
+export async function getAuthToken(): Promise<string | null> {
+  return getAuthTokenCached();
 }
 
 export async function setAuthToken(token: string) {
@@ -75,21 +122,7 @@ export async function clearAuthToken() {
 }
 
 export async function getCurrentUser(): Promise<AppUser | null> {
-  if (DEV_MODE) {
-    return DEV_USER as unknown as AppUser;
-  }
-
-  const cookieStore = await cookies();
-  if (isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME))) {
-    return ADMIN_USER as unknown as AppUser;
-  }
-
-  const token = await getAuthToken();
-  if (!token) {
-    return null;
-  }
-
-  const user = await fetchCurrentBackendUser(token);
+  const user = await getCurrentBackendUserCached();
   if (!user) {
     return null;
   }
@@ -114,12 +147,7 @@ export async function getCurrentProfile(
     return null;
   }
 
-  const token = await getAuthToken();
-  if (!token) {
-    return null;
-  }
-
-  const backendUser = await fetchCurrentBackendUser(token);
+  const backendUser = await getCurrentBackendUserCached();
   if (!backendUser) {
     return null;
   }

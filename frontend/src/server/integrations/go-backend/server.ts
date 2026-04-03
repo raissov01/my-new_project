@@ -9,6 +9,11 @@ type BackendFetchOptions = {
   body?: BodyInit | null;
   headers?: HeadersInit;
   timeoutMs?: number;
+  cache?: RequestCache;
+  next?: {
+    revalidate?: number;
+    tags?: string[];
+  };
 };
 
 export async function fetchBackendJson<T>(options: BackendFetchOptions): Promise<T> {
@@ -31,7 +36,8 @@ export async function fetchBackendJson<T>(options: BackendFetchOptions): Promise
         "X-User-ID": options.userId,
         ...(options.headers ?? {}),
       },
-      cache: "no-store",
+      cache: options.cache ?? "no-store",
+      next: options.next,
       signal: controller.signal,
     });
 

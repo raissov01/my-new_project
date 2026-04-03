@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { getCurrentUser } from "@/server/auth";
 
@@ -19,33 +21,53 @@ export type UserSetOverview = {
 
 export type PublicSetOverview = UserSetOverview;
 
+const getUserSetsOverviewCached = cache(async (userId: string): Promise<UserSetOverview[]> => {
+  try {
+    const response = await fetchBackendJson<{ items: UserSetOverview[] }>({
+      path: "/api/v1/sets/overview",
+      userId,
+    });
+    return response.items ?? [];
+  } catch {
+    return [];
+  }
+});
+
+const getPublicSetsOverviewCached = unstable_cache(
+  async (): Promise<PublicSetOverview[]> => {
+    try {
+      const response = await fetchBackendJson<{ items: PublicSetOverview[] }>({
+        path: "/api/v1/sets/public",
+        userId: "anonymous",
+        cache: "force-cache",
+        next: {
+          revalidate: 300,
+          tags: ["public-sets"],
+        },
+      });
+      return response.items ?? [];
+    } catch {
+      return [];
+    }
+  },
+  ["public-sets-overview"],
+  {
+    revalidate: 300,
+    tags: ["public-sets"],
+  }
+);
+
 export async function getUserSetsOverview(): Promise<UserSetOverview[]> {
   const user = await getCurrentUser();
   if (!user) {
     return [];
   }
 
-  try {
-    const response = await fetchBackendJson<{ items: UserSetOverview[] }>({
-      path: "/api/v1/sets/overview",
-      userId: user.id,
-    });
-    return response.items ?? [];
-  } catch {
-    return [];
-  }
+  return getUserSetsOverviewCached(user.id);
 }
 
 export async function getPublicSetsOverview(): Promise<PublicSetOverview[]> {
-  try {
-    const response = await fetchBackendJson<{ items: PublicSetOverview[] }>({
-      path: "/api/v1/sets/public",
-      userId: "anonymous",
-    });
-    return response.items ?? [];
-  } catch {
-    return [];
-  }
+  return getPublicSetsOverviewCached();
 }
 
 export async function getLibrarySetsOverview(): Promise<UserSetOverview[]> {
