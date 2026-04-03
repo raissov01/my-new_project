@@ -11,7 +11,7 @@ export type GeneratedCard = {
   source: string;
 };
 
-export type GenerationMode = "generation" | "definition" | "vocabulary";
+export type GenerationMode = "generation" | "definition" | "vocabulary" | "translation";
 export type GenerationModeInput =
   | GenerationMode
   | "extraction"

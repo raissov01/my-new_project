@@ -129,10 +129,12 @@ func buildPrompt(text, mode, language string, count int) string {
 	}
 
 	modeInstr := map[string]string{
-		"mixed":      "Use a mix of definitions, Q&A, vocabulary, and concept explanations.",
-		"definition": "Focus on term → definition cards.",
-		"qa":         "Focus on question → answer cards.",
-		"vocabulary": "Focus on word/term → meaning cards.",
+		"mixed":       "Use a mix of definitions, Q&A, vocabulary, and concept explanations.",
+		"generation":  "Automatically detect content type and generate the most appropriate flashcards: vocabulary, definitions, Q&A, or concept explanations.",
+		"definition":  "Focus on term → definition cards. Extract key terms and their definitions.",
+		"qa":          "Focus on question → answer cards.",
+		"vocabulary":  "Focus on word/term → meaning or translation cards.",
+		"translation": "Focus on word → translation pairs. Provide the translation in the target language.",
 	}
 	mi := modeInstr[mode]
 	if mi == "" {

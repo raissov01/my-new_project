@@ -64,6 +64,7 @@ const AI_MODES: { value: GenerationMode; labelKey: string }[] = [
   { value: "generation", labelKey: "ai.modeGeneration" },
   { value: "definition", labelKey: "ai.modeDefinition" },
   { value: "vocabulary", labelKey: "ai.modeVocabulary" },
+  { value: "translation", labelKey: "ai.modeTranslation" },
 ];
 
 const AI_LANGUAGES: { value: GenerationLanguage; label: string }[] = [

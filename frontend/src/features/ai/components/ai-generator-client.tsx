@@ -37,6 +37,7 @@ const MODES: { key: GenerationMode; labelKey: string; icon: typeof Brain }[] = [
   { key: "generation", labelKey: "ai.modeGeneration", icon: Sparkles },
   { key: "definition", labelKey: "ai.modeDefinition", icon: FileText },
   { key: "vocabulary", labelKey: "ai.modeVocabulary", icon: PenLine },
+  { key: "translation", labelKey: "ai.modeTranslation", icon: Languages },
 ];
 
 const LANGUAGES: { key: GenerationLanguage; label: string }[] = [
