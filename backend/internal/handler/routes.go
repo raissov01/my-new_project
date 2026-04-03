@@ -12,8 +12,9 @@ type Dependencies struct {
 	JWTSecret        string
 	Environment      string
 
-	Auth          *AuthHandler
-	GoogleOAuth   *GoogleOAuthHandler
+	Auth            *AuthHandler
+	GoogleOAuth     *GoogleOAuthHandler
+	IELTSMaterial   *IELTSMaterialHandler
 	Leaderboard   *Leaderboard
 	Profile       *Profile
 	Set           *Set
@@ -47,6 +48,10 @@ func RegisterRoutes(router *gin.Engine) {
 	api.POST("/auth/resend-verification", deps.Auth.ResendVerification)
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
+
+	// ── Public IELTS material routes (no auth required for reading) ─────
+	api.GET("/ielts/materials", deps.IELTSMaterial.List)
+	api.GET("/ielts/materials/:id", deps.IELTSMaterial.Get)
 
 	// ── JWT-authenticated routes ────────────────────────────────────────
 	authed := api.Group("")
@@ -104,6 +109,11 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.PUT("/account/password", deps.Auth.UpdatePassword)
 		internal.DELETE("/account", deps.Auth.DeleteAccount)
 		internal.POST("/ai/generate", wrapHTTP(deps.AI.Generate))
+
+		// IELTS material admin CRUD (requires internal auth — teacher/admin)
+		internal.POST("/ielts/materials", deps.IELTSMaterial.Create)
+		internal.PUT("/ielts/materials/:id", deps.IELTSMaterial.Update)
+		internal.DELETE("/ielts/materials/:id", deps.IELTSMaterial.Delete)
 	}
 
 	// Public read routes are registered above in the internal group.
