@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20.9+
 - npm
 - Go 1.22+
 - PostgreSQL 15+
@@ -30,6 +30,7 @@ Edit `backend/.env`:
 PORT=5000
 ENVIRONMENT=development
 CORS_ORIGINS=http://localhost:3000
+FRONTEND_URL=http://localhost:3000
 DATABASE_URL=postgresql://studywithraissov:password@localhost:5432/studywithraissov?sslmode=disable
 JWT_SECRET=replace-with-a-long-random-secret
 BACKEND_INTERNAL_TOKEN=replace-with-a-long-random-secret

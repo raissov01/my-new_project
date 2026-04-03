@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -50,9 +51,9 @@ func Load() (*Config, error) {
 
 	// Parse CORS origins
 	rawOrigins := getEnv("CORS_ORIGINS", "http://localhost:3000")
-	cfg.CORSOrigins = strings.Split(rawOrigins, ",")
-	for i, o := range cfg.CORSOrigins {
-		cfg.CORSOrigins[i] = strings.TrimSpace(o)
+	cfg.CORSOrigins = parseOrigins(rawOrigins)
+	if cfg.FrontendURL != "" && !slices.Contains(cfg.CORSOrigins, cfg.FrontendURL) {
+		cfg.CORSOrigins = append(cfg.CORSOrigins, cfg.FrontendURL)
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -67,4 +68,17 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func parseOrigins(raw string) []string {
+	parts := strings.Split(raw, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		origin := strings.TrimSpace(part)
+		if origin == "" || slices.Contains(origins, origin) {
+			continue
+		}
+		origins = append(origins, origin)
+	}
+	return origins
 }
