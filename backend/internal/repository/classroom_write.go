@@ -27,7 +27,7 @@ func (r *Classroom) CreateGroup(ctx context.Context, ownerID string, req model.C
 
 	var groupID string
 	err = tx.QueryRow(ctx,
-		`INSERT INTO class_groups (owner_id, name, join_code) VALUES ($1, $2, $3) RETURNING id`,
+		`INSERT INTO class_groups (owner_id, name, join_code, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id`,
 		ownerID, req.Name, joinCode,
 	).Scan(&groupID)
 	if err != nil {
@@ -36,7 +36,7 @@ func (r *Classroom) CreateGroup(ctx context.Context, ownerID string, req model.C
 
 	// Insert owner as a member
 	_, err = tx.Exec(ctx,
-		`INSERT INTO class_group_members (group_id, user_id, role) VALUES ($1, $2, 'owner')`,
+		`INSERT INTO class_group_members (group_id, user_id, role, joined_at) VALUES ($1, $2, 'owner', NOW())`,
 		groupID, ownerID,
 	)
 	if err != nil {
@@ -90,8 +90,8 @@ func (r *Classroom) CreateGroup(ctx context.Context, ownerID string, req model.C
 
 			for _, profile := range invited {
 				if _, err := tx.Exec(ctx,
-					`INSERT INTO class_group_members (group_id, user_id, role) VALUES ($1, $2, 'student')
-					 ON CONFLICT (group_id, user_id) DO NOTHING`,
+					`INSERT INTO class_group_members (group_id, user_id, role, joined_at) VALUES ($1, $2, 'student', NOW())
+						 ON CONFLICT (group_id, user_id) DO NOTHING`,
 					groupID, profile.id,
 				); err != nil {
 					return nil, fmt.Errorf("insert invited member: %w", err)
@@ -118,7 +118,7 @@ func (r *Classroom) JoinByCode(ctx context.Context, userID string, code string) 
 	}
 
 	_, err = r.pool.Exec(ctx,
-		`INSERT INTO class_group_members (group_id, user_id, role) VALUES ($1, $2, 'student')
+		`INSERT INTO class_group_members (group_id, user_id, role, joined_at) VALUES ($1, $2, 'student', NOW())
 		 ON CONFLICT (group_id, user_id) DO NOTHING`,
 		groupID, userID,
 	)
@@ -145,7 +145,7 @@ func (r *Classroom) AssignSet(ctx context.Context, ownerID string, req model.Ass
 	}
 
 	_, err = r.pool.Exec(ctx,
-		`INSERT INTO class_set_assignments (group_id, set_id, deadline) VALUES ($1, $2, $3)
+		`INSERT INTO class_set_assignments (group_id, set_id, deadline, created_at) VALUES ($1, $2, $3, NOW())
 		 ON CONFLICT DO NOTHING`,
 		req.GroupID, req.SetID, req.Deadline,
 	)
@@ -163,7 +163,7 @@ func (r *Classroom) CreateChallenge(ctx context.Context, ownerID string, req mod
 
 	var challengeID string
 	err = r.pool.QueryRow(ctx,
-		`INSERT INTO class_challenges (group_id, set_id, title, deadline) VALUES ($1, $2, $3, $4) RETURNING id`,
+		`INSERT INTO class_challenges (group_id, set_id, title, deadline, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING id`,
 		req.GroupID, req.SetID, req.Title, req.Deadline,
 	).Scan(&challengeID)
 	if err != nil {
@@ -175,7 +175,7 @@ func (r *Classroom) CreateChallenge(ctx context.Context, ownerID string, req mod
 // JoinChallenge adds a student as a participant.
 func (r *Classroom) JoinChallenge(ctx context.Context, userID, challengeID string) error {
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO class_challenge_participants (challenge_id, user_id) VALUES ($1, $2)
+		`INSERT INTO class_challenge_participants (challenge_id, user_id, joined_at) VALUES ($1, $2, NOW())
 		 ON CONFLICT DO NOTHING`,
 		challengeID, userID,
 	)

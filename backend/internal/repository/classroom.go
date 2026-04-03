@@ -25,7 +25,7 @@ func (r *Classroom) GetOwnedGroupsByUserID(
 	userID string,
 ) ([]model.OwnedGroup, error) {
 	query := `
-		SELECT id, name, owner_id, join_code, created_at
+		SELECT id, name, owner_id, join_code, COALESCE(created_at, NOW())
 		FROM public.class_groups
 		WHERE owner_id = $1
 		ORDER BY created_at DESC
@@ -112,11 +112,11 @@ func (r *Classroom) GetMyChallengesByUserID(
 	userID string,
 ) ([]model.MyClassChallenge, error) {
 	query := `
-		SELECT
-			c.id,
-			c.title,
-			c.deadline,
-			c.created_at,
+			SELECT
+				c.id,
+				c.title,
+				c.deadline,
+				COALESCE(c.created_at, NOW()),
 			COALESCE(g.name, 'Class') AS group_name,
 			COALESCE(s.title, 'Set') AS set_title,
 			(g.owner_id = $1) AS is_owner,
@@ -194,7 +194,7 @@ func (r *Classroom) GetTeacherClassroomDetail(
 	groupID string,
 ) (*model.TeacherClassroomDetail, error) {
 	groupQuery := `
-		SELECT id, name, owner_id, join_code, created_at
+		SELECT id, name, owner_id, join_code, COALESCE(created_at, NOW())
 		FROM public.class_groups
 		WHERE id = $1
 			AND owner_id = $2
@@ -219,10 +219,10 @@ func (r *Classroom) GetTeacherClassroomDetail(
 	group.CreatedAt = groupCreatedAt.UTC().Format(time.RFC3339)
 
 	membersQuery := `
-		SELECT
-			m.user_id,
-			m.role,
-			m.joined_at,
+			SELECT
+				m.user_id,
+				m.role,
+				COALESCE(m.joined_at, NOW()),
 			COALESCE(p.username, 'User') AS username,
 			p.avatar_url,
 			COALESCE(p.role, 'student') AS profile_role
@@ -263,12 +263,12 @@ func (r *Classroom) GetTeacherClassroomDetail(
 	}
 
 	assignmentsQuery := `
-		SELECT
-			a.id,
-			a.set_id,
-			COALESCE(s.title, 'Assigned set') AS set_title,
-			a.deadline,
-			a.created_at
+			SELECT
+				a.id,
+				a.set_id,
+				COALESCE(s.title, 'Assigned set') AS set_title,
+				a.deadline,
+				COALESCE(a.created_at, NOW())
 		FROM public.class_set_assignments a
 		LEFT JOIN public.flashcard_sets s ON s.id = a.set_id
 		WHERE a.group_id = $1
@@ -311,13 +311,13 @@ func (r *Classroom) GetTeacherClassroomDetail(
 	}
 
 	challengesQuery := `
-		SELECT
-			c.id,
-			c.title,
-			c.set_id,
-			COALESCE(s.title, 'Class set') AS set_title,
-			c.deadline,
-			c.created_at
+			SELECT
+				c.id,
+				c.title,
+				c.set_id,
+				COALESCE(s.title, 'Class set') AS set_title,
+				c.deadline,
+				COALESCE(c.created_at, NOW())
 		FROM public.class_challenges c
 		LEFT JOIN public.flashcard_sets s ON s.id = c.set_id
 		WHERE c.group_id = $1
@@ -456,11 +456,11 @@ func (r *Classroom) GetChallengeDetail(
 	challengeID string,
 ) (*model.ClassChallengeDetail, error) {
 	query := `
-		SELECT
-			c.id,
-			c.title,
-			c.deadline,
-			c.created_at,
+			SELECT
+				c.id,
+				c.title,
+				c.deadline,
+				COALESCE(c.created_at, NOW()),
 			g.id,
 			g.name,
 			g.owner_id,

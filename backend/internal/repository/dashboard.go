@@ -23,11 +23,11 @@ func (r *Dashboard) GetTeacherSummaryByUserID(
 	userID string,
 ) (*model.TeacherDashboardSummary, error) {
 	groupsQuery := `
-		SELECT
-			g.id,
-			g.name,
-			g.join_code,
-			g.created_at,
+			SELECT
+				g.id,
+				g.name,
+				g.join_code,
+				COALESCE(g.created_at, NOW()),
 			COALESCE(member_counts.members_count, 0) AS members_count,
 			COALESCE(assignment_counts.assignments_count, 0) AS assignments_count,
 			COALESCE(challenge_counts.challenges_count, 0) AS challenges_count
@@ -189,10 +189,10 @@ func (r *Dashboard) GetStudentSummaryByUserID(
 	userID string,
 ) (*model.StudentDashboardSummary, error) {
 	classesQuery := `
-		SELECT
-			g.id,
-			g.name,
-			m.joined_at
+			SELECT
+				g.id,
+				g.name,
+				COALESCE(m.joined_at, NOW())
 		FROM public.class_group_members m
 		JOIN public.class_groups g ON g.id = m.group_id
 		WHERE m.user_id = $1
