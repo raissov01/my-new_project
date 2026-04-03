@@ -107,9 +107,9 @@ func (r *Progress) UpsertCardResult(ctx context.Context, userID, flashcardID str
 	} else {
 		_, err = tx.Exec(ctx,
 			`INSERT INTO study_progress (
-				user_id, flashcard_id, times_seen, times_correct, times_incorrect,
-				is_weak, review_interval, next_review_at, last_studied_at, last_reviewed_at
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`,
+					user_id, flashcard_id, times_seen, times_correct, times_incorrect,
+					is_weak, review_interval, next_review_at, last_studied_at, last_reviewed_at, created_at
+				) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, NOW())`,
 			userID,
 			flashcardID,
 			timesSeen,
@@ -130,7 +130,7 @@ func (r *Progress) UpsertCardResult(ctx context.Context, userID, flashcardID str
 
 // ProfileStats holds the profile fields needed for reward computation.
 type ProfileStats struct {
-	StreakDays      int
+	StreakDays     int
 	Points         int
 	LastActiveDate *string
 }
@@ -194,21 +194,21 @@ func (r *Progress) GetAllProgress(ctx context.Context, userID string) ([]Progres
 func (r *Progress) GetSetProgress(ctx context.Context, userID, setID string) (map[string]model.SetProgressRow, error) {
 	rows, err := r.pool.Query(ctx,
 		`SELECT
-			sp.id,
-			sp.user_id,
-			sp.flashcard_id,
-			sp.times_seen,
-			sp.times_correct,
-			sp.times_incorrect,
-			sp.is_weak,
-			sp.review_interval,
-			sp.next_review_at::text,
-			sp.last_reviewed_at::text,
-			sp.last_studied_at::text,
-			sp.created_at::text
-		FROM study_progress sp
-		JOIN flashcards f ON f.id = sp.flashcard_id
-		WHERE sp.user_id = $1
+				sp.id,
+				sp.user_id,
+				sp.flashcard_id,
+				sp.times_seen,
+				sp.times_correct,
+				sp.times_incorrect,
+				sp.is_weak,
+				sp.review_interval,
+				COALESCE(sp.next_review_at, NOW())::text,
+				COALESCE(sp.last_reviewed_at, sp.last_studied_at, NOW())::text,
+				COALESCE(sp.last_studied_at, NOW())::text,
+				COALESCE(sp.created_at, NOW())::text
+			FROM study_progress sp
+			JOIN flashcards f ON f.id = sp.flashcard_id
+			WHERE sp.user_id = $1
 		  AND f.set_id = $2`,
 		userID, setID,
 	)
@@ -308,13 +308,13 @@ func (r *Progress) GetUserStats(ctx context.Context, userID string) (*model.User
 		TotalCorrect:   totalCorrect,
 		TotalIncorrect: totalIncorrect,
 		Accuracy:       accuracy,
-		StreakDays:      profile.StreakDays,
+		StreakDays:     profile.StreakDays,
 		Points:         profile.Points,
 		XPLevel:        level,
 		XPProgress:     xpProgress,
 		LevelName:      levelName(level),
 		StudiedToday:   studiedToday,
-		StreakAtRisk:    streakAtRisk,
+		StreakAtRisk:   streakAtRisk,
 		RecentActivity: activity,
 		Smart: model.SmartStats{
 			DueToday:          dueToday,
@@ -341,8 +341,20 @@ func levelName(level int) string {
 // ToggleWeakCard sets or unsets the is_weak flag.
 func (r *Progress) ToggleWeakCard(ctx context.Context, userID, flashcardID string, isWeak bool) error {
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO study_progress (user_id, flashcard_id, is_weak, times_seen, times_correct, times_incorrect, review_interval, next_review_at, last_studied_at, last_reviewed_at)
-		 VALUES ($1, $2, $3, 0, 0, 0, 1, NOW() + INTERVAL '1 day', NOW(), NOW())
+		`INSERT INTO study_progress (
+			user_id,
+			flashcard_id,
+			is_weak,
+			times_seen,
+			times_correct,
+			times_incorrect,
+			review_interval,
+			next_review_at,
+			last_studied_at,
+			last_reviewed_at,
+			created_at
+		)
+		 VALUES ($1, $2, $3, 0, 0, 0, 1, NOW() + INTERVAL '1 day', NOW(), NOW(), NOW())
 		 ON CONFLICT (user_id, flashcard_id) DO UPDATE SET is_weak = $3`,
 		userID, flashcardID, isWeak,
 	)

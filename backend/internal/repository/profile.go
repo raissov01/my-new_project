@@ -27,11 +27,11 @@ func (r *Profile) GetByID(ctx context.Context, userID string) (*model.Profile, e
 			username,
 			avatar_url,
 			bio,
-			created_at,
-			streak_days,
-			last_active_date,
-			points,
-			role
+			COALESCE(created_at, NOW())::text,
+			COALESCE(streak_days, 0),
+			last_active_date::text,
+			COALESCE(points, 0),
+			COALESCE(role, 'student')
 		FROM public.users
 		WHERE id = $1
 	`

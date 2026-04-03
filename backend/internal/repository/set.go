@@ -20,11 +20,16 @@ func NewSet(pool *pgxpool.Pool) *Set {
 
 func (r *Set) GetOverviewByUserID(ctx context.Context, userID string) ([]model.SetOverview, error) {
 	query := `
-		WITH user_sets AS (
-			SELECT id, title, description, created_at, updated_at
-			FROM public.flashcard_sets
-			WHERE user_id = $1
-		),
+			WITH user_sets AS (
+				SELECT
+					id,
+					title,
+					description,
+					COALESCE(created_at, NOW()) AS created_at,
+					COALESCE(updated_at, COALESCE(created_at, NOW())) AS updated_at
+				FROM public.flashcard_sets
+				WHERE user_id = $1
+			),
 		set_cards AS (
 			SELECT
 				f.set_id,
@@ -76,7 +81,7 @@ func (r *Set) GetOverviewByUserID(ctx context.Context, userID string) ([]model.S
 	}
 	defer rows.Close()
 
-	var items []model.SetOverview
+	items := make([]model.SetOverview, 0)
 	for rows.Next() {
 		var item model.SetOverview
 		var createdAt time.Time
@@ -118,11 +123,16 @@ func (r *Set) GetOverviewByUserID(ctx context.Context, userID string) ([]model.S
 
 func (r *Set) GetPublicOverview(ctx context.Context) ([]model.SetOverview, error) {
 	query := `
-		WITH public_sets AS (
-			SELECT id, title, description, created_at, updated_at
-			FROM public.flashcard_sets
-			WHERE is_public = true
-		),
+			WITH public_sets AS (
+				SELECT
+					id,
+					title,
+					description,
+					COALESCE(created_at, NOW()) AS created_at,
+					COALESCE(updated_at, COALESCE(created_at, NOW())) AS updated_at
+				FROM public.flashcard_sets
+				WHERE is_public = true
+			),
 		set_cards AS (
 			SELECT
 				f.set_id,
@@ -150,7 +160,7 @@ func (r *Set) GetPublicOverview(ctx context.Context) ([]model.SetOverview, error
 	}
 	defer rows.Close()
 
-	var items []model.SetOverview
+	items := make([]model.SetOverview, 0)
 	for rows.Next() {
 		var item model.SetOverview
 		var createdAt time.Time

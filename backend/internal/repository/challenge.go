@@ -19,8 +19,16 @@ func NewChallenge(pool *pgxpool.Pool) *Challenge {
 // SaveAttempt records a challenge attempt for a set.
 func (r *Challenge) SaveAttempt(ctx context.Context, userID string, input model.ChallengeAttemptInput) error {
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO challenge_attempts (user_id, set_id, completion_time, accuracy, total_correct, total_incorrect)
-		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		`INSERT INTO challenge_attempts (
+			user_id,
+			set_id,
+			completion_time,
+			accuracy,
+			total_correct,
+			total_incorrect,
+			completed_at
+		)
+		 VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
 		userID, input.SetID, input.CompletionTime, input.Accuracy,
 		input.TotalCorrect, input.TotalIncorrect,
 	)
@@ -41,13 +49,13 @@ func (r *Challenge) GetRanking(ctx context.Context, setID string) (*model.Challe
 
 	// Get best attempt per user, ranked
 	rows, err := r.pool.Query(ctx, `
-		SELECT DISTINCT ON (ca.user_id)
-			ca.user_id, p.username, p.avatar_url,
-			ca.accuracy, ca.completion_time, ca.total_incorrect,
-			ca.completed_at::text
-		FROM challenge_attempts ca
-		JOIN users p ON p.id = ca.user_id
-		WHERE ca.set_id = $1
+			SELECT DISTINCT ON (ca.user_id)
+				ca.user_id, p.username, p.avatar_url,
+				ca.accuracy, ca.completion_time, ca.total_incorrect,
+				COALESCE(ca.completed_at, NOW())::text
+			FROM challenge_attempts ca
+			JOIN users p ON p.id = ca.user_id
+			WHERE ca.set_id = $1
 		ORDER BY ca.user_id, ca.accuracy DESC, ca.completion_time ASC, ca.total_incorrect ASC, ca.completed_at ASC
 	`, setID)
 	if err != nil {
@@ -55,7 +63,7 @@ func (r *Challenge) GetRanking(ctx context.Context, setID string) (*model.Challe
 	}
 	defer rows.Close()
 
-	var entries []model.ChallengeRankingEntry
+	entries := make([]model.ChallengeRankingEntry, 0)
 	for rows.Next() {
 		var e model.ChallengeRankingEntry
 		if err := rows.Scan(&e.UserID, &e.Username, &e.AvatarURL,
@@ -93,8 +101,17 @@ func (r *Challenge) SaveClassChallengeAttempt(ctx context.Context, userID string
 	}
 
 	_, err = r.pool.Exec(ctx,
-		`INSERT INTO class_challenge_attempts (challenge_id, user_id, set_id, completion_time, accuracy, total_correct, total_incorrect)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		`INSERT INTO class_challenge_attempts (
+			challenge_id,
+			user_id,
+			set_id,
+			completion_time,
+			accuracy,
+			total_correct,
+			total_incorrect,
+			completed_at
+		)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
 		input.ChallengeID, userID, setID, input.CompletionTime, input.Accuracy,
 		input.TotalCorrect, input.TotalIncorrect,
 	)

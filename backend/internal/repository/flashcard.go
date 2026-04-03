@@ -33,8 +33,8 @@ func (r *Flashcard) CreateSet(ctx context.Context, userID string, req model.Crea
 
 	var setID string
 	err = tx.QueryRow(ctx,
-		`INSERT INTO flashcard_sets (user_id, title, description, is_public)
-		 VALUES ($1, $2, NULLIF($3, ''), $4) RETURNING id`,
+		`INSERT INTO flashcard_sets (user_id, title, description, is_public, created_at, updated_at)
+		 VALUES ($1, $2, NULLIF($3, ''), $4, NOW(), NOW()) RETURNING id`,
 		userID, req.Title, req.Description, req.IsPublic,
 	).Scan(&setID)
 	if err != nil {
@@ -85,7 +85,12 @@ func (r *Flashcard) UpdateSet(ctx context.Context, userID, setID string, req mod
 	}
 
 	_, err = tx.Exec(ctx,
-		`UPDATE flashcard_sets SET title = $2, description = NULLIF($3, ''), is_public = $4 WHERE id = $1`,
+		`UPDATE flashcard_sets
+		 SET title = $2,
+		     description = NULLIF($3, ''),
+		     is_public = $4,
+		     updated_at = NOW()
+		 WHERE id = $1`,
 		setID, req.Title, req.Description, req.IsPublic,
 	)
 	if err != nil {
@@ -130,10 +135,33 @@ func (r *Flashcard) DeleteSet(ctx context.Context, userID, setID string) error {
 func (r *Flashcard) GetSetByID(ctx context.Context, setID, requesterUserID string) (*model.SetDetail, error) {
 	var s model.SetDetail
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, title, description, is_public, user_id, created_at::text
-		 FROM flashcard_sets
-		 WHERE id = $1
-		   AND (is_public = true OR user_id = $2)`,
+		`SELECT
+			fs.id,
+			fs.title,
+			fs.description,
+			fs.is_public,
+			fs.user_id,
+			COALESCE(fs.created_at, NOW())::text
+		 FROM flashcard_sets fs
+		 WHERE fs.id = $1
+		   AND (
+		     fs.is_public = true
+		     OR fs.user_id = $2
+		     OR EXISTS (
+		       SELECT 1
+		       FROM public.class_set_assignments a
+		       JOIN public.class_group_members m ON m.group_id = a.group_id
+		       WHERE a.set_id = fs.id
+		         AND m.user_id = $2
+		     )
+		     OR EXISTS (
+		       SELECT 1
+		       FROM public.class_challenges c
+		       JOIN public.class_group_members m ON m.group_id = c.group_id
+		       WHERE c.set_id = fs.id
+		         AND m.user_id = $2
+		     )
+		   )`,
 		setID, requesterUserID,
 	).Scan(&s.ID, &s.Title, &s.Description, &s.IsPublic, &s.UserID, &s.CreatedAt)
 	if err != nil {
@@ -148,6 +176,7 @@ func (r *Flashcard) GetSetByID(ctx context.Context, setID, requesterUserID strin
 	}
 	defer rows.Close()
 
+	s.Cards = make([]model.FlashcardInput, 0)
 	for rows.Next() {
 		var c model.FlashcardInput
 		if err := rows.Scan(&c.ID, &c.Term, &c.Definition); err != nil {

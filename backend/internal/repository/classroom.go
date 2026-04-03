@@ -573,16 +573,16 @@ func (r *Classroom) GetChallengeRanking(
 			JOIN public.users u ON u.id = a.user_id
 			WHERE a.challenge_id = $1
 		)
-		SELECT
-			user_id,
-			username,
-			avatar_url,
-			accuracy,
-			completion_time,
-			total_incorrect,
-			completed_at::text
-		FROM ranked_attempts
-		WHERE rn = 1
+			SELECT
+				user_id,
+				username,
+				avatar_url,
+				accuracy,
+				completion_time,
+				total_incorrect,
+				COALESCE(completed_at, NOW())::text
+			FROM ranked_attempts
+			WHERE rn = 1
 		ORDER BY
 			accuracy DESC,
 			completion_time ASC,
