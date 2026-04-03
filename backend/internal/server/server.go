@@ -30,6 +30,13 @@ type Server struct {
 }
 
 func New(cfg *config.Config) (*Server, error) {
+	readyCtx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	defer cancel()
+
+	if err := database.WaitUntilReady(readyCtx, cfg.DatabaseURL); err != nil {
+		return nil, fmt.Errorf("database readiness: %w", err)
+	}
+
 	// pgx pool (for existing repository layer — will be replaced incrementally)
 	pool, err := database.Connect(context.Background(), cfg.DatabaseURL)
 	if err != nil {

@@ -27,11 +27,22 @@ DOCKER_BUILDKIT=1 docker build \
 
 echo ""
 echo "=== Deploying stack ==="
-docker stack deploy -c docker/stack.yml "$STACK_NAME"
+docker stack deploy --resolve-image never -c docker/stack.yml "$STACK_NAME"
 
 echo ""
 echo "=== Waiting for services to converge ==="
-sleep 10
+for attempt in $(seq 1 36); do
+  backend_replicas="$(docker service inspect "$STACK_NAME"_backend --format '{{.ServiceStatus.RunningTasks}}/{{.Spec.Mode.Replicated.Replicas}}' 2>/dev/null || true)"
+  frontend_replicas="$(docker service inspect "$STACK_NAME"_frontend --format '{{.ServiceStatus.RunningTasks}}/{{.Spec.Mode.Replicated.Replicas}}' 2>/dev/null || true)"
+  nginx_replicas="$(docker service inspect "$STACK_NAME"_nginx --format '{{.ServiceStatus.RunningTasks}}/{{if .Spec.Mode.Replicated}}{{.Spec.Mode.Replicated.Replicas}}{{else}}1{{end}}' 2>/dev/null || true)"
+  postgres_replicas="$(docker service inspect "$STACK_NAME"_postgres --format '{{.ServiceStatus.RunningTasks}}/{{if .Spec.Mode.Replicated}}{{.Spec.Mode.Replicated.Replicas}}{{else}}1{{end}}' 2>/dev/null || true)"
+
+  if [ "$backend_replicas" = "2/2" ] && [ "$frontend_replicas" = "2/2" ] && [ "$nginx_replicas" = "1/1" ] && [ "$postgres_replicas" = "1/1" ]; then
+    break
+  fi
+
+  sleep 5
+done
 
 echo ""
 echo "=== Stack services ==="
@@ -43,6 +54,34 @@ docker stack ps "$STACK_NAME" --no-trunc 2>/dev/null | head -20
 
 echo ""
 echo "=== Health checks ==="
-sleep 10
-curl -sf https://studywithraissov.com/health >/dev/null && echo " [backend OK]" || echo " [backend FAIL]"
-curl -sf -o /dev/null https://studywithraissov.com && echo " [site OK]" || echo " [site FAIL]"
+backend_ok=0
+site_ok=0
+
+for attempt in $(seq 1 24); do
+  if curl -sf https://studywithraissov.com/health >/dev/null; then
+    backend_ok=1
+    break
+  fi
+  sleep 5
+done
+
+for attempt in $(seq 1 24); do
+  if curl -sf -o /dev/null https://studywithraissov.com; then
+    site_ok=1
+    break
+  fi
+  sleep 5
+done
+
+[ "$backend_ok" -eq 1 ] && echo " [backend OK]" || echo " [backend FAIL]"
+[ "$site_ok" -eq 1 ] && echo " [site OK]" || echo " [site FAIL]"
+
+if [ "$backend_ok" -ne 1 ] || [ "$site_ok" -ne 1 ]; then
+  echo ""
+  echo "=== Recent backend logs ==="
+  docker service logs "$STACK_NAME"_backend --tail 80 2>&1 || true
+  echo ""
+  echo "=== Recent nginx logs ==="
+  docker service logs "$STACK_NAME"_nginx --tail 80 2>&1 || true
+  exit 1
+fi

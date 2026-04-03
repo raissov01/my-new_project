@@ -20,7 +20,11 @@ func NewProgress(svc *service.Progress, env string) *Progress {
 
 // SaveSession handles POST /api/v1/progress/session
 func (h *Progress) SaveSession(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
 
 	var req model.SaveSessionRequest
 	if err := decodeJSON(r, &req); err != nil {
@@ -44,7 +48,11 @@ func (h *Progress) SaveSession(w http.ResponseWriter, r *http.Request) {
 
 // GetStats handles GET /api/v1/progress/stats
 func (h *Progress) GetStats(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
 
 	stats, err := h.svc.GetUserStats(r.Context(), userID)
 	if err != nil {
@@ -56,7 +64,11 @@ func (h *Progress) GetStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Progress) GetSetProgress(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
 	setID := strings.TrimSpace(r.PathValue("setID"))
 	if setID == "" {
 		writeError(w, http.StatusBadRequest, "set id is required", nil)
@@ -74,7 +86,11 @@ func (h *Progress) GetSetProgress(w http.ResponseWriter, r *http.Request) {
 
 // ToggleWeak handles POST /api/v1/progress/toggle-weak
 func (h *Progress) ToggleWeak(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
 
 	var req struct {
 		FlashcardID string `json:"flashcardId"`
@@ -95,7 +111,11 @@ func (h *Progress) ToggleWeak(w http.ResponseWriter, r *http.Request) {
 
 // GetPomodoro handles GET /api/v1/pomodoro/preferences
 func (h *Progress) GetPomodoro(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
 
 	prefs, err := h.svc.GetPomodoroPreferences(r.Context(), userID)
 	if err != nil {
@@ -108,7 +128,11 @@ func (h *Progress) GetPomodoro(w http.ResponseWriter, r *http.Request) {
 
 // SavePomodoro handles POST /api/v1/pomodoro/preferences
 func (h *Progress) SavePomodoro(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
 
 	var prefs model.PomodoroPreferences
 	if err := decodeJSON(r, &prefs); err != nil {
@@ -135,7 +159,11 @@ func (h *Progress) SavePomodoro(w http.ResponseWriter, r *http.Request) {
 
 // SavePomodoroSession handles POST /api/v1/pomodoro/session
 func (h *Progress) SavePomodoroSession(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
 
 	var input model.PomodoroSessionInput
 	if err := decodeJSON(r, &input); err != nil {

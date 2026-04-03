@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -100,6 +101,8 @@ func InternalAuth(internalToken string) gin.HandlerFunc {
 			return
 		}
 
+		req := c.Request.WithContext(context.WithValue(c.Request.Context(), userIDKey, userID))
+		c.Request = req
 		c.Set("userID", userID)
 		c.Next()
 	}
