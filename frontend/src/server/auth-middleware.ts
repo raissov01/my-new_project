@@ -33,6 +33,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/classes/");
 
   const isAuthRoute = pathname === "/login" || pathname === "/signup";
+  const isVerifyEmail = pathname === "/verify-email";
   const isChooseRole = pathname === "/choose-role";
 
   if (isAdminSessionCookie(request.cookies.get(ADMIN_COOKIE_NAME))) {
@@ -53,6 +54,11 @@ export async function updateSession(request: NextRequest) {
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
+    return response;
+  }
+
+  // Allow verify-email page regardless of auth state
+  if (isVerifyEmail) {
     return response;
   }
 

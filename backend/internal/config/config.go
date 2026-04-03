@@ -29,6 +29,13 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURL  string
 	FrontendURL        string
+
+	// SMTP settings for email verification
+	SMTPHost     string
+	SMTPPort     string
+	SMTPUser     string
+	SMTPPassword string
+	SMTPFrom     string
 }
 
 // Load reads environment variables (with optional .env file) and returns Config.
@@ -51,6 +58,12 @@ func Load() (*Config, error) {
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", "http://localhost:5000/api/v1/auth/google/callback"),
 		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:3000"),
+
+		SMTPHost:     getEnv("SMTP_HOST", ""),
+		SMTPPort:     getEnv("SMTP_PORT", "587"),
+		SMTPUser:     getEnv("SMTP_USER", ""),
+		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:     getEnv("SMTP_FROM", ""),
 	}
 
 	// Parse CORS origins

@@ -1,23 +1,39 @@
 package handler
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/midoriya/flashlearn-backend/internal/auth"
+	"github.com/midoriya/flashlearn-backend/internal/email"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type AuthHandler struct {
-	db        *gorm.DB
-	jwtSecret string
+	db          *gorm.DB
+	jwtSecret   string
+	emailSender *email.Sender
+	frontendURL string
 }
 
-func NewAuth(db *gorm.DB, jwtSecret string) *AuthHandler {
-	return &AuthHandler{db: db, jwtSecret: jwtSecret}
+func NewAuth(db *gorm.DB, jwtSecret string, emailSender *email.Sender, frontendURL string) *AuthHandler {
+	return &AuthHandler{db: db, jwtSecret: jwtSecret, emailSender: emailSender, frontendURL: frontendURL}
+}
+
+func generateVerificationToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 type registerRequest struct {
@@ -44,7 +60,7 @@ type authResponse struct {
 	User  models.User  `json:"user"`
 }
 
-// Register creates a new user account.
+// Register creates a new user account and sends a verification email.
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req registerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -71,17 +87,38 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Generate email verification token
+	verificationToken, err := generateVerificationToken()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate verification token."})
+		return
+	}
+	tokenExpiry := time.Now().Add(24 * time.Hour)
+
 	user := models.User{
-		Email:        strings.ToLower(strings.TrimSpace(req.Email)),
-		PasswordHash: string(hash),
-		FullName:     strings.TrimSpace(req.FullName),
-		Username:     strings.TrimSpace(req.Username),
-		Role:         req.Role,
+		Email:                   strings.ToLower(strings.TrimSpace(req.Email)),
+		PasswordHash:            string(hash),
+		FullName:                strings.TrimSpace(req.FullName),
+		Username:                strings.TrimSpace(req.Username),
+		Role:                    req.Role,
+		EmailVerified:           false,
+		VerificationToken:       &verificationToken,
+		VerificationTokenExpiry: &tokenExpiry,
 	}
 
 	if err := h.db.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create account."})
 		return
+	}
+
+	// Send verification email (non-blocking — don't fail registration if email fails)
+	if h.emailSender != nil {
+		go func() {
+			verifyURL := fmt.Sprintf("%s/verify-email?token=%s", h.frontendURL, verificationToken)
+			if err := h.emailSender.SendVerificationEmail(user.Email, user.FullName, verifyURL); err != nil {
+				log.Printf("[register] failed to send verification email to %s: %v", user.Email, err)
+			}
+		}()
 	}
 
 	token, err := auth.GenerateToken(h.jwtSecret, user.ID, user.Email, user.Role)
@@ -109,6 +146,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password."})
+		return
+	}
+
+	if !user.EmailVerified {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Please verify your email before logging in.", "code": "email_not_verified"})
 		return
 	}
 
@@ -353,6 +395,91 @@ func (h *AuthHandler) DeleteAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// VerifyEmail verifies a user's email using the token from the verification link.
+func (h *AuthHandler) VerifyEmail(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Verification token is required."})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("verification_token = ?", token).First(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired verification link."})
+		return
+	}
+
+	if user.EmailVerified {
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Email already verified."})
+		return
+	}
+
+	if user.VerificationTokenExpiry != nil && time.Now().After(*user.VerificationTokenExpiry) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Verification link has expired. Please request a new one."})
+		return
+	}
+
+	if err := h.db.Model(&user).Updates(map[string]any{
+		"email_verified":            true,
+		"verification_token":        nil,
+		"verification_token_expiry": nil,
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify email."})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Email verified successfully."})
+}
+
+// ResendVerification generates a new verification token and resends the email.
+func (h *AuthHandler) ResendVerification(c *gin.Context) {
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("email = ?", strings.ToLower(strings.TrimSpace(req.Email))).First(&user).Error; err != nil {
+		// Don't reveal whether the email exists
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "If an account exists with that email, a verification link has been sent."})
+		return
+	}
+
+	if user.EmailVerified {
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Email is already verified."})
+		return
+	}
+
+	newToken, err := generateVerificationToken()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate verification token."})
+		return
+	}
+	tokenExpiry := time.Now().Add(24 * time.Hour)
+
+	if err := h.db.Model(&user).Updates(map[string]any{
+		"verification_token":        newToken,
+		"verification_token_expiry": tokenExpiry,
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update verification token."})
+		return
+	}
+
+	if h.emailSender != nil {
+		go func() {
+			verifyURL := fmt.Sprintf("%s/verify-email?token=%s", h.frontendURL, newToken)
+			if err := h.emailSender.SendVerificationEmail(user.Email, user.FullName, verifyURL); err != nil {
+				log.Printf("[resend-verification] failed to send verification email to %s: %v", user.Email, err)
+			}
+		}()
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "If an account exists with that email, a verification link has been sent."})
 }
 
 func valueOrEmpty(value *string) string {

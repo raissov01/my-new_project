@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/midoriya/flashlearn-backend/internal/config"
 	"github.com/midoriya/flashlearn-backend/internal/database"
+	"github.com/midoriya/flashlearn-backend/internal/email"
 	"github.com/midoriya/flashlearn-backend/internal/handler"
 	"github.com/midoriya/flashlearn-backend/internal/repository"
 	"github.com/midoriya/flashlearn-backend/internal/service"
@@ -149,11 +150,13 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 	challengeRepo := repository.NewChallenge(pool)
 	challengeSvc := service.NewChallenge(challengeRepo)
 
+	emailSender := email.NewSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPFrom)
+
 	return handler.Dependencies{
 		InternalAPIToken: cfg.InternalAPIToken,
 		JWTSecret:        cfg.JWTSecret,
 		Environment:      cfg.Environment,
-		Auth:             handler.NewAuth(gormDB, cfg.JWTSecret),
+		Auth:             handler.NewAuth(gormDB, cfg.JWTSecret, emailSender, cfg.FrontendURL),
 		GoogleOAuth:      handler.NewGoogleOAuth(gormDB, cfg.JWTSecret, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.FrontendURL),
 		Leaderboard:      handler.NewLeaderboard(leaderboardSvc, cfg.Environment),
 		Profile:          handler.NewProfile(profileSvc, cfg.Environment),

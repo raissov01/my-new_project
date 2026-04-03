@@ -43,6 +43,8 @@ func RegisterRoutes(router *gin.Engine) {
 	// ── Public auth routes (no token required) ──────────────────────────
 	api.POST("/auth/register", deps.Auth.Register)
 	api.POST("/auth/login", deps.Auth.Login)
+	api.GET("/auth/verify-email", deps.Auth.VerifyEmail)
+	api.POST("/auth/resend-verification", deps.Auth.ResendVerification)
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
 

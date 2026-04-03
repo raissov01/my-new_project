@@ -211,12 +211,13 @@ func (h *GoogleOAuthHandler) findOrCreateGoogleUser(info *googleUserInfo) (*mode
 	hash, _ := bcrypt.GenerateFromPassword(randomPass, bcrypt.DefaultCost)
 
 	user = models.User{
-		Email:        email,
-		PasswordHash: string(hash),
-		FullName:     fullName,
-		Username:     username,
-		AvatarURL:    nilIfEmpty(info.Picture),
-		Role:         "student",
+		Email:         email,
+		PasswordHash:  string(hash),
+		FullName:      fullName,
+		Username:      username,
+		AvatarURL:     nilIfEmpty(info.Picture),
+		Role:          "student",
+		EmailVerified: true, // Google already verified the email
 	}
 
 	if err := h.db.Create(&user).Error; err != nil {

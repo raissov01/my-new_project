@@ -70,5 +70,3 @@ func (s *Flashcard) DeleteSet(ctx context.Context, userID, setID string) error {
 func (s *Flashcard) GetSetByID(ctx context.Context, setID, requesterUserID string) (*model.SetDetail, error) {
 	return s.repo.GetSetByID(ctx, setID, requesterUserID)
 }
-
-//ВРИ

@@ -66,6 +66,7 @@ async function fetchPublicAuthJson<T>(
 
 function friendlyError(rawMessage: string, t: (key: string) => string): string {
   const lower = rawMessage.toLowerCase();
+  if (lower.includes("verify your email")) return t("action.emailNotVerified");
   if (lower.includes("invalid") && (lower.includes("email") || lower.includes("password"))) return t("action.invalidCredentials");
   if (lower.includes("already exists") || lower.includes("already taken") || lower.includes("conflict")) return t("action.accountExists");
   if (lower.includes("rate") || lower.includes("too many")) return t("action.rateLimitGeneral");
@@ -124,7 +125,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   if (password.length < 6) return { error: t("action.passwordMin") };
 
   try {
-    const resp = await fetchPublicAuthJson<PublicAuthResponse>("/auth/register", {
+    await fetchPublicAuthJson<PublicAuthResponse>("/auth/register", {
       email,
       password,
       fullName,
@@ -132,8 +133,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
       role,
     });
 
-    await setAuthToken(resp.token);
-    redirect(getRoleRegistrationRedirect(role as ProfileRole));
+    return { error: null, message: t("action.checkEmailMessage") };
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err) throw err;
     const msg = err instanceof Error ? err.message : "";
