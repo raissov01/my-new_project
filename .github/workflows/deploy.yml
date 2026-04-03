@@ -84,9 +84,9 @@ jobs:
               mv /opt/studywithraissov/.buildx-cache/backend-new /opt/studywithraissov/.buildx-cache/backend
               mv /opt/studywithraissov/.buildx-cache/frontend-new /opt/studywithraissov/.buildx-cache/frontend
             else
-              echo "docker buildx not found; falling back to classic docker build"
-              docker build -t swr-backend -f docker/backend.Dockerfile backend/
-              docker build \
+              echo "docker buildx not found; falling back to DOCKER_BUILDKIT=1 docker build"
+              DOCKER_BUILDKIT=1 docker build -t swr-backend -f docker/backend.Dockerfile backend/
+              DOCKER_BUILDKIT=1 docker build \
                 --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
                 --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
                 -t swr-frontend \

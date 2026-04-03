@@ -43,9 +43,9 @@ if docker buildx version >/dev/null 2>&1; then
   mv .buildx-cache/backend-new .buildx-cache/backend
   mv .buildx-cache/frontend-new .buildx-cache/frontend
 else
-  echo "docker buildx not found; falling back to classic docker build"
-  docker build -t swr-backend -f docker/backend.Dockerfile backend/
-  docker build \
+  echo "docker buildx not found; falling back to DOCKER_BUILDKIT=1 docker build"
+  DOCKER_BUILDKIT=1 docker build -t swr-backend -f docker/backend.Dockerfile backend/
+  DOCKER_BUILDKIT=1 docker build \
     --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
     --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
     -t swr-frontend \
