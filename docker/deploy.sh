@@ -13,11 +13,19 @@ git fetch origin main
 git reset --hard origin/main
 
 # Rebuild and restart all containers
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose \
+  --env-file frontend/.env \
+  --env-file backend/.env \
+  -f docker/docker-compose.yml \
+  up -d --build
 
 # Clean up old images
 docker image prune -f >/dev/null 2>&1 || true
 
 echo ""
 echo "=== Deploy complete ==="
-docker compose -f docker/docker-compose.yml ps
+docker compose \
+  --env-file frontend/.env \
+  --env-file backend/.env \
+  -f docker/docker-compose.yml \
+  ps
