@@ -185,6 +185,61 @@ func (r *Flashcard) DeleteSet(ctx context.Context, userID, setID string) error {
 	return nil
 }
 
+// CloneSet copies a public set into the requesting user's collection.
+func (r *Flashcard) CloneSet(ctx context.Context, userID, sourceSetID string) (string, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return "", fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Verify the source set is public
+	var title string
+	var description *string
+	var isPublic bool
+	err = tx.QueryRow(ctx,
+		`SELECT title, description, is_public FROM flashcard_sets WHERE id = $1`,
+		sourceSetID,
+	).Scan(&title, &description, &isPublic)
+	if err != nil {
+		return "", fmt.Errorf("source set not found")
+	}
+	if !isPublic {
+		return "", fmt.Errorf("access denied: set is not public")
+	}
+
+	// Create the new set
+	desc := ""
+	if description != nil {
+		desc = *description
+	}
+	var newSetID string
+	err = tx.QueryRow(ctx,
+		`INSERT INTO flashcard_sets (user_id, title, description, is_public, created_at, updated_at)
+		 VALUES ($1, $2, NULLIF($3, ''), false, NOW(), NOW()) RETURNING id`,
+		userID, title, desc,
+	).Scan(&newSetID)
+	if err != nil {
+		return "", fmt.Errorf("insert cloned set: %w", err)
+	}
+
+	// Copy all cards
+	_, err = tx.Exec(ctx,
+		`INSERT INTO flashcards (set_id, term, definition, position, created_at)
+		 SELECT $1, term, definition, position, NOW()
+		 FROM flashcards WHERE set_id = $2 ORDER BY position`,
+		newSetID, sourceSetID,
+	)
+	if err != nil {
+		return "", fmt.Errorf("copy cards: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return "", fmt.Errorf("commit: %w", err)
+	}
+	return newSetID, nil
+}
+
 // GetSetByID returns a set with its cards.
 func (r *Flashcard) GetSetByID(ctx context.Context, setID, requesterUserID string) (*model.SetDetail, error) {
 	var s model.SetDetail

@@ -70,3 +70,13 @@ func (s *Flashcard) DeleteSet(ctx context.Context, userID, setID string) error {
 func (s *Flashcard) GetSetByID(ctx context.Context, setID, requesterUserID string) (*model.SetDetail, error) {
 	return s.repo.GetSetByID(ctx, setID, requesterUserID)
 }
+
+func (s *Flashcard) CloneSet(ctx context.Context, userID, sourceSetID string) (string, error) {
+	if strings.TrimSpace(userID) == "" {
+		return "", fmt.Errorf("authentication required")
+	}
+	if strings.TrimSpace(sourceSetID) == "" {
+		return "", fmt.Errorf("source set ID is required")
+	}
+	return s.repo.CloneSet(ctx, userID, sourceSetID)
+}

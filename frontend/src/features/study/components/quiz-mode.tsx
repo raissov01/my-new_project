@@ -202,13 +202,13 @@ export function QuizMode({
           let style: string;
           if (!hasAnswered) {
             style =
-              "border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer active:scale-[0.98]";
+              "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-indigo-500/30 hover:bg-indigo-500/10 cursor-pointer active:scale-[0.98]";
           } else if (choice.isCorrect) {
-            style = "border-green-300 bg-green-50";
+            style = "border-green-500/30 bg-green-500/10";
           } else if (isSelected && !choice.isCorrect) {
-            style = "border-red-300 bg-red-50";
+            style = "border-red-500/30 bg-red-500/10";
           } else {
-            style = "border-gray-200 bg-white opacity-50";
+            style = "border-[var(--border)] bg-[var(--bg-elevated)] opacity-50";
           }
 
           return (
@@ -218,16 +218,16 @@ export function QuizMode({
               disabled={hasAnswered}
               className={`flex min-h-[3.5rem] items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm leading-6 transition-colors sm:min-h-16 sm:rounded-2xl sm:px-5 sm:py-4 ${style}`}
             >
-              <kbd className="kbd-hint flex h-6 w-6 shrink-0 items-center justify-center rounded bg-gray-100 text-xs font-mono text-gray-500">
+              <kbd className="kbd-hint flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[var(--bg-surface)] text-xs font-mono text-[var(--text-muted)]">
                 {index + 1}
               </kbd>
               {hasAnswered && choice.isCorrect && (
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-green-500" />
               )}
               {hasAnswered && isSelected && !choice.isCorrect && (
-                <XCircle className="h-5 w-5 shrink-0 text-red-600" />
+                <XCircle className="h-5 w-5 shrink-0 text-red-500" />
               )}
-              <span className="text-gray-900">{choice.text}</span>
+              <span className="text-[var(--text-primary)]">{choice.text}</span>
             </button>
           );
         })}
@@ -239,13 +239,13 @@ export function QuizMode({
           onClick={toggleDifficult}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm transition-colors tap-target ${
             isDifficult
-              ? "font-medium text-amber-600"
-              : "text-gray-400 hover:text-amber-500"
+              ? "font-medium text-amber-500"
+              : "text-[var(--text-muted)] hover:text-amber-500"
           }`}
         >
           <Flag className="h-3.5 w-3.5" />
           {isDifficult ? t("study.difficultMarked") : t("study.difficultMark")}
-          <kbd className="kbd-hint ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-mono text-gray-400">
+          <kbd className="kbd-hint ml-1 rounded bg-[var(--bg-surface)] px-1.5 py-0.5 text-[10px] font-mono text-[var(--text-muted)]">
             D
           </kbd>
         </button>

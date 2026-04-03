@@ -23,8 +23,10 @@ func (r *Set) GetOverviewByUserID(ctx context.Context, userID string) ([]model.S
 			WITH user_sets AS (
 				SELECT
 					id,
+					user_id,
 					title,
 					description,
+					is_public,
 					COALESCE(created_at, NOW()) AS created_at,
 					COALESCE(updated_at, COALESCE(created_at, NOW())) AS updated_at
 				FROM public.flashcard_sets
@@ -55,8 +57,10 @@ func (r *Set) GetOverviewByUserID(ctx context.Context, userID string) ([]model.S
 		)
 		SELECT
 			us.id,
+			us.user_id,
 			us.title,
 			us.description,
+			us.is_public,
 			us.created_at,
 			us.updated_at,
 			COALESCE(sc.card_count, 0) AS card_count,
@@ -90,8 +94,10 @@ func (r *Set) GetOverviewByUserID(ctx context.Context, userID string) ([]model.S
 
 		if err := rows.Scan(
 			&item.ID,
+			&item.UserID,
 			&item.Title,
 			&item.Description,
+			&item.IsPublic,
 			&createdAt,
 			&updatedAt,
 			&item.CardCount,
@@ -126,6 +132,7 @@ func (r *Set) GetPublicOverview(ctx context.Context) ([]model.SetOverview, error
 			WITH public_sets AS (
 				SELECT
 					id,
+					user_id,
 					title,
 					description,
 					COALESCE(created_at, NOW()) AS created_at,
@@ -143,6 +150,7 @@ func (r *Set) GetPublicOverview(ctx context.Context) ([]model.SetOverview, error
 		)
 		SELECT
 			ps.id,
+			ps.user_id,
 			ps.title,
 			ps.description,
 			ps.created_at,
@@ -168,6 +176,7 @@ func (r *Set) GetPublicOverview(ctx context.Context) ([]model.SetOverview, error
 
 		if err := rows.Scan(
 			&item.ID,
+			&item.UserID,
 			&item.Title,
 			&item.Description,
 			&createdAt,
@@ -177,6 +186,7 @@ func (r *Set) GetPublicOverview(ctx context.Context) ([]model.SetOverview, error
 			return nil, fmt.Errorf("scan public set overview: %w", err)
 		}
 
+		item.IsPublic = true
 		item.CreatedAt = createdAt.UTC().Format(time.RFC3339)
 		item.UpdatedAt = updatedAt.UTC().Format(time.RFC3339)
 		item.Accuracy = 0

@@ -6,7 +6,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { Button } from "@/components/ui/button";
 import { SetCard } from "@/features/sets/components";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
-import { getLibrarySetsOverview, getPublicSetsOverview } from "@/server/services/sets-overview";
+import { getPublicSetsOverview } from "@/server/services/sets-overview";
 
 interface SetsPageProps {
   searchParams: Promise<{
@@ -22,7 +22,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
   const t = createTranslator(locale);
   const { q = "", filter = "all", sort = "recent" } = await searchParams;
 
-  const sets = user ? await getLibrarySetsOverview() : await getPublicSetsOverview();
+  const sets = await getPublicSetsOverview();
   const query = q.trim().toLowerCase();
 
   let filtered = sets.filter((set) => {
@@ -96,7 +96,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] sm:text-base">
               {user
-                ? "Browse every public flashcard set on the platform alongside your own private and public decks."
+                ? t("sets.librarySubtitleAuth")
                 : t("guest.librarySubtitle")}
             </p>
 
@@ -241,21 +241,25 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
 
       {filtered.length > 0 ? (
         <div className="mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((set) => (
-            <SetCard
-              key={set.id}
-              id={set.id}
-              title={set.title}
-              description={set.description}
-              cardCount={set.cardCount}
-              createdAt={set.createdAt}
-              lastStudiedAt={set.lastStudiedAt}
-              accuracy={"accuracy" in set ? set.accuracy : 0}
-              locale={locale}
-              showManageActions={Boolean(user)}
-              requireAuthForStudy={!user}
-            />
-          ))}
+          {filtered.map((set) => {
+            const isOwner = Boolean(user && set.userId === user.id);
+            return (
+              <SetCard
+                key={set.id}
+                id={set.id}
+                title={set.title}
+                description={set.description}
+                cardCount={set.cardCount}
+                createdAt={set.createdAt}
+                lastStudiedAt={set.lastStudiedAt}
+                accuracy={"accuracy" in set ? set.accuracy : 0}
+                locale={locale}
+                showManageActions={isOwner}
+                showSaveAction={Boolean(user) && !isOwner}
+                requireAuthForStudy={!user}
+              />
+            );
+          })}
         </div>
       ) : (
         <div className="mt-8 rounded-[1.8rem] border border-dashed border-white/10 bg-[rgba(255,255,255,0.03)] px-6 py-16 text-center shadow-[var(--surface-shadow)]">

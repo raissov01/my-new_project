@@ -92,7 +92,7 @@ export default async function StudentDashboardPage() {
             <HeroSignal
               label={t("student.assignedSets")}
               value={`${summary.assignments.length}`}
-              detail="Assigned work waiting in your ecosystem."
+              detail={t("student.assignedWorkDetail")}
             />
           </div>
         </div>

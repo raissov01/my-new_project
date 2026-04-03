@@ -17,6 +17,7 @@ import { getCurrentUser } from "@/server/auth";
 import {
   FlashcardList,
   DeleteSetButton,
+  SaveSetButton,
   StudyRoutePrefetch,
   ShareSetPanel,
 } from "@/features/sets/components";
@@ -232,6 +233,9 @@ export default async function SetDetailPage({
               </Link>
             )}
             {isOwner && <DeleteSetButton setId={id} />}
+            {user && !isOwner && set.is_public && (
+              <SaveSetButton setId={id} variant="outline" size="md" />
+            )}
           </div>
         </div>
       </div>

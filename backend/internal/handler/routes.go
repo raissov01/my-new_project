@@ -92,6 +92,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/sets/:setID", wrapHTTP(deps.Flashcard.GetSet))
 		internal.PUT("/sets/:setID", wrapHTTP(deps.Flashcard.UpdateSet))
 		internal.DELETE("/sets/:setID", wrapHTTP(deps.Flashcard.DeleteSet))
+		internal.POST("/sets/:setID/clone", wrapHTTP(deps.Flashcard.CloneSet))
 
 		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
 		internal.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))

@@ -102,6 +102,31 @@ func (h *FlashcardHandler) DeleteSet(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+// CloneSet handles POST /api/v1/sets/{setID}/clone
+func (h *FlashcardHandler) CloneSet(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || strings.TrimSpace(userID) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	setID := r.PathValue("setID")
+	newSetID, err := h.svc.CloneSet(r.Context(), userID, setID)
+	if err != nil {
+		msg := err.Error()
+		status := http.StatusInternalServerError
+		if strings.Contains(msg, "not found") {
+			status = http.StatusNotFound
+		} else if strings.Contains(msg, "access denied") || strings.Contains(msg, "not public") {
+			status = http.StatusForbidden
+		}
+		writeError(w, status, msg, nil)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{"id": newSetID})
+}
+
 // GetSet handles GET /api/v1/sets/{setID}
 func (h *FlashcardHandler) GetSet(w http.ResponseWriter, r *http.Request) {
 	setID := r.PathValue("setID")

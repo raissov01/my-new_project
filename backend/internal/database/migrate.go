@@ -31,5 +31,15 @@ func AutoMigrate(db *gorm.DB) error {
 	}
 
 	log.Println("GORM auto-migration complete")
+
+	// Mark all existing users (who registered before email verification was added)
+	// as verified so they are not locked out of their accounts.
+	result := db.Exec(`UPDATE users SET email_verified = true WHERE email_verified = false AND verification_token IS NULL`)
+	if result.Error != nil {
+		log.Printf("warning: failed to backfill email_verified for existing users: %v", result.Error)
+	} else if result.RowsAffected > 0 {
+		log.Printf("backfilled email_verified=true for %d existing users", result.RowsAffected)
+	}
+
 	return nil
 }

@@ -134,6 +134,36 @@ export async function updateSet(
   redirect(`/sets/${setId}`);
 }
 
+export async function cloneSet(setId: string): Promise<SetFormState & { newSetId?: string }> {
+  const t = createTranslator(await getServerLocale());
+  const user = await requireUser();
+
+  if (!user) return { error: t("action.notAuthenticated") };
+
+  try {
+    const response = await fetchBackendJson<{ id: string }>({
+      path: `/api/v1/sets/${encodeURIComponent(setId)}/clone`,
+      userId: user.id,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/collections");
+    revalidatePath("/sets");
+    return { error: null, newSetId: response.id };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("access denied") || message.includes("not public")) {
+      return { error: t("action.accessDenied") };
+    }
+    if (message.includes("not found")) {
+      return { error: t("action.setNotFound") };
+    }
+    return { error: t("action.failedCreateSet") };
+  }
+}
+
 export async function deleteSet(setId: string): Promise<SetFormState> {
   const t = createTranslator(await getServerLocale());
   const user = await requireUser();

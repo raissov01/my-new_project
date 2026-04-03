@@ -57,12 +57,12 @@ export default async function TeacherDashboardPage() {
             <TeacherSignal
               label={t("teacher.totalStudents")}
               value={`${summary.totalStudents}`}
-              detail="Students connected across your classroom ecosystem."
+              detail={t("teacher.studentsDetail")}
             />
             <TeacherSignal
               label={t("teacher.totalChallenges")}
               value={`${summary.totalChallenges}`}
-              detail="Challenge flows managed from one control surface."
+              detail={t("teacher.challengesDetail")}
             />
             <TeacherSignal
               label={t("teacher.topStudents")}

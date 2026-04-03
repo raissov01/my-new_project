@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Layers, Clock3, Target, GraduationCap, Pencil } from "lucide-react";
+import { Layers, Clock3, Target, GraduationCap, Pencil, BookmarkPlus } from "lucide-react";
 import { formatDate } from "@/lib/shared/utils";
 import { type Locale, createTranslator } from "@/lib/shared/i18n";
 import { DeleteSetButton } from "./delete-set-button";
+import { SaveSetButton } from "./save-set-button";
 import { StudyRoutePrefetch } from "./study-route-prefetch";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 
@@ -16,6 +17,7 @@ interface SetCardProps {
   accuracy?: number;
   locale: Locale;
   showManageActions?: boolean;
+  showSaveAction?: boolean;
   compact?: boolean;
   requireAuthForStudy?: boolean;
 }
@@ -30,6 +32,7 @@ export function SetCard({
   accuracy = 0,
   locale,
   showManageActions = true,
+  showSaveAction = false,
   compact = false,
   requireAuthForStudy = false,
 }: SetCardProps) {
@@ -117,6 +120,11 @@ export function SetCard({
             </span>
           </Link>
           <DeleteSetButton setId={id} />
+        </div>
+      )}
+      {showSaveAction && (
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-5">
+          <SaveSetButton setId={id} />
         </div>
       )}
     </article>

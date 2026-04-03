@@ -7,8 +7,10 @@ import { getCurrentUser } from "@/server/auth";
 
 export type UserSetOverview = {
   id: string;
+  userId: string;
   title: string;
   description: string | null;
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
   cardCount: number;
