@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   //   node .next/standalone/server.js
   output: "standalone",
   outputFileTracingRoot: workspaceRoot,
+
+  // These packages use native bindings or Node.js APIs that break when bundled.
+  // They must be loaded from node_modules at runtime instead.
+  serverExternalPackages: ["mammoth", "pdf-parse"],
+
   experimental: {
     serverActions: {
       bodySizeLimit: "8mb",

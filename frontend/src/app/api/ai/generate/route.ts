@@ -54,6 +54,7 @@ function badRequest(error: string, detail?: string, status = 400) {
 }
 
 export async function POST(request: Request) {
+  try {
   const user = await getCurrentUser();
   if (!user) {
     return badRequest("NOT_AUTHENTICATED", "Login required.", 401);
@@ -90,16 +91,28 @@ export async function POST(request: Request) {
       ? await extractTextFromPdf(file)
       : await extractTextFromDocx(file);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unexpected AI request failure";
+    console.error("[ai/generate] Text extraction failed:", error);
+    const message = error instanceof Error ? error.message : "Unexpected extraction failure";
 
-    if (isPdf) {
-      return badRequest("PDF_EXTRACTION_FAILED", message, 500);
-    }
-    if (isDocx) {
-      return badRequest("DOCX_EXTRACTION_FAILED", message, 500);
+    // Check for module-not-found errors (standalone build missing packages)
+    const isModuleError =
+      message.includes("Cannot find module") ||
+      message.includes("MODULE_NOT_FOUND") ||
+      message.includes("is not a function");
+
+    if (isModuleError) {
+      return badRequest(
+        isPdf ? "PDF_PARSER_UNAVAILABLE" : "DOCX_PARSER_UNAVAILABLE",
+        "File parser is not available in this environment. Please contact the administrator.",
+        503
+      );
     }
 
-    return badRequest("GENERATION_FAILED", message, 500);
+    return badRequest(
+      isPdf ? "PDF_EXTRACTION_FAILED" : "DOCX_EXTRACTION_FAILED",
+      message,
+      500
+    );
   }
 
   if (extracted.text.length < MIN_TEXT_LENGTH) {
@@ -134,6 +147,12 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected AI request failure";
+    return badRequest("GENERATION_FAILED", message, 500);
+  }
+  } catch (outerError) {
+    // Global safety net — ensures the route NEVER crashes without sending a response
+    console.error("[ai/generate] Unhandled error:", outerError);
+    const message = outerError instanceof Error ? outerError.message : "Internal server error";
     return badRequest("GENERATION_FAILED", message, 500);
   }
 }
