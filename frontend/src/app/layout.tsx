@@ -1,8 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { getServerLocale } from "@/server/i18n";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   title: "StudyWithRaissov — Заманауи оқу платформасы",
