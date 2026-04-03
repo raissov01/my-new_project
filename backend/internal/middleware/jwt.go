@@ -10,7 +10,7 @@ import (
 
 // JWTAuth validates the Authorization: Bearer <token> header and
 // sets "userID", "email", and "role" in the Gin context.
-// This replaces the Supabase session validation.
+// Validates JWT auth tokens.
 func JWTAuth(jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")

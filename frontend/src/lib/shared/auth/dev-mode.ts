@@ -1,6 +1,6 @@
 // DEV MODE: auth disabled
 // ──────────────────────────────────────────────────────────────────────────────
-// Set to `false` to re-enable full Supabase authentication.
+// Set to `false` to re-enable full authentication.
 // When `true`, all auth checks are bypassed and a mock user is injected.
 // ──────────────────────────────────────────────────────────────────────────────
 
