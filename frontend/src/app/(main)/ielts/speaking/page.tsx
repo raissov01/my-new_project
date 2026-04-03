@@ -1,18 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft, Mic, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
+import { SpeakingPracticeClient } from "./client";
 
 export default async function IELTSSpeakingPage() {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
-
-  const parts = [
-    { id: "part1", title: t("ielts.speakingPart1"), body: t("ielts.speakingPart1Body"), time: "4-5 min" },
-    { id: "part2", title: t("ielts.speakingPart2"), body: t("ielts.speakingPart2Body"), time: "3-4 min" },
-    { id: "part3", title: t("ielts.speakingPart3"), body: t("ielts.speakingPart3Body"), time: "4-5 min" },
-  ];
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
@@ -39,19 +33,8 @@ export default async function IELTSSpeakingPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-3">
-        {parts.map((part) => (
-          <div key={part.id} className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:p-6">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="text-xl font-semibold text-[var(--text-primary)]">{part.title}</h3>
-              <span className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">{part.time}</span>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{part.body}</p>
-            <div className="mt-5">
-              <Button variant="outline" disabled className="opacity-60">{t("ielts.comingSoon")}</Button>
-            </div>
-          </div>
-        ))}
+      <div className="mt-8">
+        <SpeakingPracticeClient />
       </div>
     </div>
   );

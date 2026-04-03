@@ -26,6 +26,10 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.PomodoroPreference{},
 		&models.PomodoroSession{},
 		&models.IELTSMaterial{},
+		&models.IELTSWritingSubmission{},
+		&models.IELTSSpeakingSession{},
+		&models.IELTSQuestion{},
+		&models.IELTSMockExam{},
 	)
 	if err != nil {
 		return err

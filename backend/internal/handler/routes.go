@@ -15,6 +15,7 @@ type Dependencies struct {
 	Auth            *AuthHandler
 	GoogleOAuth     *GoogleOAuthHandler
 	IELTSMaterial   *IELTSMaterialHandler
+	IELTSExaminer   *IELTSExaminerHandler
 	Leaderboard   *Leaderboard
 	Profile       *Profile
 	Set           *Set
@@ -49,9 +50,10 @@ func RegisterRoutes(router *gin.Engine) {
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
 
-	// ── Public IELTS material routes (no auth required for reading) ─────
+	// ── Public IELTS routes (no auth required for reading) ──────────────
 	api.GET("/ielts/materials", deps.IELTSMaterial.List)
 	api.GET("/ielts/materials/:id", deps.IELTSMaterial.Get)
+	api.GET("/ielts/questions", wrapHTTP(deps.IELTSExaminer.GetQuestions))
 
 	// ── JWT-authenticated routes ────────────────────────────────────────
 	authed := api.Group("")
@@ -109,6 +111,12 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.PUT("/account/password", deps.Auth.UpdatePassword)
 		internal.DELETE("/account", deps.Auth.DeleteAccount)
 		internal.POST("/ai/generate", wrapHTTP(deps.AI.Generate))
+
+		// IELTS AI examiner (requires internal auth)
+		internal.POST("/ielts/writing/evaluate", wrapHTTP(deps.IELTSExaminer.EvaluateWriting))
+		internal.GET("/ielts/writing/history", wrapHTTP(deps.IELTSExaminer.GetWritingHistory))
+		internal.POST("/ielts/speaking/evaluate", wrapHTTP(deps.IELTSExaminer.EvaluateSpeaking))
+		internal.GET("/ielts/speaking/history", wrapHTTP(deps.IELTSExaminer.GetSpeakingHistory))
 
 		// IELTS material admin CRUD (requires internal auth — teacher/admin)
 		internal.POST("/ielts/materials", deps.IELTSMaterial.Create)

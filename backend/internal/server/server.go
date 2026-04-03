@@ -169,6 +169,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		ProfileWrite:     handler.NewProfileWrite(classroomRepo, cfg.Environment),
 		AI:               handler.NewAI(cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.AIRequestTimeout, cfg.MaxUploadBytes),
 		IELTSMaterial:    handler.NewIELTSMaterial(gormDB),
+		IELTSExaminer:    handler.NewIELTSExaminer(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.AIRequestTimeout),
 		DebugDatabase:    buildDebugDatabaseHandler(pool),
 	}
 }
