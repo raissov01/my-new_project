@@ -57,7 +57,7 @@ type googleUserInfo struct {
 	Picture       string `json:"picture"`
 }
 
-// RedirectToGoogle generates the OAuth URL and redirects the user.
+// RedirectToGoogle generates the OAuth URL and sends the browser to Google.
 // GET /api/v1/auth/google
 func (h *GoogleOAuthHandler) RedirectToGoogle(c *gin.Context) {
 	if h.oauthConfig == nil {
@@ -77,7 +77,7 @@ func (h *GoogleOAuthHandler) RedirectToGoogle(c *gin.Context) {
 	c.SetCookie("oauth_state", state, 600, "/", "", true, true)
 
 	url := h.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
-	c.JSON(http.StatusOK, gin.H{"url": url})
+	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
 // HandleCallback exchanges the code for user info and creates/logs in the user.

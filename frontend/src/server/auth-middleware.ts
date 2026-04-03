@@ -1,5 +1,4 @@
-import "server-only";
-
+// No "server-only" here — middleware runs on Edge runtime
 import { NextResponse, type NextRequest } from "next/server";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { isAdminSessionCookie, ADMIN_COOKIE_NAME } from "@/lib/shared/auth/admin";
