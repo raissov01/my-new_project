@@ -57,7 +57,7 @@ func (r *Dashboard) GetTeacherSummaryByUserID(
 	}
 	defer groupRows.Close()
 
-	var groups []model.TeacherDashboardGroup
+	groups := make([]model.TeacherDashboardGroup, 0)
 	totalAssignments := 0
 	totalChallenges := 0
 
@@ -152,7 +152,7 @@ func (r *Dashboard) GetTeacherSummaryByUserID(
 	}
 	defer topStudentRows.Close()
 
-	var topStudents []model.DashboardTopStudent
+	topStudents := make([]model.DashboardTopStudent, 0)
 	for topStudentRows.Next() {
 		var item model.DashboardTopStudent
 
@@ -205,7 +205,7 @@ func (r *Dashboard) GetStudentSummaryByUserID(
 	}
 	defer classRows.Close()
 
-	var classes []model.StudentDashboardClass
+	classes := make([]model.StudentDashboardClass, 0)
 	var groupIDs []string
 	for classRows.Next() {
 		var item model.StudentDashboardClass
@@ -253,7 +253,7 @@ func (r *Dashboard) GetStudentSummaryByUserID(
 	}
 	defer assignmentRows.Close()
 
-	var assignments []model.StudentDashboardAssignment
+	assignments := make([]model.StudentDashboardAssignment, 0)
 	for assignmentRows.Next() {
 		var item model.StudentDashboardAssignment
 		var deadline *time.Time
@@ -306,7 +306,7 @@ func (r *Dashboard) GetStudentSummaryByUserID(
 	}
 	defer challengeRows.Close()
 
-	var challenges []model.StudentDashboardChallenge
+	challenges := make([]model.StudentDashboardChallenge, 0)
 	for challengeRows.Next() {
 		var item model.StudentDashboardChallenge
 		var deadline *time.Time

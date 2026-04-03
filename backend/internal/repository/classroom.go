@@ -37,7 +37,7 @@ func (r *Classroom) GetOwnedGroupsByUserID(
 	}
 	defer rows.Close()
 
-	var groups []model.OwnedGroup
+	groups := make([]model.OwnedGroup, 0)
 	for rows.Next() {
 		var item model.OwnedGroup
 		var createdAt time.Time
@@ -80,7 +80,7 @@ func (r *Classroom) GetAvailableSetsByUserID(
 	}
 	defer rows.Close()
 
-	var sets []model.AvailableClassSet
+	sets := make([]model.AvailableClassSet, 0)
 	for rows.Next() {
 		var item model.AvailableClassSet
 		var createdAt time.Time
@@ -152,7 +152,7 @@ func (r *Classroom) GetMyChallengesByUserID(
 	}
 	defer rows.Close()
 
-	var challenges []model.MyClassChallenge
+	challenges := make([]model.MyClassChallenge, 0)
 	for rows.Next() {
 		var item model.MyClassChallenge
 		var deadline *time.Time
@@ -238,7 +238,7 @@ func (r *Classroom) GetTeacherClassroomDetail(
 	}
 	defer memberRows.Close()
 
-	var members []model.TeacherClassroomMember
+	members := make([]model.TeacherClassroomMember, 0)
 	for memberRows.Next() {
 		var item model.TeacherClassroomMember
 		var joinedAt time.Time
@@ -281,7 +281,7 @@ func (r *Classroom) GetTeacherClassroomDetail(
 	}
 	defer assignmentRows.Close()
 
-	var assignments []model.TeacherClassroomAssignment
+	assignments := make([]model.TeacherClassroomAssignment, 0)
 	for assignmentRows.Next() {
 		var item model.TeacherClassroomAssignment
 		var deadline *time.Time
@@ -330,7 +330,7 @@ func (r *Classroom) GetTeacherClassroomDetail(
 	}
 	defer challengeRows.Close()
 
-	var challenges []model.TeacherClassroomChallenge
+	challenges := make([]model.TeacherClassroomChallenge, 0)
 	for challengeRows.Next() {
 		var item model.TeacherClassroomChallenge
 		var deadline *time.Time
@@ -403,7 +403,7 @@ func (r *Classroom) GetTeacherClassroomDetail(
 	}
 	defer progressRows.Close()
 
-	var progress []model.TeacherClassroomProgress
+	progress := make([]model.TeacherClassroomProgress, 0)
 	for progressRows.Next() {
 		var item model.TeacherClassroomProgress
 		var totalCorrect int
@@ -594,7 +594,7 @@ func (r *Classroom) GetChallengeRanking(
 	}
 	defer rows.Close()
 
-	var entries []model.ChallengeRankingEntry
+	entries := make([]model.ChallengeRankingEntry, 0)
 	var currentUserRank *int
 	rank := 0
 	for rows.Next() {
