@@ -54,14 +54,18 @@ jobs:
             . frontend/.env
             . backend/.env
             STACK_DEPLOY_VERSION="$(date +%Y%m%d%H%M%S)-$(git rev-parse --short HEAD)"
+            BACKEND_IMAGE="swr-backend:${STACK_DEPLOY_VERSION}"
+            FRONTEND_IMAGE="swr-frontend:${STACK_DEPLOY_VERSION}"
+            export BACKEND_IMAGE
+            export FRONTEND_IMAGE
             export STACK_DEPLOY_VERSION
             set +a
 
-            DOCKER_BUILDKIT=1 docker build -t swr-backend -f docker/backend.Dockerfile backend/
+            DOCKER_BUILDKIT=1 docker build -t "$BACKEND_IMAGE" -f docker/backend.Dockerfile backend/
             DOCKER_BUILDKIT=1 docker build \
               --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
               --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
-              -t swr-frontend \
+              -t "$FRONTEND_IMAGE" \
               -f docker/frontend.Dockerfile \
               frontend/
 

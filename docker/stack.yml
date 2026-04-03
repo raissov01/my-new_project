@@ -51,7 +51,7 @@ services:
       retries: 5
 
   backend:
-    image: swr-backend:latest
+    image: ${BACKEND_IMAGE:-swr-backend:latest}
     build:
       context: ../backend
       dockerfile: ../docker/backend.Dockerfile
@@ -96,7 +96,7 @@ services:
       start_period: 90s
 
   frontend:
-    image: swr-frontend:latest
+    image: ${FRONTEND_IMAGE:-swr-frontend:latest}
     build:
       context: ../frontend
       dockerfile: ../docker/frontend.Dockerfile
