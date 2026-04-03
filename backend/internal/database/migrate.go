@@ -46,5 +46,9 @@ func AutoMigrate(db *gorm.DB) error {
 		log.Printf("backfilled email_verified=true for %d existing users", result.RowsAffected)
 	}
 
+	if err := seedIELTSContent(db); err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -43,7 +43,7 @@ export default async function IELTSMaterialsPage() {
   const categoryLabels = {
     reading: t("ielts.matReading"),
     listening: t("ielts.matListening"),
-    writing: t("ielts.matWriting" in {} ? "ielts.matWriting" : "ielts.writingTitle"),
+    writing: t("ielts.writingTitle"),
     speaking: t("ielts.speakingTitle"),
   };
 

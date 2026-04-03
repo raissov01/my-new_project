@@ -14,8 +14,25 @@ export type SpeakingResult = {
     strengths: string[];
     weaknesses: string[];
     suggestions: string[];
+    improvementPlan?: string[];
+    bandExplanation?: string;
     detailedFeedback: string;
+    modelAnswer?: string;
+    rewrittenResponse?: string;
+    grammarHighlights?: Array<{
+      original: string;
+      issue: string;
+      suggestion: string;
+      explanation: string;
+    }>;
+    vocabularyHighlights?: Array<{
+      original: string;
+      issue: string;
+      suggestion: string;
+      explanation: string;
+    }>;
     followUpQuestion: string;
+    followUpQuestions?: string[];
   };
   aiModel: string;
 };

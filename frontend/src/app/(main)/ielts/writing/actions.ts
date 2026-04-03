@@ -14,7 +14,23 @@ export type WritingResult = {
     strengths: string[];
     weaknesses: string[];
     suggestions: string[];
+    improvementPlan?: string[];
+    bandExplanation?: string;
     detailedFeedback: string;
+    modelAnswer?: string;
+    rewrittenResponse?: string;
+    grammarHighlights?: Array<{
+      original: string;
+      issue: string;
+      suggestion: string;
+      explanation: string;
+    }>;
+    vocabularyHighlights?: Array<{
+      original: string;
+      issue: string;
+      suggestion: string;
+      explanation: string;
+    }>;
   };
   wordCount: number;
   aiModel: string;

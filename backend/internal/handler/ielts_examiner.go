@@ -44,19 +44,32 @@ type writingEvalRequest struct {
 }
 
 type writingScores struct {
-	OverallBand     float64        `json:"overallBand"`
-	TaskAchievement float64        `json:"taskAchievement"`
-	Coherence       float64        `json:"coherence"`
-	LexicalResource float64        `json:"lexicalResource"`
-	Grammar         float64        `json:"grammar"`
+	OverallBand     float64         `json:"overallBand"`
+	TaskAchievement float64         `json:"taskAchievement"`
+	Coherence       float64         `json:"coherence"`
+	LexicalResource float64         `json:"lexicalResource"`
+	Grammar         float64         `json:"grammar"`
 	Feedback        writingFeedback `json:"feedback"`
 }
 
+type feedbackIssue struct {
+	Original    string `json:"original"`
+	Issue       string `json:"issue"`
+	Suggestion  string `json:"suggestion"`
+	Explanation string `json:"explanation"`
+}
+
 type writingFeedback struct {
-	Strengths        []string `json:"strengths"`
-	Weaknesses       []string `json:"weaknesses"`
-	Suggestions      []string `json:"suggestions"`
-	DetailedFeedback string   `json:"detailedFeedback"`
+	Strengths            []string        `json:"strengths"`
+	Weaknesses           []string        `json:"weaknesses"`
+	Suggestions          []string        `json:"suggestions"`
+	ImprovementPlan      []string        `json:"improvementPlan"`
+	BandExplanation      string          `json:"bandExplanation"`
+	DetailedFeedback     string          `json:"detailedFeedback"`
+	ModelAnswer          string          `json:"modelAnswer"`
+	RewrittenResponse    string          `json:"rewrittenResponse"`
+	GrammarHighlights    []feedbackIssue `json:"grammarHighlights"`
+	VocabularyHighlights []feedbackIssue `json:"vocabularyHighlights"`
 }
 
 func (h *IELTSExaminerHandler) EvaluateWriting(w http.ResponseWriter, r *http.Request) {
@@ -124,7 +137,17 @@ Return ONLY valid JSON with no additional text:
     "strengths": ["strength 1", "strength 2", "strength 3"],
     "weaknesses": ["weakness 1", "weakness 2"],
     "suggestions": ["specific actionable suggestion 1", "suggestion 2", "suggestion 3"],
-    "detailedFeedback": "A paragraph of detailed examiner feedback explaining the scores."
+    "improvementPlan": ["step 1", "step 2", "step 3"],
+    "bandExplanation": "Explain exactly why this band was awarded in examiner language.",
+    "detailedFeedback": "A paragraph of detailed examiner feedback explaining the scores.",
+    "modelAnswer": "Write a band 7-9 sample answer.",
+    "rewrittenResponse": "Rewrite the student's response into a stronger version while keeping the main ideas.",
+    "grammarHighlights": [
+      {"original": "student phrase", "issue": "grammar issue", "suggestion": "better version", "explanation": "why"}
+    ],
+    "vocabularyHighlights": [
+      {"original": "student word", "issue": "lexical weakness", "suggestion": "better word", "explanation": "why"}
+    ]
   }
 }`, taskLabel, req.Prompt, wordCount, essay)
 
@@ -208,20 +231,27 @@ type speakingEvalRequest struct {
 }
 
 type speakingScores struct {
-	OverallBand      float64         `json:"overallBand"`
-	FluencyCoherence float64         `json:"fluencyCoherence"`
-	LexicalResource  float64         `json:"lexicalResource"`
-	Grammar          float64         `json:"grammar"`
-	Pronunciation    float64         `json:"pronunciation"`
+	OverallBand      float64          `json:"overallBand"`
+	FluencyCoherence float64          `json:"fluencyCoherence"`
+	LexicalResource  float64          `json:"lexicalResource"`
+	Grammar          float64          `json:"grammar"`
+	Pronunciation    float64          `json:"pronunciation"`
 	Feedback         speakingFeedback `json:"feedback"`
 }
 
 type speakingFeedback struct {
-	Strengths        []string `json:"strengths"`
-	Weaknesses       []string `json:"weaknesses"`
-	Suggestions      []string `json:"suggestions"`
-	DetailedFeedback string   `json:"detailedFeedback"`
-	FollowUpQuestion string   `json:"followUpQuestion"`
+	Strengths            []string        `json:"strengths"`
+	Weaknesses           []string        `json:"weaknesses"`
+	Suggestions          []string        `json:"suggestions"`
+	ImprovementPlan      []string        `json:"improvementPlan"`
+	BandExplanation      string          `json:"bandExplanation"`
+	DetailedFeedback     string          `json:"detailedFeedback"`
+	ModelAnswer          string          `json:"modelAnswer"`
+	RewrittenResponse    string          `json:"rewrittenResponse"`
+	GrammarHighlights    []feedbackIssue `json:"grammarHighlights"`
+	VocabularyHighlights []feedbackIssue `json:"vocabularyHighlights"`
+	FollowUpQuestion     string          `json:"followUpQuestion"`
+	FollowUpQuestions    []string        `json:"followUpQuestions"`
 }
 
 func (h *IELTSExaminerHandler) EvaluateSpeaking(w http.ResponseWriter, r *http.Request) {
@@ -273,6 +303,7 @@ Score each criterion on the IELTS band scale (0-9, half-band increments):
 Calculate the overall band as the average, rounded to nearest 0.5.
 
 Also generate one natural follow-up question an examiner would ask next.
+The follow-up must react to the candidate's actual ideas, not be generic.
 
 Return ONLY valid JSON:
 {
@@ -285,8 +316,19 @@ Return ONLY valid JSON:
     "strengths": ["strength 1", "strength 2"],
     "weaknesses": ["weakness 1", "weakness 2"],
     "suggestions": ["suggestion 1", "suggestion 2"],
+    "improvementPlan": ["step 1", "step 2", "step 3"],
+    "bandExplanation": "Explain why this speaking band was awarded.",
     "detailedFeedback": "Detailed examiner feedback paragraph.",
-    "followUpQuestion": "A natural follow-up question for the candidate."
+    "modelAnswer": "Write a strong band 7-9 style spoken answer.",
+    "rewrittenResponse": "Rewrite the candidate's answer to sound more natural and higher-band.",
+    "grammarHighlights": [
+      {"original": "student phrase", "issue": "grammar issue", "suggestion": "better version", "explanation": "why"}
+    ],
+    "vocabularyHighlights": [
+      {"original": "student word", "issue": "lexical weakness", "suggestion": "better expression", "explanation": "why"}
+    ],
+    "followUpQuestion": "A natural follow-up question for the candidate.",
+    "followUpQuestions": ["follow-up 1", "follow-up 2", "follow-up 3"]
   }
 }`, partLabel, req.Prompt, strings.TrimSpace(req.Transcript))
 
@@ -355,33 +397,6 @@ func (h *IELTSExaminerHandler) GetSpeakingHistory(w http.ResponseWriter, r *http
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"items": sessions})
-}
-
-// ── Questions ───────────────────────────────────────────────────────────────
-
-func (h *IELTSExaminerHandler) GetQuestions(w http.ResponseWriter, r *http.Request) {
-	query := h.db.Order("sort_order ASC, created_at DESC")
-
-	if section := r.URL.Query().Get("section"); section != "" {
-		query = query.Where("section = ?", section)
-	}
-	if qType := r.URL.Query().Get("type"); qType != "" {
-		query = query.Where("question_type = ?", qType)
-	}
-	if mockType := r.URL.Query().Get("mockType"); mockType != "" {
-		query = query.Where("mock_type = ?", mockType)
-	}
-	if diff := r.URL.Query().Get("difficulty"); diff != "" {
-		query = query.Where("difficulty = ?", diff)
-	}
-
-	var questions []models.IELTSQuestion
-	if err := query.Find(&questions).Error; err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to load questions", err)
-		return
-	}
-
-	writeJSON(w, http.StatusOK, map[string]any{"items": questions})
 }
 
 // ── LLM call ────────────────────────────────────────────────────────────────

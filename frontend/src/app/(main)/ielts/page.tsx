@@ -24,7 +24,7 @@ export default async function IELTSHubPage() {
       title: t("ielts.simulatorTitle"),
       body: t("ielts.simulatorBody"),
       color: "text-blue-500 bg-blue-500/10",
-      badge: t("ielts.comingSoon"),
+      badge: null,
       accent: "group-hover:border-l-blue-500",
     },
     {
@@ -33,7 +33,7 @@ export default async function IELTSHubPage() {
       title: t("ielts.writingTitle"),
       body: t("ielts.writingBody"),
       color: "text-emerald-500 bg-emerald-500/10",
-      badge: t("ielts.comingSoon"),
+      badge: null,
       accent: "group-hover:border-l-emerald-500",
     },
     {
@@ -42,7 +42,7 @@ export default async function IELTSHubPage() {
       title: t("ielts.speakingTitle"),
       body: t("ielts.speakingBody"),
       color: "text-violet-500 bg-violet-500/10",
-      badge: t("ielts.comingSoon"),
+      badge: null,
       accent: "group-hover:border-l-violet-500",
     },
     {

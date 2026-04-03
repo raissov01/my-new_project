@@ -12,10 +12,10 @@ type Dependencies struct {
 	JWTSecret        string
 	Environment      string
 
-	Auth            *AuthHandler
-	GoogleOAuth     *GoogleOAuthHandler
-	IELTSMaterial   *IELTSMaterialHandler
-	IELTSExaminer   *IELTSExaminerHandler
+	Auth          *AuthHandler
+	GoogleOAuth   *GoogleOAuthHandler
+	IELTSMaterial *IELTSMaterialHandler
+	IELTSExaminer *IELTSExaminerHandler
 	Leaderboard   *Leaderboard
 	Profile       *Profile
 	Set           *Set
@@ -54,6 +54,7 @@ func RegisterRoutes(router *gin.Engine) {
 	api.GET("/ielts/materials", deps.IELTSMaterial.List)
 	api.GET("/ielts/materials/:id", deps.IELTSMaterial.Get)
 	api.GET("/ielts/questions", wrapHTTP(deps.IELTSExaminer.GetQuestions))
+	api.GET("/ielts/mock", wrapHTTP(deps.IELTSExaminer.GetMockExam))
 
 	// ── JWT-authenticated routes ────────────────────────────────────────
 	authed := api.Group("")
