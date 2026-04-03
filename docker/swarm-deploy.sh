@@ -61,5 +61,5 @@ docker stack ps "$STACK_NAME" --no-trunc 2>/dev/null | head -20
 echo ""
 echo "=== Health checks ==="
 sleep 10
-curl -sf https://studywithraissov.com/api/v1/leaderboard >/dev/null && echo " [backend OK]" || echo " [backend FAIL]"
+curl -sf https://studywithraissov.com/health >/dev/null && echo " [backend OK]" || echo " [backend FAIL]"
 curl -sf -o /dev/null https://studywithraissov.com && echo " [site OK]" || echo " [site FAIL]"
