@@ -229,7 +229,7 @@ export default async function SetDetailPage({
                 className="inline-flex items-center gap-1.5 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
               >
                 <Trophy className="h-4 w-4" />
-                Create class challenge
+                {t("challenge.createClassChallenge")}
               </Link>
             )}
             {isOwner && <DeleteSetButton setId={id} />}

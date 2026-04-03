@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -106,7 +107,7 @@ func (h *GoogleOAuthHandler) HandleCallback(c *gin.Context) {
 
 	// Check for error from Google
 	if errParam := c.Query("error"); errParam != "" {
-		c.Redirect(http.StatusTemporaryRedirect, h.frontendURL+"/login?error="+errParam)
+		c.Redirect(http.StatusTemporaryRedirect, h.frontendURL+"/login?error="+url.QueryEscape(errParam))
 		return
 	}
 

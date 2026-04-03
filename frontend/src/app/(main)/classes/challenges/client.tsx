@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
+import { useLocale } from "@/components/providers/locale-provider";
 import { createClassChallenge, createClassGroup } from "./actions";
 
 export function ClassChallengesClient({
@@ -25,6 +26,7 @@ export function ClassChallengesClient({
   defaultSetId?: string;
 }) {
   const [isPending, startTransition] = useTransition();
+  const { t } = useLocale();
 
   return (
     <div className="space-y-8">
@@ -38,18 +40,18 @@ export function ClassChallengesClient({
           className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6"
         >
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Create class or private group
+            {t("challenge.createGroup")}
           </h2>
           <div className="mt-5 space-y-4">
             <input
               name="name"
-              placeholder="Class name"
+              placeholder={t("challenge.className")}
               className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none"
             />
             <textarea
               name="members"
               rows={5}
-              placeholder="Student usernames, one per line"
+              placeholder={t("challenge.studentUsernames")}
               className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none"
             />
             <button
@@ -57,7 +59,7 @@ export function ClassChallengesClient({
               disabled={isPending}
               className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
             >
-              Create group
+              {t("challenge.createGroupBtn")}
             </button>
           </div>
         </form>
@@ -71,19 +73,19 @@ export function ClassChallengesClient({
           className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6"
         >
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Create private class challenge
+            {t("challenge.createPrivateChallenge")}
           </h2>
           <div className="mt-5 space-y-4">
             <input
               name="title"
-              placeholder="Challenge title"
+              placeholder={t("challenge.challengeTitle")}
               className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none"
             />
             <select
               name="group_id"
               className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none"
             >
-              <option value="">Select group</option>
+              <option value="">{t("challenge.selectGroup")}</option>
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}
@@ -95,7 +97,7 @@ export function ClassChallengesClient({
               defaultValue={defaultSetId ?? ""}
               className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none"
             >
-              <option value="">Assign flashcard set</option>
+              <option value="">{t("challenge.assignSet")}</option>
               {sets.map((set) => (
                 <option key={set.id} value={set.id}>
                   {set.title}
@@ -112,7 +114,7 @@ export function ClassChallengesClient({
               disabled={isPending}
               className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
             >
-              Create challenge
+              {t("challenge.createChallengeBtn")}
             </button>
           </div>
         </form>
@@ -120,11 +122,11 @@ export function ClassChallengesClient({
 
       <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
         <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-          Your class challenges
+          {t("challenge.yourChallenges")}
         </h2>
         {challenges.length === 0 ? (
           <p className="mt-4 text-sm text-[var(--text-secondary)]">
-            No private class challenges yet.
+            {t("challenge.noChallengesYet")}
           </p>
         ) : (
           <div className="mt-5 grid gap-4">
@@ -143,14 +145,14 @@ export function ClassChallengesClient({
                     </p>
                     {challenge.deadline && (
                       <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                        Deadline: {new Date(challenge.deadline).toLocaleString()}
+                        {t("challenge.deadline").replace("{date}", new Date(challenge.deadline).toLocaleString())}
                       </p>
                     )}
                   </div>
 
                   <div className="text-right text-sm text-[var(--text-secondary)]">
-                    <p>{challenge.participantCount} joined</p>
-                    <p>{challenge.isOwner ? "Teacher / owner" : "Student member"}</p>
+                    <p>{t("challenge.joinedCount").replace("{count}", String(challenge.participantCount))}</p>
+                    <p>{challenge.isOwner ? t("challenge.teacherOwner") : t("challenge.studentMember")}</p>
                   </div>
                 </div>
 
@@ -159,13 +161,13 @@ export function ClassChallengesClient({
                     href={`/classes/challenges/${challenge.id}`}
                     className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
                   >
-                    {challenge.joined ? "Open challenge" : "Join challenge"}
+                    {challenge.joined ? t("challenge.openChallenge") : t("challenge.joinChallenge")}
                   </Link>
                   <Link
                     href={`/classes/challenges/${challenge.id}/ranking`}
                     className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)]"
                   >
-                    Private ranking
+                    {t("challenge.privateRanking")}
                   </Link>
                 </div>
               </div>

@@ -222,6 +222,8 @@ export function PreferencesPanel({
           <Input
             type="number"
             min={5}
+            max={240}
+            step={1}
             label={t("pomodoro.studyDuration")}
             value={workMinutes}
             onChange={(event) => setWorkMinutes(event.target.value)}
@@ -229,6 +231,8 @@ export function PreferencesPanel({
           <Input
             type="number"
             min={1}
+            max={60}
+            step={1}
             label={t("pomodoro.breakDurationLabel")}
             value={breakMinutes}
             onChange={(event) => setBreakMinutes(event.target.value)}

@@ -91,7 +91,7 @@ export default async function TeacherDashboardPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="max-w-xl">
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--text-muted)]">
-                Classroom system
+                {t("teacher.classroomSystem")}
               </p>
               <h2 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                 {t("teacher.classesOverview")}
@@ -146,7 +146,7 @@ export default async function TeacherDashboardPage() {
         <section className="space-y-6">
           <section className="rounded-[1.8rem] border border-white/8 bg-[rgba(255,255,255,0.04)] p-4 shadow-[var(--surface-shadow)] backdrop-blur-sm sm:p-6">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Student signal
+              {t("teacher.studentSignal")}
             </p>
             <h2 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
               {t("teacher.topStudents")}
@@ -186,14 +186,13 @@ export default async function TeacherDashboardPage() {
 
           <section className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(135deg,rgba(45,212,191,0.14),rgba(15,23,42,0.82))] p-4 shadow-[var(--surface-shadow)] sm:p-6">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Teacher control
+              {t("teacher.teacherControl")}
             </p>
             <h3 className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-              Build classes, assign sets, and shape challenge activity from one dashboard
+              {t("teacher.teacherControlTitle")}
             </h3>
             <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-              The workspace now presents teaching as a connected system: members, assignments,
-              rankings, and class momentum all surfaced together.
+              {t("teacher.teacherControlBody")}
             </p>
           </section>
         </section>

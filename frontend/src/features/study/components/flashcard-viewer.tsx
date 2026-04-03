@@ -99,31 +99,31 @@ export function FlashcardViewer({
           }`}
         >
           {/* Front — Term */}
-          <div className="backface-hidden absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-[var(--glass-border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg-surface)] p-6 shadow-lg sm:rounded-3xl sm:p-10">
+          <div className="backface-hidden absolute inset-0 flex flex-col items-center justify-center overflow-y-auto rounded-2xl border border-[var(--glass-border)] bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg-surface)] p-6 shadow-lg sm:rounded-3xl sm:p-10">
             {isDifficult && (
-              <div className="absolute right-3 top-3 rounded-full bg-amber-500/10 p-1.5 sm:right-4 sm:top-4">
+              <div className="absolute right-3 top-3 z-10 rounded-full bg-amber-500/10 p-1.5 sm:right-4 sm:top-4">
                 <Flag className="h-3.5 w-3.5 text-amber-500" />
               </div>
             )}
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+            <p className="shrink-0 text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
               {t("study.term")}
             </p>
             <p className="mt-3 text-center text-xl font-bold leading-tight text-[var(--text-primary)] sm:mt-5 sm:text-2xl md:text-3xl">
               {currentCard.term}
             </p>
-            <p className="mt-4 text-xs text-[var(--text-muted)] sm:mt-6">
+            <p className="mt-4 shrink-0 text-xs text-[var(--text-muted)] sm:mt-6">
               {t("study.tapToReveal")}
             </p>
           </div>
 
           {/* Back — Definition */}
-          <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 p-6 shadow-lg text-white sm:rounded-3xl sm:p-10">
+          <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col items-center justify-center overflow-y-auto rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 p-6 shadow-lg text-white sm:rounded-3xl sm:p-10">
             {isDifficult && (
-              <div className="absolute right-3 top-3 rounded-full bg-white/20 p-1.5 sm:right-4 sm:top-4">
+              <div className="absolute right-3 top-3 z-10 rounded-full bg-white/20 p-1.5 sm:right-4 sm:top-4">
                 <Flag className="h-3.5 w-3.5 text-white" />
               </div>
             )}
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-200">
+            <p className="shrink-0 text-xs font-bold uppercase tracking-[0.2em] text-indigo-200">
               {t("study.definition")}
             </p>
             <p className="mt-3 text-center text-xl font-bold leading-tight sm:mt-5 sm:text-2xl md:text-3xl">

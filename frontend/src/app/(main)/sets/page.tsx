@@ -149,23 +149,23 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
 
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
             <LibrarySignal
-              label={user ? "Platform library" : "Public sets"}
+              label={user ? t("sets.librarySignalTotal") : t("guest.publicSets")}
               value={sets.length}
               body={
                 user
-                  ? "Public decks from the whole platform, plus your own workspace, in one view."
-                  : "Guests can preview open study resources before registering."
+                  ? t("sets.librarySignalTotalBody")
+                  : t("guest.libraryPreviewBody")
               }
             />
             <LibrarySignal
-              label={user ? "Review ready" : "Visible now"}
+              label={user ? t("sets.librarySignalReview") : t("guest.visibleNow")}
               value={user ? reviewReadyCount : filtered.length}
-              body={user ? "Sets that need attention, review, or weak-card recovery." : "Currently filtered results ready for exploration."}
+              body={user ? t("sets.librarySignalReviewBody") : t("guest.visibleNowBody")}
             />
             <LibrarySignal
-              label={user ? "High accuracy" : "Structured decks"}
+              label={user ? t("sets.librarySignalMastery") : t("guest.structuredDecks")}
               value={masteryCount}
-              body={user ? "Sets already showing strong performance." : "Curated resources that reinforce platform quality."}
+              body={user ? t("sets.librarySignalMasteryBody") : t("guest.structuredDecksBody")}
             />
           </div>
         </div>
@@ -229,13 +229,13 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
             {filtered.length} {filtered.length === 1 ? t("dashboard.set") : t("dashboard.sets")}
           </p>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            {query ? `Search matched "${q}" across your library.` : "Scan, filter, and jump into any deck from one premium workspace."}
+            {query ? t("sets.searchMatched").replace("{q}", q) : t("sets.browseHint")}
           </p>
         </div>
 
         <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[rgba(255,255,255,0.04)] px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
           <Sparkles className="h-3.5 w-3.5 text-indigo-300" />
-          {user ? "Study ecosystem" : "Guest preview mode"}
+          {user ? t("sets.studyEcosystem") : t("guest.previewMode")}
         </div>
       </section>
 

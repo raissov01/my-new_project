@@ -1,12 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
 import { Camera } from "lucide-react";
 import { updateProfile } from "@/app/(main)/profile/actions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { ProfileAvatar } from "@/features/profile/components/profile-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+function SubmitButton() {
+  const { t } = useLocale();
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" isLoading={pending} disabled={pending}>
+      {t("profile.saveProfile")}
+    </Button>
+  );
+}
 
 export function EditProfileForm({
   initialUsername,
@@ -36,11 +47,11 @@ export function EditProfileForm({
               {t("profile.uploadAvatar")}
             </p>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Paste a direct image URL for your avatar. Local file storage is no longer used.
+              {t("profile.avatarUrlHint")}
             </p>
             <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[var(--bg-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)]">
               <Camera className="h-3.5 w-3.5" />
-              PNG, JPG, WEBP URL
+              {t("profile.avatarUrlFormats")}
             </div>
           </div>
         </div>
@@ -84,7 +95,7 @@ export function EditProfileForm({
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit">{t("profile.saveProfile")}</Button>
+        <SubmitButton />
         <Link href="/profile">
           <Button type="button" variant="outline">
             {t("set.cancel")}
