@@ -35,6 +35,8 @@ services:
       - internal
     deploy:
       replicas: 1
+      labels:
+        com.studywithraissov.deploy-version: ${STACK_DEPLOY_VERSION:-latest}
       placement:
         constraints:
           - node.role == manager
@@ -73,6 +75,8 @@ services:
       - internal
     deploy:
       replicas: 2
+      labels:
+        com.studywithraissov.deploy-version: ${STACK_DEPLOY_VERSION:-latest}
       update_config:
         parallelism: 1
         delay: 10s
@@ -109,6 +113,8 @@ services:
       - internal
     deploy:
       replicas: 2
+      labels:
+        com.studywithraissov.deploy-version: ${STACK_DEPLOY_VERSION:-latest}
       update_config:
         parallelism: 1
         delay: 10s
@@ -141,6 +147,8 @@ services:
       - internal
     deploy:
       replicas: 1
+      labels:
+        com.studywithraissov.deploy-version: ${STACK_DEPLOY_VERSION:-latest}
       placement:
         constraints:
           - node.role == manager

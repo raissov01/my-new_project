@@ -46,7 +46,8 @@ func (r *Flashcard) CreateSet(ctx context.Context, userID string, req model.Crea
 
 	for i, card := range req.Cards {
 		_, err = tx.Exec(ctx,
-			`INSERT INTO flashcards (set_id, term, definition, position) VALUES ($1, $2, $3, $4)`,
+			`INSERT INTO flashcards (set_id, term, definition, position, created_at)
+			 VALUES ($1, $2, $3, $4, NOW())`,
 			setID, card.Term, card.Definition, i,
 		)
 		if err != nil {
@@ -97,20 +98,73 @@ func (r *Flashcard) UpdateSet(ctx context.Context, userID, setID string, req mod
 		return fmt.Errorf("update set: %w", err)
 	}
 
-	// Delete old cards, insert new ones (atomic within tx)
-	_, err = tx.Exec(ctx, `DELETE FROM flashcards WHERE set_id = $1`, setID)
+	existingRows, err := tx.Query(ctx, `SELECT id FROM flashcards WHERE set_id = $1`, setID)
 	if err != nil {
-		return fmt.Errorf("delete cards: %w", err)
+		return fmt.Errorf("load existing cards: %w", err)
 	}
 
+	existingCardIDs := make(map[string]struct{})
+	for existingRows.Next() {
+		var cardID string
+		if err := existingRows.Scan(&cardID); err != nil {
+			existingRows.Close()
+			return fmt.Errorf("scan existing card id: %w", err)
+		}
+		existingCardIDs[cardID] = struct{}{}
+	}
+	if err := existingRows.Err(); err != nil {
+		existingRows.Close()
+		return fmt.Errorf("iterate existing cards: %w", err)
+	}
+	existingRows.Close()
+
+	keptCardIDs := make([]string, 0, len(req.Cards))
 	for i, card := range req.Cards {
-		_, err = tx.Exec(ctx,
-			`INSERT INTO flashcards (set_id, term, definition, position) VALUES ($1, $2, $3, $4)`,
+		cardID := ""
+		if card.ID != nil {
+			cardID = strings.TrimSpace(*card.ID)
+		}
+		if _, exists := existingCardIDs[cardID]; exists {
+			_, err = tx.Exec(ctx,
+				`UPDATE flashcards
+				 SET term = $3,
+				     definition = $4,
+				     position = $5
+				 WHERE id = $1
+				   AND set_id = $2`,
+				cardID, setID, card.Term, card.Definition, i,
+			)
+			if err != nil {
+				return fmt.Errorf("update card %d: %w", i, err)
+			}
+			keptCardIDs = append(keptCardIDs, cardID)
+			continue
+		}
+
+		var insertedCardID string
+		err = tx.QueryRow(ctx,
+			`INSERT INTO flashcards (set_id, term, definition, position, created_at)
+			 VALUES ($1, $2, $3, $4, NOW())
+			 RETURNING id`,
 			setID, card.Term, card.Definition, i,
-		)
+		).Scan(&insertedCardID)
 		if err != nil {
 			return fmt.Errorf("insert card %d: %w", i, err)
 		}
+		keptCardIDs = append(keptCardIDs, insertedCardID)
+	}
+
+	if len(keptCardIDs) == 0 {
+		_, err = tx.Exec(ctx, `DELETE FROM flashcards WHERE set_id = $1`, setID)
+		if err != nil {
+			return fmt.Errorf("delete cards: %w", err)
+		}
+		return tx.Commit(ctx)
+	}
+
+	_, err = tx.Exec(ctx, `DELETE FROM flashcards WHERE set_id = $1 AND NOT (id = ANY($2::uuid[]))`, setID, keptCardIDs)
+	if err != nil {
+		return fmt.Errorf("delete cards: %w", err)
 	}
 
 	return tx.Commit(ctx)
@@ -146,20 +200,20 @@ func (r *Flashcard) GetSetByID(ctx context.Context, setID, requesterUserID strin
 		 WHERE fs.id = $1
 		   AND (
 		     fs.is_public = true
-		     OR fs.user_id = $2
+		     OR fs.user_id::text = $2
 		     OR EXISTS (
 		       SELECT 1
 		       FROM public.class_set_assignments a
 		       JOIN public.class_group_members m ON m.group_id = a.group_id
 		       WHERE a.set_id = fs.id
-		         AND m.user_id = $2
+		         AND m.user_id::text = $2
 		     )
 		     OR EXISTS (
 		       SELECT 1
 		       FROM public.class_challenges c
 		       JOIN public.class_group_members m ON m.group_id = c.group_id
 		       WHERE c.set_id = fs.id
-		         AND m.user_id = $2
+		         AND m.user_id::text = $2
 		     )
 		   )`,
 		setID, requesterUserID,
