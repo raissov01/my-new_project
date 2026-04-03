@@ -1,11 +1,11 @@
 "use client";
 
-function getApiBase() {
+export function getApiBaseUrl() {
   return process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 }
 
 export async function fetchApiJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${getApiBase()}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     credentials: "include",
     cache: "no-store",

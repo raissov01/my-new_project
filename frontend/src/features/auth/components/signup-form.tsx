@@ -3,11 +3,12 @@
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, GraduationCap, ShieldCheck } from "lucide-react";
-import { signup, socialLogin } from "@/app/(auth)/actions";
+import { signup } from "@/app/(auth)/actions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+import { getApiBaseUrl } from "@/lib/client/api";
 import type { ProfileRole } from "@/lib/shared/types/database";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -84,21 +85,7 @@ export function SignupForm() {
     setError(null);
     setMessage(null);
     setSocialPending(provider);
-    startTransition(async () => {
-      try {
-        const result = await socialLogin(provider);
-        if (result?.error) {
-          setError(result.error);
-        }
-      } catch (socialError) {
-        // redirect() throws on success — that's expected
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[signup-form] social submit threw:", socialError);
-        }
-      } finally {
-        setSocialPending(null);
-      }
-    });
+    window.location.assign(`${getApiBaseUrl()}/auth/${provider}`);
   }
 
   // Only disable during active request. Never leave permanently disabled.

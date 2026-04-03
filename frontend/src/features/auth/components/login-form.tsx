@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
-import { login, socialLogin } from "@/app/(auth)/actions";
+import { login } from "@/app/(auth)/actions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+import { getApiBaseUrl } from "@/lib/client/api";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -20,9 +21,13 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-export function LoginForm() {
+type LoginFormProps = {
+  initialError?: string | null;
+};
+
+export function LoginForm({ initialError = null }: LoginFormProps) {
   const { t } = useLocale();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [isPending, startTransition] = useTransition();
   const [socialPending, setSocialPending] = useState<string | null>(null);
 
@@ -46,21 +51,10 @@ export function LoginForm() {
   function handleSocial(provider: "google") {
     setError(null);
     setSocialPending(provider);
-    startTransition(async () => {
-      try {
-        const result = await socialLogin(provider);
-        if (result?.error) {
-          setError(result.error);
-        }
-      } catch {
-        // redirect() throws on success — expected
-      } finally {
-        setSocialPending(null);
-      }
-    });
+    window.location.assign(`${getApiBaseUrl()}/auth/${provider}`);
   }
 
-  const isDisabled = isPending;
+  const isDisabled = isPending || !!socialPending;
 
   return (
     <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">

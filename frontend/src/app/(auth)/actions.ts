@@ -142,21 +142,6 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   }
 }
 
-export async function socialLogin(
-  provider: "google" | "apple"
-): Promise<AuthResult> {
-  if (provider !== "google") {
-    return { error: "Only Google login is supported." };
-  }
-
-  try {
-    redirect(`${getPublicApiBaseUrl()}/auth/google`);
-  } catch (err) {
-    if (err && typeof err === "object" && "digest" in err) throw err;
-    return { error: err instanceof Error ? err.message : "Google login failed." };
-  }
-}
-
 export async function logout(): Promise<void> {
   if (DEV_MODE) redirect("/student");
 
