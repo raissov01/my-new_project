@@ -1,12 +1,13 @@
+# syntax=docker/dockerfile:1.7
 FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 COPY go.mod ./
 COPY go.sum* ./
-RUN go mod download 2>/dev/null || true
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go mod download 2>/dev/null || true
 COPY . .
-RUN GOTOOLCHAIN=local go mod tidy 2>/dev/null || true
-RUN CGO_ENABLED=0 GOOS=linux GOTOOLCHAIN=local go build -o /server ./cmd
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build GOTOOLCHAIN=local go mod tidy 2>/dev/null || true
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 GOOS=linux GOTOOLCHAIN=local go build -o /server ./cmd
 
 FROM alpine:3.19
 RUN apk --no-cache add ca-certificates wget

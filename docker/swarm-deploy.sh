@@ -15,11 +15,30 @@ set -a
 . backend/.env
 set +a
 
-docker build -t swr-backend -f docker/backend.Dockerfile backend/
-docker build -t swr-frontend \
+mkdir -p .buildx-cache/backend-new
+mkdir -p .buildx-cache/frontend-new
+docker buildx create --name swr-builder --use 2>/dev/null || docker buildx use swr-builder
+
+docker buildx build \
+  --load \
+  --cache-from type=local,src=.buildx-cache/backend \
+  --cache-to type=local,dest=.buildx-cache/backend-new,mode=max \
+  -t swr-backend \
+  -f docker/backend.Dockerfile \
+  backend/
+docker buildx build \
+  --load \
+  --cache-from type=local,src=.buildx-cache/frontend \
+  --cache-to type=local,dest=.buildx-cache/frontend-new,mode=max \
   --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
   --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+  -t swr-frontend \
   -f docker/frontend.Dockerfile frontend/
+
+rm -rf .buildx-cache/backend
+rm -rf .buildx-cache/frontend
+mv .buildx-cache/backend-new .buildx-cache/backend
+mv .buildx-cache/frontend-new .buildx-cache/frontend
 
 echo ""
 echo "=== Deploying stack ==="

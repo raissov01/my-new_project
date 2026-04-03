@@ -3,12 +3,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
-  getAppHomePath,
   getRoleRegistrationRedirect,
   setAuthToken,
   clearAuthToken,
 } from "@/server/auth";
-import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
@@ -22,6 +20,13 @@ import type { ProfileRole } from "@/lib/shared/types/database";
 export type AuthResult = {
   error: string | null;
   message?: string | null;
+};
+
+type PublicAuthResponse = {
+  token: string;
+  user: {
+    role: string;
+  };
 };
 
 function getPublicApiBaseUrl() {
@@ -38,16 +43,38 @@ function getPublicApiBaseUrl() {
   return "/api/v1";
 }
 
+async function fetchPublicAuthJson<T>(
+  path: string,
+  body: Record<string, unknown>
+): Promise<T> {
+  const response = await fetch(`${getPublicApiBaseUrl()}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(typeof data?.error === "string" ? data.error : "request failed");
+  }
+
+  return data as T;
+}
+
 function friendlyError(rawMessage: string, t: (key: string) => string): string {
   const lower = rawMessage.toLowerCase();
   if (lower.includes("invalid") && (lower.includes("email") || lower.includes("password"))) return t("action.invalidCredentials");
   if (lower.includes("already exists") || lower.includes("already taken") || lower.includes("conflict")) return t("action.accountExists");
   if (lower.includes("rate") || lower.includes("too many")) return t("action.rateLimitGeneral");
   if (lower.includes("password") && lower.includes("min")) return t("action.passwordMin");
+  if (lower.includes("bridge_not_configured") || lower.includes("go_backend_bridge_not_configured")) {
+    return "Server auth connection is not configured.";
+  }
   return t("action.genericError");
 }
-
-// ── Login → Go backend ─────────────────────────────────────────────────────
 
 export async function login(formData: FormData): Promise<AuthResult> {
   if (DEV_MODE) redirect("/student");
@@ -58,7 +85,6 @@ export async function login(formData: FormData): Promise<AuthResult> {
 
   if (!email || !password) return { error: t("action.requiredEmailPassword") };
 
-  // Admin bypass
   if (isAdminCredentials(email, password)) {
     const cookieStore = await cookies();
     cookieStore.set(getAdminSessionCookie());
@@ -66,26 +92,20 @@ export async function login(formData: FormData): Promise<AuthResult> {
   }
 
   try {
-    const resp = await fetchBackendJson<{ token: string; user: { role: string } }>({
-      path: "/api/v1/auth/login",
-      userId: "",
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-      headers: { "Content-Type": "application/json" },
+    const resp = await fetchPublicAuthJson<PublicAuthResponse>("/auth/login", {
+      email,
+      password,
     });
 
     await setAuthToken(resp.token);
     redirect(resp.user.role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
   } catch (err) {
-    // redirect() throws NEXT_REDIRECT — rethrow it
     if (err && typeof err === "object" && "digest" in err) throw err;
     const msg = err instanceof Error ? err.message : "";
     console.error("[login] error:", msg);
     return { error: friendlyError(msg, t) };
   }
 }
-
-// ── Signup → Go backend ────────────────────────────────────────────────────
 
 export async function signup(formData: FormData): Promise<AuthResult> {
   if (DEV_MODE) redirect("/student");
@@ -104,12 +124,12 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   if (password.length < 6) return { error: t("action.passwordMin") };
 
   try {
-    const resp = await fetchBackendJson<{ token: string; user: { role: string } }>({
-      path: "/api/v1/auth/register",
-      userId: "",
-      method: "POST",
-      body: JSON.stringify({ email, password, fullName, username, role }),
-      headers: { "Content-Type": "application/json" },
+    const resp = await fetchPublicAuthJson<PublicAuthResponse>("/auth/register", {
+      email,
+      password,
+      fullName,
+      username,
+      role,
     });
 
     await setAuthToken(resp.token);
@@ -121,8 +141,6 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     return { error: friendlyError(msg, t) };
   }
 }
-
-// ── Google OAuth ───────────────────────────────────────────────────────────
 
 export async function socialLogin(
   provider: "google" | "apple"
@@ -138,8 +156,6 @@ export async function socialLogin(
     return { error: err instanceof Error ? err.message : "Google login failed." };
   }
 }
-
-// ── Logout ─────────────────────────────────────────────────────────────────
 
 export async function logout(): Promise<void> {
   if (DEV_MODE) redirect("/student");

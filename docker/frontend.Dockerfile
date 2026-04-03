@@ -1,9 +1,10 @@
+# syntax=docker/dockerfile:1.7
 FROM node:20-bookworm-slim AS deps
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 FROM node:20-bookworm-slim AS builder
 
@@ -18,7 +19,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 FROM node:20-bookworm-slim AS runner
 

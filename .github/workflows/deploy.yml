@@ -55,12 +55,33 @@ jobs:
             . backend/.env
             set +a
 
-            # Build images with current frontend build args
-            docker build -t swr-backend -f docker/backend.Dockerfile backend/
-            docker build -t swr-frontend \
+            # Prepare persistent BuildKit cache directories
+            mkdir -p /opt/studywithraissov/.buildx-cache/backend-new
+            mkdir -p /opt/studywithraissov/.buildx-cache/frontend-new
+            docker buildx create --name swr-builder --use 2>/dev/null || docker buildx use swr-builder
+
+            # Build images with persistent Docker layer cache
+            docker buildx build \
+              --load \
+              --cache-from type=local,src=/opt/studywithraissov/.buildx-cache/backend \
+              --cache-to type=local,dest=/opt/studywithraissov/.buildx-cache/backend-new,mode=max \
+              -t swr-backend \
+              -f docker/backend.Dockerfile \
+              backend/
+            docker buildx build \
+              --load \
+              --cache-from type=local,src=/opt/studywithraissov/.buildx-cache/frontend \
+              --cache-to type=local,dest=/opt/studywithraissov/.buildx-cache/frontend-new,mode=max \
               --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
               --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
-              -f docker/frontend.Dockerfile frontend/
+              -t swr-frontend \
+              -f docker/frontend.Dockerfile \
+              frontend/
+
+            rm -rf /opt/studywithraissov/.buildx-cache/backend
+            rm -rf /opt/studywithraissov/.buildx-cache/frontend
+            mv /opt/studywithraissov/.buildx-cache/backend-new /opt/studywithraissov/.buildx-cache/backend
+            mv /opt/studywithraissov/.buildx-cache/frontend-new /opt/studywithraissov/.buildx-cache/frontend
 
             # Deploy/update the swarm stack with exported variables
             docker stack deploy -c docker/stack.yml swr
