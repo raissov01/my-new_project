@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
@@ -21,6 +22,7 @@ import { BrandLogo } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
+import { getAppHomePath, getCurrentUser } from "@/server/auth";
 
 const heroStats = [
   { value: "12+", label: "Connected study tools" },
@@ -174,6 +176,11 @@ const sectionLinks: Array<{ href: string; label: string; short: string; icon: Lu
 ];
 
 export default async function LandingPage() {
+  const user = await getCurrentUser();
+  if (user) {
+    redirect(await getAppHomePath(user));
+  }
+
   const locale = await getServerLocale();
   const t = createTranslator(locale);
 
