@@ -47,9 +47,22 @@ export async function requestAIGeneration(
     try {
       data = rawText ? JSON.parse(rawText) : null;
     } catch {
+      const gatewayTimeout =
+        response.status === 504 || /504\s+Gateway Time-?out/i.test(rawText);
+      const upstreamFailure =
+        response.status >= 500 || /50[234]\s+(Bad Gateway|Gateway Time-?out)/i.test(rawText);
+
       data = {
-        error: "NON_JSON_ERROR",
-        detail: rawText.slice(0, 400) || `Server returned ${response.status}`,
+        error: gatewayTimeout
+          ? "UPSTREAM_TIMEOUT"
+          : upstreamFailure
+            ? "UPSTREAM_ERROR"
+            : "NON_JSON_ERROR",
+        detail: gatewayTimeout
+          ? `Server returned ${response.status || 504} Gateway Time-out.`
+          : upstreamFailure
+            ? `Server returned ${response.status} while processing the AI request.`
+            : rawText.slice(0, 400) || `Server returned ${response.status}`,
       };
     }
 
