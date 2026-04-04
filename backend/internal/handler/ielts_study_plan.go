@@ -211,7 +211,7 @@ Include all 4 weeks with daily tasks for each week. Each week should have tasks 
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]any{"plan": plan})
+	writeJSON(w, http.StatusCreated, map[string]any{"plan": serializeStudyPlan(plan)})
 }
 
 // ── Get Plan ────────────────────────────────────────────────────────────────
@@ -237,7 +237,7 @@ func (h *IELTSStudyPlanHandler) GetPlan(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"plan": plan})
+	writeJSON(w, http.StatusOK, map[string]any{"plan": serializeStudyPlan(plan)})
 }
 
 // ── Update Plan ─────────────────────────────────────────────────────────────
@@ -286,5 +286,47 @@ func (h *IELTSStudyPlanHandler) UpdatePlan(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"plan": plan})
+	writeJSON(w, http.StatusOK, map[string]any{"plan": serializeStudyPlan(plan)})
+}
+
+// serializeStudyPlan converts the GORM model into a properly structured JSON
+// response. JSONB fields stored as *string are parsed into real JSON objects
+// so the frontend receives objects, not escaped strings.
+func serializeStudyPlan(plan models.IELTSStudyPlan) map[string]any {
+	result := map[string]any{
+		"id":            plan.ID,
+		"userId":        plan.UserID,
+		"targetBand":    plan.TargetBand,
+		"currentBand":   plan.CurrentBand,
+		"examDate":      plan.ExamDate,
+		"examType":      plan.ExamType,
+		"weeklyHours":   plan.WeeklyHours,
+		"status":        plan.Status,
+		"generatedByAI": plan.GeneratedByAI,
+		"aiModel":       plan.AIModel,
+		"createdAt":     plan.CreatedAt,
+		"updatedAt":     plan.UpdatedAt,
+	}
+
+	// Parse JSONB string fields into real JSON objects
+	result["weakSections"] = parseJSONBField(plan.WeakSections)
+	result["strengths"] = parseJSONBField(plan.Strengths)
+	result["struggles"] = parseJSONBField(plan.Struggles)
+	result["planData"] = parseJSONBField(plan.PlanData)
+	result["questionnaire"] = parseJSONBField(plan.Questionnaire)
+
+	return result
+}
+
+// parseJSONBField takes a *string containing JSON and returns the parsed value.
+// If nil or invalid, returns nil.
+func parseJSONBField(field *string) any {
+	if field == nil || strings.TrimSpace(*field) == "" {
+		return nil
+	}
+	var parsed any
+	if err := json.Unmarshal([]byte(*field), &parsed); err != nil {
+		return *field
+	}
+	return parsed
 }

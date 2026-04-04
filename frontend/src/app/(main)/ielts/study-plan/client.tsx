@@ -1,15 +1,104 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Headphones,
+  Loader2,
+  Mic,
+  PenLine,
+  RefreshCw,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateStudyPlan, getStudyPlan } from "../simulator/attempt-actions";
 
+// ── Types ───────────────────────────────────────────────────────────────────
+
+type DayTask = {
+  day: string;
+  skill: string;
+  activity: string;
+  durationMinutes: number;
+  details?: string;
+};
+
+type WeeklyGoal = {
+  week: number;
+  focus: string;
+  tasks: DayTask[];
+};
+
+type PlanData = {
+  overview?: string;
+  weeklyGoals?: WeeklyGoal[];
+  prioritySkills?: string[];
+  tips?: string[];
+  raw?: string;
+};
+
+type StudyPlan = {
+  id: string;
+  targetBand: string;
+  currentBand: string;
+  examDate?: string;
+  examType: string;
+  weeklyHours: number;
+  weakSections?: string[];
+  strengths?: string[];
+  struggles?: string[];
+  planData?: PlanData;
+  status: string;
+  createdAt: string;
+};
+
+// ── Wizard steps ────────────────────────────────────────────────────────────
+
+const BAND_OPTIONS = ["4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0", "8.5", "9.0"];
+const SKILLS = ["listening", "reading", "writing", "speaking"];
+const SKILL_ICONS: Record<string, typeof BookOpen> = {
+  listening: Headphones,
+  reading: BookOpen,
+  writing: PenLine,
+  speaking: Mic,
+};
+
+type WizardData = {
+  targetBand: string;
+  currentBand: string;
+  examDate: string;
+  examType: string;
+  weeklyHours: number;
+  weakSections: string[];
+  strengths: string[];
+  struggles: string[];
+};
+
 export function IELTSStudyPlanClient() {
-  const [plan, setPlan] = useState<Record<string, unknown> | null>(null);
+  const [plan, setPlan] = useState<StudyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showWizard, setShowWizard] = useState(false);
+  const [wizardStep, setWizardStep] = useState(0);
+  const [wizardData, setWizardData] = useState<WizardData>({
+    targetBand: "6.5",
+    currentBand: "5.5",
+    examDate: "",
+    examType: "academic",
+    weeklyHours: 10,
+    weakSections: ["writing", "speaking"],
+    strengths: ["reading", "listening"],
+    struggles: ["timing", "grammar"],
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -17,7 +106,7 @@ export function IELTSStudyPlanClient() {
       try {
         const resp = await getStudyPlan();
         if (!mounted) return;
-        setPlan(resp.plan);
+        if (resp.plan) setPlan(resp.plan as StudyPlan);
       } catch (err) {
         if (mounted) setError(err instanceof Error ? err.message : "Failed to load study plan.");
       } finally {
@@ -25,39 +114,17 @@ export function IELTSStudyPlanClient() {
       }
     }
     void load();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
-  async function handleGenerate(formData: FormData) {
+  async function handleGenerate() {
     setSubmitting(true);
     setError(null);
     try {
-      const weakSections = String(formData.get("weakSections") ?? "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const strengths = String(formData.get("strengths") ?? "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const struggles = String(formData.get("struggles") ?? "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-
-      const response = await generateStudyPlan({
-        targetBand: String(formData.get("targetBand") ?? ""),
-        currentBand: String(formData.get("currentBand") ?? ""),
-        examDate: String(formData.get("examDate") ?? ""),
-        examType: String(formData.get("examType") ?? "academic"),
-        weeklyHours: Number(formData.get("weeklyHours") ?? 10),
-        weakSections,
-        strengths,
-        struggles,
-      });
-      setPlan(response.plan);
+      const response = await generateStudyPlan(wizardData);
+      setPlan(response.plan as StudyPlan);
+      setShowWizard(false);
+      setWizardStep(0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate plan.");
     } finally {
@@ -67,58 +134,403 @@ export function IELTSStudyPlanClient() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[var(--primary)]" />
+      <div className="flex flex-col items-center justify-center gap-3 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--primary)]" />
+        <p className="text-sm text-[var(--text-muted)]">Loading your study plan...</p>
+      </div>
+    );
+  }
+
+  if (showWizard || !plan) {
+    return (
+      <div className="space-y-6">
+        <WizardFlow
+          step={wizardStep}
+          data={wizardData}
+          submitting={submitting}
+          onChange={(updates) => setWizardData((prev) => ({ ...prev, ...updates }))}
+          onNext={() => setWizardStep((s) => s + 1)}
+          onBack={() => setWizardStep((s) => s - 1)}
+          onGenerate={handleGenerate}
+        />
+        {error && <ErrorBanner message={error} />}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void handleGenerate(new FormData(event.currentTarget));
-        }}
-        className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 md:grid-cols-2"
-      >
-        <Field label="Target band" name="targetBand" defaultValue="6.5" />
-        <Field label="Current band" name="currentBand" defaultValue="5.5" />
-        <Field label="Exam date" name="examDate" type="date" />
-        <Field label="Exam type" name="examType" defaultValue="academic" />
-        <Field label="Weekly hours" name="weeklyHours" type="number" defaultValue="10" />
-        <Field label="Weak sections (comma-separated)" name="weakSections" defaultValue="writing,speaking" />
-        <Field label="Strengths (comma-separated)" name="strengths" defaultValue="reading,listening" />
-        <Field label="Main struggles (comma-separated)" name="struggles" defaultValue="timing,grammar" />
-        <div className="md:col-span-2 flex justify-end">
-          <Button type="submit" disabled={submitting}>
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Generate study plan
-          </Button>
+      {/* Plan header */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">Your IELTS Roadmap</h2>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            Generated {new Date(plan.createdAt).toLocaleDateString()} • {plan.examType === "academic" ? "Academic" : "General Training"}
+          </p>
         </div>
-      </form>
+        <Button variant="secondary" onClick={() => { setShowWizard(true); setWizardStep(0); }}>
+          <RefreshCw className="h-4 w-4" />
+          Regenerate plan
+        </Button>
+      </div>
 
-      {error ? <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-400">{error}</div> : null}
+      {/* Summary cards */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <SummaryCard icon={Target} label="Current band" value={plan.currentBand} color="text-amber-500 bg-amber-500/10" />
+        <SummaryCard icon={TrendingUp} label="Target band" value={plan.targetBand} color="text-emerald-500 bg-emerald-500/10" />
+        <SummaryCard icon={Clock} label="Weekly hours" value={`${plan.weeklyHours}h`} color="text-blue-500 bg-blue-500/10" />
+        <SummaryCard icon={CalendarDays} label="Exam date" value={plan.examDate ? new Date(plan.examDate).toLocaleDateString() : "Not set"} color="text-violet-500 bg-violet-500/10" />
+      </div>
 
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Current plan</h2>
-        {plan ? (
-          <pre className="mt-4 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-xs leading-6 text-[var(--text-secondary)]">
-            {JSON.stringify(plan, null, 2)}
-          </pre>
-        ) : (
-          <p className="mt-3 text-sm text-[var(--text-secondary)]">No active plan available yet.</p>
-        )}
-      </section>
+      {/* Priority skills */}
+      {plan.planData?.prioritySkills && plan.planData.prioritySkills.length > 0 && (
+        <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Priority Focus Areas</h3>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {plan.planData.prioritySkills.map((skill) => {
+              const Icon = SKILL_ICONS[skill] ?? Zap;
+              return (
+                <span key={skill} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--primary)]">
+                  <Icon className="h-3.5 w-3.5" />
+                  {skill.charAt(0).toUpperCase() + skill.slice(1)}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Overview */}
+      {plan.planData?.overview && (
+        <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Strategy Overview</h3>
+          <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.overview}</p>
+        </div>
+      )}
+
+      {/* Weekly plan */}
+      {plan.planData?.weeklyGoals && plan.planData.weeklyGoals.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold text-[var(--text-primary)]">Weekly Roadmap</h3>
+          {plan.planData.weeklyGoals.map((week) => (
+            <WeekCard key={week.week} week={week} />
+          ))}
+        </div>
+      )}
+
+      {/* Tips */}
+      {plan.planData?.tips && plan.planData.tips.length > 0 && (
+        <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Personalized Tips</h3>
+          <ul className="mt-3 space-y-2">
+            {plan.planData.tips.map((tip, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Raw fallback if planData was unparseable */}
+      {plan.planData?.raw && !plan.planData?.weeklyGoals && (
+        <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Plan Details</h3>
+          <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
+            {plan.planData.raw}
+          </div>
+        </div>
+      )}
+
+      {error && <ErrorBanner message={error} />}
     </div>
   );
 }
 
-function Field({ label, name, type = "text", defaultValue }: { label: string; name: string; type?: string; defaultValue?: string }) {
+// ── Wizard Flow ─────────────────────────────────────────────────────────────
+
+const WIZARD_STEPS = [
+  { title: "Exam Goal", desc: "What band score do you need?" },
+  { title: "Current Level", desc: "Where are you right now?" },
+  { title: "Time & Schedule", desc: "How much time do you have?" },
+  { title: "Strengths & Weaknesses", desc: "Which skills need work?" },
+  { title: "Generate", desc: "Review and create your roadmap" },
+];
+
+function WizardFlow({
+  step,
+  data,
+  submitting,
+  onChange,
+  onNext,
+  onBack,
+  onGenerate,
+}: {
+  step: number;
+  data: WizardData;
+  submitting: boolean;
+  onChange: (updates: Partial<WizardData>) => void;
+  onNext: () => void;
+  onBack: () => void;
+  onGenerate: () => void;
+}) {
   return (
-    <label className="space-y-2 text-sm text-[var(--text-secondary)]">
-      <span>{label}</span>
-      <input name={name} type={type} defaultValue={defaultValue} className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/40" />
-    </label>
+    <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
+      {/* Progress */}
+      <div className="mb-6 flex items-center gap-2">
+        {WIZARD_STEPS.map((_, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+              i < step ? "bg-[var(--success)] text-white"
+                : i === step ? "bg-[var(--primary)] text-white"
+                  : "border border-[var(--border)] text-[var(--text-muted)]"
+            }`}>
+              {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+            </div>
+            {i < WIZARD_STEPS.length - 1 && (
+              <div className={`hidden h-0.5 w-6 sm:block ${i < step ? "bg-[var(--success)]" : "bg-[var(--border)]"}`} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <h2 className="text-xl font-bold text-[var(--text-primary)]">{WIZARD_STEPS[step].title}</h2>
+      <p className="mt-1 text-sm text-[var(--text-secondary)]">{WIZARD_STEPS[step].desc}</p>
+
+      <div className="mt-6">
+        {step === 0 && (
+          <div className="space-y-5">
+            <div>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Target band score</label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {BAND_OPTIONS.filter((b) => parseFloat(b) >= 5.0).map((band) => (
+                  <button key={band} onClick={() => onChange({ targetBand: band })} className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm font-semibold transition-all ${data.targetBand === band ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"}`}>
+                    {band}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Exam type</label>
+              <div className="mt-2 flex gap-3">
+                {["academic", "general"].map((type) => (
+                  <button key={type} onClick={() => onChange({ examType: type })} className={`flex-1 rounded-[var(--radius-lg)] border p-4 text-left transition-all ${data.examType === type ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--border)] hover:border-[var(--border-strong)]"}`}>
+                    <p className={`text-sm font-semibold ${data.examType === type ? "text-[var(--primary)]" : "text-[var(--text-primary)]"}`}>
+                      {type === "academic" ? "Academic" : "General Training"}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">
+                      {type === "academic" ? "For university admission" : "For immigration/work"}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div className="space-y-5">
+            <div>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Current estimated band</label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {BAND_OPTIONS.map((band) => (
+                  <button key={band} onClick={() => onChange({ currentBand: band })} className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm font-semibold transition-all ${data.currentBand === band ? "border-amber-500 bg-amber-500/10 text-amber-500" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"}`}>
+                    {band}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Main struggles</label>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Select all that apply</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {["timing", "grammar", "vocabulary", "reading speed", "listening focus", "writing structure", "speaking confidence"].map((s) => (
+                  <button key={s} onClick={() => onChange({ struggles: data.struggles.includes(s) ? data.struggles.filter((x) => x !== s) : [...data.struggles, s] })} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${data.struggles.includes(s) ? "border-red-500/30 bg-red-500/10 text-red-400" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"}`}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-5">
+            <div>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Exam date</label>
+              <input type="date" value={data.examDate} onChange={(e) => onChange({ examDate: e.target.value })} className="mt-2 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Weekly study hours: {data.weeklyHours}h</label>
+              <input type="range" min={3} max={40} value={data.weeklyHours} onChange={(e) => onChange({ weeklyHours: parseInt(e.target.value) })} className="mt-2 w-full accent-[var(--primary)]" />
+              <div className="mt-1 flex justify-between text-xs text-[var(--text-muted)]">
+                <span>3h (light)</span>
+                <span>20h (moderate)</span>
+                <span>40h (intensive)</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-5">
+            <div>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Weakest skills</label>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {SKILLS.map((skill) => {
+                  const Icon = SKILL_ICONS[skill] ?? Zap;
+                  const isWeak = data.weakSections.includes(skill);
+                  return (
+                    <button key={skill} onClick={() => onChange({ weakSections: isWeak ? data.weakSections.filter((s) => s !== skill) : [...data.weakSections, skill] })} className={`flex flex-col items-center gap-2 rounded-[var(--radius-lg)] border p-4 transition-all ${isWeak ? "border-red-500/30 bg-red-500/10" : "border-[var(--border)] hover:border-[var(--border-strong)]"}`}>
+                      <Icon className={`h-5 w-5 ${isWeak ? "text-red-400" : "text-[var(--text-muted)]"}`} />
+                      <span className={`text-xs font-semibold ${isWeak ? "text-red-400" : "text-[var(--text-secondary)]"}`}>{skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Strongest skills</label>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {SKILLS.map((skill) => {
+                  const Icon = SKILL_ICONS[skill] ?? Zap;
+                  const isStrong = data.strengths.includes(skill);
+                  return (
+                    <button key={skill} onClick={() => onChange({ strengths: isStrong ? data.strengths.filter((s) => s !== skill) : [...data.strengths, skill] })} className={`flex flex-col items-center gap-2 rounded-[var(--radius-lg)] border p-4 transition-all ${isStrong ? "border-emerald-500/30 bg-emerald-500/10" : "border-[var(--border)] hover:border-[var(--border-strong)]"}`}>
+                      <Icon className={`h-5 w-5 ${isStrong ? "text-emerald-400" : "text-[var(--text-muted)]"}`} />
+                      <span className={`text-xs font-semibold ${isStrong ? "text-emerald-400" : "text-[var(--text-secondary)]"}`}>{skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-4">
+            <p className="text-sm text-[var(--text-secondary)]">Review your profile and generate a personalized roadmap.</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ReviewItem label="Target" value={`Band ${data.targetBand}`} />
+              <ReviewItem label="Current" value={`Band ${data.currentBand}`} />
+              <ReviewItem label="Exam type" value={data.examType === "academic" ? "Academic" : "General Training"} />
+              <ReviewItem label="Weekly hours" value={`${data.weeklyHours}h / week`} />
+              <ReviewItem label="Exam date" value={data.examDate || "Not set"} />
+              <ReviewItem label="Weak areas" value={data.weakSections.join(", ") || "None"} />
+              <ReviewItem label="Strengths" value={data.strengths.join(", ") || "None"} />
+              <ReviewItem label="Struggles" value={data.struggles.join(", ") || "None"} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="mt-8 flex items-center justify-between">
+        {step > 0 ? (
+          <Button variant="ghost" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Button>
+        ) : <div />}
+
+        {step < WIZARD_STEPS.length - 1 ? (
+          <Button onClick={onNext}>
+            Next <ArrowRight className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button onClick={onGenerate} disabled={submitting}>
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {submitting ? "Generating roadmap..." : "Generate my roadmap"}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Week Card ───────────────────────────────────────────────────────────────
+
+function WeekCard({ week }: { week: WeeklyGoal }) {
+  const [open, setOpen] = useState(week.week === 1);
+
+  return (
+    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--bg-soft)]">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary)]">
+            W{week.week}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Week {week.week}</p>
+            <p className="text-xs text-[var(--text-muted)]">{week.focus}</p>
+          </div>
+        </div>
+        <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+
+      {open && week.tasks && week.tasks.length > 0 && (
+        <div className="border-t border-[var(--border)] px-5 py-4">
+          <div className="space-y-2.5">
+            {week.tasks.map((task, i) => {
+              const Icon = SKILL_ICONS[task.skill] ?? Zap;
+              return (
+                <div key={i} className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--bg-soft)]">
+                    <Icon className="h-4 w-4 text-[var(--text-muted)]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-[var(--text-primary)]">{task.day}</span>
+                      <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
+                        {task.skill} • {task.durationMinutes}min
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-[var(--text-secondary)]">{task.activity}</p>
+                    {task.details && (
+                      <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">{task.details}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Helper components ───────────────────────────────────────────────────────
+
+function SummaryCard({ icon: Icon, label, value, color }: { icon: typeof Target; label: string; value: string; color: string }) {
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+      <div className="flex items-center gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] ${color}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-xs text-[var(--text-muted)]">{label}</p>
+          <p className="text-lg font-bold text-[var(--text-primary)]">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReviewItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
+      <p className="text-xs text-[var(--text-muted)]">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">{value}</p>
+    </div>
+  );
+}
+
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+      {message}
+    </div>
   );
 }
