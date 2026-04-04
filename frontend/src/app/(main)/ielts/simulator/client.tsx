@@ -958,21 +958,24 @@ export function SimulatorClient() {
 
       {currentSection.key === "reading" && (!currentSection.passages || currentSection.passages.length === 0) && (
         <div className="space-y-5">
-          {groupedQuestions.map((group) => (
-            <section key={group.key} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">{group.title}</h3>
-              {group.content ? (
-                <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.content}</p>
+          {groupedQuestions.map((group, groupIndex) => {
+            const qOffset = groupedQuestions.slice(0, groupIndex).reduce((sum, g) => sum + g.questions.length, 0);
+            return (
+              <section key={group.key} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{group.title}</h3>
+                {group.content ? (
+                  <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                    <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.content}</p>
+                  </div>
+                ) : null}
+                <div className="mt-5 space-y-4">
+                  {group.questions.map((question, index) => (
+                    <ObjectiveQuestionCard key={question.id} index={qOffset + index + 1} question={question} value={objectiveAnswers[question.id] ?? ""} revealed={isCurrentSectionRevealed} onChange={handleObjectiveAnswer} />
+                  ))}
                 </div>
-              ) : null}
-              <div className="mt-5 space-y-4">
-                {group.questions.map((question, index) => (
-                  <ObjectiveQuestionCard key={question.id} index={index + 1} question={question} value={objectiveAnswers[question.id] ?? ""} revealed={isCurrentSectionRevealed} onChange={handleObjectiveAnswer} />
-                ))}
-              </div>
-            </section>
-          ))}
+              </section>
+            );
+          })}
         </div>
       )}
 
@@ -989,21 +992,24 @@ export function SimulatorClient() {
 
       {currentSection.key === "listening" && (!currentSection.passages || currentSection.passages.length === 0) && (
         <div className="space-y-5">
-          {groupedQuestions.map((group) => (
-            <section key={group.key} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">{group.title}</h3>
-              {group.audioScript ? (
-                <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.audioScript}</p>
+          {groupedQuestions.map((group, groupIndex) => {
+            const qOffset = groupedQuestions.slice(0, groupIndex).reduce((sum, g) => sum + g.questions.length, 0);
+            return (
+              <section key={group.key} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{group.title}</h3>
+                {group.audioScript ? (
+                  <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+                    <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.audioScript}</p>
+                  </div>
+                ) : null}
+                <div className="mt-5 space-y-4">
+                  {group.questions.map((question, index) => (
+                    <ObjectiveQuestionCard key={question.id} index={qOffset + index + 1} question={question} value={objectiveAnswers[question.id] ?? ""} revealed={isCurrentSectionRevealed} onChange={handleObjectiveAnswer} />
+                  ))}
                 </div>
-              ) : null}
-              <div className="mt-5 space-y-4">
-                {group.questions.map((question, index) => (
-                  <ObjectiveQuestionCard key={question.id} index={index + 1} question={question} value={objectiveAnswers[question.id] ?? ""} revealed={isCurrentSectionRevealed} onChange={handleObjectiveAnswer} />
-                ))}
-              </div>
-            </section>
-          ))}
+              </section>
+            );
+          })}
         </div>
       )}
 
@@ -1167,45 +1173,47 @@ export function SimulatorClient() {
                 ) : null}
 
                 {(question.questionType !== "part2" || speakingPrepTime === 0) && (
-                <div className="mt-4">
-                  <SpeakingRecorderPanel
-                    compact
-                    onUseTranscript={(value) =>
-                      setSpeakingResponses((prev) => ({
-                        ...prev,
-                        [question.id]: value,
-                      }))
-                    }
-                  />
-                </div>
+                  <>
+                    <div className="mt-4">
+                      <SpeakingRecorderPanel
+                        compact
+                        onUseTranscript={(value) =>
+                          setSpeakingResponses((prev) => ({
+                            ...prev,
+                            [question.id]: value,
+                          }))
+                        }
+                      />
+                    </div>
 
-                <textarea
-                  value={transcript}
-                  onChange={(event) =>
-                    setSpeakingResponses((prev) => ({
-                      ...prev,
-                      [question.id]: event.target.value,
-                    }))
-                  }
-                  rows={8}
-                  placeholder={t("ielts.sp.responsePlaceholder")}
-                  className="mt-4 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violet-400 focus:ring-2 focus:ring-violet-500/40"
-                />
+                    <textarea
+                      value={transcript}
+                      onChange={(event) =>
+                        setSpeakingResponses((prev) => ({
+                          ...prev,
+                          [question.id]: event.target.value,
+                        }))
+                      }
+                      rows={8}
+                      placeholder={t("ielts.sp.responsePlaceholder")}
+                      className="mt-4 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violet-400 focus:ring-2 focus:ring-violet-500/40"
+                    />
 
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Button
-                    size="sm"
-                    onClick={() => handleEvaluateSpeaking(question)}
-                    disabled={evaluatingQuestionId === question.id}
-                  >
-                    {evaluatingQuestionId === question.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
-                    )}
-                    Get AI evaluation
-                  </Button>
-                </div>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <Button
+                        size="sm"
+                        onClick={() => handleEvaluateSpeaking(question)}
+                        disabled={evaluatingQuestionId === question.id}
+                      >
+                        {evaluatingQuestionId === question.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                        Get AI evaluation
+                      </Button>
+                    </div>
+                  </>
                 )}
 
                 {result ? (
@@ -1398,7 +1406,13 @@ function objectiveOptions(question: IELTSQuestion) {
   }
 
   if (question.questionType === "true_false") {
-    return ["true", "false", "not given"];
+    return ["True", "False"];
+  }
+  if (question.questionType === "true_false_not_given") {
+    return ["True", "False", "Not Given"];
+  }
+  if (question.questionType === "yes_no_not_given") {
+    return ["Yes", "No", "Not Given"];
   }
 
   return [];
