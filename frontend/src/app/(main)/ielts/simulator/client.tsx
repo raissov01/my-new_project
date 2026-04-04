@@ -907,13 +907,24 @@ export function SimulatorClient() {
               {currentSection.instructions}
             </p>
           </div>
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-right">
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-              Section timer
-            </p>
-            <p className={`mt-1 text-2xl font-semibold ${timeLeft < 60 ? "text-red-400" : "text-[var(--text-primary)]"}`}>
-              {formatTime(timeLeft)}
-            </p>
+          <div className="flex items-center gap-4">
+            {autosave.lastSavedAt && (
+              <div className="text-right text-xs text-[var(--text-muted)]">
+                {autosave.isSaving ? (
+                  <span className="text-amber-400">Saving...</span>
+                ) : (
+                  <span>Saved {Math.max(0, Math.floor((Date.now() - autosave.lastSavedAt.getTime()) / 1000))}s ago</span>
+                )}
+              </div>
+            )}
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-right">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                Section timer
+              </p>
+              <p className={`mt-1 text-2xl font-semibold ${timeLeft < 60 ? "text-red-400" : "text-[var(--text-primary)]"}`}>
+                {formatTime(timeLeft)}
+              </p>
+            </div>
           </div>
         </div>
 
