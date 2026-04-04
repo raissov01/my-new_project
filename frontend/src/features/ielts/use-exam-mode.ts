@@ -73,9 +73,10 @@ export function useExamMode(options: UseExamModeOptions) {
     try {
       await document.documentElement.requestFullscreen();
     } catch {
+      logViolation("fullscreen_exit", "Fullscreen request was blocked by the browser");
       setWarningMessage("Fullscreen request was blocked by the browser.");
     }
-  }, [policy.fullscreenRequired]);
+  }, [logViolation, policy.fullscreenRequired]);
 
   const exitFullscreen = useCallback(async () => {
     if (typeof document === "undefined") return;
@@ -202,7 +203,7 @@ export function useExamMode(options: UseExamModeOptions) {
       document.removeEventListener("keydown", onKeyDown);
       void exitFullscreen();
     };
-  }, [exitFullscreen, logViolation, options.enabled, policy.fullscreenRequired, requestFullscreen]);
+  }, [exitFullscreen, logViolation, options.enabled, policy.fullscreenRequired]);
 
   return {
     violationCount,
