@@ -158,8 +158,9 @@ func seedIELTSQuestions(db *gorm.DB) error {
 				"options":        question.Options,
 				"answer":         question.Answer,
 				"explanation":    question.Explanation,
-				"band_target":    question.BandTarget,
-				"sort_order":     question.SortOrder,
+				"band_target":     question.BandTarget,
+				"passage_number":  question.PassageNumber,
+				"sort_order":      question.SortOrder,
 			}).Error; err != nil {
 				return err
 			}
@@ -178,6 +179,15 @@ func seedIELTSQuestions(db *gorm.DB) error {
 }
 
 func buildIELTSQuestionSeed() []models.IELTSQuestion {
+	// Start with the reading test bank (full-length passages)
+	questions := buildReadingTestBank()
+
+	// Then append the legacy question seed
+	questions = append(questions, buildLegacyQuestionSeed()...)
+	return questions
+}
+
+func buildLegacyQuestionSeed() []models.IELTSQuestion {
 	questions := make([]models.IELTSQuestion, 0, 64)
 
 	addQuestion := func(q models.IELTSQuestion) {
