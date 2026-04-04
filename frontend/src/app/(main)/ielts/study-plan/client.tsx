@@ -123,7 +123,8 @@ export function IELTSStudyPlanClient() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"checklist" | "guide">("checklist");
+  const [viewMode, setViewMode] = useState<"roadmap" | "checklist" | "guide">("roadmap");
+  const [selectedPhase, setSelectedPhase] = useState<number | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
   const [wizardData, setWizardData] = useState<WizardData>({
@@ -239,12 +240,11 @@ export function IELTSStudyPlanClient() {
         </div>
         <div className="flex items-center gap-2">
           <div className="inline-flex rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-0.5">
-            <button onClick={() => setViewMode("checklist")} className={`rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "checklist" ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]" : "text-[var(--text-muted)]"}`}>
-              Checklist
-            </button>
-            <button onClick={() => setViewMode("guide")} className={`rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "guide" ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]" : "text-[var(--text-muted)]"}`}>
-              Study Guide
-            </button>
+            {(["roadmap", "checklist", "guide"] as const).map((mode) => (
+              <button key={mode} onClick={() => setViewMode(mode)} className={`rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === mode ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]" : "text-[var(--text-muted)]"}`}>
+                {mode === "roadmap" ? "Roadmap" : mode === "checklist" ? "Checklist" : "Full Guide"}
+              </button>
+            ))}
           </div>
           <Button variant="secondary" onClick={() => { setShowWizard(true); setWizardStep(0); }}>
             <RefreshCw className="h-4 w-4" />
@@ -276,6 +276,70 @@ export function IELTSStudyPlanClient() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* ═══════════════ VISUAL ROADMAP MODE ═══════════════ */}
+      {viewMode === "roadmap" && (
+        <div className="space-y-6">
+          {/* Visual timeline */}
+          {plan.planData?.phases && plan.planData.phases.length > 0 && (
+            <VisualRoadmapTimeline
+              phases={plan.planData.phases}
+              weeklyGoals={plan.planData.weeklyGoals ?? []}
+              taskStatuses={taskStatuses}
+              selectedPhase={selectedPhase}
+              onSelectPhase={setSelectedPhase}
+              onToggleTask={handleTaskToggle}
+              currentWeek={Math.max(1, Math.floor((Date.now() - new Date(plan.createdAt).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1)}
+            />
+          )}
+
+          {/* Fallback if no phases — show weekly goals as roadmap */}
+          {(!plan.planData?.phases || plan.planData.phases.length === 0) && plan.planData?.weeklyGoals && (
+            <VisualRoadmapTimeline
+              phases={plan.planData.weeklyGoals.map((w) => ({
+                name: `Week ${w.week}`,
+                weeks: `Week ${w.week}`,
+                goal: w.focus,
+                actions: "",
+                avoid: "",
+                expectedProgress: "",
+              }))}
+              weeklyGoals={plan.planData.weeklyGoals}
+              taskStatuses={taskStatuses}
+              selectedPhase={selectedPhase}
+              onSelectPhase={setSelectedPhase}
+              onToggleTask={handleTaskToggle}
+              currentWeek={Math.max(1, Math.floor((Date.now() - new Date(plan.createdAt).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1)}
+            />
+          )}
+
+          {/* Overview below roadmap */}
+          {plan.planData?.overview && (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Strategy Overview</h3>
+              <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.overview}</p>
+            </div>
+          )}
+
+          {/* Module readiness */}
+          {plan.planData?.moduleGuide && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {Object.entries(plan.planData.moduleGuide).map(([skill, guide]) => {
+                const Icon = SKILL_ICONS[skill] ?? Zap;
+                return (
+                  <div key={skill} className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-4 w-4 text-[var(--primary)]" />
+                      <span className="text-sm font-bold text-[var(--text-primary)]">{skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-[var(--text-secondary)]">{guide}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -907,6 +971,180 @@ function WeekCard({ week, taskStatuses, onToggleTask }: {
               <TaskRow key={i} task={task} isDone={taskStatuses[`${week.week}-${task.day}-${task.skill}`] === "completed"} onToggle={() => onToggleTask(week.week, task.day, task.skill, task.activity)} actionLink={SKILL_LINKS[task.skill]} />
             ))}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Visual Roadmap Timeline ─────────────────────────────────────────────────
+
+function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhase, onSelectPhase, onToggleTask, currentWeek }: {
+  phases: Phase[];
+  weeklyGoals: WeeklyGoal[];
+  taskStatuses: Record<string, string>;
+  selectedPhase: number | null;
+  onSelectPhase: (index: number | null) => void;
+  onToggleTask: (week: number, day: string, skill: string, activity: string) => void;
+  currentWeek: number;
+}) {
+  // Calculate phase completion from task statuses
+  function getPhaseCompletion(phaseIndex: number): number {
+    // Map phases to weeks: phase 0 → weeks 1-2, phase 1 → weeks 3-4, etc.
+    const weeksPerPhase = Math.max(1, Math.ceil(weeklyGoals.length / Math.max(1, phases.length)));
+    const startWeek = phaseIndex * weeksPerPhase + 1;
+    const endWeek = startWeek + weeksPerPhase;
+    const phaseWeeks = weeklyGoals.filter((w) => w.week >= startWeek && w.week < endWeek);
+    if (phaseWeeks.length === 0) return 0;
+    let total = 0;
+    let done = 0;
+    for (const w of phaseWeeks) {
+      for (const t of w.tasks) {
+        total++;
+        if (taskStatuses[`${w.week}-${t.day}-${t.skill}`] === "completed") done++;
+      }
+    }
+    return total > 0 ? Math.round((done / total) * 100) : 0;
+  }
+
+  // Determine which phase the user is currently in
+  const weeksPerPhase = Math.max(1, Math.ceil(weeklyGoals.length / Math.max(1, phases.length)));
+  const currentPhaseIndex = Math.min(phases.length - 1, Math.floor((currentWeek - 1) / weeksPerPhase));
+
+  const PHASE_COLORS = [
+    { bg: "bg-blue-500", soft: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/30" },
+    { bg: "bg-violet-500", soft: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/30" },
+    { bg: "bg-amber-500", soft: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/30" },
+    { bg: "bg-emerald-500", soft: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/30" },
+  ];
+
+  // Get weeks belonging to selected phase
+  const selectedPhaseWeeks = selectedPhase !== null
+    ? weeklyGoals.filter((w) => {
+        const start = selectedPhase * weeksPerPhase + 1;
+        return w.week >= start && w.week < start + weeksPerPhase;
+      })
+    : [];
+
+  const SKILL_LINKS: Record<string, string> = {
+    reading: "/ielts/simulator",
+    listening: "/ielts/simulator",
+    writing: "/ielts/writing",
+    speaking: "/ielts/speaking",
+    vocabulary: "/flashcards",
+    grammar: "/flashcards",
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Timeline visualization */}
+      <div className="relative rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
+        <h3 className="text-base font-bold text-[var(--text-primary)]">Your Learning Journey</h3>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">{phases.length} phases • {weeklyGoals.length} weeks</p>
+
+        {/* Phase nodes */}
+        <div className="mt-6 flex flex-col gap-0 sm:flex-row sm:items-start sm:gap-0">
+          {phases.map((phase, i) => {
+            const colors = PHASE_COLORS[i % PHASE_COLORS.length];
+            const completion = getPhaseCompletion(i);
+            const isCurrent = i === currentPhaseIndex;
+            const isSelected = selectedPhase === i;
+            const isPast = i < currentPhaseIndex;
+
+            return (
+              <div key={i} className="flex flex-1 flex-col items-center sm:items-stretch">
+                {/* Connector line + node */}
+                <div className="flex items-center sm:flex-col">
+                  {/* Node */}
+                  <button
+                    onClick={() => onSelectPhase(isSelected ? null : i)}
+                    className={`relative z-10 flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full border-[3px] transition-all sm:mx-auto ${
+                      isSelected
+                        ? `${colors.border} ${colors.soft} ring-4 ring-[var(--primary-soft)]`
+                        : isPast
+                          ? `border-emerald-500/40 bg-emerald-500/10`
+                          : isCurrent
+                            ? `${colors.border} ${colors.soft} animate-pulse`
+                            : `border-[var(--border)] bg-[var(--bg-elevated)]`
+                    }`}
+                  >
+                    {isPast ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                    ) : (
+                      <>
+                        <span className={`text-xs font-bold ${isCurrent || isSelected ? colors.text : "text-[var(--text-muted)]"}`}>{completion}%</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Connector */}
+                  {i < phases.length - 1 && (
+                    <div className={`hidden h-1 flex-1 sm:block ${isPast ? "bg-emerald-500/30" : "bg-[var(--border)]"}`} />
+                  )}
+                </div>
+
+                {/* Label */}
+                <div className="mt-2 text-center sm:px-1">
+                  <p className={`text-xs font-bold ${isCurrent ? colors.text : "text-[var(--text-primary)]"}`}>
+                    {phase.name}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{phase.weeks}</p>
+                  {isCurrent && (
+                    <span className={`mt-1 inline-block rounded-full ${colors.soft} px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${colors.text}`}>
+                      Current
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Selected phase detail panel */}
+      {selectedPhase !== null && phases[selectedPhase] && (
+        <div className="space-y-4">
+          <div className={`rounded-[var(--radius-xl)] border ${PHASE_COLORS[selectedPhase % PHASE_COLORS.length].border} bg-[var(--bg-surface)] p-5 sm:p-6`}>
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${PHASE_COLORS[selectedPhase % PHASE_COLORS.length].soft}`}>
+                <span className={`text-sm font-bold ${PHASE_COLORS[selectedPhase % PHASE_COLORS.length].text}`}>{selectedPhase + 1}</span>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">{phases[selectedPhase].name}</h3>
+                <p className="text-xs text-[var(--text-muted)]">{phases[selectedPhase].weeks} • {getPhaseCompletion(selectedPhase)}% complete</p>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm font-medium text-[var(--text-primary)]">{phases[selectedPhase].goal}</p>
+
+            {phases[selectedPhase].actions && (
+              <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{phases[selectedPhase].actions}</p>
+            )}
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {phases[selectedPhase].avoid && (
+                <div className="rounded-[var(--radius-md)] border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Avoid</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{phases[selectedPhase].avoid}</p>
+                </div>
+              )}
+              {phases[selectedPhase].expectedProgress && (
+                <div className="rounded-[var(--radius-md)] border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Expected Progress</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{phases[selectedPhase].expectedProgress}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Weeks in this phase */}
+          {selectedPhaseWeeks.length > 0 && (
+            <div className="space-y-3">
+              {selectedPhaseWeeks.map((week) => (
+                <WeekCard key={week.week} week={week} taskStatuses={taskStatuses} onToggleTask={onToggleTask} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
