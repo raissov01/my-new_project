@@ -330,3 +330,212 @@ func parseJSONBField(field *string) any {
 	}
 	return parsed
 }
+
+// ── Task Completion ─────────────────────────────────────────────────────────
+
+type completeTaskRequest struct {
+	PlanID   string `json:"planId"`
+	Week     int    `json:"week"`
+	Day      string `json:"day"`
+	Skill    string `json:"skill"`
+	Activity string `json:"activity"`
+	Status   string `json:"status"`
+	Note     string `json:"note"`
+}
+
+func (h *IELTSStudyPlanHandler) CompleteTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var req completeTaskRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	validStatuses := map[string]bool{"completed": true, "skipped": true, "partial": true, "pending": true}
+	if !validStatuses[req.Status] {
+		writeError(w, http.StatusBadRequest, "status must be completed, skipped, partial, or pending", nil)
+		return
+	}
+
+	// Upsert: find existing or create new
+	var existing models.IELTSTaskCompletion
+	result := h.db.Where("user_id = ? AND plan_id = ? AND week = ? AND day = ? AND skill = ?",
+		userID, req.PlanID, req.Week, req.Day, req.Skill).First(&existing)
+
+	if result.Error == nil {
+		// Update existing
+		updates := map[string]any{"status": req.Status}
+		if strings.TrimSpace(req.Note) != "" {
+			note := strings.TrimSpace(req.Note)
+			updates["note"] = &note
+		}
+		h.db.Model(&existing).Updates(updates)
+		writeJSON(w, http.StatusOK, existing)
+		return
+	}
+
+	// Create new
+	var note *string
+	if strings.TrimSpace(req.Note) != "" {
+		n := strings.TrimSpace(req.Note)
+		note = &n
+	}
+
+	completion := models.IELTSTaskCompletion{
+		UserID:   userID,
+		PlanID:   req.PlanID,
+		Week:     req.Week,
+		Day:      req.Day,
+		Skill:    req.Skill,
+		Activity: req.Activity,
+		Status:   req.Status,
+		Note:     note,
+	}
+
+	if err := h.db.Create(&completion).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to save task completion", err)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, completion)
+}
+
+func (h *IELTSStudyPlanHandler) GetTaskCompletions(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	planID := r.URL.Query().Get("planId")
+	if planID == "" {
+		writeError(w, http.StatusBadRequest, "planId required", nil)
+		return
+	}
+
+	var completions []models.IELTSTaskCompletion
+	if err := h.db.Where("user_id = ? AND plan_id = ?", userID, planID).
+		Order("week ASC, day ASC").Find(&completions).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load completions", err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"completions": completions})
+}
+
+// GetRoadmapProgress returns aggregated progress stats for the dashboard.
+func (h *IELTSStudyPlanHandler) GetRoadmapProgress(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	// Get active plan
+	var plan models.IELTSStudyPlan
+	err := h.db.Where("user_id = ? AND status = ?", userID, "active").
+		Order("created_at DESC").First(&plan).Error
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{"progress": nil})
+		return
+	}
+
+	// Count completions
+	var totalTasks int64
+	var completedTasks int64
+	var skippedTasks int64
+
+	h.db.Model(&models.IELTSTaskCompletion{}).
+		Where("user_id = ? AND plan_id = ?", userID, plan.ID).Count(&totalTasks)
+	h.db.Model(&models.IELTSTaskCompletion{}).
+		Where("user_id = ? AND plan_id = ? AND status = ?", userID, plan.ID, "completed").Count(&completedTasks)
+	h.db.Model(&models.IELTSTaskCompletion{}).
+		Where("user_id = ? AND plan_id = ? AND status = ?", userID, plan.ID, "skipped").Count(&skippedTasks)
+
+	// Count total planned tasks from plan data
+	planData := parseJSONBField(plan.PlanData)
+	totalPlannedTasks := 0
+	if pd, ok := planData.(map[string]any); ok {
+		if weeks, ok := pd["weeklyGoals"].([]any); ok {
+			for _, w := range weeks {
+				if wk, ok := w.(map[string]any); ok {
+					if tasks, ok := wk["tasks"].([]any); ok {
+						totalPlannedTasks += len(tasks)
+					}
+				}
+			}
+		}
+	}
+
+	// Days until exam
+	daysLeft := -1
+	if plan.ExamDate != nil && *plan.ExamDate != "" {
+		if examDate, err := time.Parse("2006-01-02", *plan.ExamDate); err == nil {
+			daysLeft = int(time.Until(examDate).Hours() / 24)
+			if daysLeft < 0 {
+				daysLeft = 0
+			}
+		}
+	}
+
+	// Determine current week (based on plan creation date)
+	daysSinceCreation := int(time.Since(plan.CreatedAt).Hours() / 24)
+	currentWeek := (daysSinceCreation / 7) + 1
+
+	// Completion percentage
+	completionPct := 0
+	if totalPlannedTasks > 0 {
+		completionPct = int(float64(completedTasks) / float64(totalPlannedTasks) * 100)
+	}
+
+	// Readiness label
+	readiness := "just started"
+	if completionPct >= 80 {
+		readiness = "exam ready"
+	} else if completionPct >= 60 {
+		readiness = "strong progress"
+	} else if completionPct >= 40 {
+		readiness = "on track"
+	} else if completionPct >= 20 {
+		readiness = "building momentum"
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"progress": map[string]any{
+			"planId":            plan.ID,
+			"targetBand":        plan.TargetBand,
+			"currentBand":       plan.CurrentBand,
+			"examDate":          plan.ExamDate,
+			"examType":          plan.ExamType,
+			"daysLeft":          daysLeft,
+			"currentWeek":       currentWeek,
+			"totalPlannedTasks": totalPlannedTasks,
+			"completedTasks":    completedTasks,
+			"skippedTasks":      skippedTasks,
+			"completionPercent": completionPct,
+			"readiness":         readiness,
+			"weakSections":      parseJSONBField(plan.WeakSections),
+			"prioritySkills":    getPrioritySkills(planData),
+		},
+	})
+}
+
+func getPrioritySkills(planData any) []string {
+	if pd, ok := planData.(map[string]any); ok {
+		if skills, ok := pd["prioritySkills"].([]any); ok {
+			result := make([]string, 0, len(skills))
+			for _, s := range skills {
+				if str, ok := s.(string); ok {
+					result = append(result, str)
+				}
+			}
+			return result
+		}
+	}
+	return nil
+}

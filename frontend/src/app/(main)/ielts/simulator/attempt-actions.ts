@@ -181,3 +181,60 @@ export async function generateStudyPlan(payload: Record<string, unknown>) {
     timeoutMs: 90_000,
   });
 }
+
+export async function completeStudyTask(payload: {
+  planId: string;
+  week: number;
+  day: string;
+  skill: string;
+  activity: string;
+  status: string;
+  note?: string;
+}) {
+  const user = await requireUser();
+
+  return fetchBackendJson<Record<string, unknown>>({
+    path: "/api/v1/ielts/study-plan/task",
+    userId: user.id,
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 15_000,
+  });
+}
+
+export async function getTaskCompletions(planId: string) {
+  const user = await requireUser();
+
+  return fetchBackendJson<{ completions: Array<{ week: number; day: string; skill: string; status: string }> }>({
+    path: `/api/v1/ielts/study-plan/tasks?planId=${planId}`,
+    userId: user.id,
+    timeoutMs: 15_000,
+  });
+}
+
+export async function getRoadmapProgress() {
+  const user = await requireUser();
+
+  return fetchBackendJson<{
+    progress: {
+      planId: string;
+      targetBand: string;
+      currentBand: string;
+      examDate: string | null;
+      daysLeft: number;
+      currentWeek: number;
+      totalPlannedTasks: number;
+      completedTasks: number;
+      skippedTasks: number;
+      completionPercent: number;
+      readiness: string;
+      weakSections: string[];
+      prioritySkills: string[];
+    } | null;
+  }>({
+    path: "/api/v1/ielts/study-plan/progress",
+    userId: user.id,
+    timeoutMs: 15_000,
+  });
+}

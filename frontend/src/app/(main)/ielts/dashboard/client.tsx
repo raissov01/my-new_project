@@ -5,7 +5,7 @@ import type { ComponentType } from "react";
 import Link from "next/link";
 import { BookOpen, CalendarDays, ChartColumn, Loader2, PenLine, Sparkles, Target, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getIELTSDashboard, getIELTSWeakness, getStudyPlan } from "../simulator/attempt-actions";
+import { getIELTSDashboard, getIELTSWeakness, getRoadmapProgress } from "../simulator/attempt-actions";
 
 type DashboardData = {
   recentAttempts: Array<{
@@ -41,9 +41,26 @@ type WeaknessData = {
   attemptCount: number;
 };
 
+type RoadmapProgress = {
+  planId: string;
+  targetBand: string;
+  currentBand: string;
+  examDate: string | null;
+  daysLeft: number;
+  currentWeek: number;
+  totalPlannedTasks: number;
+  completedTasks: number;
+  skippedTasks: number;
+  completionPercent: number;
+  readiness: string;
+  weakSections: string[];
+  prioritySkills: string[];
+};
+
 export function IELTSDashboardClient() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [weakness, setWeakness] = useState<WeaknessData | null>(null);
+  const [roadmap, setRoadmap] = useState<RoadmapProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,10 +70,13 @@ export function IELTSDashboardClient() {
     async function load() {
       setLoading(true);
       try {
-        const [dash, weak] = await Promise.all([getIELTSDashboard(), getIELTSWeakness(), getStudyPlan()]);
+        const [dash, weak, progress] = await Promise.all([getIELTSDashboard(), getIELTSWeakness(), getRoadmapProgress()]);
         if (!mounted) return;
         setDashboard(dash as DashboardData);
         setWeakness(weak as WeaknessData);
+        if (progress && typeof progress === "object" && "progress" in progress) {
+          setRoadmap((progress as { progress: RoadmapProgress | null }).progress);
+        }
       } catch (err) {
         if (!mounted) return;
         setError(err instanceof Error ? err.message : "Failed to load dashboard.");
@@ -131,18 +151,77 @@ export function IELTSDashboardClient() {
         </div>
 
         <div className="space-y-4">
+          {/* Roadmap progress widget */}
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-            <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
-              <Sparkles className="h-4 w-4" />
-              Current study plan
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
+                <Sparkles className="h-4 w-4" />
+                Your Roadmap
+              </div>
+              {roadmap && (
+                <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                  roadmap.readiness === "exam ready" ? "bg-emerald-500/10 text-emerald-400" :
+                  roadmap.readiness === "strong progress" ? "bg-blue-500/10 text-blue-400" :
+                  roadmap.readiness === "on track" ? "bg-amber-500/10 text-amber-400" :
+                  "bg-[var(--bg-soft)] text-[var(--text-muted)]"
+                }`}>
+                  {roadmap.readiness}
+                </span>
+              )}
             </div>
-            <p className="mt-3 text-sm text-[var(--text-secondary)]">
-              {dashboard.activePlan ? "An active study plan is available." : "No active study plan yet."}
-            </p>
-            <div className="mt-4 flex gap-2">
-              <Link href="/ielts/study-plan"><Button size="sm">Open study plan</Button></Link>
-              <Link href="/ielts/simulator"><Button size="sm" variant="secondary">Start mock</Button></Link>
-            </div>
+
+            {roadmap ? (
+              <div className="mt-4 space-y-4">
+                {/* Progress bar */}
+                <div>
+                  <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                    <span>Completion</span>
+                    <span className="font-semibold text-[var(--text-primary)]">{roadmap.completionPercent}%</span>
+                  </div>
+                  <div className="mt-1.5 h-2.5 rounded-full bg-[var(--bg-soft)]">
+                    <div
+                      className="h-2.5 rounded-full bg-gradient-to-r from-[var(--primary)] to-cyan-400 transition-all"
+                      style={{ width: `${Math.min(100, roadmap.completionPercent)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-center">
+                    <p className="text-lg font-bold text-[var(--text-primary)]">{roadmap.completedTasks}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">Done</p>
+                  </div>
+                  <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-center">
+                    <p className="text-lg font-bold text-[var(--text-primary)]">W{roadmap.currentWeek}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">Week</p>
+                  </div>
+                  <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-center">
+                    <p className="text-lg font-bold text-[var(--text-primary)]">{roadmap.daysLeft >= 0 ? roadmap.daysLeft : "—"}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">Days left</p>
+                  </div>
+                </div>
+
+                {/* Band target */}
+                <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-sm">
+                  <span className="text-[var(--text-secondary)]">Band {roadmap.currentBand} → {roadmap.targetBand}</span>
+                  <Target className="h-4 w-4 text-[var(--text-muted)]" />
+                </div>
+
+                <div className="flex gap-2">
+                  <Link href="/ielts/study-plan" className="flex-1"><Button size="sm" className="w-full">Open roadmap</Button></Link>
+                  <Link href="/ielts/simulator"><Button size="sm" variant="secondary">Start mock</Button></Link>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3">
+                <p className="text-sm text-[var(--text-secondary)]">No active study plan yet.</p>
+                <div className="mt-4 flex gap-2">
+                  <Link href="/ielts/study-plan"><Button size="sm">Create roadmap</Button></Link>
+                  <Link href="/ielts/simulator"><Button size="sm" variant="secondary">Start mock</Button></Link>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">

@@ -19,7 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generateStudyPlan, getStudyPlan } from "../simulator/attempt-actions";
+import { completeStudyTask, generateStudyPlan, getStudyPlan, getTaskCompletions } from "../simulator/attempt-actions";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -100,13 +100,31 @@ export function IELTSStudyPlanClient() {
     struggles: ["timing", "grammar"],
   });
 
+  // taskKey → status
+  const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>({});
+
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
         const resp = await getStudyPlan();
         if (!mounted) return;
-        if (resp.plan) setPlan(resp.plan as StudyPlan);
+        if (resp.plan) {
+          const p = resp.plan as StudyPlan;
+          setPlan(p);
+          // Load task completions
+          try {
+            const completionsResp = await getTaskCompletions(p.id);
+            if (!mounted) return;
+            const map: Record<string, string> = {};
+            for (const c of completionsResp.completions ?? []) {
+              map[`${c.week}-${c.day}-${c.skill}`] = c.status;
+            }
+            setTaskStatuses(map);
+          } catch {
+            // ignore — completions just won't show
+          }
+        }
       } catch (err) {
         if (mounted) setError(err instanceof Error ? err.message : "Failed to load study plan.");
       } finally {
@@ -116,6 +134,20 @@ export function IELTSStudyPlanClient() {
     void load();
     return () => { mounted = false; };
   }, []);
+
+  async function handleTaskToggle(week: number, day: string, skill: string, activity: string) {
+    if (!plan) return;
+    const key = `${week}-${day}-${skill}`;
+    const current = taskStatuses[key];
+    const next = current === "completed" ? "pending" : "completed";
+    setTaskStatuses((prev) => ({ ...prev, [key]: next }));
+    try {
+      await completeStudyTask({ planId: plan.id, week, day, skill, activity, status: next });
+    } catch {
+      // revert on error
+      setTaskStatuses((prev) => ({ ...prev, [key]: current ?? "pending" }));
+    }
+  }
 
   async function handleGenerate() {
     setSubmitting(true);
@@ -213,7 +245,7 @@ export function IELTSStudyPlanClient() {
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-[var(--text-primary)]">Weekly Roadmap</h3>
           {plan.planData.weeklyGoals.map((week) => (
-            <WeekCard key={week.week} week={week} />
+            <WeekCard key={week.week} week={week} taskStatuses={taskStatuses} onToggleTask={handleTaskToggle} />
           ))}
         </div>
       )}
@@ -450,22 +482,45 @@ function WizardFlow({
 
 // ── Week Card ───────────────────────────────────────────────────────────────
 
-function WeekCard({ week }: { week: WeeklyGoal }) {
+function WeekCard({ week, taskStatuses, onToggleTask }: {
+  week: WeeklyGoal;
+  taskStatuses: Record<string, string>;
+  onToggleTask: (week: number, day: string, skill: string, activity: string) => void;
+}) {
   const [open, setOpen] = useState(week.week === 1);
+
+  const completedCount = week.tasks?.filter((t) => taskStatuses[`${week.week}-${t.day}-${t.skill}`] === "completed").length ?? 0;
+  const totalCount = week.tasks?.length ?? 0;
+
+  const SKILL_LINKS: Record<string, string> = {
+    reading: "/ielts/simulator",
+    listening: "/ielts/simulator",
+    writing: "/ielts/writing",
+    speaking: "/ielts/speaking",
+    vocabulary: "/flashcards",
+    grammar: "/flashcards",
+  };
 
   return (
     <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
       <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--bg-soft)]">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary)]">
-            W{week.week}
+          <div className={`flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] text-sm font-bold ${
+            completedCount === totalCount && totalCount > 0
+              ? "bg-emerald-500/10 text-emerald-400"
+              : "bg-[var(--primary-soft)] text-[var(--primary)]"
+          }`}>
+            {completedCount === totalCount && totalCount > 0 ? <CheckCircle2 className="h-5 w-5" /> : `W${week.week}`}
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--text-primary)]">Week {week.week}</p>
             <p className="text-xs text-[var(--text-muted)]">{week.focus}</p>
           </div>
         </div>
-        <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} />
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-medium text-[var(--text-muted)]">{completedCount}/{totalCount}</span>
+          <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} />
+        </div>
       </button>
 
       {open && week.tasks && week.tasks.length > 0 && (
@@ -473,23 +528,42 @@ function WeekCard({ week }: { week: WeeklyGoal }) {
           <div className="space-y-2.5">
             {week.tasks.map((task, i) => {
               const Icon = SKILL_ICONS[task.skill] ?? Zap;
+              const key = `${week.week}-${task.day}-${task.skill}`;
+              const isDone = taskStatuses[key] === "completed";
+              const actionLink = SKILL_LINKS[task.skill];
+
               return (
-                <div key={i} className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--bg-soft)]">
-                    <Icon className="h-4 w-4 text-[var(--text-muted)]" />
-                  </div>
+                <div key={i} className={`flex items-start gap-3 rounded-[var(--radius-md)] border p-3 transition-all ${
+                  isDone ? "border-emerald-500/20 bg-emerald-500/5" : "border-[var(--border)] bg-[var(--bg-elevated)]"
+                }`}>
+                  <button
+                    onClick={() => onToggleTask(week.week, task.day, task.skill, task.activity)}
+                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                      isDone
+                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        : "border-[var(--border-strong)] hover:border-[var(--primary)]"
+                    }`}
+                  >
+                    {isDone && <CheckCircle2 className="h-3.5 w-3.5" />}
+                  </button>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-[var(--text-primary)]">{task.day}</span>
+                      <Icon className={`h-3.5 w-3.5 ${isDone ? "text-emerald-400" : "text-[var(--text-muted)]"}`} />
+                      <span className={`text-xs font-semibold ${isDone ? "text-emerald-400 line-through" : "text-[var(--text-primary)]"}`}>{task.day}</span>
                       <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
                         {task.skill} • {task.durationMinutes}min
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-[var(--text-secondary)]">{task.activity}</p>
-                    {task.details && (
+                    <p className={`mt-0.5 text-xs ${isDone ? "text-[var(--text-muted)] line-through" : "text-[var(--text-secondary)]"}`}>{task.activity}</p>
+                    {task.details && !isDone && (
                       <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">{task.details}</p>
                     )}
                   </div>
+                  {actionLink && !isDone && (
+                    <a href={actionLink} className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--border)] px-2.5 py-1 text-[10px] font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary-soft)]">
+                      Start
+                    </a>
+                  )}
                 </div>
               );
             })}
