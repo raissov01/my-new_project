@@ -37,10 +37,16 @@ type Config struct {
 	SMTPPassword string
 	SMTPFrom     string
 
-	// Telegram bot
+	// Telegram bot (webhook for real-time new posts)
 	TelegramBotToken      string
 	TelegramWebhookURL    string
 	TelegramWebhookSecret string
+
+	// Telegram client API (MTProto for channel history import)
+	TelegramAppID    int
+	TelegramAppHash  string
+	TelegramPhone    string
+	TelegramChannelID int64
 }
 
 // Load reads environment variables (with optional .env file) and returns Config.
@@ -73,6 +79,11 @@ func Load() (*Config, error) {
 		TelegramBotToken:      os.Getenv("TELEGRAM_BOT_TOKEN"),
 		TelegramWebhookURL:    os.Getenv("TELEGRAM_WEBHOOK_URL"),
 		TelegramWebhookSecret: os.Getenv("TELEGRAM_WEBHOOK_SECRET"),
+
+		TelegramAppID:     getEnvInt("TELEGRAM_APP_ID", 0),
+		TelegramAppHash:   os.Getenv("TELEGRAM_APP_HASH"),
+		TelegramPhone:     os.Getenv("TELEGRAM_PHONE"),
+		TelegramChannelID: int64(getEnvInt("TELEGRAM_CHANNEL_ID", 0)),
 	}
 
 	// Parse CORS origins
