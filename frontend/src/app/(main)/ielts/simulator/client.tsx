@@ -23,6 +23,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import type { IELTSMockExam, IELTSMockSection, IELTSQuestion } from "@/features/ielts/api";
 import { fetchIELTSMockExam, fetchIELTSQuestions } from "@/features/ielts/api";
+import { SpeakingRecorderPanel } from "@/features/ielts/components/speaking-recorder-panel";
 import { evaluateSpeaking, type SpeakingResult } from "../speaking/actions";
 import { evaluateWriting, type WritingResult } from "../writing/actions";
 
@@ -905,6 +906,18 @@ export function SimulatorClient() {
                     </ul>
                   </div>
                 ) : null}
+
+                <div className="mt-4">
+                  <SpeakingRecorderPanel
+                    compact
+                    onUseTranscript={(value) =>
+                      setSpeakingResponses((prev) => ({
+                        ...prev,
+                        [question.id]: value,
+                      }))
+                    }
+                  />
+                </div>
 
                 <textarea
                   value={transcript}

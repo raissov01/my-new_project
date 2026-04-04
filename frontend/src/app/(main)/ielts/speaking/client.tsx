@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
+import { SpeakingRecorderPanel } from "@/features/ielts/components/speaking-recorder-panel";
 import type { IELTSQuestion } from "@/features/ielts/api";
 import { fetchIELTSQuestions } from "@/features/ielts/api";
 import { evaluateSpeaking, type SpeakingResult } from "./actions";
@@ -494,6 +495,8 @@ export function SpeakingPracticeClient() {
                 {t("ielts.sp.getEvaluation")}
               </Button>
             </div>
+
+            <SpeakingRecorderPanel onUseTranscript={setTranscript} />
 
             <div>
               <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
