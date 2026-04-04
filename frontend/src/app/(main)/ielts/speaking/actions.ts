@@ -37,6 +37,15 @@ export type SpeakingResult = {
   aiModel: string;
 };
 
+export type SpeakingHistoryItem = {
+  id: string;
+  part: string;
+  prompt: string;
+  transcript: string;
+  overallBand: number;
+  createdAt: string;
+};
+
 export async function evaluateSpeaking(
   part: string,
   prompt: string,
@@ -58,5 +67,20 @@ export async function evaluateSpeaking(
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Evaluation failed.";
     return { error: msg };
+  }
+}
+
+export async function getSpeakingHistory(): Promise<SpeakingHistoryItem[]> {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  try {
+    const resp = await fetchBackendJson<{ items: SpeakingHistoryItem[] }>({
+      path: "/api/v1/ielts/speaking/history",
+      userId: user.id,
+    });
+    return resp.items ?? [];
+  } catch {
+    return [];
   }
 }

@@ -12,21 +12,25 @@ type Dependencies struct {
 	JWTSecret        string
 	Environment      string
 
-	Auth          *AuthHandler
-	GoogleOAuth   *GoogleOAuthHandler
-	IELTSMaterial *IELTSMaterialHandler
-	IELTSExaminer *IELTSExaminerHandler
-	Leaderboard   *Leaderboard
-	Profile       *Profile
-	Set           *Set
-	Dashboard     *Dashboard
-	Classroom     *Classroom
-	Progress      *Progress
-	Flashcard     *FlashcardHandler
-	Challenge     *ChallengeHandler
-	ProfileWrite  *ProfileWriteHandler
-	AI            *AIHandler
-	DebugDatabase http.HandlerFunc
+	Auth               *AuthHandler
+	GoogleOAuth        *GoogleOAuthHandler
+	IELTSMaterial      *IELTSMaterialHandler
+	IELTSExaminer      *IELTSExaminerHandler
+	IELTSAttempt       *IELTSAttemptHandler
+	IELTSStudyPlan     *IELTSStudyPlanHandler
+	IELTSDashboard     *IELTSDashboardHandler
+	IELTSQuestionAdmin *IELTSQuestionAdminHandler
+	Leaderboard        *Leaderboard
+	Profile            *Profile
+	Set                *Set
+	Dashboard          *Dashboard
+	Classroom          *Classroom
+	Progress           *Progress
+	Flashcard          *FlashcardHandler
+	Challenge          *ChallengeHandler
+	ProfileWrite       *ProfileWriteHandler
+	AI                 *AIHandler
+	DebugDatabase      http.HandlerFunc
 }
 
 var deps Dependencies
@@ -123,6 +127,32 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/ielts/materials", deps.IELTSMaterial.Create)
 		internal.PUT("/ielts/materials/:id", deps.IELTSMaterial.Update)
 		internal.DELETE("/ielts/materials/:id", deps.IELTSMaterial.Delete)
+
+		// IELTS attempt lifecycle
+		internal.POST("/ielts/attempts", wrapHTTP(deps.IELTSAttempt.StartAttempt))
+		internal.PUT("/ielts/attempts/:attemptID/save", wrapHTTP(deps.IELTSAttempt.AutoSave))
+		internal.PUT("/ielts/attempts/:attemptID/complete", wrapHTTP(deps.IELTSAttempt.Complete))
+		internal.PUT("/ielts/attempts/:attemptID/abandon", wrapHTTP(deps.IELTSAttempt.Abandon))
+		internal.GET("/ielts/attempts/:attemptID", wrapHTTP(deps.IELTSAttempt.GetAttempt))
+		internal.GET("/ielts/attempts", wrapHTTP(deps.IELTSAttempt.ListAttempts))
+		internal.POST("/ielts/attempts/:attemptID/violations", wrapHTTP(deps.IELTSAttempt.LogViolation))
+		internal.GET("/ielts/attempts/:attemptID/violations", wrapHTTP(deps.IELTSAttempt.GetViolations))
+
+		// IELTS dashboard & analytics
+		internal.GET("/ielts/dashboard", wrapHTTP(deps.IELTSDashboard.GetDashboard))
+		internal.GET("/ielts/dashboard/weakness", wrapHTTP(deps.IELTSDashboard.GetWeaknessAnalysis))
+
+		// IELTS study plan
+		internal.POST("/ielts/study-plan", wrapHTTP(deps.IELTSStudyPlan.GeneratePlan))
+		internal.GET("/ielts/study-plan", wrapHTTP(deps.IELTSStudyPlan.GetPlan))
+		internal.PUT("/ielts/study-plan/:planID", wrapHTTP(deps.IELTSStudyPlan.UpdatePlan))
+
+		// IELTS admin question management
+		internal.POST("/ielts/admin/questions", wrapHTTP(deps.IELTSQuestionAdmin.CreateQuestion))
+		internal.PUT("/ielts/admin/questions/:questionID", wrapHTTP(deps.IELTSQuestionAdmin.UpdateQuestion))
+		internal.DELETE("/ielts/admin/questions/:questionID", wrapHTTP(deps.IELTSQuestionAdmin.DeleteQuestion))
+		internal.POST("/ielts/admin/questions/bulk", wrapHTTP(deps.IELTSQuestionAdmin.BulkCreateQuestions))
+		internal.GET("/ielts/admin/questions/stats", wrapHTTP(deps.IELTSQuestionAdmin.GetQuestionStats))
 	}
 
 	// Public read routes are registered above in the internal group.

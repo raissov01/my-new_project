@@ -7,6 +7,8 @@ import {
   Mic,
   PenLine,
   Target,
+  BarChart3,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GuestIELTSCta } from "@/features/auth/components/guest-ielts-cta";
@@ -53,6 +55,24 @@ export default async function IELTSHubPage() {
       color: "text-cyan-500 bg-cyan-500/10",
       badge: null,
       accent: "group-hover:border-l-cyan-500",
+    },
+    {
+      href: "/ielts/dashboard",
+      icon: BarChart3,
+      title: "Dashboard",
+      body: "Track recent attempts, weak skills, and your AI feedback history.",
+      color: "text-indigo-500 bg-indigo-500/10",
+      badge: null,
+      accent: "group-hover:border-l-indigo-500",
+    },
+    {
+      href: "/ielts/study-plan",
+      icon: CalendarDays,
+      title: "Study plan",
+      body: "Generate a structured plan from your target band and exam date.",
+      color: "text-rose-500 bg-rose-500/10",
+      badge: null,
+      accent: "group-hover:border-l-rose-500",
     },
     {
       href: "/ielts/tips",

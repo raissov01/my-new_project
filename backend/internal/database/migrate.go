@@ -30,6 +30,9 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.IELTSSpeakingSession{},
 		&models.IELTSQuestion{},
 		&models.IELTSMockExam{},
+		&models.IELTSAttempt{},
+		&models.IELTSViolation{},
+		&models.IELTSStudyPlan{},
 	)
 	if err != nil {
 		return err

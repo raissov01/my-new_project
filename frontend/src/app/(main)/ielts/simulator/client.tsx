@@ -23,7 +23,17 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import type { IELTSMockExam, IELTSMockSection, IELTSQuestion } from "@/features/ielts/api";
 import { fetchIELTSMockExam, fetchIELTSQuestions } from "@/features/ielts/api";
+import { useAutosave } from "@/features/ielts/use-autosave";
+import { useExamMode } from "@/features/ielts/use-exam-mode";
+import { ExamViolationModal } from "@/features/ielts/components/exam-violation-modal";
 import { SpeakingRecorderPanel } from "@/features/ielts/components/speaking-recorder-panel";
+import {
+  abandonAttempt,
+  autosaveAttempt,
+  completeAttempt,
+  logAttemptViolation,
+  startAttempt,
+} from "./attempt-actions";
 import { evaluateSpeaking, type SpeakingResult } from "../speaking/actions";
 import { evaluateWriting, type WritingResult } from "../writing/actions";
 
@@ -66,7 +76,18 @@ export function SimulatorClient() {
   const [showListeningTranscript, setShowListeningTranscript] = useState<Record<string, boolean>>({});
   const [speechEnabled, setSpeechEnabled] = useState(false);
   const [playingGroupKey, setPlayingGroupKey] = useState<string | null>(null);
+  const [strictMode, setStrictMode] = useState(true);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [attemptStartedAt, setAttemptStartedAt] = useState<number | null>(null);
+  const [isTerminating, setIsTerminating] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const goToConfigure = useCallback(() => {
+    setStage("configure");
+    setAttemptId(null);
+    setAttemptStartedAt(null);
+    setIsTerminating(false);
+  }, []);
 
   useEffect(() => {
     setSpeechEnabled(typeof window !== "undefined" && "speechSynthesis" in window);
@@ -209,6 +230,31 @@ export function SimulatorClient() {
     stopTimer();
 
     try {
+      const attemptType =
+        section === "full"
+          ? "full_mock"
+          : section === "writing"
+            ? "writing_practice"
+            : section === "speaking"
+              ? "speaking_practice"
+              : "section_practice";
+
+      const startedAttempt = await startAttempt({
+        attemptType,
+        mockType,
+        examSet:
+          mockType === "cambridge_style"
+            ? cambridgeExamSet !== "auto"
+              ? cambridgeExamSet
+              : undefined
+            : predictionExamSet !== "auto"
+              ? predictionExamSet
+              : undefined,
+        section,
+        bandTarget,
+        strictMode,
+      });
+
       const response = await fetchIELTSMockExam({
         mockType,
         section,
@@ -230,12 +276,14 @@ export function SimulatorClient() {
       setSpeakingResponses({});
       setSpeakingResults({});
       setShowListeningTranscript({});
+      setAttemptId(startedAttempt.id);
+      setAttemptStartedAt(Date.now());
       setStage("exam");
     } catch (loadError) {
       setError(
         loadError instanceof Error ? loadError.message : "Failed to load mock exam."
       );
-      setStage("configure");
+      goToConfigure();
     }
   }
 
@@ -245,7 +293,7 @@ export function SimulatorClient() {
     setActiveSectionIndex(index);
   }
 
-  function handleCompleteSection() {
+  async function handleCompleteSection() {
     if (!mock || !currentSection) {
       return;
     }
@@ -260,6 +308,67 @@ export function SimulatorClient() {
     if (activeSectionIndex < mock.sections.length - 1) {
       setActiveSectionIndex((prev) => prev + 1);
       return;
+    }
+
+    if (attemptId) {
+      const elapsed = attemptStartedAt
+        ? Math.max(0, Math.floor((Date.now() - attemptStartedAt) / 1000))
+        : 0;
+
+      const writingBands = mock.sections
+        .filter((item) => item.key === "writing")
+        .flatMap((item) => item.questions)
+        .map((question) => writingResults[question.id]?.overallBand)
+        .filter((item): item is number => typeof item === "number");
+
+      const speakingBands = mock.sections
+        .filter((item) => item.key === "speaking")
+        .flatMap((item) => item.questions)
+        .map((question) => speakingResults[question.id]?.overallBand)
+        .filter((item): item is number => typeof item === "number");
+
+      const readingSection = mock.sections.find((item) => item.key === "reading");
+      const listeningSection = mock.sections.find((item) => item.key === "listening");
+      const readingStats = readingSection
+        ? computeObjectiveStats(readingSection.questions, objectiveAnswers)
+        : null;
+      const listeningStats = listeningSection
+        ? computeObjectiveStats(listeningSection.questions, objectiveAnswers)
+        : null;
+
+      const overallResults = {
+        readingScore: readingStats?.correct ?? null,
+        readingTotal: readingStats?.total ?? null,
+        readingBand: readingStats ? objectivePercentToBand(readingStats.percent) : null,
+        listeningScore: listeningStats?.correct ?? null,
+        listeningTotal: listeningStats?.total ?? null,
+        listeningBand: listeningStats ? objectivePercentToBand(listeningStats.percent) : null,
+        writingBand:
+          writingBands.length > 0
+            ? Number((writingBands.reduce((sum, item) => sum + item, 0) / writingBands.length).toFixed(1))
+            : null,
+        speakingBand:
+          speakingBands.length > 0
+            ? Number((speakingBands.reduce((sum, item) => sum + item, 0) / speakingBands.length).toFixed(1))
+            : null,
+      };
+
+      try {
+        await autosave.forceSave();
+        await completeAttempt(attemptId, {
+          answers: answersPayload,
+          timeTakenSecs: elapsed,
+          results: overallResults,
+        });
+        autosave.clearLocal();
+      } catch (submitError) {
+        setError(
+          submitError instanceof Error
+            ? submitError.message
+            : "Failed to submit attempt. Your answers are saved locally."
+        );
+        return;
+      }
     }
 
     setStage("results");
@@ -374,6 +483,75 @@ export function SimulatorClient() {
         speaking?.questions.filter((question) => !speakingResults[question.id]).length ?? 0,
     };
   }, [mock, objectiveAnswers, speakingResults, writingResults]);
+
+  const answersPayload = useMemo(() => {
+    return {
+      ...objectiveAnswers,
+      ...Object.fromEntries(Object.entries(writingResponses).map(([key, value]) => [key, value])),
+      ...Object.fromEntries(Object.entries(speakingResponses).map(([key, value]) => [key, value])),
+    };
+  }, [objectiveAnswers, speakingResponses, writingResponses]);
+
+  const sectionProgress = useMemo(() => {
+    if (!mock) return {};
+    const map: Record<string, boolean> = {};
+    for (const sectionItem of mock.sections) {
+      map[sectionItem.key] = Boolean(revealedSections[sectionItem.key]);
+    }
+    return map;
+  }, [mock, revealedSections]);
+
+  const examMode = useExamMode({
+    enabled: stage === "exam" && strictMode && Boolean(attemptId),
+    attemptId: attemptId ?? undefined,
+    policy: {
+      fullscreenRequired: true,
+      warnOnly: false,
+      autoTerminateAt: 5,
+      immediateTerminate: false,
+    },
+    onViolation: ({ type, details }) => {
+      if (!attemptId) return;
+      void logAttemptViolation(attemptId, { type, details });
+    },
+    onTerminate: () => {
+      setIsTerminating(true);
+    },
+  });
+
+  const autosave = useAutosave({
+    enabled: stage === "exam" && Boolean(attemptId),
+    storageKey: `ielts-attempt-${attemptId ?? "draft"}`,
+    payload: {
+      answers: answersPayload,
+      sectionProgress,
+      timeTakenSecs: attemptStartedAt ? Math.max(0, Math.floor((Date.now() - attemptStartedAt) / 1000)) : 0,
+    },
+    onSave: async (payload) => {
+      if (!attemptId) return;
+      await autosaveAttempt(attemptId, payload);
+    },
+  });
+
+  useEffect(() => {
+    if (!isTerminating) return;
+
+    async function terminateNow() {
+      try {
+        if (attemptId) {
+          await autosave.forceSave();
+          await abandonAttempt(attemptId);
+        }
+      } catch {
+        // ignore termination network errors
+      } finally {
+        setIsTerminating(false);
+        goToConfigure();
+      }
+    }
+
+    void terminateNow();
+  }, [attemptId, autosave, goToConfigure, isTerminating]);
 
   if (stage === "configure") {
     return (
@@ -523,9 +701,33 @@ export function SimulatorClient() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
+
+          <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
+            <label className="flex items-center justify-between gap-3 text-sm text-[var(--text-secondary)]">
+              <span>Strict exam mode (fullscreen, tab/leave monitoring)</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={strictMode}
+                onClick={() => setStrictMode((prev) => !prev)}
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  strictMode ? "bg-indigo-500" : "bg-[var(--border)]"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                    strictMode ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </label>
+          </div>
         </div>
 
         {error ? <ErrorBanner message={error} /> : null}
+        {examMode.warningMessage ? (
+          <ErrorBanner message={examMode.warningMessage} onClose={examMode.clearWarning} />
+        ) : null}
       </div>
     );
   }
@@ -628,7 +830,7 @@ export function SimulatorClient() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button onClick={() => setStage("configure")}>
+          <Button onClick={goToConfigure}>
             <RotateCcw className="h-4 w-4" />
             Configure another mock
           </Button>
@@ -654,7 +856,8 @@ export function SimulatorClient() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="fixed inset-0 z-[90] overflow-y-auto bg-[var(--bg-surface)] px-4 py-6 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-7xl space-y-6">
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-400">
@@ -998,6 +1201,9 @@ export function SimulatorClient() {
       )}
 
       {error ? <ErrorBanner message={error} /> : null}
+      {examMode.warningMessage ? (
+        <ErrorBanner message={examMode.warningMessage} onClose={examMode.clearWarning} />
+      ) : null}
 
       <div className="flex flex-wrap gap-3">
         <Button onClick={handleCompleteSection}>
@@ -1008,10 +1214,25 @@ export function SimulatorClient() {
               : "Continue to next section"}
           <ArrowRight className="h-4 w-4" />
         </Button>
-        <Button variant="secondary" onClick={() => setStage("configure")}>
+        <Button variant="secondary" onClick={examMode.askExit}>
           <RotateCcw className="h-4 w-4" />
           Exit and reconfigure
         </Button>
+      </div>
+
+      <ExamViolationModal
+        open={examMode.showExitConfirm}
+        title="Terminate current exam attempt?"
+        message="Leaving the exam will terminate your attempt. Continue?"
+        cancelLabel="Stay in exam"
+        confirmLabel="Terminate and exit"
+        confirmTone="danger"
+        onCancel={examMode.cancelExit}
+        onConfirm={() => {
+          void examMode.confirmExit();
+          setIsTerminating(true);
+        }}
+      />
       </div>
     </div>
   );
@@ -1105,6 +1326,20 @@ function formatTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function objectivePercentToBand(percent: number) {
+  if (percent >= 90) return 9.0;
+  if (percent >= 85) return 8.5;
+  if (percent >= 80) return 8.0;
+  if (percent >= 75) return 7.5;
+  if (percent >= 70) return 7.0;
+  if (percent >= 63) return 6.5;
+  if (percent >= 55) return 6.0;
+  if (percent >= 47) return 5.5;
+  if (percent >= 40) return 5.0;
+  if (percent >= 32) return 4.5;
+  return 4.0;
 }
 
 function extractFollowUps(feedback?: SpeakingResult["feedback"]) {
@@ -1277,11 +1512,20 @@ function ObjectiveQuestionCard({
   );
 }
 
-function ErrorBanner({ message }: { message: string }) {
+function ErrorBanner({ message, onClose }: { message: string; onClose?: () => void }) {
   return (
     <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-      <span>{message}</span>
+      <span className="flex-1">{message}</span>
+      {onClose ? (
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-xs font-medium text-red-400 hover:text-red-300"
+        >
+          Dismiss
+        </button>
+      ) : null}
     </div>
   );
 }
