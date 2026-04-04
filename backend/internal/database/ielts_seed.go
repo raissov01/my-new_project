@@ -179,10 +179,13 @@ func seedIELTSQuestions(db *gorm.DB) error {
 }
 
 func buildIELTSQuestionSeed() []models.IELTSQuestion {
-	// Start with the reading test bank (full-length passages)
+	// Full-length reading passages (3 tests × 3 passages × ~13 questions = 120)
 	questions := buildReadingTestBank()
 
-	// Then append the legacy question seed
+	// Full-length listening sections (3 tests × 4 sections × 10 questions = 120)
+	questions = append(questions, buildListeningTestBank()...)
+
+	// Legacy question seed (writing, speaking, short reading/listening)
 	questions = append(questions, buildLegacyQuestionSeed()...)
 	return questions
 }
