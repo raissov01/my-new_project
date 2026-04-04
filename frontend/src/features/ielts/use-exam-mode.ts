@@ -114,7 +114,8 @@ export function useExamMode(options: UseExamModeOptions) {
       return;
     }
 
-    void requestFullscreen();
+    // Fullscreen must be triggered by user gesture (click) — NOT here in useEffect.
+    // The consumer calls requestFullscreen() from the "Start exam" button handler.
     window.history.pushState({ exam: true }, "", window.location.href);
 
     const onFullscreenChange = () => {

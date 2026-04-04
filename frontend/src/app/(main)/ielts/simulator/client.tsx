@@ -224,6 +224,14 @@ export function SimulatorClient() {
   }, [activeSectionIndex, currentSection, stage, startSectionTimer]);
 
   async function handleStartMock() {
+    // Request fullscreen immediately — must happen in the user-gesture call stack
+    // before any await, otherwise the browser blocks it.
+    if (strictMode && typeof document !== "undefined" && !document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {
+        // Some browsers may still block; exam will work without fullscreen.
+      });
+    }
+
     setStage("loading");
     setError(null);
     stopSpeaking();
