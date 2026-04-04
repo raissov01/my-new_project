@@ -37,6 +37,9 @@ type DayTask = {
   activity: string;
   durationMinutes: number;
   details?: string;
+  howTo?: string;
+  whatToAvoid?: string;
+  whyItMatters?: string;
 };
 
 type WeeklyGoal = {
@@ -45,11 +48,33 @@ type WeeklyGoal = {
   tasks: DayTask[];
 };
 
+type Phase = {
+  name: string;
+  weeks: string;
+  goal: string;
+  actions: string;
+  avoid: string;
+  expectedProgress: string;
+};
+
+type Strategy = {
+  whatToFocusFirst?: string;
+  urgentSkills?: string;
+  stableSkills?: string;
+  commonMistakes?: string;
+  dailyStructure?: string;
+  timingStrategy?: string;
+};
+
 type PlanData = {
   overview?: string;
+  strategy?: Strategy;
+  phases?: Phase[];
   weeklyGoals?: WeeklyGoal[];
   prioritySkills?: string[];
   tips?: string[];
+  moduleGuide?: Record<string, string>;
+  examCountdown?: string;
   raw?: string;
 };
 
@@ -98,6 +123,7 @@ export function IELTSStudyPlanClient() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"checklist" | "guide">("checklist");
   const [showWizard, setShowWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
   const [wizardData, setWizardData] = useState<WizardData>({
@@ -211,10 +237,20 @@ export function IELTSStudyPlanClient() {
             Generated {new Date(plan.createdAt).toLocaleDateString()} • {plan.examType === "academic" ? "Academic" : "General Training"}
           </p>
         </div>
-        <Button variant="secondary" onClick={() => { setShowWizard(true); setWizardStep(0); }}>
-          <RefreshCw className="h-4 w-4" />
-          Regenerate plan
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-0.5">
+            <button onClick={() => setViewMode("checklist")} className={`rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "checklist" ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]" : "text-[var(--text-muted)]"}`}>
+              Checklist
+            </button>
+            <button onClick={() => setViewMode("guide")} className={`rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "guide" ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]" : "text-[var(--text-muted)]"}`}>
+              Study Guide
+            </button>
+          </div>
+          <Button variant="secondary" onClick={() => { setShowWizard(true); setWizardStep(0); }}>
+            <RefreshCw className="h-4 w-4" />
+            Regenerate
+          </Button>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -243,46 +279,167 @@ export function IELTSStudyPlanClient() {
         </div>
       )}
 
-      {/* Overview */}
-      {plan.planData?.overview && (
-        <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Strategy Overview</h3>
-          <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.overview}</p>
+      {/* ═══════════════ STUDY GUIDE MODE ═══════════════ */}
+      {viewMode === "guide" && (
+        <div className="space-y-5">
+          {/* Strategy overview */}
+          {plan.planData?.overview && (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
+              <h3 className="text-base font-bold text-[var(--text-primary)]">Strategy Overview</h3>
+              <div className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+                {plan.planData.overview.split("\n").map((p, i) => <p key={i} className="mb-3 last:mb-0">{p}</p>)}
+              </div>
+            </div>
+          )}
+
+          {/* Strategy details */}
+          {plan.planData?.strategy && (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
+              <h3 className="text-base font-bold text-[var(--text-primary)]">Your Personalized Strategy</h3>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {plan.planData.strategy.whatToFocusFirst && (
+                  <StrategyCard title="What to focus on first" icon="🎯" text={plan.planData.strategy.whatToFocusFirst} />
+                )}
+                {plan.planData.strategy.urgentSkills && (
+                  <StrategyCard title="Skills needing urgent work" icon="🔴" text={plan.planData.strategy.urgentSkills} />
+                )}
+                {plan.planData.strategy.stableSkills && (
+                  <StrategyCard title="Your stable skills" icon="✅" text={plan.planData.strategy.stableSkills} />
+                )}
+                {plan.planData.strategy.commonMistakes && (
+                  <StrategyCard title="Mistakes slowing your progress" icon="⚠️" text={plan.planData.strategy.commonMistakes} />
+                )}
+                {plan.planData.strategy.dailyStructure && (
+                  <StrategyCard title="Recommended daily structure" icon="📅" text={plan.planData.strategy.dailyStructure} />
+                )}
+                {plan.planData.strategy.timingStrategy && (
+                  <StrategyCard title="Timing strategy" icon="⏱️" text={plan.planData.strategy.timingStrategy} />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Phases */}
+          {plan.planData?.phases && plan.planData.phases.length > 0 && (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
+              <h3 className="text-base font-bold text-[var(--text-primary)]">Preparation Phases</h3>
+              <div className="mt-4 space-y-4">
+                {plan.planData.phases.map((phase, i) => (
+                  <div key={i} className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary-soft)] text-xs font-bold text-[var(--primary)]">{i + 1}</div>
+                      <div>
+                        <p className="text-sm font-bold text-[var(--text-primary)]">{phase.name}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{phase.weeks}</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-[var(--text-primary)]">{phase.goal}</p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{phase.actions}</p>
+                    {phase.avoid && (
+                      <p className="mt-2 rounded-[var(--radius-md)] border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-500">
+                        Avoid: {phase.avoid}
+                      </p>
+                    )}
+                    {phase.expectedProgress && (
+                      <p className="mt-2 rounded-[var(--radius-md)] border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-400">
+                        Expected: {phase.expectedProgress}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Module guide */}
+          {plan.planData?.moduleGuide && (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
+              <h3 className="text-base font-bold text-[var(--text-primary)]">Module-by-Module Guide</h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {Object.entries(plan.planData.moduleGuide).map(([skill, guide]) => {
+                  const Icon = SKILL_ICONS[skill] ?? Zap;
+                  return (
+                    <div key={skill} className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 text-[var(--primary)]" />
+                        <span className="text-sm font-bold text-[var(--text-primary)]">{skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{guide}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Exam countdown */}
+          {plan.planData?.examCountdown && (
+            <div className="rounded-[var(--radius-xl)] border border-orange-500/20 bg-orange-500/5 p-5 sm:p-6">
+              <h3 className="text-base font-bold text-orange-400">Final Exam Countdown Strategy</h3>
+              <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.examCountdown}</p>
+            </div>
+          )}
+
+          {/* Tips */}
+          {plan.planData?.tips && plan.planData.tips.length > 0 && (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Personalized Tips</h3>
+              <ul className="mt-3 space-y-2">
+                {plan.planData.tips.map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Weekly plan */}
-      {plan.planData?.weeklyGoals && plan.planData.weeklyGoals.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold text-[var(--text-primary)]">Weekly Roadmap</h3>
-          {plan.planData.weeklyGoals.map((week) => (
-            <WeekCard key={week.week} week={week} taskStatuses={taskStatuses} onToggleTask={handleTaskToggle} />
-          ))}
+      {/* ═══════════════ CHECKLIST MODE ═══════════════ */}
+      {viewMode === "checklist" && (
+        <div className="space-y-5">
+          {/* Overview (compact in checklist mode) */}
+          {plan.planData?.overview && (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Strategy Overview</h3>
+              <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.overview}</p>
+            </div>
+          )}
+
+          {/* Weekly plan with checklists */}
+          {plan.planData?.weeklyGoals && plan.planData.weeklyGoals.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Weekly Checklist</h3>
+              {plan.planData.weeklyGoals.map((week) => (
+                <WeekCard key={week.week} week={week} taskStatuses={taskStatuses} onToggleTask={handleTaskToggle} />
+              ))}
+            </div>
+          )}
+
+          {/* Tips */}
+          {plan.planData?.tips && plan.planData.tips.length > 0 && (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Personalized Tips</h3>
+              <ul className="mt-3 space-y-2">
+                {plan.planData.tips.map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Tips */}
-      {plan.planData?.tips && plan.planData.tips.length > 0 && (
-        <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Personalized Tips</h3>
-          <ul className="mt-3 space-y-2">
-            {plan.planData.tips.map((tip, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
-                <span>{tip}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Raw fallback if planData was unparseable */}
+      {/* Raw fallback */}
       {plan.planData?.raw && !plan.planData?.weeklyGoals && (
         <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Plan Details</h3>
-          <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
-            {plan.planData.raw}
-          </div>
+          <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.raw}</div>
         </div>
       )}
 
@@ -746,47 +903,9 @@ function WeekCard({ week, taskStatuses, onToggleTask }: {
       {open && week.tasks && week.tasks.length > 0 && (
         <div className="border-t border-[var(--border)] px-5 py-4">
           <div className="space-y-2.5">
-            {week.tasks.map((task, i) => {
-              const Icon = SKILL_ICONS[task.skill] ?? Zap;
-              const key = `${week.week}-${task.day}-${task.skill}`;
-              const isDone = taskStatuses[key] === "completed";
-              const actionLink = SKILL_LINKS[task.skill];
-
-              return (
-                <div key={i} className={`flex items-start gap-3 rounded-[var(--radius-md)] border p-3 transition-all ${
-                  isDone ? "border-emerald-500/20 bg-emerald-500/5" : "border-[var(--border)] bg-[var(--bg-elevated)]"
-                }`}>
-                  <button
-                    onClick={() => onToggleTask(week.week, task.day, task.skill, task.activity)}
-                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                      isDone
-                        ? "border-emerald-500 bg-emerald-500 text-white"
-                        : "border-[var(--border-strong)] hover:border-[var(--primary)]"
-                    }`}
-                  >
-                    {isDone && <CheckCircle2 className="h-3.5 w-3.5" />}
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <Icon className={`h-3.5 w-3.5 ${isDone ? "text-emerald-400" : "text-[var(--text-muted)]"}`} />
-                      <span className={`text-xs font-semibold ${isDone ? "text-emerald-400 line-through" : "text-[var(--text-primary)]"}`}>{task.day}</span>
-                      <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
-                        {task.skill} • {task.durationMinutes}min
-                      </span>
-                    </div>
-                    <p className={`mt-0.5 text-xs ${isDone ? "text-[var(--text-muted)] line-through" : "text-[var(--text-secondary)]"}`}>{task.activity}</p>
-                    {task.details && !isDone && (
-                      <p className="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">{task.details}</p>
-                    )}
-                  </div>
-                  {actionLink && !isDone && (
-                    <a href={actionLink} className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--border)] px-2.5 py-1 text-[10px] font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary-soft)]">
-                      Start
-                    </a>
-                  )}
-                </div>
-              );
-            })}
+            {week.tasks.map((task, i) => (
+              <TaskRow key={i} task={task} isDone={taskStatuses[`${week.week}-${task.day}-${task.skill}`] === "completed"} onToggle={() => onToggleTask(week.week, task.day, task.skill, task.activity)} actionLink={SKILL_LINKS[task.skill]} />
+            ))}
           </div>
         </div>
       )}
@@ -794,7 +913,86 @@ function WeekCard({ week, taskStatuses, onToggleTask }: {
   );
 }
 
+// ── Task Row (expandable) ───────────────────────────────────────────────────
+
+function TaskRow({ task, isDone, onToggle, actionLink }: {
+  task: DayTask;
+  isDone: boolean;
+  onToggle: () => void;
+  actionLink?: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const Icon = SKILL_ICONS[task.skill] ?? Zap;
+  const hasDetails = task.howTo || task.whatToAvoid || task.whyItMatters || task.details;
+
+  return (
+    <div className={`rounded-[var(--radius-md)] border transition-all ${isDone ? "border-emerald-500/20 bg-emerald-500/5" : "border-[var(--border)] bg-[var(--bg-elevated)]"}`}>
+      <div className="flex items-start gap-3 p-3">
+        <button onClick={onToggle} className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all ${isDone ? "border-emerald-500 bg-emerald-500 text-white" : "border-[var(--border-strong)] hover:border-[var(--primary)]"}`}>
+          {isDone && <CheckCircle2 className="h-3.5 w-3.5" />}
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <Icon className={`h-3.5 w-3.5 ${isDone ? "text-emerald-400" : "text-[var(--text-muted)]"}`} />
+            <span className={`text-xs font-semibold ${isDone ? "text-emerald-400 line-through" : "text-[var(--text-primary)]"}`}>{task.day}</span>
+            <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
+              {task.skill} • {task.durationMinutes}min
+            </span>
+          </div>
+          <button onClick={() => hasDetails && setExpanded(!expanded)} className={`mt-0.5 text-left text-xs ${isDone ? "text-[var(--text-muted)] line-through" : "text-[var(--text-secondary)]"} ${hasDetails && !isDone ? "cursor-pointer hover:text-[var(--text-primary)]" : ""}`}>
+            {task.activity}
+            {hasDetails && !isDone && <span className="ml-1 text-[var(--text-muted)]">{expanded ? "▾" : "▸"}</span>}
+          </button>
+        </div>
+        {actionLink && !isDone && (
+          <a href={actionLink} className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--border)] px-2.5 py-1 text-[10px] font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary-soft)]">
+            Start
+          </a>
+        )}
+      </div>
+
+      {expanded && !isDone && hasDetails && (
+        <div className="border-t border-[var(--border)] px-3 pb-3 pt-2.5 pl-12 space-y-2">
+          {task.details && (
+            <p className="text-xs leading-5 text-[var(--text-secondary)]">{task.details}</p>
+          )}
+          {task.howTo && (
+            <div className="rounded-[var(--radius-sm)] border border-blue-500/20 bg-blue-500/5 px-3 py-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">How to do it</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{task.howTo}</p>
+            </div>
+          )}
+          {task.whatToAvoid && (
+            <div className="rounded-[var(--radius-sm)] border border-amber-500/20 bg-amber-500/5 px-3 py-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">What to avoid</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{task.whatToAvoid}</p>
+            </div>
+          )}
+          {task.whyItMatters && (
+            <div className="rounded-[var(--radius-sm)] border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Why it matters</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{task.whyItMatters}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Helper components ───────────────────────────────────────────────────────
+
+function StrategyCard({ title, icon, text }: { title: string; icon: string; text: string }) {
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+      <div className="flex items-center gap-2">
+        <span className="text-base">{icon}</span>
+        <span className="text-xs font-bold text-[var(--text-primary)]">{title}</span>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{text}</p>
+    </div>
+  );
+}
 
 function SummaryCard({ icon: Icon, label, value, color }: { icon: typeof Target; label: string; value: string; color: string }) {
   return (

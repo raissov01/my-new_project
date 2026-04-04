@@ -125,37 +125,70 @@ func (h *IELTSStudyPlanHandler) GeneratePlan(w http.ResponseWriter, r *http.Requ
 	}
 	questionnaireJSON, _ := json.Marshal(questionnaire)
 
-	// Build LLM prompt
-	prompt := fmt.Sprintf(`You are an expert IELTS tutor. Create a personalized 4-week study plan based on the following student profile:
+	// Build LLM prompt — generates both readable strategy guide AND actionable task checklist
+	prompt := fmt.Sprintf(`You are a premium IELTS preparation coach. Create a comprehensive, personalized study roadmap.
 
+Student profile:
 - Current Band: %s
 - Target Band: %s
 - Exam Type: %s
 - Exam Date: %s
-- Weekly Study Hours Available: %d
+- Weekly Study Hours: %d
 - Weak Sections: %s
 - Strengths: %s
 - Struggles: %s
 
-Create a structured study plan that prioritizes the weak areas while maintaining strengths. Distribute the %d weekly hours across the 4 weeks.
-
-Return ONLY valid JSON with no additional text:
+Return ONLY valid JSON (no markdown, no backticks):
 {
-  "overview": "A brief overview of the study plan strategy",
+  "overview": "2-3 paragraph strategy overview: what the student should focus on, why their weak areas matter, and the overall approach",
+  "strategy": {
+    "whatToFocusFirst": "What to prioritize in the first 2 weeks",
+    "urgentSkills": "Which skills need immediate attention and why",
+    "stableSkills": "Which skills are already decent and need maintenance only",
+    "commonMistakes": "What mistakes are likely slowing this student down",
+    "dailyStructure": "Recommended daily study structure (morning/afternoon/evening)",
+    "timingStrategy": "How to manage time during practice and actual exam"
+  },
+  "phases": [
+    {
+      "name": "Foundation",
+      "weeks": "Week 1-2",
+      "goal": "Build core skills and identify weak patterns",
+      "actions": "What to do in this phase",
+      "avoid": "What NOT to do yet",
+      "expectedProgress": "What improvement to expect by end of phase"
+    }
+  ],
   "weeklyGoals": [
     {
       "week": 1,
-      "focus": "Main focus area for this week",
+      "focus": "Main focus area",
       "tasks": [
-        { "day": "Monday", "skill": "reading", "activity": "Practice skimming and scanning techniques", "durationMinutes": 45, "details": "Detailed instructions for the activity" }
+        {
+          "day": "Monday",
+          "skill": "reading",
+          "activity": "Timed reading passage practice",
+          "durationMinutes": 45,
+          "details": "Detailed step-by-step instructions",
+          "howTo": "Specific technique to use",
+          "whatToAvoid": "Common mistakes for this task",
+          "whyItMatters": "Why this task helps reach the target band"
+        }
       ]
     }
   ],
   "prioritySkills": ["writing", "speaking"],
-  "tips": ["Practical tip 1", "Practical tip 2"]
+  "tips": ["Specific actionable tip 1", "Specific actionable tip 2"],
+  "moduleGuide": {
+    "listening": "2-3 sentences on how to improve listening for this student",
+    "reading": "2-3 sentences on reading improvement strategy",
+    "writing": "2-3 sentences on writing improvement strategy",
+    "speaking": "2-3 sentences on speaking improvement strategy"
+  },
+  "examCountdown": "What to do in the final 7-10 days before the exam"
 }
 
-Include all 4 weeks with daily tasks for each week. Each week should have tasks for Monday through Sunday. Skills should be one of: reading, writing, listening, speaking, vocabulary, grammar.`,
+Include all 4 weeks. Each week should have tasks for Monday through Sunday. Distribute %d hours/week across tasks. Skills: reading, writing, listening, speaking, vocabulary, grammar. Make the overview and strategy sections detailed and personal, not generic.`,
 		req.CurrentBand,
 		req.TargetBand,
 		req.ExamType,
