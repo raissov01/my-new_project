@@ -205,8 +205,10 @@ func (h *IELTSExaminerHandler) loadMockQuestions(mockType, examSet, section, ban
 
 	if examSet != "" {
 		query = query.Where("exam_set = ?", examSet)
-	}
-	if bandTarget != "" {
+		// When a specific exam set is selected, load ALL its questions
+		// regardless of band target. The exam set defines the content;
+		// band target is just a preference, not a hard filter.
+	} else if bandTarget != "" {
 		query = query.Where("band_target = ? OR band_target IS NULL OR band_target = ''", bandTarget)
 	}
 
