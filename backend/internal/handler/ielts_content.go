@@ -28,15 +28,24 @@ type ieltsQuestionPayload struct {
 	Answer        string   `json:"answer,omitempty"`
 	Explanation   string   `json:"explanation,omitempty"`
 	BandTarget    string   `json:"bandTarget,omitempty"`
+	PassageNumber int      `json:"passageNumber"`
 	SortOrder     int      `json:"sortOrder"`
 }
 
+type readingPassagePayload struct {
+	PassageNumber int                    `json:"passageNumber"`
+	Title         string                 `json:"title"`
+	Content       string                 `json:"content"`
+	Questions     []ieltsQuestionPayload `json:"questions"`
+}
+
 type ieltsMockSectionPayload struct {
-	Key             string                 `json:"key"`
-	Title           string                 `json:"title"`
-	Instructions    string                 `json:"instructions"`
-	DurationMinutes int                    `json:"durationMinutes"`
-	Questions       []ieltsQuestionPayload `json:"questions"`
+	Key             string                  `json:"key"`
+	Title           string                  `json:"title"`
+	Instructions    string                  `json:"instructions"`
+	DurationMinutes int                     `json:"durationMinutes"`
+	Questions       []ieltsQuestionPayload  `json:"questions"`
+	Passages        []readingPassagePayload `json:"passages,omitempty"`
 }
 
 type ieltsMockPayload struct {
@@ -142,13 +151,22 @@ func (h *IELTSExaminerHandler) GetMockExam(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		responseSections = append(responseSections, ieltsMockSectionPayload{
+		serialized := serializeIELTSQuestions(questions)
+
+		payload := ieltsMockSectionPayload{
 			Key:             sectionKey,
 			Title:           mockSectionTitle(sectionKey),
 			Instructions:    mockSectionInstructions(sectionKey),
 			DurationMinutes: mockSectionDuration(sectionKey),
-			Questions:       serializeIELTSQuestions(questions),
-		})
+			Questions:       serialized,
+		}
+
+		// Group reading/listening questions into passages/sections for split-screen UI
+		if sectionKey == "reading" || sectionKey == "listening" {
+			payload.Passages = groupQuestionsIntoPassages(serialized)
+		}
+
+		responseSections = append(responseSections, payload)
 	}
 
 	writeJSON(w, http.StatusOK, ieltsMockPayload{
@@ -412,10 +430,48 @@ func serializeIELTSQuestions(questions []models.IELTSQuestion) []ieltsQuestionPa
 			Answer:        derefString(question.Answer),
 			Explanation:   derefString(question.Explanation),
 			BandTarget:    derefString(question.BandTarget),
+			PassageNumber: question.PassageNumber,
 			SortOrder:     question.SortOrder,
 		})
 	}
 	return items
+}
+
+// groupQuestionsIntoPassages groups reading questions by PassageNumber.
+// Each passage gets its content from the first question in the group (all
+// questions in the same passage share the same Content field).
+func groupQuestionsIntoPassages(questions []ieltsQuestionPayload) []readingPassagePayload {
+	grouped := make(map[int][]ieltsQuestionPayload)
+	titles := make(map[int]string)
+	contents := make(map[int]string)
+
+	for _, q := range questions {
+		pn := q.PassageNumber
+		if pn == 0 {
+			pn = 1
+		}
+		grouped[pn] = append(grouped[pn], q)
+		if _, ok := titles[pn]; !ok {
+			titles[pn] = q.Title
+			contents[pn] = q.Content
+		}
+	}
+
+	passages := make([]readingPassagePayload, 0, len(grouped))
+	for pn, qs := range grouped {
+		passages = append(passages, readingPassagePayload{
+			PassageNumber: pn,
+			Title:         titles[pn],
+			Content:       contents[pn],
+			Questions:     qs,
+		})
+	}
+
+	sort.Slice(passages, func(i, j int) bool {
+		return passages[i].PassageNumber < passages[j].PassageNumber
+	})
+
+	return passages
 }
 
 func buildIELTSQuestionFilters(questions []models.IELTSQuestion) map[string][]string {

@@ -41,6 +41,11 @@ func AutoMigrate(db *gorm.DB) error {
 
 	log.Println("GORM auto-migration complete")
 
+	// Drop old restrictive CHECK constraint on question_type and replace with
+	// an expanded one that supports all IELTS question types.
+	db.Exec(`ALTER TABLE ielts_questions DROP CONSTRAINT IF EXISTS chk_ielts_questions_question_type`)
+	db.Exec(`ALTER TABLE ielts_questions ADD CONSTRAINT chk_ielts_questions_question_type CHECK (question_type IN ('task1','task2','part1','part2','part3','multiple_choice','fill_blank','true_false','matching','true_false_not_given','yes_no_not_given','matching_headings','matching_information','sentence_completion','summary_completion','short_answer'))`)
+
 	// Mark all existing users (who registered before email verification was added)
 	// as verified so they are not locked out of their accounts.
 	result := db.Exec(`UPDATE users SET email_verified = true WHERE email_verified = false AND verification_token IS NULL`)

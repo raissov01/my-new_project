@@ -26,6 +26,7 @@ import { fetchIELTSMockExam, fetchIELTSQuestions } from "@/features/ielts/api";
 import { useAutosave } from "@/features/ielts/use-autosave";
 import { useExamMode } from "@/features/ielts/use-exam-mode";
 import { ExamViolationModal } from "@/features/ielts/components/exam-violation-modal";
+import { ReadingSplitScreen } from "@/features/ielts/components/reading-split-screen";
 import { SpeakingRecorderPanel } from "@/features/ielts/components/speaking-recorder-panel";
 import {
   abandonAttempt,
@@ -80,6 +81,7 @@ export function SimulatorClient() {
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptStartedAt, setAttemptStartedAt] = useState<number | null>(null);
   const [isTerminating, setIsTerminating] = useState(false);
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goToConfigure = useCallback(() => {
@@ -440,6 +442,18 @@ export function SimulatorClient() {
 
   function handleObjectiveAnswer(questionId: string, value: string) {
     setObjectiveAnswers((prev) => ({ ...prev, [questionId]: value }));
+  }
+
+  function handleFlagQuestion(questionId: string) {
+    setFlaggedQuestions((prev) => {
+      const next = new Set(prev);
+      if (next.has(questionId)) {
+        next.delete(questionId);
+      } else {
+        next.add(questionId);
+      }
+      return next;
+    });
   }
 
   function handlePlayListening(group: QuestionGroup) {
@@ -917,89 +931,75 @@ export function SimulatorClient() {
         </div>
       </div>
 
-      {(currentSection.key === "reading" || currentSection.key === "listening") && (
+      {currentSection.key === "reading" && currentSection.passages && currentSection.passages.length > 0 && (
+        <ReadingSplitScreen
+          passages={currentSection.passages}
+          answers={objectiveAnswers}
+          flagged={flaggedQuestions}
+          revealed={isCurrentSectionRevealed}
+          onAnswer={handleObjectiveAnswer}
+          onFlag={handleFlagQuestion}
+        />
+      )}
+
+      {currentSection.key === "reading" && (!currentSection.passages || currentSection.passages.length === 0) && (
         <div className="space-y-5">
           {groupedQuestions.map((group) => (
-            <section
-              key={group.key}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
-            >
+            <section key={group.key} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">{group.title}</h3>
+              {group.content ? (
+                <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.content}</p>
+                </div>
+              ) : null}
+              <div className="mt-5 space-y-4">
+                {group.questions.map((question, index) => (
+                  <ObjectiveQuestionCard key={question.id} index={index + 1} question={question} value={objectiveAnswers[question.id] ?? ""} revealed={isCurrentSectionRevealed} onChange={handleObjectiveAnswer} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {currentSection.key === "listening" && (
+        <div className="space-y-5">
+          {groupedQuestions.map((group) => (
+            <section key={group.key} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                    {group.title}
-                  </h3>
-                  {group.topic ? (
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                      Topic: {group.topic}
-                    </p>
-                  ) : null}
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">{group.title}</h3>
+                  {group.topic ? <p className="mt-1 text-sm text-[var(--text-secondary)]">Topic: {group.topic}</p> : null}
                 </div>
-
-                {currentSection.key === "listening" && group.audioScript ? (
+                {group.audioScript ? (
                   <div className="flex flex-wrap gap-2">
                     {speechEnabled ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handlePlayListening(group)}
-                      >
-                        {playingGroupKey === group.key ? (
-                          <Pause className="h-4 w-4" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
+                      <Button size="sm" variant="secondary" onClick={() => handlePlayListening(group)}>
+                        {playingGroupKey === group.key ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                         {playingGroupKey === group.key ? "Stop audio" : "Play audio"}
                       </Button>
                     ) : null}
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        setShowListeningTranscript((prev) => ({
-                          ...prev,
-                          [group.key]: !prev[group.key],
-                        }))
-                      }
-                    >
+                    <Button size="sm" variant="secondary" onClick={() => setShowListeningTranscript((prev) => ({ ...prev, [group.key]: !prev[group.key] }))}>
                       <Volume2 className="h-4 w-4" />
                       {showListeningTranscript[group.key] ? "Hide script" : "Show script"}
                     </Button>
                   </div>
                 ) : null}
               </div>
-
               {group.content ? (
                 <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
-                    {group.content}
-                  </p>
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.content}</p>
                 </div>
               ) : null}
-
-              {currentSection.key === "listening" &&
-              group.audioScript &&
-              showListeningTranscript[group.key] ? (
+              {group.audioScript && showListeningTranscript[group.key] ? (
                 <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-400">
-                    Audio script
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
-                    {group.audioScript}
-                  </p>
+                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-400">Audio script</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.audioScript}</p>
                 </div>
               ) : null}
-
               <div className="mt-5 space-y-4">
                 {group.questions.map((question, index) => (
-                  <ObjectiveQuestionCard
-                    key={question.id}
-                    index={index + 1}
-                    question={question}
-                    value={objectiveAnswers[question.id] ?? ""}
-                    revealed={isCurrentSectionRevealed}
-                    onChange={handleObjectiveAnswer}
-                  />
+                  <ObjectiveQuestionCard key={question.id} index={index + 1} question={question} value={objectiveAnswers[question.id] ?? ""} revealed={isCurrentSectionRevealed} onChange={handleObjectiveAnswer} />
                 ))}
               </div>
             </section>

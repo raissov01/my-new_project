@@ -2,3 +2,5 @@
 /tmp
 /bin
 *.exe
+backend/telegram-auth
+backend/telegram-import

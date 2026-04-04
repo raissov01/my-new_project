@@ -12,7 +12,14 @@ export type IELTSQuestion = {
     | "multiple_choice"
     | "fill_blank"
     | "true_false"
-    | "matching";
+    | "matching"
+    | "true_false_not_given"
+    | "yes_no_not_given"
+    | "matching_headings"
+    | "matching_information"
+    | "sentence_completion"
+    | "summary_completion"
+    | "short_answer";
   difficulty: "easy" | "medium" | "hard";
   mockType: "original" | "predictions" | "cambridge_style";
   topic: string;
@@ -26,6 +33,7 @@ export type IELTSQuestion = {
   answer?: string;
   explanation?: string;
   bandTarget?: string;
+  passageNumber: number;
   sortOrder: number;
 };
 
@@ -39,12 +47,20 @@ export type IELTSQuestionFilters = {
   examSets?: string[];
 };
 
+export type ReadingPassage = {
+  passageNumber: number;
+  title: string;
+  content: string;
+  questions: IELTSQuestion[];
+};
+
 export type IELTSMockSection = {
   key: "reading" | "listening" | "writing" | "speaking";
   title: string;
   instructions: string;
   durationMinutes: number;
   questions: IELTSQuestion[];
+  passages?: ReadingPassage[];
 };
 
 export type IELTSMockExam = {

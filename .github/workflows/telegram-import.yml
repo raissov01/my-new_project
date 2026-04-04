@@ -1,0 +1,26 @@
+name: Telegram Channel Import
+
+on:
+  workflow_dispatch:
+
+jobs:
+  import:
+    name: Import @studywithme_r history
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run importer on VPS via Docker
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: 209.38.247.103
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script_stop: true
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+            cd /opt/studywithraissov
+
+            # Run the telegram-import binary inside the backend container
+            # It connects to the postgres container via Docker network
+            docker compose -f docker/docker-compose.yml exec -T backend ./telegram-import

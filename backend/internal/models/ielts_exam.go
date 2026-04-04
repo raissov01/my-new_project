@@ -50,7 +50,7 @@ func (IELTSSpeakingSession) TableName() string {
 type IELTSQuestion struct {
 	ID            string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Section       string    `gorm:"not null;index;check:section IN ('reading','writing','speaking','listening')" json:"section"`
-	QuestionType  string    `gorm:"not null;check:question_type IN ('task1','task2','part1','part2','part3','multiple_choice','fill_blank','true_false','matching')" json:"questionType"`
+	QuestionType  string    `gorm:"not null" json:"questionType"`
 	Difficulty    string    `gorm:"not null;default:'medium';check:difficulty IN ('easy','medium','hard')" json:"difficulty"`
 	MockType      string    `gorm:"not null;default:'original';check:mock_type IN ('original','predictions','cambridge_style')" json:"mockType"`
 	Topic         string    `gorm:"not null;default:'';index" json:"topic"`
@@ -64,6 +64,7 @@ type IELTSQuestion struct {
 	Answer        *string   `gorm:"type:text" json:"answer"`
 	Explanation   *string   `gorm:"type:text" json:"explanation"`
 	BandTarget    *string   `json:"bandTarget"`
+	PassageNumber int       `gorm:"not null;default:0" json:"passageNumber"`
 	SortOrder     int       `gorm:"not null;default:0" json:"sortOrder"`
 	CreatedAt     time.Time `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt     time.Time `gorm:"autoUpdateTime" json:"updatedAt"`
