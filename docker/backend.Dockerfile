@@ -1,5 +1,9 @@
 # syntax=docker/dockerfile:1.7
-FROM golang:1.25-alpine AS builder
+FROM golang:1.24-alpine AS builder
+
+# GOTOOLCHAIN=auto lets Go 1.24 auto-download the Go 1.25 toolchain
+# required by go.mod, without needing a golang:1.25 base image.
+ENV GOTOOLCHAIN=auto
 
 WORKDIR /app
 COPY go.mod ./
