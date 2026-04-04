@@ -37,16 +37,12 @@ type Config struct {
 	SMTPPassword string
 	SMTPFrom     string
 
-	// Telegram bot (webhook for real-time new posts)
-	TelegramBotToken      string
-	TelegramWebhookURL    string
-	TelegramWebhookSecret string
-
-	// Telegram client API (MTProto for channel history import)
-	TelegramAppID        int
-	TelegramAppHash      string
-	TelegramPhone        string
-	TelegramTargetChannel string // e.g. "studywithme_r" or "@studywithme_r"
+	// Telegram channel history importer (MTProto user session)
+	TelegramAppID         int
+	TelegramAppHash       string
+	TelegramPhone         string
+	TelegramSessionPath   string // path to stored session file
+	TelegramTargetChannel string // default: studywithme_r
 }
 
 // Load reads environment variables (with optional .env file) and returns Config.
@@ -76,13 +72,10 @@ func Load() (*Config, error) {
 		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:     getEnv("SMTP_FROM", ""),
 
-		TelegramBotToken:      os.Getenv("TELEGRAM_BOT_TOKEN"),
-		TelegramWebhookURL:    os.Getenv("TELEGRAM_WEBHOOK_URL"),
-		TelegramWebhookSecret: os.Getenv("TELEGRAM_WEBHOOK_SECRET"),
-
 		TelegramAppID:         getEnvInt("TELEGRAM_APP_ID", 0),
 		TelegramAppHash:       os.Getenv("TELEGRAM_APP_HASH"),
 		TelegramPhone:         os.Getenv("TELEGRAM_PHONE"),
+		TelegramSessionPath:   getEnv("TELEGRAM_SESSION_PATH", ".telegram-session"),
 		TelegramTargetChannel: getEnv("TELEGRAM_TARGET_CHANNEL", "studywithme_r"),
 	}
 

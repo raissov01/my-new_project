@@ -12,20 +12,18 @@ import (
 	"github.com/midoriya/flashlearn-backend/internal/telegram"
 )
 
-// telegram-import imports the full message history of a single Telegram channel
-// into PostgreSQL via the MTProto client API.
+// Imports full history of @studywithme_r into PostgreSQL.
 //
-// Target channel: @studywithme_r (configurable via TELEGRAM_TARGET_CHANNEL)
+// First run: prompts for verification code, saves session to TELEGRAM_SESSION_PATH.
+// Subsequent runs: reuses saved session, imports only new (non-duplicate) posts.
 //
-// Usage:
-//   go run ./cmd/telegram-import
+// Usage:  go run ./cmd/telegram-import
 //
-// Required environment variables:
-//   DATABASE_URL             - PostgreSQL connection string
-//   TELEGRAM_APP_ID          - from https://my.telegram.org
-//   TELEGRAM_APP_HASH        - from https://my.telegram.org
-//   TELEGRAM_PHONE           - your phone number (e.g. +77001234567)
-//   TELEGRAM_TARGET_CHANNEL  - channel username (default: studywithme_r)
+// Required env:
+//   DATABASE_URL, TELEGRAM_APP_ID, TELEGRAM_APP_HASH, TELEGRAM_PHONE
+// Optional env:
+//   TELEGRAM_TARGET_CHANNEL (default: studywithme_r)
+//   TELEGRAM_SESSION_PATH   (default: .telegram-session)
 
 func main() {
 	cfg, err := config.Load()
@@ -42,10 +40,11 @@ func main() {
 		log.Fatalf("migration: %v", err)
 	}
 
-	importer := telegram.NewImporter(telegram.ImporterConfig{
+	imp := telegram.NewImporter(telegram.ImporterConfig{
 		AppID:         cfg.TelegramAppID,
 		AppHash:       cfg.TelegramAppHash,
 		Phone:         cfg.TelegramPhone,
+		SessionPath:   cfg.TelegramSessionPath,
 		TargetChannel: cfg.TelegramTargetChannel,
 	}, gormDB)
 
@@ -56,13 +55,11 @@ func main() {
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		<-quit
-		log.Println("shutting down importer...")
+		log.Println("shutting down...")
 		cancel()
 	}()
 
-	if err := importer.Run(ctx); err != nil {
+	if err := imp.Run(ctx); err != nil {
 		log.Fatalf("import failed: %v", err)
 	}
-
-	log.Println("import complete")
 }

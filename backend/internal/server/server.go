@@ -63,15 +63,6 @@ func New(cfg *config.Config) (*Server, error) {
 	handler.SetDependencies(buildDependencies(cfg, pool, gormDB))
 	handler.RegisterRoutes(router)
 
-	// Register Telegram webhook if configured
-	if cfg.TelegramBotToken != "" && cfg.TelegramWebhookURL != "" {
-		go func() {
-			if err := handler.RegisterWebhook(cfg.TelegramBotToken, cfg.TelegramWebhookURL, cfg.TelegramWebhookSecret); err != nil {
-				log.Printf("WARNING: failed to register Telegram webhook: %v", err)
-			}
-		}()
-	}
-
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
 		Handler:      buildHTTPHandler(cfg, router),
@@ -183,7 +174,6 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		IELTSStudyPlan:     handler.NewIELTSStudyPlan(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.AIRequestTimeout),
 		IELTSDashboard:     handler.NewIELTSDashboard(gormDB),
 		IELTSQuestionAdmin: handler.NewIELTSQuestionAdmin(gormDB),
-		Telegram:            handler.NewTelegram(gormDB, cfg.TelegramBotToken, cfg.TelegramWebhookSecret),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),
 	}
 }

@@ -20,7 +20,6 @@ type Dependencies struct {
 	IELTSStudyPlan     *IELTSStudyPlanHandler
 	IELTSDashboard     *IELTSDashboardHandler
 	IELTSQuestionAdmin *IELTSQuestionAdminHandler
-	Telegram           *TelegramHandler
 	Leaderboard        *Leaderboard
 	Profile            *Profile
 	Set                *Set
@@ -54,11 +53,6 @@ func RegisterRoutes(router *gin.Engine) {
 	api.POST("/auth/resend-verification", deps.Auth.ResendVerification)
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
-
-	// ── Telegram webhook (public — called by Telegram servers) ─────────
-	if deps.Telegram != nil {
-		api.POST("/webhook/telegram", deps.Telegram.HandleWebhook)
-	}
 
 	// ── Public IELTS routes (no auth required for reading) ──────────────
 	api.GET("/ielts/materials", deps.IELTSMaterial.List)
