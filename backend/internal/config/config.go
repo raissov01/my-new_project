@@ -43,10 +43,10 @@ type Config struct {
 	TelegramWebhookSecret string
 
 	// Telegram client API (MTProto for channel history import)
-	TelegramAppID    int
-	TelegramAppHash  string
-	TelegramPhone    string
-	TelegramChannelID int64
+	TelegramAppID        int
+	TelegramAppHash      string
+	TelegramPhone        string
+	TelegramTargetChannel string // e.g. "studywithme_r" or "@studywithme_r"
 }
 
 // Load reads environment variables (with optional .env file) and returns Config.
@@ -80,10 +80,10 @@ func Load() (*Config, error) {
 		TelegramWebhookURL:    os.Getenv("TELEGRAM_WEBHOOK_URL"),
 		TelegramWebhookSecret: os.Getenv("TELEGRAM_WEBHOOK_SECRET"),
 
-		TelegramAppID:     getEnvInt("TELEGRAM_APP_ID", 0),
-		TelegramAppHash:   os.Getenv("TELEGRAM_APP_HASH"),
-		TelegramPhone:     os.Getenv("TELEGRAM_PHONE"),
-		TelegramChannelID: int64(getEnvInt("TELEGRAM_CHANNEL_ID", 0)),
+		TelegramAppID:         getEnvInt("TELEGRAM_APP_ID", 0),
+		TelegramAppHash:       os.Getenv("TELEGRAM_APP_HASH"),
+		TelegramPhone:         os.Getenv("TELEGRAM_PHONE"),
+		TelegramTargetChannel: getEnv("TELEGRAM_TARGET_CHANNEL", "studywithme_r"),
 	}
 
 	// Parse CORS origins

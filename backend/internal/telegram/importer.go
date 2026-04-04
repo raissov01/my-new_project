@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gotd/td/telegram"
@@ -16,14 +17,14 @@ import (
 
 // ImporterConfig holds the configuration for the Telegram channel history importer.
 type ImporterConfig struct {
-	AppID     int
-	AppHash   string
-	Phone     string
-	ChannelID int64 // numeric channel ID (without -100 prefix)
-	SessionDir string
+	AppID          int
+	AppHash        string
+	Phone          string
+	TargetChannel  string // channel username, e.g. "studywithme_r" or "@studywithme_r"
 }
 
-// Importer reads full channel history via Telegram MTProto and stores posts in PostgreSQL.
+// Importer reads full channel history of a single target channel via Telegram MTProto
+// and stores posts in PostgreSQL. It refuses to import from any other channel.
 type Importer struct {
 	cfg ImporterConfig
 	db  *gorm.DB
@@ -33,8 +34,8 @@ func NewImporter(cfg ImporterConfig, db *gorm.DB) *Importer {
 	return &Importer{cfg: cfg, db: db}
 }
 
-// Run connects to Telegram, authenticates, and imports all channel history.
-// It pages through the entire history from newest to oldest, deduplicating by message ID.
+// Run connects to Telegram, authenticates, resolves the target channel by username,
+// validates it, and imports all its history. Only imports from the configured channel.
 func (imp *Importer) Run(ctx context.Context) error {
 	if imp.cfg.AppID == 0 || imp.cfg.AppHash == "" {
 		return fmt.Errorf("TELEGRAM_APP_ID and TELEGRAM_APP_HASH are required")
@@ -42,16 +43,18 @@ func (imp *Importer) Run(ctx context.Context) error {
 	if imp.cfg.Phone == "" {
 		return fmt.Errorf("TELEGRAM_PHONE is required")
 	}
-	if imp.cfg.ChannelID == 0 {
-		return fmt.Errorf("TELEGRAM_CHANNEL_ID is required")
+
+	targetUsername := normalizeUsername(imp.cfg.TargetChannel)
+	if targetUsername == "" {
+		return fmt.Errorf("TELEGRAM_TARGET_CHANNEL is required (e.g. studywithme_r)")
 	}
 
-	log.Printf("[telegram-import] starting import for channel %d", imp.cfg.ChannelID)
+	log.Printf("[telegram-import] target channel: @%s", targetUsername)
 
 	client := telegram.NewClient(imp.cfg.AppID, imp.cfg.AppHash, telegram.Options{})
 
 	return client.Run(ctx, func(ctx context.Context) error {
-		// Authenticate with phone number (interactive code input)
+		// Authenticate with phone number (interactive code input on first run)
 		flow := auth.NewFlow(terminalAuth{phone: imp.cfg.Phone}, auth.SendCodeOptions{})
 		if err := client.Auth().IfNecessary(ctx, flow); err != nil {
 			return fmt.Errorf("auth: %w", err)
@@ -59,22 +62,29 @@ func (imp *Importer) Run(ctx context.Context) error {
 
 		api := client.API()
 
-		// Resolve the channel
-		inputChannel, err := imp.resolveChannel(ctx, api)
+		// Resolve the channel by @username — this is the ONLY way we find the channel.
+		// We never scan dialogs or iterate over subscribed channels.
+		channel, err := imp.resolveByUsername(ctx, api, targetUsername)
 		if err != nil {
-			return fmt.Errorf("resolve channel: %w", err)
+			return fmt.Errorf("resolve @%s: %w", targetUsername, err)
 		}
 
-		log.Printf("[telegram-import] resolved channel, starting history pagination")
+		inputPeer := &tg.InputPeerChannel{
+			ChannelID:  channel.ID,
+			AccessHash: channel.AccessHash,
+		}
 
-		// Paginate through entire history
+		log.Printf("[telegram-import] resolved: @%s → id=%d title=%q",
+			targetUsername, channel.ID, channel.Title)
+
+		// Paginate through entire history (newest → oldest)
 		totalImported := 0
 		totalSkipped := 0
 		offsetID := 0
 
 		for {
 			messages, err := api.MessagesGetHistory(ctx, &tg.MessagesGetHistoryRequest{
-				Peer:     inputChannel,
+				Peer:     inputPeer,
 				OffsetID: offsetID,
 				Limit:    100,
 			})
@@ -95,11 +105,10 @@ func (imp *Importer) Run(ctx context.Context) error {
 			}
 
 			if len(msgs) == 0 {
-				log.Printf("[telegram-import] no more messages, done")
 				break
 			}
 
-			imported, skipped := imp.processMessages(msgs)
+			imported, skipped := imp.processMessages(msgs, channel.ID, targetUsername)
 			totalImported += imported
 			totalSkipped += skipped
 
@@ -111,56 +120,58 @@ func (imp *Importer) Run(ctx context.Context) error {
 			case *tg.MessageService:
 				offsetID = m.ID
 			default:
-				// MessageEmpty or unknown — use previous offset - 1
 				offsetID--
 			}
 
-			log.Printf("[telegram-import] page done: imported=%d skipped=%d total_imported=%d offset_id=%d",
+			log.Printf("[telegram-import] page: +%d imported, %d skipped (total: %d) offset→%d",
 				imported, skipped, totalImported, offsetID)
 
-			// Small delay to respect rate limits
+			// Rate limit: 500ms between API calls
 			time.Sleep(500 * time.Millisecond)
 		}
 
-		log.Printf("[telegram-import] COMPLETE: total_imported=%d total_skipped=%d", totalImported, totalSkipped)
+		log.Printf("[telegram-import] DONE: imported=%d skipped=%d from @%s",
+			totalImported, totalSkipped, targetUsername)
 		return nil
 	})
 }
 
-// resolveChannel resolves the channel ID to an InputPeerChannel.
-func (imp *Importer) resolveChannel(ctx context.Context, api *tg.Client) (*tg.InputPeerChannel, error) {
-	channelID := imp.cfg.ChannelID
-
-	// Try to get channel info using the numeric ID
-	channels, err := api.ChannelsGetChannels(ctx, []tg.InputChannelClass{
-		&tg.InputChannel{ChannelID: channelID},
+// resolveByUsername resolves a channel by its public @username.
+// It validates that the resolved entity is a channel and its username matches exactly.
+func (imp *Importer) resolveByUsername(ctx context.Context, api *tg.Client, username string) (*tg.Channel, error) {
+	resolved, err := api.ContactsResolveUsername(ctx, &tg.ContactsResolveUsernameRequest{
+		Username: username,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("get channel %d: %w", channelID, err)
+		return nil, fmt.Errorf("ContactsResolveUsername(%q): %w", username, err)
 	}
 
-	chats := channels.GetChats()
-	if len(chats) == 0 {
-		return nil, fmt.Errorf("channel %d not found", channelID)
+	if len(resolved.Chats) == 0 {
+		return nil, fmt.Errorf("@%s resolved but no chats returned", username)
 	}
 
-	chat := chats[0]
+	chat := resolved.Chats[0]
 	channel, ok := chat.(*tg.Channel)
 	if !ok {
-		return nil, fmt.Errorf("chat %d is not a channel (type: %T)", channelID, chat)
+		return nil, fmt.Errorf("@%s is not a channel (type: %T) — refusing to import", username, chat)
 	}
 
-	log.Printf("[telegram-import] resolved channel: id=%d title=%q access_hash=%d",
-		channel.ID, channel.Title, channel.AccessHash)
+	// Strict validation: the resolved channel's username must match exactly
+	resolvedUsername := normalizeUsername(channel.Username)
+	if resolvedUsername != username {
+		return nil, fmt.Errorf(
+			"SAFETY CHECK FAILED: requested @%s but resolved to @%s (id=%d) — refusing to import",
+			username, resolvedUsername, channel.ID,
+		)
+	}
 
-	return &tg.InputPeerChannel{
-		ChannelID:  channel.ID,
-		AccessHash: channel.AccessHash,
-	}, nil
+	log.Printf("[telegram-import] VERIFIED: @%s → channel id=%d title=%q", username, channel.ID, channel.Title)
+	return channel, nil
 }
 
-// processMessages saves a batch of Telegram messages to the database.
-func (imp *Importer) processMessages(msgs []tg.MessageClass) (imported, skipped int) {
+// processMessages saves a batch of messages, tagging each with the channel username and ID.
+// It only saves messages that belong to the expected channel.
+func (imp *Importer) processMessages(msgs []tg.MessageClass, expectedChannelID int64, channelUsername string) (imported, skipped int) {
 	for _, msgClass := range msgs {
 		msg, ok := msgClass.(*tg.Message)
 		if !ok {
@@ -168,7 +179,19 @@ func (imp *Importer) processMessages(msgs []tg.MessageClass) (imported, skipped 
 			continue
 		}
 
-		// Check if already imported
+		// Verify this message actually belongs to the target channel
+		var msgChannelID int64
+		if peer, ok := msg.PeerID.(*tg.PeerChannel); ok {
+			msgChannelID = peer.ChannelID
+		}
+		if msgChannelID != expectedChannelID {
+			log.Printf("[telegram-import] WARNING: skipping message %d — channel %d != expected %d",
+				msg.ID, msgChannelID, expectedChannelID)
+			skipped++
+			continue
+		}
+
+		// Deduplicate by telegram_post_id
 		var count int64
 		imp.db.Model(&models.TelegramPost{}).Where("telegram_post_id = ?", int64(msg.ID)).Count(&count)
 		if count > 0 {
@@ -176,42 +199,29 @@ func (imp *Importer) processMessages(msgs []tg.MessageClass) (imported, skipped 
 			continue
 		}
 
-		// Extract channel ID from peer
-		var channelID int64
-		if peer, ok := msg.PeerID.(*tg.PeerChannel); ok {
-			channelID = peer.ChannelID
-		}
-
-		// Determine text content
 		text := msg.Message
-
-		// Determine media presence
 		hasMedia := msg.Media != nil
-
-		// Determine caption (for media messages, the text IS the caption)
 		caption := ""
 		if hasMedia && text != "" {
 			caption = text
 			text = ""
 		}
 
-		// Marshal the raw message to JSON
 		rawBytes, err := json.Marshal(msg)
 		if err != nil {
 			log.Printf("[telegram-import] failed to marshal message %d: %v", msg.ID, err)
 			rawBytes = []byte("{}")
 		}
 
-		postDate := time.Unix(int64(msg.Date), 0)
-
 		post := models.TelegramPost{
-			TelegramPostID: int64(msg.ID),
-			ChannelID:      channelID,
-			Text:           text,
-			Caption:        caption,
-			RawJSON:        string(rawBytes),
-			HasMedia:       hasMedia,
-			PostDate:       postDate,
+			TelegramPostID:  int64(msg.ID),
+			ChannelID:       msgChannelID,
+			ChannelUsername: channelUsername,
+			Text:            text,
+			Caption:         caption,
+			RawJSON:         string(rawBytes),
+			HasMedia:        hasMedia,
+			PostDate:        time.Unix(int64(msg.Date), 0),
 		}
 
 		if err := imp.db.Create(&post).Error; err != nil {
@@ -226,7 +236,14 @@ func (imp *Importer) processMessages(msgs []tg.MessageClass) (imported, skipped 
 	return imported, skipped
 }
 
-// terminalAuth implements the auth flow by reading the verification code from stdin.
+// normalizeUsername strips the leading "@" and lowercases the username.
+func normalizeUsername(raw string) string {
+	s := strings.TrimSpace(raw)
+	s = strings.TrimPrefix(s, "@")
+	return strings.ToLower(s)
+}
+
+// terminalAuth implements the interactive auth flow for first-time login.
 type terminalAuth struct {
 	phone string
 }
