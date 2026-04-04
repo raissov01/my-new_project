@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"net/http"
 	"strings"
@@ -451,15 +452,33 @@ func (h *IELTSExaminerHandler) GetSpeakingHistory(w http.ResponseWriter, r *http
 	writeJSON(w, http.StatusOK, map[string]any{"items": sessions})
 }
 
-// ── LLM call ────────────────────────────────────────────────────────────────
+// ── LLM call with retry ─────────────────────────────────────────────────────
 
 func (h *IELTSExaminerHandler) callLLM(prompt string) (string, string, error) {
-	// Try OpenAI first, fallback to Gemini
+	start := time.Now()
+	raw, model, err := h.callLLMOnce(prompt)
+	if err != nil {
+		// Retry once after 2 seconds
+		log.Printf("[llm] first attempt failed (%v), retrying in 2s...", err)
+		time.Sleep(2 * time.Second)
+		raw, model, err = h.callLLMOnce(prompt)
+		if err != nil {
+			log.Printf("[llm] retry also failed: %v (total: %v)", err, time.Since(start))
+			return "", "", err
+		}
+	}
+	log.Printf("[llm] success: model=%s time=%v len=%d", model, time.Since(start), len(raw))
+	return raw, model, nil
+}
+
+func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error) {
+	// Try OpenAI first (Chat Completions API — faster than Responses API)
 	if strings.TrimSpace(h.openAIKey) != "" {
-		raw, err := callOpenAIRaw(h.openAIKey, h.openAIModel, prompt, h.timeout)
+		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, prompt, h.timeout)
 		if err == nil {
 			return raw, h.openAIModel, nil
 		}
+		log.Printf("[llm] OpenAI failed: %v", err)
 		if strings.TrimSpace(h.geminiKey) == "" {
 			return "", "", err
 		}
@@ -480,7 +499,7 @@ func callGeminiRaw(apiKey, model, prompt string, timeout time.Duration) (string,
 		"generationConfig": map[string]any{
 			"temperature":      0.3,
 			"topP":             0.9,
-			"maxOutputTokens":  4096,
+			"maxOutputTokens":  8192,
 			"responseMimeType": "application/json",
 		},
 	}
@@ -518,25 +537,25 @@ func callGeminiRaw(apiKey, model, prompt string, timeout time.Duration) (string,
 		return "", fmt.Errorf("empty AI response")
 	}
 
-	raw := strings.TrimSpace(geminiResp.Candidates[0].Content.Parts[0].Text)
-	raw = strings.TrimPrefix(raw, "```json")
-	raw = strings.TrimPrefix(raw, "```")
-	raw = strings.TrimSuffix(raw, "```")
-	return strings.TrimSpace(raw), nil
+	return cleanJSON(geminiResp.Candidates[0].Content.Parts[0].Text), nil
 }
 
-func callOpenAIRaw(apiKey, model, prompt string, timeout time.Duration) (string, error) {
+// callOpenAIChatCompletion uses the standard Chat Completions API — faster and
+// more reliable than the Responses API for structured JSON output.
+func callOpenAIChatCompletion(apiKey, model, prompt string, timeout time.Duration) (string, error) {
 	body := map[string]any{
-		"model":        model,
-		"instructions": "Return only valid JSON. No markdown, no commentary.",
-		"input":        prompt,
-		"text": map[string]any{
-			"format": map[string]any{"type": "text"},
+		"model": model,
+		"messages": []map[string]string{
+			{"role": "system", "content": "You are an expert IELTS examiner. Return ONLY valid JSON with no markdown, no backticks, no commentary."},
+			{"role": "user", "content": prompt},
 		},
+		"temperature":      0.3,
+		"max_tokens":        8192,
+		"response_format": map[string]string{"type": "json_object"},
 	}
 
 	bodyBytes, _ := json.Marshal(body)
-	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/responses", bytes.NewReader(bodyBytes))
+	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(bodyBytes))
 	if err != nil {
 		return "", fmt.Errorf("build request: %w", err)
 	}
@@ -555,32 +574,32 @@ func callOpenAIRaw(apiKey, model, prompt string, timeout time.Duration) (string,
 		return "", fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
 	}
 
-	var openAIResp struct {
-		Output []struct {
-			Content []struct {
-				Type string `json:"type"`
-				Text string `json:"text"`
-			} `json:"content"`
-		} `json:"output"`
+	var chatResp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&openAIResp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	for _, item := range openAIResp.Output {
-		for _, part := range item.Content {
-			if part.Type == "output_text" && strings.TrimSpace(part.Text) != "" {
-				raw := strings.TrimSpace(part.Text)
-				raw = strings.TrimPrefix(raw, "```json")
-				raw = strings.TrimPrefix(raw, "```")
-				raw = strings.TrimSuffix(raw, "```")
-				return strings.TrimSpace(raw), nil
-			}
-		}
+	if len(chatResp.Choices) == 0 || strings.TrimSpace(chatResp.Choices[0].Message.Content) == "" {
+		return "", fmt.Errorf("openai returned empty output")
 	}
 
-	return "", fmt.Errorf("openai returned empty output")
+	return cleanJSON(chatResp.Choices[0].Message.Content), nil
+}
+
+// cleanJSON strips markdown backticks that LLMs sometimes add around JSON.
+func cleanJSON(raw string) string {
+	raw = strings.TrimSpace(raw)
+	raw = strings.TrimPrefix(raw, "```json")
+	raw = strings.TrimPrefix(raw, "```")
+	raw = strings.TrimSuffix(raw, "```")
+	return strings.TrimSpace(raw)
 }
 
 // clampBand rounds to the nearest 0.5 and clamps to [0, 9].

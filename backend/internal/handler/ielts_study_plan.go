@@ -35,7 +35,7 @@ func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, geminiKey, geminiMod
 
 func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 	if strings.TrimSpace(h.openAIKey) != "" {
-		raw, err := callOpenAIRaw(h.openAIKey, h.openAIModel, prompt, h.timeout)
+		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, prompt, h.timeout)
 		if err == nil {
 			return raw, h.openAIModel, nil
 		}
