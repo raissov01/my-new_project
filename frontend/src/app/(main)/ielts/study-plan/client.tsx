@@ -19,7 +19,15 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { completeStudyTask, generateStudyPlan, getStudyPlan, getTaskCompletions } from "../simulator/attempt-actions";
+import {
+  checkAdaptive,
+  completeStudyTask,
+  generateStudyPlan,
+  getPlanHistory,
+  getStudyPlan,
+  getTaskCompletions,
+  submitReflection,
+} from "../simulator/attempt-actions";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -57,6 +65,9 @@ type StudyPlan = {
   struggles?: string[];
   planData?: PlanData;
   status: string;
+  version: number;
+  versionReason: string;
+  parentPlanId?: string;
   createdAt: string;
 };
 
@@ -275,7 +286,216 @@ export function IELTSStudyPlanClient() {
         </div>
       )}
 
+      {/* Adaptive banner */}
+      <AdaptiveBanner planId={plan.id} onRegenerate={() => { setShowWizard(true); setWizardStep(0); }} />
+
+      {/* Weekly reflection */}
+      <WeeklyReflectionForm planId={plan.id} currentWeek={Math.max(1, Math.floor((Date.now() - new Date(plan.createdAt).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1)} />
+
+      {/* Plan version history */}
+      {plan.version > 1 && (
+        <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Plan Version</h3>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">
+            Version {plan.version} • {plan.versionReason || "updated"}
+          </p>
+        </div>
+      )}
+
+      <PlanHistorySection />
+
       {error && <ErrorBanner message={error} />}
+    </div>
+  );
+}
+
+// ── Adaptive Banner ─────────────────────────────────────────────────────────
+
+function AdaptiveBanner({ planId, onRegenerate }: { planId: string; onRegenerate: () => void }) {
+  const [adaptive, setAdaptive] = useState<{ status: string; level: number; message: string } | null>(null);
+
+  useEffect(() => {
+    checkAdaptive().then((data) => setAdaptive(data)).catch(() => {});
+  }, []);
+
+  if (!adaptive || adaptive.status === "stable" || adaptive.status === "no_plan") return null;
+
+  const colors = {
+    suggest_catchup: "border-amber-500/20 bg-amber-500/5 text-amber-400",
+    suggest_rebalance: "border-orange-500/20 bg-orange-500/5 text-orange-400",
+    suggest_rebuild: "border-red-500/20 bg-red-500/5 text-red-400",
+  };
+
+  return (
+    <div className={`rounded-[var(--radius-xl)] border p-5 ${colors[adaptive.status as keyof typeof colors] ?? "border-[var(--border)] bg-[var(--bg-surface)]"}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-semibold">Roadmap Check-in</h3>
+          <p className="mt-1 text-sm leading-6">{adaptive.message}</p>
+        </div>
+        {adaptive.level >= 3 && (
+          <Button size="sm" variant="secondary" onClick={onRegenerate}>
+            <RefreshCw className="h-3.5 w-3.5" /> Adjust roadmap
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Weekly Reflection ───────────────────────────────────────────────────────
+
+function WeeklyReflectionForm({ planId, currentWeek }: { planId: string; currentWeek: number }) {
+  const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [coachNote, setCoachNote] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSubmitting(true);
+    const fd = new FormData(e.currentTarget);
+    try {
+      const result = await submitReflection({
+        planId,
+        week: currentWeek,
+        completed: String(fd.get("completed") ?? ""),
+        difficult: String(fd.get("difficult") ?? ""),
+        improved: String(fd.get("improved") ?? ""),
+        slowedDown: String(fd.get("slowedDown") ?? ""),
+        nextWeek: String(fd.get("nextWeek") ?? "same"),
+      });
+      setSubmitted(true);
+      if (result && typeof result === "object" && "coachNote" in result && typeof result.coachNote === "string") {
+        setCoachNote(result.coachNote);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="rounded-[var(--radius-xl)] border border-emerald-500/20 bg-emerald-500/5 p-5">
+        <div className="flex items-center gap-2 text-sm font-semibold text-emerald-400">
+          <CheckCircle2 className="h-4 w-4" />
+          Week {currentWeek} reflection submitted
+        </div>
+        {coachNote && (
+          <div className="mt-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+            <p className="text-xs font-semibold text-[var(--primary)]">AI Coach Note</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{coachNote}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between text-left">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
+          <Sparkles className="h-4 w-4 text-[var(--primary)]" />
+          Weekly Check-in (Week {currentWeek})
+        </div>
+        <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+
+      {open && (
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+          <ReflectionField name="completed" label="What did you complete this week?" placeholder="e.g. 3 reading practices, 2 writing tasks" />
+          <ReflectionField name="difficult" label="What was difficult?" placeholder="e.g. Writing Task 2 timing, vocabulary" />
+          <ReflectionField name="improved" label="Which section improved most?" placeholder="e.g. Listening comprehension" />
+          <ReflectionField name="slowedDown" label="What slowed you down?" placeholder="e.g. Work schedule, fatigue" />
+          <div>
+            <label className="text-xs font-medium text-[var(--text-secondary)]">Next week preference</label>
+            <div className="mt-1.5 flex gap-2">
+              {["lighter", "same", "intensive"].map((opt) => (
+                <label key={opt} className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)] has-[:checked]:border-[var(--primary)]/30 has-[:checked]:bg-[var(--primary-soft)] has-[:checked]:text-[var(--primary)]">
+                  <input type="radio" name="nextWeek" value={opt} defaultChecked={opt === "same"} className="sr-only" />
+                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </label>
+              ))}
+            </div>
+          </div>
+          <Button type="submit" size="sm" disabled={submitting}>
+            {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            Submit & get AI coach note
+          </Button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function ReflectionField({ name, label, placeholder }: { name: string; label: string; placeholder: string }) {
+  return (
+    <div>
+      <label className="text-xs font-medium text-[var(--text-secondary)]">{label}</label>
+      <input name={name} placeholder={placeholder} className="mt-1 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]" />
+    </div>
+  );
+}
+
+// ── Plan History ────────────────────────────────────────────────────────────
+
+function PlanHistorySection() {
+  const [plans, setPlans] = useState<Array<Record<string, unknown>>>([]);
+  const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  async function loadHistory() {
+    if (loaded) { setOpen(!open); return; }
+    try {
+      const resp = await getPlanHistory();
+      setPlans(resp.plans ?? []);
+      setLoaded(true);
+      setOpen(true);
+    } catch {
+      // ignore
+    }
+  }
+
+  const archivedPlans = plans.filter((p) => p.status === "archived");
+  if (!open && archivedPlans.length === 0 && loaded) return null;
+
+  return (
+    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+      <button onClick={loadHistory} className="flex w-full items-center justify-between text-left">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Roadmap History</h3>
+        <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+
+      {open && archivedPlans.length > 0 && (
+        <div className="mt-4 space-y-2">
+          {archivedPlans.map((p) => (
+            <div key={String(p.id)} className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-[var(--text-primary)]">
+                    Version {String(p.version ?? "?")}
+                  </span>
+                  <span className="ml-2 text-xs text-[var(--text-muted)]">
+                    {p.versionReason ? String(p.versionReason) : "archived"}
+                  </span>
+                </div>
+                <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
+                  {p.createdAt ? new Date(String(p.createdAt)).toLocaleDateString() : ""}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Band {String(p.currentBand ?? "?")} → {String(p.targetBand ?? "?")} • {String(p.examType ?? "academic")}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {open && archivedPlans.length === 0 && (
+        <p className="mt-3 text-xs text-[var(--text-muted)]">No previous roadmap versions yet.</p>
+      )}
     </div>
   );
 }

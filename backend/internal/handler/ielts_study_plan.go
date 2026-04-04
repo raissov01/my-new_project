@@ -97,10 +97,20 @@ func (h *IELTSStudyPlanHandler) GeneratePlan(w http.ResponseWriter, r *http.Requ
 		req.ExamType = "academic"
 	}
 
+	// Get previous active plan for version tracking
+	var prevPlan models.IELTSStudyPlan
+	var prevVersion int
+	var prevPlanID *string
+	if err := h.db.Where("user_id = ? AND status = ?", userID, "active").
+		Order("created_at DESC").First(&prevPlan).Error; err == nil {
+		prevVersion = prevPlan.Version
+		prevPlanID = &prevPlan.ID
+	}
+
 	// Archive any existing active plans for this user
 	h.db.Model(&models.IELTSStudyPlan{}).
 		Where("user_id = ? AND status = ?", userID, "active").
-		Update("status", "archived")
+		Updates(map[string]any{"status": "archived", "version_reason": "replaced by new generation"})
 
 	// Build questionnaire JSON
 	questionnaire := map[string]any{
@@ -202,6 +212,9 @@ Include all 4 weeks with daily tasks for each week. Each week should have tasks 
 		PlanData:      &planDataStr,
 		Questionnaire: &questionnaireStr,
 		Status:        "active",
+		Version:       prevVersion + 1,
+		VersionReason: "initial",
+		ParentPlanID:  prevPlanID,
 		GeneratedByAI: true,
 		AIModel:       modelName,
 	}
@@ -302,6 +315,9 @@ func serializeStudyPlan(plan models.IELTSStudyPlan) map[string]any {
 		"examType":      plan.ExamType,
 		"weeklyHours":   plan.WeeklyHours,
 		"status":        plan.Status,
+		"version":       plan.Version,
+		"versionReason": plan.VersionReason,
+		"parentPlanId":  plan.ParentPlanID,
 		"generatedByAI": plan.GeneratedByAI,
 		"aiModel":       plan.AIModel,
 		"createdAt":     plan.CreatedAt,
@@ -538,4 +554,251 @@ func getPrioritySkills(planData any) []string {
 		}
 	}
 	return nil
+}
+
+// ── Plan Version History ────────────────────────────────────────────────────
+
+func (h *IELTSStudyPlanHandler) GetPlanHistory(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var plans []models.IELTSStudyPlan
+	if err := h.db.Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Limit(20).
+		Find(&plans).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to load plan history", err)
+		return
+	}
+
+	serialized := make([]map[string]any, 0, len(plans))
+	for _, p := range plans {
+		serialized = append(serialized, serializeStudyPlan(p))
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"plans": serialized})
+}
+
+// ── Weekly Reflection ───────────────────────────────────────────────────────
+
+type reflectionRequest struct {
+	PlanID     string `json:"planId"`
+	Week       int    `json:"week"`
+	Completed  string `json:"completed"`
+	Difficult  string `json:"difficult"`
+	Improved   string `json:"improved"`
+	SlowedDown string `json:"slowedDown"`
+	NextWeek   string `json:"nextWeek"`
+}
+
+func (h *IELTSStudyPlanHandler) SubmitReflection(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var req reflectionRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	if req.NextWeek == "" {
+		req.NextWeek = "same"
+	}
+
+	// Generate AI coach note based on reflection
+	var coachNote *string
+	if h.openAIKey != "" || h.geminiKey != "" {
+		prompt := fmt.Sprintf(`You are a supportive IELTS study coach. Based on this weekly reflection, write a brief, encouraging coaching note (2-3 sentences max). Be specific and actionable.
+
+Student reflection for Week %d:
+- What they completed: %s
+- What was difficult: %s
+- What improved: %s
+- What slowed them down: %s
+- Next week preference: %s
+
+Write a short coaching note:`, req.Week, req.Completed, req.Difficult, req.Improved, req.SlowedDown, req.NextWeek)
+
+		raw, _, err := h.callLLM(prompt)
+		if err == nil {
+			note := strings.TrimSpace(raw)
+			// Remove any JSON wrapping if the LLM returned JSON
+			note = strings.Trim(note, "\"")
+			coachNote = &note
+		}
+	}
+
+	var completed, difficult, improved, slowedDown *string
+	if s := strings.TrimSpace(req.Completed); s != "" {
+		completed = &s
+	}
+	if s := strings.TrimSpace(req.Difficult); s != "" {
+		difficult = &s
+	}
+	if s := strings.TrimSpace(req.Improved); s != "" {
+		improved = &s
+	}
+	if s := strings.TrimSpace(req.SlowedDown); s != "" {
+		slowedDown = &s
+	}
+
+	reflection := models.IELTSWeeklyReflection{
+		UserID:     userID,
+		PlanID:     req.PlanID,
+		Week:       req.Week,
+		Completed:  completed,
+		Difficult:  difficult,
+		Improved:   improved,
+		SlowedDown: slowedDown,
+		NextWeek:   req.NextWeek,
+		CoachNote:  coachNote,
+	}
+
+	if err := h.db.Create(&reflection).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to save reflection", err)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, reflection)
+}
+
+func (h *IELTSStudyPlanHandler) GetReflections(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	planID := r.URL.Query().Get("planId")
+	if planID == "" {
+		writeError(w, http.StatusBadRequest, "planId required", nil)
+		return
+	}
+
+	var reflections []models.IELTSWeeklyReflection
+	if err := h.db.Where("user_id = ? AND plan_id = ?", userID, planID).
+		Order("week ASC").Find(&reflections).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to load reflections", err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"reflections": reflections})
+}
+
+// ── Adaptive Check ──────────────────────────────────────────────────────────
+
+// CheckAdaptive analyzes whether the roadmap needs adjustment.
+// Returns one of: "stable", "suggest_catchup", "suggest_rebalance", "suggest_rebuild"
+func (h *IELTSStudyPlanHandler) CheckAdaptive(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var plan models.IELTSStudyPlan
+	if err := h.db.Where("user_id = ? AND status = ?", userID, "active").
+		Order("created_at DESC").First(&plan).Error; err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{"status": "no_plan"})
+		return
+	}
+
+	// Calculate current week
+	daysSinceCreation := int(time.Since(plan.CreatedAt).Hours() / 24)
+	currentWeek := (daysSinceCreation / 7) + 1
+
+	// Count planned tasks per week from plan data
+	planData := parseJSONBField(plan.PlanData)
+	weekTaskCounts := make(map[int]int)
+	if pd, ok := planData.(map[string]any); ok {
+		if weeks, ok := pd["weeklyGoals"].([]any); ok {
+			for _, w := range weeks {
+				if wk, ok := w.(map[string]any); ok {
+					weekNum := 1
+					if wn, ok := wk["week"].(float64); ok {
+						weekNum = int(wn)
+					}
+					if tasks, ok := wk["tasks"].([]any); ok {
+						weekTaskCounts[weekNum] = len(tasks)
+					}
+				}
+			}
+		}
+	}
+
+	// Count completed tasks per week
+	var completions []models.IELTSTaskCompletion
+	h.db.Where("user_id = ? AND plan_id = ? AND status = ?", userID, plan.ID, "completed").Find(&completions)
+
+	weekCompletedCounts := make(map[int]int)
+	for _, c := range completions {
+		weekCompletedCounts[c.Week]++
+	}
+
+	// Analyze the last 2 weeks
+	week1 := currentWeek - 1
+	week2 := currentWeek - 2
+
+	week1Planned := weekTaskCounts[week1]
+	week1Done := weekCompletedCounts[week1]
+	week2Planned := weekTaskCounts[week2]
+	week2Done := weekCompletedCounts[week2]
+
+	// Determine adaptation level
+	status := "stable"
+	message := "You are on track. Keep going!"
+	level := 0 // 0=stable, 1=catchup, 2=rebalance, 3=rebuild
+
+	week1Rate := 0.0
+	if week1Planned > 0 {
+		week1Rate = float64(week1Done) / float64(week1Planned)
+	}
+	week2Rate := 0.0
+	if week2Planned > 0 {
+		week2Rate = float64(week2Done) / float64(week2Planned)
+	}
+
+	// Level 1: a few missed tasks in current/last week → suggest catch-up
+	if currentWeek >= 2 && week1Planned > 0 && week1Rate < 0.6 {
+		status = "suggest_catchup"
+		message = "You missed some tasks last week. Consider catching up on the important ones this week."
+		level = 1
+	}
+
+	// Level 2: whole week is weak → suggest rebalance
+	if currentWeek >= 2 && week1Planned > 0 && week1Rate < 0.3 {
+		status = "suggest_rebalance"
+		message = "Last week was light on progress. We recommend redistributing tasks for this week."
+		level = 2
+	}
+
+	// Level 3: 2 consecutive weeks of underperformance → suggest rebuild
+	if currentWeek >= 3 && week1Planned > 0 && week2Planned > 0 && week1Rate < 0.4 && week2Rate < 0.4 {
+		status = "suggest_rebuild"
+		message = "You have been off-plan for about 2 weeks. We recommend generating a revised roadmap to get back on track."
+		level = 3
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"status":      status,
+		"level":       level,
+		"message":     message,
+		"currentWeek": currentWeek,
+		"lastWeek": map[string]any{
+			"planned":        week1Planned,
+			"completed":      week1Done,
+			"completionRate": week1Rate,
+		},
+		"twoWeeksAgo": map[string]any{
+			"planned":        week2Planned,
+			"completed":      week2Done,
+			"completionRate": week2Rate,
+		},
+	})
 }

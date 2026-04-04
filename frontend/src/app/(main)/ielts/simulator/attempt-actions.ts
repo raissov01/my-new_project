@@ -238,3 +238,57 @@ export async function getRoadmapProgress() {
     timeoutMs: 15_000,
   });
 }
+
+export async function getPlanHistory() {
+  const user = await requireUser();
+  return fetchBackendJson<{ plans: Array<Record<string, unknown>> }>({
+    path: "/api/v1/ielts/study-plan/history",
+    userId: user.id,
+    timeoutMs: 15_000,
+  });
+}
+
+export async function submitReflection(payload: {
+  planId: string;
+  week: number;
+  completed: string;
+  difficult: string;
+  improved: string;
+  slowedDown: string;
+  nextWeek: string;
+}) {
+  const user = await requireUser();
+  return fetchBackendJson<Record<string, unknown>>({
+    path: "/api/v1/ielts/study-plan/reflection",
+    userId: user.id,
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 30_000,
+  });
+}
+
+export async function getReflections(planId: string) {
+  const user = await requireUser();
+  return fetchBackendJson<{ reflections: Array<Record<string, unknown>> }>({
+    path: `/api/v1/ielts/study-plan/reflections?planId=${planId}`,
+    userId: user.id,
+    timeoutMs: 15_000,
+  });
+}
+
+export async function checkAdaptive() {
+  const user = await requireUser();
+  return fetchBackendJson<{
+    status: string;
+    level: number;
+    message: string;
+    currentWeek: number;
+    lastWeek: { planned: number; completed: number; completionRate: number };
+    twoWeeksAgo: { planned: number; completed: number; completionRate: number };
+  }>({
+    path: "/api/v1/ielts/study-plan/adaptive",
+    userId: user.id,
+    timeoutMs: 15_000,
+  });
+}
