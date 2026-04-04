@@ -440,12 +440,17 @@ func (h *IELTSAttemptHandler) LogViolation(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Increment violation count on attempt
-	h.db.Model(&attempt).Update("violation_count", gorm.Expr("violation_count + 1"))
+	// Increment violation count atomically and re-read the updated value
+	if err := h.db.Model(&attempt).Update("violation_count", gorm.Expr("violation_count + 1")).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to update violation count", err)
+		return
+	}
+	// Reload to get the actual DB value (not stale Go struct)
+	h.db.Select("violation_count").First(&attempt, "id = ?", attemptID)
 
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"id":             violation.ID,
-		"violationCount": attempt.ViolationCount + 1,
+		"violationCount": attempt.ViolationCount,
 	})
 }
 

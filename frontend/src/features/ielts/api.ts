@@ -57,6 +57,10 @@ export type IELTSMockExam = {
 };
 
 function getPublicApiBaseUrl() {
+  if (typeof window !== "undefined") {
+    return "/api/v1";
+  }
+
   const publicApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
   if (publicApiUrl) {
     return publicApiUrl.replace(/\/+$/, "");

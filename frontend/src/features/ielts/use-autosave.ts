@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type UseAutosaveOptions<TPayload> = {
   enabled: boolean;
@@ -12,10 +12,12 @@ type UseAutosaveOptions<TPayload> = {
 
 export function useAutosave<TPayload>(options: UseAutosaveOptions<TPayload>) {
   const payloadRef = useRef(options.payload);
+  const onSaveRef = useRef(options.onSave);
+  const savingRef = useRef(false);
 
-  useEffect(() => {
-    payloadRef.current = options.payload;
-  }, [options.payload]);
+  // Keep refs in sync every render — no stale closures.
+  payloadRef.current = options.payload;
+  onSaveRef.current = options.onSave;
 
   const persistLocal = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -47,14 +49,20 @@ export function useAutosave<TPayload>(options: UseAutosaveOptions<TPayload>) {
   }, [options.storageKey]);
 
   const forceSave = useCallback(async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
     try {
-      await options.onSave(payloadRef.current);
+      // Always read from ref so we get the latest payload
+      await onSaveRef.current(payloadRef.current);
       clearLocal();
     } catch {
       persistLocal();
+    } finally {
+      savingRef.current = false;
     }
-  }, [clearLocal, options, persistLocal]);
+  }, [clearLocal, persistLocal]);
 
+  // Periodic autosave
   useEffect(() => {
     if (!options.enabled) return;
 
@@ -67,6 +75,7 @@ export function useAutosave<TPayload>(options: UseAutosaveOptions<TPayload>) {
     };
   }, [forceSave, options.enabled, options.intervalMs]);
 
+  // Persist to localStorage on page unload as last resort
   useEffect(() => {
     if (!options.enabled) return;
 
@@ -80,13 +89,5 @@ export function useAutosave<TPayload>(options: UseAutosaveOptions<TPayload>) {
     };
   }, [options.enabled, persistLocal]);
 
-  return useMemo(
-    () => ({
-      forceSave,
-      persistLocal,
-      restoreLocal,
-      clearLocal,
-    }),
-    [clearLocal, forceSave, persistLocal, restoreLocal]
-  );
+  return { forceSave, persistLocal, restoreLocal, clearLocal };
 }

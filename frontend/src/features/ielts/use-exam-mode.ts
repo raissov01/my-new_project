@@ -39,20 +39,55 @@ export function useExamMode(options: UseExamModeOptions) {
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const suppressPopStateRef = useRef(false);
+  const hadFullscreenRef = useRef(false);
+
+  // Use refs for callbacks to avoid stale closures in event listeners
+  const onViolationRef = useRef(options.onViolation);
+  const onTerminateRef = useRef(options.onTerminate);
+  onViolationRef.current = options.onViolation;
+  onTerminateRef.current = options.onTerminate;
+
+  // Debounce ref to prevent double-counting the same tab-switch event.
+  // When user switches tab: blur fires first, then visibilitychange fires ~0-5ms later.
+  // We only want to count it once.
+  const lastViolationTimeRef = useRef<Record<string, number>>({});
 
   const logViolation = useCallback(
     (type: ViolationType, details?: string) => {
+      // Deduplicate: if the same violation type fired within the last 500ms, skip it.
+      const now = Date.now();
+      const lastTime = lastViolationTimeRef.current[type] ?? 0;
+      if (now - lastTime < 500) {
+        return;
+      }
+
+      // For blur events specifically: if a visibilitychange already fired in the last 500ms
+      // (or vice versa), deduplicate as they represent the same user action (tab switch).
+      if (type === "blur") {
+        const lastTabSwitch = lastViolationTimeRef.current["tab_switch"] ?? 0;
+        if (now - lastTabSwitch < 500) return;
+      }
+      if (type === "tab_switch") {
+        const lastBlur = lastViolationTimeRef.current["blur"] ?? 0;
+        if (now - lastBlur < 500) return;
+      }
+
+      lastViolationTimeRef.current[type] = now;
+
       setViolationCount((prev) => {
         const next = prev + 1;
-        options.onViolation?.({ type, details, count: next });
+        if (typeof window !== "undefined") {
+          console.info("[exam-mode] violation", { type, details, count: next });
+        }
+        onViolationRef.current?.({ type, details, count: next });
 
         if (policy.immediateTerminate) {
-          options.onTerminate?.(`Violation: ${type}`);
+          onTerminateRef.current?.(`Violation: ${type}`);
           return next;
         }
 
         if (!policy.warnOnly && next >= policy.autoTerminateAt) {
-          options.onTerminate?.("Maximum violations reached");
+          onTerminateRef.current?.("Maximum violations reached");
           return next;
         }
 
@@ -62,7 +97,7 @@ export function useExamMode(options: UseExamModeOptions) {
         return next;
       });
     },
-    [options, policy.autoTerminateAt, policy.immediateTerminate, policy.warnOnly]
+    [policy.autoTerminateAt, policy.immediateTerminate, policy.warnOnly]
   );
 
   const requestFullscreen = useCallback(async () => {
@@ -72,11 +107,13 @@ export function useExamMode(options: UseExamModeOptions) {
 
     try {
       await document.documentElement.requestFullscreen();
+      hadFullscreenRef.current = true;
     } catch {
-      logViolation("fullscreen_exit", "Fullscreen request was blocked by the browser");
+      // Fullscreen was blocked by the browser. This is NOT a violation —
+      // the user never had fullscreen, so exiting it is not cheating.
       setWarningMessage("Fullscreen request was blocked by the browser.");
     }
-  }, [logViolation, policy.fullscreenRequired]);
+  }, [policy.fullscreenRequired]);
 
   const exitFullscreen = useCallback(async () => {
     if (typeof document === "undefined") return;
@@ -121,19 +158,33 @@ export function useExamMode(options: UseExamModeOptions) {
 
     const onFullscreenChange = () => {
       if (!policy.fullscreenRequired) return;
-      if (!document.fullscreenElement) {
+      if (document.fullscreenElement) {
+        // Entered fullscreen
+        hadFullscreenRef.current = true;
+        return;
+      }
+      // Only log violation if user previously HAD fullscreen and left it.
+      // If fullscreen was never entered (browser blocked it), no violation.
+      if (hadFullscreenRef.current) {
         logViolation("fullscreen_exit", "User exited fullscreen mode");
+        hadFullscreenRef.current = false;
       }
     };
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        logViolation("tab_switch", "Document became hidden");
+        logViolation("tab_switch", "Document became hidden (tab switch)");
       }
     };
 
+    // Only log blur as a separate violation if the document is NOT hidden.
+    // If the document IS hidden, visibilitychange already handled it.
     const onWindowBlur = () => {
-      logViolation("blur", "Window lost focus");
+      if (document.visibilityState === "hidden") {
+        // visibilitychange will handle this — don't double-count
+        return;
+      }
+      logViolation("blur", "Window lost focus (non-tab-switch)");
     };
 
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -192,6 +243,7 @@ export function useExamMode(options: UseExamModeOptions) {
     document.addEventListener("keydown", onKeyDown);
 
     return () => {
+      hadFullscreenRef.current = false;
       document.removeEventListener("fullscreenchange", onFullscreenChange);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("blur", onWindowBlur);
