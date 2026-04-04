@@ -135,21 +135,11 @@ func (h *IELTSExaminerHandler) GetMockExam(w http.ResponseWriter, r *http.Reques
 	}
 
 	responseSections := make([]ieltsMockSectionPayload, 0, len(sections))
-	generatedByAI := false
-
 	for _, sectionKey := range sections {
 		questions, err := h.loadMockQuestions(mockType, examSet, sectionKey, bandTarget)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to load mock section", err)
 			return
-		}
-
-		if mockType == "predictions" && (sectionKey == "writing" || sectionKey == "speaking") {
-			aiQuestions, err := h.generatePredictionSection(sectionKey, bandTarget)
-			if err == nil && len(aiQuestions) > 0 {
-				questions = aiQuestions
-				generatedByAI = true
-			}
 		}
 
 		responseSections = append(responseSections, ieltsMockSectionPayload{
@@ -167,7 +157,7 @@ func (h *IELTSExaminerHandler) GetMockExam(w http.ResponseWriter, r *http.Reques
 		BandTarget:    bandTarget,
 		ExamSet:       examSet,
 		Sections:      responseSections,
-		GeneratedByAI: generatedByAI,
+		GeneratedByAI: false,
 	})
 }
 

@@ -49,7 +49,9 @@ export function SimulatorClient() {
   const [section, setSection] = useState<Section>("full");
   const [bandTarget, setBandTarget] = useState<BandTarget>("6.5");
   const [cambridgeExamSet, setCambridgeExamSet] = useState("auto");
+  const [predictionExamSet, setPredictionExamSet] = useState("auto");
   const [cambridgeExamSets, setCambridgeExamSets] = useState<string[]>([]);
+  const [predictionExamSets, setPredictionExamSets] = useState<string[]>([]);
   const [mock, setMock] = useState<IELTSMockExam | null>(null);
   const [activeSectionIndex, setActiveSectionIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -95,35 +97,44 @@ export function SimulatorClient() {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadCambridgeSets() {
+    async function loadExamSets() {
       try {
         const response = await fetchIELTSQuestions({
           section: "writing",
-          mockType: "cambridge_style",
-          limit: 200,
+          limit: 400,
         });
 
         if (cancelled) {
           return;
         }
 
-        const examSets = Array.from(
+        const allExamSets = response.items ?? [];
+        const cambridgeSets = Array.from(
           new Set(
-            (response.items ?? [])
+            allExamSets
               .map((item) => item.examSet)
               .filter((item) => item && item.startsWith("cambridge-"))
           )
         ).sort();
+        const predictionsSets = Array.from(
+          new Set(
+            allExamSets
+              .map((item) => item.examSet)
+              .filter((item) => item && item.startsWith("predictions-"))
+          )
+        ).sort();
 
-        setCambridgeExamSets(examSets);
+        setCambridgeExamSets(cambridgeSets);
+        setPredictionExamSets(predictionsSets);
       } catch {
         if (!cancelled) {
           setCambridgeExamSets([]);
+          setPredictionExamSets([]);
         }
       }
     }
 
-    void loadCambridgeSets();
+    void loadExamSets();
 
     return () => {
       cancelled = true;
@@ -143,12 +154,12 @@ export function SimulatorClient() {
     {
       key: "predictions",
       title: t("ielts.sim.predictions"),
-      body: "AI-backed sections with recent IELTS-style themes and dynamic writing / speaking prompts.",
+      body: "Question-bank prediction sets built around recent IELTS-style themes. AI is used only to score your writing and speaking answers.",
     },
     {
       key: "cambridge_style",
       title: t("ielts.sim.cambridge"),
-      body: "Structured exam sets built like Cambridge IELTS books with stable reading, listening, writing, and speaking flow.",
+      body: "Structured book-style sets covering Cambridge 10 to 20 with a stable full-test flow.",
     },
   ];
 
@@ -202,10 +213,12 @@ export function SimulatorClient() {
         mockType,
         section,
         band: bandTarget,
-        examSet:
-          mockType === "cambridge_style" && cambridgeExamSet !== "auto"
-            ? cambridgeExamSet
-            : undefined,
+        examSet: (() => {
+          if (mockType === "cambridge_style") {
+            return cambridgeExamSet !== "auto" ? cambridgeExamSet : undefined;
+          }
+          return predictionExamSet !== "auto" ? predictionExamSet : undefined;
+        })(),
       });
 
       setMock(response);
@@ -461,19 +474,33 @@ export function SimulatorClient() {
                 <option value="auto">Auto-pick best matched set</option>
                 {cambridgeExamSets.map((item) => (
                   <option key={item} value={item}>
-                    {item}
+                    {formatExamSetLabel(item)}
                   </option>
                 ))}
               </select>
               <p className="mt-3 text-sm text-[var(--text-secondary)]">
-                Cambridge mock uses a structured exam package from the question bank instead of random prompts.
+                Cambridge mode now pulls from a fixed book-style question bank instead of generated prompts.
               </p>
             </div>
           ) : (
             <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5">
-              <h3 className="text-sm font-semibold text-indigo-400">Predictions mode</h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                Reading and listening come from the database, while writing and speaking can be generated dynamically to mimic current IELTS trends.
+              <label className="block text-sm font-medium text-[var(--text-primary)]">
+                Predictions exam set
+              </label>
+              <select
+                value={predictionExamSet}
+                onChange={(event) => setPredictionExamSet(event.target.value)}
+                className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50"
+              >
+                <option value="auto">Auto-pick latest prediction set</option>
+                {predictionExamSets.map((item) => (
+                  <option key={item} value={item}>
+                    {formatExamSetLabel(item)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+                Predictions mode uses stored exam sets that follow current IELTS themes. AI is used only after you answer writing or speaking tasks.
               </p>
             </div>
           )}
@@ -513,7 +540,7 @@ export function SimulatorClient() {
           Preparing your mock exam
         </h2>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">
-          Loading passages, question types, and AI-backed prompts for a realistic IELTS flow.
+          Loading reading, listening, writing, and speaking sections from the IELTS question bank.
         </p>
       </div>
     );
@@ -529,12 +556,7 @@ export function SimulatorClient() {
             </span>
             {mock.examSet ? (
               <span className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
-                {mock.examSet}
-              </span>
-            ) : null}
-            {mock.generatedByAI ? (
-              <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-400">
-                AI-generated sections included
+                {formatExamSetLabel(mock.examSet)}
               </span>
             ) : null}
           </div>
@@ -601,7 +623,7 @@ export function SimulatorClient() {
             <li>Structured Cambridge-style sets or prediction-based runs.</li>
             <li>Reading passages with multiple IELTS question types.</li>
             <li>Listening scripts with browser audio playback and answer checking.</li>
-            <li>Timed writing and speaking tasks with AI examiner feedback.</li>
+            <li>Writing and speaking tasks scored with AI feedback on your answers only.</li>
           </ul>
         </div>
 
@@ -640,7 +662,7 @@ export function SimulatorClient() {
           </span>
           {mock.examSet ? (
             <span className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
-              {mock.examSet}
+              {formatExamSetLabel(mock.examSet)}
             </span>
           ) : null}
           <span className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
@@ -1059,6 +1081,24 @@ function computeObjectiveStats(
 
 function normalizeAnswer(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function formatExamSetLabel(value: string) {
+  if (value.startsWith("cambridge-")) {
+    const [, book, marker, testNumber] = value.split("-");
+    if (book && marker === "test" && testNumber) {
+      return `Cambridge ${book} · Test ${testNumber}`;
+    }
+  }
+
+  if (value.startsWith("predictions-")) {
+    const [, year, marker, setNumber] = value.split("-");
+    if (year && marker === "set" && setNumber) {
+      return `Predictions ${year} · Set ${setNumber}`;
+    }
+  }
+
+  return value.replace(/-/g, " ");
 }
 
 function formatTime(totalSeconds: number) {

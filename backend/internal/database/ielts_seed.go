@@ -124,20 +124,56 @@ func seedIELTSMaterials(db *gorm.DB) error {
 }
 
 func seedIELTSQuestions(db *gorm.DB) error {
-	var count int64
-	if err := db.Model(&models.IELTSQuestion{}).Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return nil
-	}
-
 	questions := buildIELTSQuestionSeed()
-	if err := db.Create(&questions).Error; err != nil {
+
+	var existing []models.IELTSQuestion
+	if err := db.Select("id", "section", "mock_type", "exam_set", "question_group", "question_type", "sort_order").
+		Find(&existing).Error; err != nil {
 		return err
 	}
 
-	log.Printf("seeded %d IELTS questions", len(questions))
+	existingByKey := make(map[string]string, len(existing))
+	for _, item := range existing {
+		existingByKey[ieltsQuestionSeedKey(item)] = item.ID
+	}
+
+	created := 0
+	updated := 0
+
+	for _, question := range questions {
+		key := ieltsQuestionSeedKey(question)
+		if id, ok := existingByKey[key]; ok {
+			if err := db.Model(&models.IELTSQuestion{}).Where("id = ?", id).Updates(map[string]any{
+				"section":        question.Section,
+				"question_type":  question.QuestionType,
+				"difficulty":     question.Difficulty,
+				"mock_type":      question.MockType,
+				"topic":          question.Topic,
+				"exam_set":       question.ExamSet,
+				"question_group": question.QuestionGroup,
+				"title":          question.Title,
+				"prompt":         question.Prompt,
+				"content":        question.Content,
+				"audio_script":   question.AudioScript,
+				"options":        question.Options,
+				"answer":         question.Answer,
+				"explanation":    question.Explanation,
+				"band_target":    question.BandTarget,
+				"sort_order":     question.SortOrder,
+			}).Error; err != nil {
+				return err
+			}
+			updated++
+			continue
+		}
+
+		if err := db.Create(&question).Error; err != nil {
+			return err
+		}
+		created++
+	}
+
+	log.Printf("synced IELTS questions: created=%d updated=%d total_seed=%d", created, updated, len(questions))
 	return nil
 }
 
@@ -583,7 +619,21 @@ func buildIELTSQuestionSeed() []models.IELTSQuestion {
 	}
 	addReadingListeningGroup("listening", listeningQuestions)
 
+	questions = append(questions, buildExpandedIELTSQuestionSeed()...)
+
 	return questions
+}
+
+func ieltsQuestionSeedKey(question models.IELTSQuestion) string {
+	return fmt.Sprintf(
+		"%s|%s|%s|%s|%s|%d",
+		question.Section,
+		question.MockType,
+		question.ExamSet,
+		question.QuestionGroup,
+		question.QuestionType,
+		question.SortOrder,
+	)
 }
 
 type seedQuestion struct {
