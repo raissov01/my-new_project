@@ -152,8 +152,8 @@ export function WritingPracticeClient() {
   }
 
   async function handleSubmit() {
-    if (wordCount < 20) {
-      setError(t("ielts.wr.errorTooShort"));
+    if (wordCount < Math.min(minWords, 100)) {
+      setError(`Your essay is too short. ${taskType === "task1" ? "Task 1 requires at least 150 words." : "Task 2 requires at least 250 words."} You wrote ${wordCount} words.`);
       return;
     }
 

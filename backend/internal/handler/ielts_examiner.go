@@ -101,32 +101,69 @@ func (h *IELTSExaminerHandler) EvaluateWriting(w http.ResponseWriter, r *http.Re
 
 	essay := strings.TrimSpace(req.Essay)
 	wordCount := len(strings.Fields(essay))
-	if wordCount < 20 {
-		writeError(w, http.StatusBadRequest, "essay is too short (minimum 20 words)", nil)
+
+	// Enforce realistic minimum word counts
+	minWords := 50
+	if req.TaskType == "task1" {
+		minWords = 100
+	} else if req.TaskType == "task2" {
+		minWords = 150
+	}
+	if wordCount < minWords {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("essay is too short (minimum %d words for %s, you wrote %d)", minWords, req.TaskType, wordCount), nil)
 		return
 	}
 
-	taskLabel := "Task 1 (report/letter)"
-	if req.TaskType == "task2" {
-		taskLabel = "Task 2 (essay)"
+	taskContext := ""
+	if req.TaskType == "task1" {
+		taskContext = `This is IELTS Writing Task 1. The student should:
+- Summarize information from a visual (graph, chart, table, diagram, map, or process)
+- Write at least 150 words
+- Include an overview of main trends/features
+- Select and report key data points
+- Compare where relevant
+- NOT give personal opinions
+
+Score "Task Achievement" specifically on: overview presence, key features selection, data accuracy, minimum word count.`
+	} else {
+		taskContext = `This is IELTS Writing Task 2. The student should:
+- Write a discursive essay responding to a point of view, argument, or problem
+- Write at least 250 words
+- Present a clear position throughout
+- Develop ideas with explanations, examples, and evidence
+- Organize ideas logically in paragraphs
+- Use a range of vocabulary and grammar
+
+Score "Task Response" specifically on: position clarity, idea development, relevance, completeness.`
 	}
 
-	prompt := fmt.Sprintf(`You are a certified IELTS examiner with 15 years of experience. Evaluate the following IELTS Academic Writing %s response.
+	prompt := fmt.Sprintf(`You are a senior IELTS examiner with 20+ years of experience. Evaluate this IELTS Academic Writing response with detailed, mentor-level feedback.
+
+%s
 
 Task prompt: %s
 
 Student's response (%d words):
 %s
 
-Score each criterion on the official IELTS band scale (0-9, half-band increments only: 0, 0.5, 1.0, 1.5, ... 8.5, 9.0):
-1. Task Achievement (how well the student addressed the task requirements)
-2. Coherence and Cohesion (logical organization, paragraphing, linking)
-3. Lexical Resource (vocabulary range, accuracy, appropriacy)
-4. Grammatical Range and Accuracy (sentence structures, error frequency)
+SCORING INSTRUCTIONS:
+Use the official IELTS band scale (half-band increments: 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0).
+Be strict and realistic — most IELTS candidates score between 5.5 and 7.0.
 
-Calculate the overall band as the average of the four criteria, rounded to the nearest 0.5.
+For each criterion, consider:
+- Band 5.0-5.5: Limited, basic, frequent errors, partially addresses task
+- Band 6.0-6.5: Competent, adequate, some errors, generally addresses task
+- Band 7.0-7.5: Good, effective, occasional errors, well-developed ideas
+- Band 8.0+: Expert, rare errors, sophisticated language, fully developed
 
-Return ONLY valid JSON with no additional text:
+FEEDBACK INSTRUCTIONS:
+- Be specific — quote exact phrases from the essay
+- Be constructive — explain HOW to improve, not just what is wrong
+- Be detailed — write paragraph-length explanations, not bullet fragments
+- Provide a model answer of appropriate length (%d+ words)
+- Identify 3-5 grammar issues and 3-5 vocabulary weaknesses from the actual essay
+
+Return ONLY valid JSON:
 {
   "overallBand": 6.5,
   "taskAchievement": 6.5,
@@ -134,22 +171,24 @@ Return ONLY valid JSON with no additional text:
   "lexicalResource": 6.0,
   "grammar": 6.5,
   "feedback": {
-    "strengths": ["strength 1", "strength 2", "strength 3"],
-    "weaknesses": ["weakness 1", "weakness 2"],
-    "suggestions": ["specific actionable suggestion 1", "suggestion 2", "suggestion 3"],
-    "improvementPlan": ["step 1", "step 2", "step 3"],
-    "bandExplanation": "Explain exactly why this band was awarded in examiner language.",
-    "detailedFeedback": "A paragraph of detailed examiner feedback explaining the scores.",
-    "modelAnswer": "Write a band 7-9 sample answer.",
-    "rewrittenResponse": "Rewrite the student's response into a stronger version while keeping the main ideas.",
+    "strengths": ["Specific strength citing exact phrases from the essay", "Another strength with examples"],
+    "weaknesses": ["Specific weakness quoting the essay", "Another weakness with examples"],
+    "suggestions": ["Detailed actionable suggestion explaining exactly what to change and how", "Another specific suggestion"],
+    "improvementPlan": ["This week: focus on X because...", "Next: practice Y to improve...", "Then: work on Z for band 7+"],
+    "bandExplanation": "A detailed 3-4 sentence explanation of why this band was awarded, referencing specific aspects of the essay that demonstrate each band level. Explain what would be needed for a higher band.",
+    "detailedFeedback": "A long detailed paragraph (150+ words) of examiner-level feedback analyzing the essay's task response, organization, vocabulary, and grammar in depth. Reference specific examples from the student's writing.",
+    "modelAnswer": "A complete model answer at band 7.5-8.0 level for this exact task prompt. Must be at least %d words.",
+    "rewrittenResponse": "The student's exact essay rewritten to band 7.0+ level, preserving their ideas but improving language, structure, and accuracy.",
     "grammarHighlights": [
-      {"original": "student phrase", "issue": "grammar issue", "suggestion": "better version", "explanation": "why"}
+      {"original": "exact phrase from essay", "issue": "specific grammar error type", "suggestion": "corrected version", "explanation": "grammar rule explanation"},
+      {"original": "another phrase", "issue": "another error", "suggestion": "correction", "explanation": "why this is wrong"}
     ],
     "vocabularyHighlights": [
-      {"original": "student word", "issue": "lexical weakness", "suggestion": "better word", "explanation": "why"}
+      {"original": "basic word used", "issue": "too simple/repetitive/inappropriate", "suggestion": "more sophisticated alternative", "explanation": "why the upgrade matters for band score"},
+      {"original": "another word", "issue": "lexical issue", "suggestion": "better alternative", "explanation": "context"}
     ]
   }
-}`, taskLabel, req.Prompt, wordCount, essay)
+}`, taskContext, req.Prompt, wordCount, essay, minWords, minWords)
 
 	raw, modelName, err := h.callLLM(prompt)
 	if err != nil {
@@ -281,29 +320,42 @@ func (h *IELTSExaminerHandler) EvaluateSpeaking(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	partLabel := map[string]string{
-		"part1": "Part 1 (Introduction and Interview)",
-		"part2": "Part 2 (Individual Long Turn / Cue Card)",
-		"part3": "Part 3 (Two-way Discussion)",
-	}[req.Part]
+	partContext := ""
+	switch req.Part {
+	case "part1":
+		partContext = `This is Part 1 (Introduction & Interview, 4-5 minutes). The candidate answers short personal questions.
+Expected: natural, brief but developed answers (3-5 sentences each). Evaluate fluency of spontaneous speech.`
+	case "part2":
+		partContext = `This is Part 2 (Long Turn / Cue Card, 1-2 minutes speaking after 1 minute preparation).
+Expected: extended monologue covering all cue card points. Evaluate ability to speak at length with coherent structure.`
+	case "part3":
+		partContext = `This is Part 3 (Two-way Discussion, 4-5 minutes). Abstract discussion related to Part 2 topic.
+Expected: developed opinions with reasoning, examples, and abstract thinking. Evaluate depth of ideas and language sophistication.`
+	}
 
-	prompt := fmt.Sprintf(`You are a certified IELTS Speaking examiner. Evaluate the following IELTS Speaking %s response.
+	prompt := fmt.Sprintf(`You are a senior IELTS Speaking examiner with 20+ years of experience. Evaluate this response with detailed, mentor-level feedback.
+
+%s
 
 Examiner's question/prompt: %s
 
 Candidate's response (transcribed):
 %s
 
-Score each criterion on the IELTS band scale (0-9, half-band increments):
-1. Fluency and Coherence
-2. Lexical Resource
-3. Grammatical Range and Accuracy
-4. Pronunciation (estimate from written text based on word choice complexity and natural phrasing)
+SCORING INSTRUCTIONS:
+Use the official IELTS band scale (half-band increments). Be realistic — most candidates score 5.5-7.0.
 
-Calculate the overall band as the average, rounded to nearest 0.5.
+For Fluency & Coherence: assess speech rate, hesitation, self-correction, topic development, coherence markers.
+For Lexical Resource: assess vocabulary range, precision, idiomatic language, paraphrasing ability.
+For Grammar: assess sentence variety, accuracy, complex structures, error frequency.
+For Pronunciation: estimate from text — assess word choice naturalness, likely stress patterns, and phrasing sophistication. Note this is an estimate from written transcript.
 
-Also generate one natural follow-up question an examiner would ask next.
-The follow-up must react to the candidate's actual ideas, not be generic.
+FEEDBACK INSTRUCTIONS:
+- Quote exact phrases from the transcript
+- Explain HOW to improve with specific techniques
+- Write paragraph-length detailed feedback (150+ words)
+- Provide a model answer appropriate for this part type
+- Generate 2-3 follow-up questions that react to the candidate's actual ideas
 
 Return ONLY valid JSON:
 {
@@ -313,24 +365,24 @@ Return ONLY valid JSON:
   "grammar": 6.0,
   "pronunciation": 6.5,
   "feedback": {
-    "strengths": ["strength 1", "strength 2"],
-    "weaknesses": ["weakness 1", "weakness 2"],
-    "suggestions": ["suggestion 1", "suggestion 2"],
-    "improvementPlan": ["step 1", "step 2", "step 3"],
-    "bandExplanation": "Explain why this speaking band was awarded.",
-    "detailedFeedback": "Detailed examiner feedback paragraph.",
-    "modelAnswer": "Write a strong band 7-9 style spoken answer.",
-    "rewrittenResponse": "Rewrite the candidate's answer to sound more natural and higher-band.",
+    "strengths": ["Specific strength quoting the transcript", "Another strength with examples"],
+    "weaknesses": ["Specific weakness quoting the transcript", "Another weakness"],
+    "suggestions": ["Detailed actionable suggestion with technique to practice", "Another specific suggestion"],
+    "improvementPlan": ["This week: practice X because...", "Next: focus on Y to reach band 7", "Then: develop Z for fluency"],
+    "bandExplanation": "A detailed 3-4 sentence explanation of why this band was awarded, referencing specific moments from the response that demonstrate each band level.",
+    "detailedFeedback": "A long detailed paragraph (150+ words) analyzing the candidate's fluency patterns, vocabulary choices, grammatical accuracy, and overall communicative effectiveness. Reference specific examples from their response.",
+    "modelAnswer": "A complete model answer at band 7.5+ level for this exact question. Natural spoken style, not written style.",
+    "rewrittenResponse": "The candidate's response rewritten to band 7.0+ level, preserving their ideas but improving naturalness and sophistication.",
     "grammarHighlights": [
-      {"original": "student phrase", "issue": "grammar issue", "suggestion": "better version", "explanation": "why"}
+      {"original": "exact phrase from transcript", "issue": "specific grammar error", "suggestion": "corrected version", "explanation": "grammar rule"}
     ],
     "vocabularyHighlights": [
-      {"original": "student word", "issue": "lexical weakness", "suggestion": "better expression", "explanation": "why"}
+      {"original": "basic expression used", "issue": "too simple or repetitive", "suggestion": "more natural/sophisticated alternative", "explanation": "why this sounds more band 7+"}
     ],
-    "followUpQuestion": "A natural follow-up question for the candidate.",
-    "followUpQuestions": ["follow-up 1", "follow-up 2", "follow-up 3"]
+    "followUpQuestion": "A natural follow-up question reacting to the candidate's actual ideas.",
+    "followUpQuestions": ["follow-up reacting to their ideas 1", "follow-up 2", "follow-up 3"]
   }
-}`, partLabel, req.Prompt, strings.TrimSpace(req.Transcript))
+}`, partContext, req.Prompt, strings.TrimSpace(req.Transcript))
 
 	raw, modelName, err := h.callLLM(prompt)
 	if err != nil {

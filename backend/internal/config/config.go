@@ -56,7 +56,7 @@ func Load() (*Config, error) {
 		InternalAPIToken:   os.Getenv("BACKEND_INTERNAL_TOKEN"),
 		Environment:        getEnv("ENVIRONMENT", "development"),
 		OpenAIAPIKey:       os.Getenv("OPENAI_API_KEY"),
-		OpenAIModel:        getEnv("OPENAI_MODEL", "gpt-4o-mini"),
+		OpenAIModel:        getEnv("OPENAI_MODEL", "gpt-4o"),
 		GeminiAPIKey:       os.Getenv("GEMINI_API_KEY"),
 		GeminiModel:        getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
 		AIRequestTimeout:   time.Duration(maxInt(getEnvInt("AI_REQUEST_TIMEOUT_SECONDS", 90), 30)) * time.Second,
