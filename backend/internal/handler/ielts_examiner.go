@@ -20,17 +20,21 @@ type IELTSExaminerHandler struct {
 	db          *gorm.DB
 	openAIKey   string
 	openAIModel string
+	claudeKey   string
+	claudeModel string
+	claudeURL   string
 	geminiKey   string
 	geminiModel string
 	timeout     time.Duration
 }
 
-func NewIELTSExaminer(db *gorm.DB, openAIKey, openAIModel, geminiKey, geminiModel string, timeout time.Duration) *IELTSExaminerHandler {
+func NewIELTSExaminer(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeURL, geminiKey, geminiModel string, timeout time.Duration) *IELTSExaminerHandler {
 	if timeout < 30*time.Second {
 		timeout = 60 * time.Second
 	}
 	return &IELTSExaminerHandler{
 		db: db, openAIKey: openAIKey, openAIModel: openAIModel,
+		claudeKey: claudeKey, claudeModel: claudeModel, claudeURL: claudeURL,
 		geminiKey: geminiKey, geminiModel: geminiModel, timeout: timeout,
 	}
 }
@@ -80,7 +84,7 @@ func (h *IELTSExaminerHandler) EvaluateWriting(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if h.openAIKey == "" && h.geminiKey == "" {
+	if h.claudeKey == "" && h.openAIKey == "" && h.geminiKey == "" {
 		writeError(w, http.StatusServiceUnavailable, "AI examiner is not configured", nil)
 		return
 	}
@@ -301,7 +305,7 @@ func (h *IELTSExaminerHandler) EvaluateSpeaking(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if h.openAIKey == "" && h.geminiKey == "" {
+	if h.claudeKey == "" && h.openAIKey == "" && h.geminiKey == "" {
 		writeError(w, http.StatusServiceUnavailable, "AI examiner is not configured", nil)
 		return
 	}
@@ -472,23 +476,34 @@ func (h *IELTSExaminerHandler) callLLM(prompt string) (string, string, error) {
 }
 
 func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error) {
-	// Try OpenAI first (Chat Completions API — faster than Responses API)
+	// Try Claude first (primary for IELTS features)
+	if strings.TrimSpace(h.claudeKey) != "" {
+		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, prompt, h.timeout)
+		if err == nil {
+			return raw, h.claudeModel, nil
+		}
+		log.Printf("[llm] Claude failed: %v", err)
+	}
+
+	// Fallback to OpenAI
 	if strings.TrimSpace(h.openAIKey) != "" {
 		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, prompt, h.timeout)
 		if err == nil {
 			return raw, h.openAIModel, nil
 		}
 		log.Printf("[llm] OpenAI failed: %v", err)
-		if strings.TrimSpace(h.geminiKey) == "" {
-			return "", "", err
-		}
 	}
 
-	raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, h.timeout)
-	if err != nil {
-		return "", "", err
+	// Fallback to Gemini
+	if strings.TrimSpace(h.geminiKey) != "" {
+		raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, h.timeout)
+		if err == nil {
+			return raw, h.geminiModel, nil
+		}
+		log.Printf("[llm] Gemini failed: %v", err)
 	}
-	return raw, h.geminiModel, nil
+
+	return "", "", fmt.Errorf("all AI providers failed")
 }
 
 func callGeminiRaw(apiKey, model, prompt string, timeout time.Duration) (string, error) {
@@ -538,6 +553,57 @@ func callGeminiRaw(apiKey, model, prompt string, timeout time.Duration) (string,
 	}
 
 	return cleanJSON(geminiResp.Candidates[0].Content.Parts[0].Text), nil
+}
+
+// callClaudeChatCompletion calls the Claude API via do-ai.run (OpenAI-compatible Chat Completions format).
+func callClaudeChatCompletion(apiKey, model, apiURL, prompt string, timeout time.Duration) (string, error) {
+	body := map[string]any{
+		"model": model,
+		"messages": []map[string]string{
+			{"role": "system", "content": "You are an expert IELTS examiner. Return ONLY valid JSON with no markdown, no backticks, no commentary."},
+			{"role": "user", "content": prompt},
+		},
+		"temperature": 0.3,
+		"max_tokens":  8192,
+	}
+
+	bodyBytes, _ := json.Marshal(body)
+	req, err := http.NewRequest(http.MethodPost, apiURL, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return "", fmt.Errorf("build request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	client := &http.Client{Timeout: timeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("claude request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		errBody, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("claude returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
+	}
+
+	var chatResp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
+		return "", fmt.Errorf("decode response: %w", err)
+	}
+
+	if len(chatResp.Choices) == 0 || strings.TrimSpace(chatResp.Choices[0].Message.Content) == "" {
+		return "", fmt.Errorf("claude returned empty output")
+	}
+
+	return cleanJSON(chatResp.Choices[0].Message.Content), nil
 }
 
 // callOpenAIChatCompletion uses the standard Chat Completions API — faster and
