@@ -21,9 +21,10 @@ type Config struct {
 	Environment        string // "development" | "production"
 	OpenAIAPIKey       string
 	OpenAIModel        string
-	ClaudeAPIKey       string
-	ClaudeModel        string
-	ClaudeAPIURL       string
+	ClaudeAPIKey          string
+	ClaudeModel           string
+	ClaudeFallbackModel   string
+	ClaudeAPIURL          string
 	GeminiAPIKey       string
 	GeminiModel        string
 	AIRequestTimeout   time.Duration
@@ -61,8 +62,9 @@ func Load() (*Config, error) {
 		OpenAIAPIKey:       os.Getenv("OPENAI_API_KEY"),
 		OpenAIModel:        getEnv("OPENAI_MODEL", "gpt-4o"),
 		ClaudeAPIKey:       os.Getenv("CLAUDE_API_KEY"),
-		ClaudeModel:        getEnv("CLAUDE_MODEL", "anthropic-claude-opus-4.6"),
-		ClaudeAPIURL:       getEnv("CLAUDE_API_URL", "https://inference.do-ai.run/v1/chat/completions"),
+		ClaudeModel:           getEnv("CLAUDE_MODEL", "anthropic-claude-opus-4.6"),
+		ClaudeFallbackModel:  getEnv("CLAUDE_FALLBACK_MODEL", "anthropic-claude-sonnet-4.6"),
+		ClaudeAPIURL:         getEnv("CLAUDE_API_URL", "https://inference.do-ai.run/v1/chat/completions"),
 		GeminiAPIKey:       os.Getenv("GEMINI_API_KEY"),
 		GeminiModel:        getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
 		AIRequestTimeout:   time.Duration(maxInt(getEnvInt("AI_REQUEST_TIMEOUT_SECONDS", 90), 30)) * time.Second,

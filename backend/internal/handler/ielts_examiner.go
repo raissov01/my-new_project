@@ -17,24 +17,25 @@ import (
 )
 
 type IELTSExaminerHandler struct {
-	db          *gorm.DB
-	openAIKey   string
-	openAIModel string
-	claudeKey   string
-	claudeModel string
-	claudeURL   string
-	geminiKey   string
-	geminiModel string
-	timeout     time.Duration
+	db                *gorm.DB
+	openAIKey         string
+	openAIModel       string
+	claudeKey         string
+	claudeModel       string
+	claudeFallback    string
+	claudeURL         string
+	geminiKey         string
+	geminiModel       string
+	timeout           time.Duration
 }
 
-func NewIELTSExaminer(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeURL, geminiKey, geminiModel string, timeout time.Duration) *IELTSExaminerHandler {
+func NewIELTSExaminer(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeFallback, claudeURL, geminiKey, geminiModel string, timeout time.Duration) *IELTSExaminerHandler {
 	if timeout < 30*time.Second {
 		timeout = 60 * time.Second
 	}
 	return &IELTSExaminerHandler{
 		db: db, openAIKey: openAIKey, openAIModel: openAIModel,
-		claudeKey: claudeKey, claudeModel: claudeModel, claudeURL: claudeURL,
+		claudeKey: claudeKey, claudeModel: claudeModel, claudeFallback: claudeFallback, claudeURL: claudeURL,
 		geminiKey: geminiKey, geminiModel: geminiModel, timeout: timeout,
 	}
 }
@@ -476,16 +477,25 @@ func (h *IELTSExaminerHandler) callLLM(prompt string) (string, string, error) {
 }
 
 func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error) {
-	// Try Claude first (primary for IELTS features)
+	// Try Claude Opus first (primary for IELTS features)
 	if strings.TrimSpace(h.claudeKey) != "" {
 		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, prompt, h.timeout)
 		if err == nil {
 			return raw, h.claudeModel, nil
 		}
-		log.Printf("[llm] Claude failed: %v", err)
+		log.Printf("[llm] Claude Opus failed: %v", err)
+
+		// Fallback to Claude Sonnet
+		if strings.TrimSpace(h.claudeFallback) != "" {
+			raw, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, prompt, h.timeout)
+			if err == nil {
+				return raw, h.claudeFallback, nil
+			}
+			log.Printf("[llm] Claude Sonnet failed: %v", err)
+		}
 	}
 
-	// Fallback to OpenAI
+	// Fallback to OpenAI (GPT)
 	if strings.TrimSpace(h.openAIKey) != "" {
 		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, prompt, h.timeout)
 		if err == nil {
@@ -494,7 +504,7 @@ func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error
 		log.Printf("[llm] OpenAI failed: %v", err)
 	}
 
-	// Fallback to Gemini
+	// Last resort: Gemini
 	if strings.TrimSpace(h.geminiKey) != "" {
 		raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, h.timeout)
 		if err == nil {
@@ -514,7 +524,7 @@ func callGeminiRaw(apiKey, model, prompt string, timeout time.Duration) (string,
 		"generationConfig": map[string]any{
 			"temperature":      0.3,
 			"topP":             0.9,
-			"maxOutputTokens":  8192,
+			"maxOutputTokens":  16384,
 			"responseMimeType": "application/json",
 		},
 	}
@@ -564,7 +574,7 @@ func callClaudeChatCompletion(apiKey, model, apiURL, prompt string, timeout time
 			{"role": "user", "content": prompt},
 		},
 		"temperature": 0.3,
-		"max_tokens":  8192,
+		"max_tokens":  16384,
 	}
 
 	bodyBytes, _ := json.Marshal(body)
@@ -616,7 +626,7 @@ func callOpenAIChatCompletion(apiKey, model, prompt string, timeout time.Duratio
 			{"role": "user", "content": prompt},
 		},
 		"temperature":      0.3,
-		"max_tokens":        8192,
+		"max_tokens":        16384,
 		"response_format": map[string]string{"type": "json_object"},
 	}
 

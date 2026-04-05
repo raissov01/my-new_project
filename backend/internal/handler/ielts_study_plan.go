@@ -14,24 +14,25 @@ import (
 )
 
 type IELTSStudyPlanHandler struct {
-	db          *gorm.DB
-	openAIKey   string
-	openAIModel string
-	claudeKey   string
-	claudeModel string
-	claudeURL   string
-	geminiKey   string
-	geminiModel string
-	timeout     time.Duration
+	db             *gorm.DB
+	openAIKey      string
+	openAIModel    string
+	claudeKey      string
+	claudeModel    string
+	claudeFallback string
+	claudeURL      string
+	geminiKey      string
+	geminiModel    string
+	timeout        time.Duration
 }
 
-func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeURL, geminiKey, geminiModel string, timeout time.Duration) *IELTSStudyPlanHandler {
+func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeFallback, claudeURL, geminiKey, geminiModel string, timeout time.Duration) *IELTSStudyPlanHandler {
 	if timeout < 30*time.Second {
 		timeout = 60 * time.Second
 	}
 	return &IELTSStudyPlanHandler{
 		db: db, openAIKey: openAIKey, openAIModel: openAIModel,
-		claudeKey: claudeKey, claudeModel: claudeModel, claudeURL: claudeURL,
+		claudeKey: claudeKey, claudeModel: claudeModel, claudeFallback: claudeFallback, claudeURL: claudeURL,
 		geminiKey: geminiKey, geminiModel: geminiModel, timeout: timeout,
 	}
 }
@@ -39,16 +40,25 @@ func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeMod
 // ── LLM call ────────────────────────────────────────────────────────────────
 
 func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
-	// Try Claude first (primary for IELTS features)
+	// Try Claude Opus first (primary for IELTS features)
 	if strings.TrimSpace(h.claudeKey) != "" {
 		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, prompt, h.timeout)
 		if err == nil {
 			return raw, h.claudeModel, nil
 		}
-		log.Printf("[llm] Claude failed: %v", err)
+		log.Printf("[llm] Claude Opus failed: %v", err)
+
+		// Fallback to Claude Sonnet
+		if strings.TrimSpace(h.claudeFallback) != "" {
+			raw, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, prompt, h.timeout)
+			if err == nil {
+				return raw, h.claudeFallback, nil
+			}
+			log.Printf("[llm] Claude Sonnet failed: %v", err)
+		}
 	}
 
-	// Fallback to OpenAI
+	// Fallback to OpenAI (GPT)
 	if strings.TrimSpace(h.openAIKey) != "" {
 		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, prompt, h.timeout)
 		if err == nil {
@@ -57,7 +67,7 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 		log.Printf("[llm] OpenAI failed: %v", err)
 	}
 
-	// Fallback to Gemini
+	// Last resort: Gemini
 	if strings.TrimSpace(h.geminiKey) != "" {
 		raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, h.timeout)
 		if err == nil {
@@ -115,6 +125,26 @@ func (h *IELTSStudyPlanHandler) GeneratePlan(w http.ResponseWriter, r *http.Requ
 		req.ExamType = "academic"
 	}
 
+	// Calculate total weeks dynamically from exam date
+	totalWeeks := 4 // default
+	if strings.TrimSpace(req.ExamDate) != "" {
+		if examDate, err := time.Parse("2006-01-02", strings.TrimSpace(req.ExamDate)); err == nil {
+			daysUntil := int(time.Until(examDate).Hours() / 24)
+			if daysUntil > 0 {
+				totalWeeks = daysUntil / 7
+				if daysUntil%7 > 2 {
+					totalWeeks++ // round up partial weeks
+				}
+			}
+			if totalWeeks < 2 {
+				totalWeeks = 2
+			}
+			if totalWeeks > 16 {
+				totalWeeks = 16 // cap at 4 months
+			}
+		}
+	}
+
 	// Get previous active plan for version tracking
 	var prevPlan models.IELTSStudyPlan
 	var prevVersion int
@@ -140,82 +170,130 @@ func (h *IELTSStudyPlanHandler) GeneratePlan(w http.ResponseWriter, r *http.Requ
 		"weakSections": req.WeakSections,
 		"strengths":    req.Strengths,
 		"struggles":    req.Struggles,
+		"totalWeeks":   totalWeeks,
 	}
 	questionnaireJSON, _ := json.Marshal(questionnaire)
 
-	// Build LLM prompt — generates both readable strategy guide AND actionable task checklist
-	prompt := fmt.Sprintf(`You are a premium IELTS preparation coach. Create a comprehensive, personalized study roadmap.
+	// Build LLM prompt — dynamic weeks, milestones, gamification, detailed daily plan
+	prompt := fmt.Sprintf(`You are a premium IELTS preparation coach with 15+ years of experience. Create a comprehensive, personalized study roadmap.
 
 Student profile:
 - Current Band: %s
 - Target Band: %s
 - Exam Type: %s
 - Exam Date: %s
+- Total Preparation Time: %d weeks
 - Weekly Study Hours: %d
 - Weak Sections: %s
 - Strengths: %s
 - Struggles: %s
 
+IMPORTANT: Generate a plan for exactly %d weeks (the full preparation period). Each week MUST have tasks for Monday through Sunday. Distribute %d hours/week across tasks.
+
 Return ONLY valid JSON (no markdown, no backticks):
 {
-  "overview": "2-3 paragraph strategy overview: what the student should focus on, why their weak areas matter, and the overall approach",
+  "totalWeeks": %d,
+  "overview": "3-4 paragraph detailed strategy overview: diagnose the student's current level, explain why their weak areas matter, describe the overall approach phase by phase, and set realistic expectations for improvement. Be personal and specific, not generic.",
   "strategy": {
-    "whatToFocusFirst": "What to prioritize in the first 2 weeks",
-    "urgentSkills": "Which skills need immediate attention and why",
+    "whatToFocusFirst": "What to prioritize in the first phase and why (2-3 sentences)",
+    "urgentSkills": "Which skills need immediate attention — explain exactly what's holding the student back",
     "stableSkills": "Which skills are already decent and need maintenance only",
-    "commonMistakes": "What mistakes are likely slowing this student down",
-    "dailyStructure": "Recommended daily study structure (morning/afternoon/evening)",
-    "timingStrategy": "How to manage time during practice and actual exam"
+    "commonMistakes": "3-4 specific mistakes students at this band level make and how to avoid them",
+    "dailyStructure": "Recommended daily study structure with morning/afternoon/evening breakdown and rest periods",
+    "timingStrategy": "How to manage time during practice and actual exam — section-by-section timing advice",
+    "weeklyCheckpoint": "What the student should evaluate every Sunday to stay on track"
   },
   "phases": [
     {
       "name": "Foundation",
       "weeks": "Week 1-2",
       "goal": "Build core skills and identify weak patterns",
-      "actions": "What to do in this phase",
-      "avoid": "What NOT to do yet",
-      "expectedProgress": "What improvement to expect by end of phase"
+      "actions": "Detailed list of what to do in this phase",
+      "avoid": "What NOT to do yet and why",
+      "expectedProgress": "What measurable improvement to expect by end of phase",
+      "milestone": "Specific achievement that marks this phase as complete (e.g., 'Complete 3 timed reading passages under 20 min each')",
+      "xpReward": 100
     }
   ],
   "weeklyGoals": [
     {
       "week": 1,
-      "focus": "Main focus area",
+      "focus": "Main focus area for this week",
+      "weeklyTarget": "One specific measurable target for the week (e.g., 'Score 6+ on 2 practice writing tasks')",
+      "motivationalNote": "Short encouraging message for this week (1-2 sentences)",
       "tasks": [
         {
           "day": "Monday",
           "skill": "reading",
           "activity": "Timed reading passage practice",
           "durationMinutes": 45,
-          "details": "Detailed step-by-step instructions",
-          "howTo": "Specific technique to use",
+          "details": "Detailed step-by-step instructions for this specific task",
+          "howTo": "Specific technique to use with examples",
           "whatToAvoid": "Common mistakes for this task",
-          "whyItMatters": "Why this task helps reach the target band"
+          "whyItMatters": "Why this task directly helps reach the target band",
+          "xpReward": 15,
+          "difficulty": "easy"
         }
       ]
     }
   ],
+  "milestones": [
+    {
+      "week": 2,
+      "title": "Foundation Complete",
+      "description": "You've built your study habits and identified your weak patterns",
+      "badge": "foundation",
+      "xpBonus": 50
+    },
+    {
+      "week": 4,
+      "title": "Halfway Hero",
+      "description": "You're halfway through your preparation — great discipline!",
+      "badge": "halfway",
+      "xpBonus": 100
+    }
+  ],
   "prioritySkills": ["writing", "speaking"],
-  "tips": ["Specific actionable tip 1", "Specific actionable tip 2"],
+  "tips": ["Specific actionable tip 1", "Specific actionable tip 2", "Tip 3", "Tip 4", "Tip 5"],
   "moduleGuide": {
-    "listening": "2-3 sentences on how to improve listening for this student",
-    "reading": "2-3 sentences on reading improvement strategy",
-    "writing": "2-3 sentences on writing improvement strategy",
-    "speaking": "2-3 sentences on speaking improvement strategy"
+    "listening": "3-4 sentences on how to improve listening for this student, with specific exercise types",
+    "reading": "3-4 sentences on reading improvement strategy with technique names",
+    "writing": "3-4 sentences on writing improvement strategy with task-specific advice",
+    "speaking": "3-4 sentences on speaking improvement strategy with practice methods"
   },
-  "examCountdown": "What to do in the final 7-10 days before the exam"
+  "examCountdown": "Detailed day-by-day plan for the final 7-10 days before the exam, including what to review, what to avoid, sleep/nutrition advice, and exam-day morning routine",
+  "dailyGoal": {
+    "tasksPerDay": 2,
+    "minutesPerDay": %d,
+    "description": "Complete your daily study tasks to earn XP and maintain your streak"
+  }
 }
 
-Include all 4 weeks. Each week should have tasks for Monday through Sunday. Distribute %d hours/week across tasks. Skills: reading, writing, listening, speaking, vocabulary, grammar. Make the overview and strategy sections detailed and personal, not generic.`,
+IMPORTANT RULES:
+- Generate ALL %d weeks with full Monday-Sunday tasks
+- Each task must have a difficulty: "easy", "medium", or "hard"
+- Each task must have xpReward: easy=10, medium=15, hard=25
+- Create 4-6 milestones spread across the preparation period (including start, mid-point, pre-exam, final)
+- Each phase xpReward should be 50-200 based on phase importance
+- Make tasks progressively harder as weeks advance
+- Final 1-2 weeks should focus on full mock exams and review
+- The motivationalNote for each week should be unique and encouraging
+- Skills: reading, writing, listening, speaking, vocabulary, grammar
+- Make everything personal and specific to THIS student's profile, not generic`,
 		req.CurrentBand,
 		req.TargetBand,
 		req.ExamType,
 		req.ExamDate,
+		totalWeeks,
 		req.WeeklyHours,
 		strings.Join(req.WeakSections, ", "),
 		strings.Join(req.Strengths, ", "),
 		strings.Join(req.Struggles, ", "),
+		totalWeeks,
 		req.WeeklyHours,
+		totalWeeks,
+		req.WeeklyHours*60/7,
+		totalWeeks,
 	)
 
 	raw, modelName, err := h.callLLM(prompt)
@@ -401,13 +479,14 @@ func parseJSONBField(field *string) any {
 // ── Task Completion ─────────────────────────────────────────────────────────
 
 type completeTaskRequest struct {
-	PlanID   string `json:"planId"`
-	Week     int    `json:"week"`
-	Day      string `json:"day"`
-	Skill    string `json:"skill"`
-	Activity string `json:"activity"`
-	Status   string `json:"status"`
-	Note     string `json:"note"`
+	PlanID     string `json:"planId"`
+	Week       int    `json:"week"`
+	Day        string `json:"day"`
+	Skill      string `json:"skill"`
+	Activity   string `json:"activity"`
+	Status     string `json:"status"`
+	Note       string `json:"note"`
+	Difficulty string `json:"difficulty"`
 }
 
 func (h *IELTSStudyPlanHandler) CompleteTask(w http.ResponseWriter, r *http.Request) {
@@ -429,12 +508,17 @@ func (h *IELTSStudyPlanHandler) CompleteTask(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// Calculate XP reward based on task difficulty
+	xpEarned := 0
+	wasAlreadyCompleted := false
+
 	// Upsert: find existing or create new
 	var existing models.IELTSTaskCompletion
 	result := h.db.Where("user_id = ? AND plan_id = ? AND week = ? AND day = ? AND skill = ?",
 		userID, req.PlanID, req.Week, req.Day, req.Skill).First(&existing)
 
 	if result.Error == nil {
+		wasAlreadyCompleted = existing.Status == "completed"
 		// Update existing
 		updates := map[string]any{"status": req.Status}
 		if strings.TrimSpace(req.Note) != "" {
@@ -442,34 +526,141 @@ func (h *IELTSStudyPlanHandler) CompleteTask(w http.ResponseWriter, r *http.Requ
 			updates["note"] = &note
 		}
 		h.db.Model(&existing).Updates(updates)
-		writeJSON(w, http.StatusOK, existing)
-		return
+
+		// Award XP only if transitioning TO completed (not already completed)
+		if req.Status == "completed" && !wasAlreadyCompleted {
+			xpEarned = calcTaskXP(req.Difficulty)
+		}
+	} else {
+		// Create new
+		var note *string
+		if strings.TrimSpace(req.Note) != "" {
+			n := strings.TrimSpace(req.Note)
+			note = &n
+		}
+
+		completion := models.IELTSTaskCompletion{
+			UserID:   userID,
+			PlanID:   req.PlanID,
+			Week:     req.Week,
+			Day:      req.Day,
+			Skill:    req.Skill,
+			Activity: req.Activity,
+			Status:   req.Status,
+			Note:     note,
+		}
+
+		if err := h.db.Create(&completion).Error; err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to save task completion", err)
+			return
+		}
+		existing = completion
+
+		if req.Status == "completed" {
+			xpEarned = calcTaskXP(req.Difficulty)
+		}
 	}
 
-	// Create new
-	var note *string
-	if strings.TrimSpace(req.Note) != "" {
-		n := strings.TrimSpace(req.Note)
-		note = &n
+	// Check for milestone bonuses and daily completion bonus
+	var milestoneUnlocked *map[string]any
+	if req.Status == "completed" {
+		// Daily completion bonus: +5 XP if all tasks for today are done
+		var todayTotal int64
+		var todayDone int64
+		h.db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND plan_id = ? AND week = ? AND day = ?", userID, req.PlanID, req.Week, req.Day).
+			Count(&todayTotal)
+		h.db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND plan_id = ? AND week = ? AND day = ? AND status = ?", userID, req.PlanID, req.Week, req.Day, "completed").
+			Count(&todayDone)
+		if todayTotal > 1 && todayDone == todayTotal {
+			xpEarned += 5 // daily completion bonus
+		}
+
+		// Weekly completion bonus: +25 XP if all tasks for the week are done
+		var weekTotal int64
+		var weekDone int64
+		h.db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND plan_id = ? AND week = ?", userID, req.PlanID, req.Week).
+			Count(&weekTotal)
+		h.db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND plan_id = ? AND week = ? AND status = ?", userID, req.PlanID, req.Week, "completed").
+			Count(&weekDone)
+		if weekTotal > 1 && weekDone == weekTotal {
+			xpEarned += 25 // weekly completion bonus
+		}
+
+		// Check milestones from plan data
+		var plan models.IELTSStudyPlan
+		if err := h.db.Where("id = ? AND user_id = ?", req.PlanID, userID).First(&plan).Error; err == nil {
+			milestoneUnlocked = checkMilestoneUnlock(plan, req.Week)
+			if milestoneUnlocked != nil {
+				if bonus, ok := (*milestoneUnlocked)["xpBonus"].(float64); ok {
+					xpEarned += int(bonus)
+				}
+			}
+		}
+
+		// Update user's total IELTS XP
+		if xpEarned > 0 {
+			h.db.Exec("UPDATE users SET points = COALESCE(points, 0) + ? WHERE id = ?", xpEarned, userID)
+		}
 	}
 
-	completion := models.IELTSTaskCompletion{
-		UserID:   userID,
-		PlanID:   req.PlanID,
-		Week:     req.Week,
-		Day:      req.Day,
-		Skill:    req.Skill,
-		Activity: req.Activity,
-		Status:   req.Status,
-		Note:     note,
+	response := map[string]any{
+		"task":    existing,
+		"xp":     xpEarned,
+	}
+	if milestoneUnlocked != nil {
+		response["milestone"] = *milestoneUnlocked
 	}
 
-	if err := h.db.Create(&completion).Error; err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to save task completion", err)
-		return
+	status := http.StatusOK
+	if result.Error != nil {
+		status = http.StatusCreated
 	}
+	writeJSON(w, status, response)
+}
 
-	writeJSON(w, http.StatusCreated, completion)
+// calcTaskXP returns XP reward based on task difficulty.
+func calcTaskXP(difficulty string) int {
+	switch strings.ToLower(strings.TrimSpace(difficulty)) {
+	case "hard":
+		return 25
+	case "medium":
+		return 15
+	case "easy":
+		return 10
+	default:
+		return 15
+	}
+}
+
+// checkMilestoneUnlock checks if completing a task in the given week unlocks a milestone.
+func checkMilestoneUnlock(plan models.IELTSStudyPlan, week int) *map[string]any {
+	planData := parseJSONBField(plan.PlanData)
+	pd, ok := planData.(map[string]any)
+	if !ok {
+		return nil
+	}
+	milestones, ok := pd["milestones"].([]any)
+	if !ok {
+		return nil
+	}
+	for _, m := range milestones {
+		ms, ok := m.(map[string]any)
+		if !ok {
+			continue
+		}
+		mWeek, ok := ms["week"].(float64)
+		if !ok {
+			continue
+		}
+		if int(mWeek) == week {
+			return &ms
+		}
+	}
+	return nil
 }
 
 func (h *IELTSStudyPlanHandler) GetTaskCompletions(w http.ResponseWriter, r *http.Request) {
@@ -527,8 +718,10 @@ func (h *IELTSStudyPlanHandler) GetRoadmapProgress(w http.ResponseWriter, r *htt
 	// Count total planned tasks from plan data
 	planData := parseJSONBField(plan.PlanData)
 	totalPlannedTasks := 0
+	totalWeeksInPlan := 0
 	if pd, ok := planData.(map[string]any); ok {
 		if weeks, ok := pd["weeklyGoals"].([]any); ok {
+			totalWeeksInPlan = len(weeks)
 			for _, w := range weeks {
 				if wk, ok := w.(map[string]any); ok {
 					if tasks, ok := wk["tasks"].([]any); ok {
@@ -572,6 +765,49 @@ func (h *IELTSStudyPlanHandler) GetRoadmapProgress(w http.ResponseWriter, r *htt
 		readiness = "building momentum"
 	}
 
+	// Calculate per-week completion for progress chart
+	weeklyProgress := make([]map[string]any, 0)
+	for w := 1; w <= totalWeeksInPlan; w++ {
+		var wPlanned int64
+		var wDone int64
+		h.db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND plan_id = ? AND week = ?", userID, plan.ID, w).Count(&wPlanned)
+		h.db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND plan_id = ? AND week = ? AND status = ?", userID, plan.ID, w, "completed").Count(&wDone)
+
+		pct := 0
+		if wPlanned > 0 {
+			pct = int(float64(wDone) / float64(wPlanned) * 100)
+		}
+		weeklyProgress = append(weeklyProgress, map[string]any{
+			"week":      w,
+			"planned":   wPlanned,
+			"completed": wDone,
+			"percent":   pct,
+		})
+	}
+
+	// Per-skill breakdown
+	skills := []string{"reading", "writing", "listening", "speaking", "vocabulary", "grammar"}
+	skillProgress := make(map[string]map[string]int64)
+	for _, skill := range skills {
+		var sTotal int64
+		var sDone int64
+		h.db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND plan_id = ? AND skill = ?", userID, plan.ID, skill).Count(&sTotal)
+		h.db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND plan_id = ? AND skill = ? AND status = ?", userID, plan.ID, skill, "completed").Count(&sDone)
+		if sTotal > 0 {
+			skillProgress[skill] = map[string]int64{"total": sTotal, "completed": sDone}
+		}
+	}
+
+	// Extract milestones with unlock status
+	milestones := extractMilestones(planData, currentWeek, completionPct)
+
+	// IELTS study streak (consecutive days with at least 1 completed task)
+	ieltsStreak := calcIELTSStreak(h.db, userID)
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"progress": map[string]any{
 			"planId":            plan.ID,
@@ -581,6 +817,7 @@ func (h *IELTSStudyPlanHandler) GetRoadmapProgress(w http.ResponseWriter, r *htt
 			"examType":          plan.ExamType,
 			"daysLeft":          daysLeft,
 			"currentWeek":       currentWeek,
+			"totalWeeks":        totalWeeksInPlan,
 			"totalPlannedTasks": totalPlannedTasks,
 			"completedTasks":    completedTasks,
 			"skippedTasks":      skippedTasks,
@@ -588,8 +825,63 @@ func (h *IELTSStudyPlanHandler) GetRoadmapProgress(w http.ResponseWriter, r *htt
 			"readiness":         readiness,
 			"weakSections":      parseJSONBField(plan.WeakSections),
 			"prioritySkills":    getPrioritySkills(planData),
+			"weeklyProgress":    weeklyProgress,
+			"skillProgress":     skillProgress,
+			"milestones":        milestones,
+			"ieltsStreak":       ieltsStreak,
 		},
 	})
+}
+
+// extractMilestones pulls milestones from plan data and marks which are unlocked.
+func extractMilestones(planData any, currentWeek, completionPct int) []map[string]any {
+	pd, ok := planData.(map[string]any)
+	if !ok {
+		return nil
+	}
+	raw, ok := pd["milestones"].([]any)
+	if !ok {
+		return nil
+	}
+	result := make([]map[string]any, 0, len(raw))
+	for _, m := range raw {
+		ms, ok := m.(map[string]any)
+		if !ok {
+			continue
+		}
+		mWeek := 0
+		if w, ok := ms["week"].(float64); ok {
+			mWeek = int(w)
+		}
+		unlocked := currentWeek > mWeek || (currentWeek == mWeek && completionPct >= 50)
+		entry := map[string]any{
+			"week":        mWeek,
+			"title":       ms["title"],
+			"description": ms["description"],
+			"badge":       ms["badge"],
+			"xpBonus":     ms["xpBonus"],
+			"unlocked":    unlocked,
+		}
+		result = append(result, entry)
+	}
+	return result
+}
+
+// calcIELTSStreak counts consecutive days (ending today) with at least one completed IELTS task.
+func calcIELTSStreak(db *gorm.DB, userID string) int {
+	streak := 0
+	for i := 0; i < 365; i++ {
+		date := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
+		var count int64
+		db.Model(&models.IELTSTaskCompletion{}).
+			Where("user_id = ? AND status = ? AND DATE(updated_at) = ?", userID, "completed", date).
+			Count(&count)
+		if count == 0 {
+			break
+		}
+		streak++
+	}
+	return streak
 }
 
 func getPrioritySkills(planData any) []string {
