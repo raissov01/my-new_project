@@ -178,7 +178,7 @@ export async function generateStudyPlan(payload: Record<string, unknown>) {
     method: "POST",
     body: JSON.stringify(payload),
     headers: { "Content-Type": "application/json" },
-    timeoutMs: 90_000,
+    timeoutMs: 300_000,
   });
 }
 
