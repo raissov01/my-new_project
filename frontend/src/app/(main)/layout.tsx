@@ -8,7 +8,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative z-10 flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1 bg-gradient-main">{children}</main>
     </div>
