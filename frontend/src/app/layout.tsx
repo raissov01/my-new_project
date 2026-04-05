@@ -4,6 +4,8 @@ import { LocaleProvider } from "@/components/providers/locale-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
