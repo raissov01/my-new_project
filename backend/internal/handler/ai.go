@@ -298,9 +298,9 @@ Output language: %s. %s
 Rules:
 - "front" = question/term, "back" = answer/definition (max 2-3 sentences)
 - No duplicates. Prioritize study value. Assign difficulty: easy/medium/hard.
-- Return ONLY a JSON array, no explanation.
+- Return ONLY valid JSON with this structure: {"cards": [...]}
 
-Each element: {"front":"...","back":"...","category":"...","difficulty":"easy|medium|hard","source":"..."}
+Each element in "cards": {"front":"...","back":"...","category":"...","difficulty":"easy|medium|hard","source":"..."}
 
 Text:
 %s`, count, langName, mi, text)
@@ -383,18 +383,18 @@ func callGemini(apiKey, model, prompt string, timeout time.Duration) ([]generate
 
 func callOpenAI(apiKey, model, prompt string, timeout time.Duration) ([]generatedCard, error) {
 	body := map[string]any{
-		"model":        model,
-		"instructions": "Return only a JSON array of flashcards. Do not include markdown or commentary.",
-		"input":        prompt,
-		"text": map[string]any{
-			"format": map[string]any{
-				"type": "text",
-			},
+		"model": model,
+		"messages": []map[string]string{
+			{"role": "system", "content": "Return ONLY a valid JSON array of flashcards. No markdown, no backticks, no commentary."},
+			{"role": "user", "content": prompt},
 		},
+		"temperature":     0.4,
+		"max_tokens":      16384,
+		"response_format": map[string]string{"type": "json_object"},
 	}
 
 	bodyBytes, _ := json.Marshal(body)
-	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/responses", bytes.NewReader(bodyBytes))
+	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, fmt.Errorf("build openai request: %w", err)
 	}
@@ -413,48 +413,42 @@ func callOpenAI(apiKey, model, prompt string, timeout time.Duration) ([]generate
 
 	if resp.StatusCode != http.StatusOK {
 		errBody, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 200)]))
+		return nil, fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
 	}
 
-	var openAIResp struct {
-		Output []struct {
-			Content []struct {
-				Type string `json:"type"`
-				Text string `json:"text"`
-			} `json:"content"`
-		} `json:"output"`
+	var chatResp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&openAIResp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
 		return nil, fmt.Errorf("decode openai response: %w", err)
 	}
 
-	raw := ""
-	for _, item := range openAIResp.Output {
-		for _, part := range item.Content {
-			if part.Type == "output_text" && strings.TrimSpace(part.Text) != "" {
-				raw = part.Text
-				break
-			}
-		}
-		if raw != "" {
-			break
-		}
-	}
-
-	if raw == "" {
+	if len(chatResp.Choices) == 0 || strings.TrimSpace(chatResp.Choices[0].Message.Content) == "" {
 		return nil, fmt.Errorf("openai returned empty output")
 	}
 
-	raw = strings.TrimSpace(raw)
+	raw := strings.TrimSpace(chatResp.Choices[0].Message.Content)
 	raw = strings.TrimPrefix(raw, "```json")
 	raw = strings.TrimPrefix(raw, "```")
 	raw = strings.TrimSuffix(raw, "```")
 	raw = strings.TrimSpace(raw)
 
+	// Try parsing as array directly, or as {"cards": [...]} wrapper
 	var cards []generatedCard
 	if err := json.Unmarshal([]byte(raw), &cards); err != nil {
-		return nil, fmt.Errorf("parse cards: %w", err)
+		// Try wrapped format: {"cards": [...]}
+		var wrapped struct {
+			Cards []generatedCard `json:"cards"`
+		}
+		if err2 := json.Unmarshal([]byte(raw), &wrapped); err2 != nil {
+			return nil, fmt.Errorf("parse cards: %w", err)
+		}
+		cards = wrapped.Cards
 	}
 
 	var valid []generatedCard
