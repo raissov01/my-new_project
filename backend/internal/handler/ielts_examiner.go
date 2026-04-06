@@ -524,7 +524,7 @@ func callGeminiRaw(apiKey, model, prompt string, timeout time.Duration) (string,
 		"generationConfig": map[string]any{
 			"temperature":      0.3,
 			"topP":             0.9,
-			"maxOutputTokens":  16384,
+			"maxOutputTokens":  40000,
 			"responseMimeType": "application/json",
 		},
 	}
@@ -574,7 +574,7 @@ func callClaudeChatCompletion(apiKey, model, apiURL, prompt string, timeout time
 			{"role": "user", "content": prompt},
 		},
 		"temperature": 0.3,
-		"max_tokens":  16384,
+		"max_tokens":  40000,
 	}
 
 	bodyBytes, _ := json.Marshal(body)
@@ -626,7 +626,7 @@ func callOpenAIChatCompletion(apiKey, model, prompt string, timeout time.Duratio
 			{"role": "user", "content": prompt},
 		},
 		"temperature":      0.3,
-		"max_tokens":        16384,
+		"max_tokens":        40000,
 		"response_format": map[string]string{"type": "json_object"},
 	}
 

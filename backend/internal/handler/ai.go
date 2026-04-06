@@ -314,7 +314,7 @@ func callGemini(apiKey, model, prompt string, timeout time.Duration) ([]generate
 		"generationConfig": map[string]any{
 			"temperature":      0.4,
 			"topP":             0.9,
-			"maxOutputTokens":  8192,
+			"maxOutputTokens":  40000,
 			"responseMimeType": "application/json",
 		},
 	}
@@ -389,7 +389,7 @@ func callOpenAI(apiKey, model, prompt string, timeout time.Duration) ([]generate
 			{"role": "user", "content": prompt},
 		},
 		"temperature":     0.4,
-		"max_tokens":      16384,
+		"max_tokens":      40000,
 		"response_format": map[string]string{"type": "json_object"},
 	}
 
