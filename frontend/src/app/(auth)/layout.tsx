@@ -8,7 +8,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-main px-4 py-4 sm:px-5 sm:py-6 lg:px-8">
+    <div className="relative z-10 min-h-screen bg-gradient-main px-4 py-4 sm:px-5 sm:py-6 lg:px-8">
       <div className="mx-auto flex max-w-6xl justify-end">
         <LanguageSwitcher />
       </div>
