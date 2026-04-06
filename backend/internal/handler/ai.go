@@ -31,7 +31,7 @@ const (
 	maxAICardCount          = 600
 	maxCardsPerAIBatch      = 50
 	defaultAITextLimitRunes = 30000
-	maxAITextLimitRunes     = 120000
+	maxAITextLimitRunes     = 360000
 )
 
 func NewAI(openAIKey, openAIModel, geminiKey, geminiModel string, requestTimeout time.Duration, maxBytes int64) *AIHandler {
