@@ -390,9 +390,7 @@ func callOpenAI(apiKey, model, prompt string, timeout time.Duration) ([]generate
 			{"role": "system", "content": "Return ONLY a valid JSON array of flashcards. No markdown, no backticks, no commentary."},
 			{"role": "user", "content": prompt},
 		},
-		"temperature":            0.4,
-		"max_completion_tokens":  40000,
-		"response_format": map[string]string{"type": "json_object"},
+		"max_completion_tokens": 40000,
 	}
 
 	bodyBytes, _ := json.Marshal(body)

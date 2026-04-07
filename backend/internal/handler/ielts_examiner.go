@@ -625,9 +625,7 @@ func callOpenAIChatCompletion(apiKey, model, prompt string, timeout time.Duratio
 			{"role": "system", "content": "You are an expert IELTS examiner. Return ONLY valid JSON with no markdown, no backticks, no commentary."},
 			{"role": "user", "content": prompt},
 		},
-		"temperature":            0.3,
-		"max_completion_tokens":  40000,
-		"response_format": map[string]string{"type": "json_object"},
+		"max_completion_tokens": 40000,
 	}
 
 	bodyBytes, _ := json.Marshal(body)
