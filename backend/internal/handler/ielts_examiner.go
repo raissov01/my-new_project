@@ -477,25 +477,7 @@ func (h *IELTSExaminerHandler) callLLM(prompt string) (string, string, error) {
 }
 
 func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error) {
-	// Try Claude Opus first (primary for IELTS features)
-	if strings.TrimSpace(h.claudeKey) != "" {
-		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, prompt, h.timeout)
-		if err == nil {
-			return raw, h.claudeModel, nil
-		}
-		log.Printf("[llm] Claude Opus failed: %v", err)
-
-		// Fallback to Claude Sonnet
-		if strings.TrimSpace(h.claudeFallback) != "" {
-			raw, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, prompt, h.timeout)
-			if err == nil {
-				return raw, h.claudeFallback, nil
-			}
-			log.Printf("[llm] Claude Sonnet failed: %v", err)
-		}
-	}
-
-	// Fallback to OpenAI (GPT)
+	// Primary: OpenAI (GPT-5.4)
 	if strings.TrimSpace(h.openAIKey) != "" {
 		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, prompt, h.timeout)
 		if err == nil {
@@ -504,7 +486,7 @@ func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error
 		log.Printf("[llm] OpenAI failed: %v", err)
 	}
 
-	// Last resort: Gemini
+	// Fallback: Gemini
 	if strings.TrimSpace(h.geminiKey) != "" {
 		raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, h.timeout)
 		if err == nil {
