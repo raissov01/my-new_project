@@ -139,10 +139,12 @@ func (h *AIHandler) generateCards(text, mode, language string, count int) ([]gen
 }
 
 func (h *AIHandler) generateBatch(prompt string) ([]generatedCard, string, error) {
+	// Use gpt-5-mini for flashcards — faster and cheaper than the main IELTS model
+	flashcardModel := "gpt-5-mini"
 	if strings.TrimSpace(h.openAIKey) != "" {
-		cards, err := callOpenAI(h.openAIKey, h.openAIModel, prompt, h.requestTimeout)
+		cards, err := callOpenAI(h.openAIKey, flashcardModel, prompt, h.requestTimeout)
 		if err == nil {
-			return cards, h.openAIModel, nil
+			return cards, flashcardModel, nil
 		}
 		if strings.TrimSpace(h.geminiKey) == "" {
 			return nil, "", err
