@@ -169,17 +169,72 @@ export async function getStudyPlan() {
   });
 }
 
-export async function generateStudyPlan(payload: Record<string, unknown>) {
+// startStudyPlanGeneration enqueues a study-plan generation job on the backend
+// and returns the job ID immediately. The actual LLM call runs in a backend
+// goroutine; the client polls pollStudyPlanJob() for completion. This avoids
+// upstream proxy / Next.js server-action timeouts on long LLM responses.
+export async function startStudyPlanGeneration(
+  payload: Record<string, unknown>
+): Promise<{ jobId: string; error?: never } | { jobId?: never; error: string }> {
   const user = await requireUser();
 
-  return fetchBackendJson<{ plan: Record<string, unknown> }>({
-    path: "/api/v1/ielts/study-plan",
-    userId: user.id,
-    method: "POST",
-    body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json" },
-    timeoutMs: 300_000,
-  });
+  try {
+    const data = await fetchBackendJson<{ jobId: string; status: string }>({
+      path: "/api/v1/ielts/study-plan",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+      timeoutMs: 15_000,
+    });
+    return { jobId: data.jobId };
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Failed to start study plan generation",
+    };
+  }
+}
+
+// pollStudyPlanJob fetches the current status of a generation job. The client
+// should call this every few seconds until status is "done" or "failed".
+export async function pollStudyPlanJob(
+  jobId: string
+): Promise<
+  | { status: "pending" | "running"; plan?: never; error?: never }
+  | { status: "done"; plan: Record<string, unknown>; error?: never }
+  | { status: "failed"; plan?: never; error: string }
+  | { status: "error"; plan?: never; error: string }
+> {
+  const user = await requireUser();
+
+  try {
+    const data = await fetchBackendJson<{
+      jobId: string;
+      status: "pending" | "running" | "done" | "failed";
+      plan?: Record<string, unknown>;
+      error?: string;
+    }>({
+      path: `/api/v1/ielts/study-plan/jobs/${encodeURIComponent(jobId)}`,
+      userId: user.id,
+      timeoutMs: 15_000,
+    });
+
+    if (data.status === "done" && data.plan) {
+      return { status: "done", plan: data.plan };
+    }
+    if (data.status === "failed") {
+      return { status: "failed", error: data.error ?? "Generation failed" };
+    }
+    if (data.status === "pending" || data.status === "running") {
+      return { status: data.status };
+    }
+    return { status: "error", error: "Unexpected job status" };
+  } catch (err) {
+    return {
+      status: "error",
+      error: err instanceof Error ? err.message : "Failed to poll study plan job",
+    };
+  }
 }
 
 export async function completeStudyTask(payload: {

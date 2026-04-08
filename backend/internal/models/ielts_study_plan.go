@@ -48,3 +48,24 @@ type IELTSWeeklyReflection struct {
 func (IELTSWeeklyReflection) TableName() string {
 	return "ielts_weekly_reflections"
 }
+
+// IELTSStudyPlanJob tracks an asynchronous study-plan generation job.
+// The HTTP handler returns the job ID immediately and runs the LLM call in
+// a background goroutine; the frontend polls for completion. This avoids
+// being killed by upstream proxy timeouts on long LLM requests.
+type IELTSStudyPlanJob struct {
+	ID            string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	UserID        string     `gorm:"type:uuid;not null;index" json:"userId"`
+	Status        string     `gorm:"not null;default:'pending';check:status IN ('pending','running','done','failed')" json:"status"`
+	Questionnaire *string    `gorm:"type:jsonb" json:"questionnaire"`
+	PlanID        *string    `gorm:"type:uuid" json:"planId"`
+	ErrorMessage  *string    `gorm:"type:text" json:"errorMessage"`
+	StartedAt     *time.Time `json:"startedAt"`
+	FinishedAt    *time.Time `json:"finishedAt"`
+	CreatedAt     time.Time  `gorm:"autoCreateTime;index" json:"createdAt"`
+	UpdatedAt     time.Time  `gorm:"autoUpdateTime" json:"updatedAt"`
+}
+
+func (IELTSStudyPlanJob) TableName() string {
+	return "ielts_study_plan_jobs"
+}

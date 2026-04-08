@@ -40,24 +40,49 @@ func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeMod
 // ── LLM call ────────────────────────────────────────────────────────────────
 
 func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
-	// Primary: OpenAI (GPT-5.4)
-	if strings.TrimSpace(h.openAIKey) != "" {
-		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, prompt, h.timeout)
-		if err == nil {
-			return raw, h.openAIModel, nil
-		}
-		log.Printf("[llm] OpenAI failed: %v", err)
+	start := time.Now()
+
+	// Per-provider timeout MUST be small enough that the whole chain finishes
+	// before the Next.js server-action call is killed by the upstream proxy
+	// (~60-100s on most hosts). 45s per provider × 3 providers ≈ 135s worst case,
+	// but in practice a single provider returns within 30-50s.
+	perProviderTimeout := 45 * time.Second
+	if h.timeout > 0 && h.timeout < perProviderTimeout {
+		perProviderTimeout = h.timeout
 	}
 
-	// Fallback: Gemini
-	if strings.TrimSpace(h.geminiKey) != "" {
-		raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, h.timeout)
+	// Primary: Claude via do-ai.run (llama3.3-70b) — non-reasoning model, fast & cheap.
+	if strings.TrimSpace(h.claudeKey) != "" && strings.TrimSpace(h.claudeURL) != "" {
+		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, prompt, perProviderTimeout)
 		if err == nil {
+			log.Printf("[study-plan-llm] success via Claude: model=%s time=%v len=%d", h.claudeModel, time.Since(start), len(raw))
+			return raw, h.claudeModel, nil
+		}
+		log.Printf("[study-plan-llm] Claude failed: %v", err)
+	}
+
+	// Fallback 1: OpenAI gpt-5-mini — much faster than gpt-5 (no heavy reasoning).
+	if strings.TrimSpace(h.openAIKey) != "" {
+		fastModel := "gpt-5-mini"
+		raw, err := callOpenAIChatCompletion(h.openAIKey, fastModel, prompt, perProviderTimeout)
+		if err == nil {
+			log.Printf("[study-plan-llm] success via OpenAI: model=%s time=%v len=%d", fastModel, time.Since(start), len(raw))
+			return raw, fastModel, nil
+		}
+		log.Printf("[study-plan-llm] OpenAI %s failed: %v", fastModel, err)
+	}
+
+	// Fallback 2: Gemini.
+	if strings.TrimSpace(h.geminiKey) != "" {
+		raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, perProviderTimeout)
+		if err == nil {
+			log.Printf("[study-plan-llm] success via Gemini: model=%s time=%v len=%d", h.geminiModel, time.Since(start), len(raw))
 			return raw, h.geminiModel, nil
 		}
-		log.Printf("[llm] Gemini failed: %v", err)
+		log.Printf("[study-plan-llm] Gemini failed: %v", err)
 	}
 
+	log.Printf("[study-plan-llm] all providers failed (total: %v)", time.Since(start))
 	return "", "", fmt.Errorf("all AI providers failed")
 }
 
@@ -106,6 +131,82 @@ func (h *IELTSStudyPlanHandler) GeneratePlan(w http.ResponseWriter, r *http.Requ
 	if strings.TrimSpace(req.ExamType) == "" {
 		req.ExamType = "academic"
 	}
+
+	// Persist the job up front and kick off generation in the background.
+	// The HTTP handler returns immediately so the upstream proxy / Next.js
+	// server-action does not time out on a slow LLM call. The frontend polls
+	// GET /ielts/study-plan/jobs/:id for completion.
+	questionnaireBytes, _ := json.Marshal(req)
+	questionnaireStr := string(questionnaireBytes)
+	job := models.IELTSStudyPlanJob{
+		UserID:        userID,
+		Status:        "pending",
+		Questionnaire: &questionnaireStr,
+	}
+	if err := h.db.Create(&job).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to enqueue job", err)
+		return
+	}
+
+	go h.runPlanGeneration(job.ID, userID, req)
+
+	writeJSON(w, http.StatusAccepted, map[string]any{
+		"jobId":  job.ID,
+		"status": "pending",
+	})
+}
+
+// GetPlanJob returns the current state of an asynchronous study-plan generation job.
+func (h *IELTSStudyPlanHandler) GetPlanJob(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	jobID := strings.TrimSpace(r.PathValue("jobID"))
+	if jobID == "" {
+		writeError(w, http.StatusBadRequest, "jobID is required", nil)
+		return
+	}
+
+	var job models.IELTSStudyPlanJob
+	if err := h.db.Where("id = ? AND user_id = ?", jobID, userID).First(&job).Error; err != nil {
+		writeError(w, http.StatusNotFound, "job not found", err)
+		return
+	}
+
+	resp := map[string]any{
+		"jobId":  job.ID,
+		"status": job.Status,
+	}
+	if job.ErrorMessage != nil {
+		resp["error"] = *job.ErrorMessage
+	}
+	if job.Status == "done" && job.PlanID != nil {
+		var plan models.IELTSStudyPlan
+		if err := h.db.Where("id = ?", *job.PlanID).First(&plan).Error; err == nil {
+			resp["plan"] = serializeStudyPlan(plan)
+		}
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// runPlanGeneration executes the LLM call and persists the resulting plan.
+// It MUST be called in a goroutine — it intentionally does not use the HTTP
+// request context, so it survives the original HTTP connection closing.
+func (h *IELTSStudyPlanHandler) runPlanGeneration(jobID, userID string, req generatePlanRequest) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			log.Printf("[study-plan-job] panic in job %s: %v", jobID, rec)
+			h.failJob(jobID, fmt.Sprintf("internal panic: %v", rec))
+		}
+	}()
+
+	now := time.Now()
+	h.db.Model(&models.IELTSStudyPlanJob{}).
+		Where("id = ?", jobID).
+		Updates(map[string]any{"status": "running", "started_at": now})
 
 	// Calculate total weeks dynamically from exam date
 	totalWeeks := 4 // default
@@ -280,7 +381,8 @@ IMPORTANT RULES:
 
 	raw, modelName, err := h.callLLM(prompt)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "AI plan generation failed: "+err.Error(), err)
+		log.Printf("[study-plan-job] job %s: LLM failed: %v", jobID, err)
+		h.failJob(jobID, "AI plan generation failed: "+err.Error())
 		return
 	}
 
@@ -331,11 +433,32 @@ IMPORTANT RULES:
 	}
 
 	if err := h.db.Create(&plan).Error; err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to save study plan", err)
+		log.Printf("[study-plan-job] job %s: failed to save plan: %v", jobID, err)
+		h.failJob(jobID, "Failed to save study plan")
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]any{"plan": serializeStudyPlan(plan)})
+	finished := time.Now()
+	h.db.Model(&models.IELTSStudyPlanJob{}).
+		Where("id = ?", jobID).
+		Updates(map[string]any{
+			"status":      "done",
+			"plan_id":     plan.ID,
+			"finished_at": finished,
+		})
+	log.Printf("[study-plan-job] job %s: completed (planID=%s)", jobID, plan.ID)
+}
+
+// failJob marks a job as failed with the given error message.
+func (h *IELTSStudyPlanHandler) failJob(jobID, msg string) {
+	finished := time.Now()
+	h.db.Model(&models.IELTSStudyPlanJob{}).
+		Where("id = ?", jobID).
+		Updates(map[string]any{
+			"status":        "failed",
+			"error_message": msg,
+			"finished_at":   finished,
+		})
 }
 
 // ── Get Plan ────────────────────────────────────────────────────────────────

@@ -22,10 +22,11 @@ import { Button } from "@/components/ui/button";
 import {
   checkAdaptive,
   completeStudyTask,
-  generateStudyPlan,
   getPlanHistory,
   getStudyPlan,
   getTaskCompletions,
+  pollStudyPlanJob,
+  startStudyPlanGeneration,
   submitReflection,
 } from "../simulator/attempt-actions";
 
@@ -191,10 +192,43 @@ export function IELTSStudyPlanClient() {
     setSubmitting(true);
     setError(null);
     try {
-      const response = await generateStudyPlan(wizardData);
-      setPlan(response.plan as StudyPlan);
-      setShowWizard(false);
-      setWizardStep(0);
+      // Step 1: enqueue job (returns immediately)
+      const start = await startStudyPlanGeneration(wizardData);
+      if (!start.jobId) {
+        setError(start.error ?? "Failed to start generation.");
+        return;
+      }
+      const jobId = start.jobId;
+
+      // Step 2: poll until done / failed. Cap at 5 minutes (150 attempts × 2s).
+      const maxAttempts = 150;
+      const intervalMs = 2_000;
+      let finalError: string | null = null;
+      let finalPlan: StudyPlan | null = null;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await new Promise((r) => setTimeout(r, intervalMs));
+        const status = await pollStudyPlanJob(jobId);
+        if (status.status === "done") {
+          finalPlan = status.plan as StudyPlan;
+          break;
+        }
+        if (status.status === "failed" || status.status === "error") {
+          finalError = status.error;
+          break;
+        }
+        // pending / running → keep polling
+      }
+
+      if (finalPlan) {
+        setPlan(finalPlan);
+        setShowWizard(false);
+        setWizardStep(0);
+      } else if (finalError) {
+        setError(finalError);
+      } else {
+        setError("Generation timed out. Please try again.");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate plan.");
     } finally {

@@ -145,6 +145,7 @@ func RegisterRoutes(router *gin.Engine) {
 		// IELTS study plan
 		internal.POST("/ielts/study-plan", wrapHTTP(deps.IELTSStudyPlan.GeneratePlan))
 		internal.GET("/ielts/study-plan", wrapHTTP(deps.IELTSStudyPlan.GetPlan))
+		internal.GET("/ielts/study-plan/jobs/:jobID", wrapHTTP(deps.IELTSStudyPlan.GetPlanJob))
 		internal.PUT("/ielts/study-plan/:planID", wrapHTTP(deps.IELTSStudyPlan.UpdatePlan))
 		internal.POST("/ielts/study-plan/task", wrapHTTP(deps.IELTSStudyPlan.CompleteTask))
 		internal.GET("/ielts/study-plan/tasks", wrapHTTP(deps.IELTSStudyPlan.GetTaskCompletions))
