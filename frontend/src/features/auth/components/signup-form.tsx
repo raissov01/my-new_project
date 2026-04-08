@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, GraduationCap, ShieldCheck } from "lucide-react";
 import { signup } from "@/app/(auth)/actions";
@@ -269,10 +269,17 @@ function ResendVerificationForm() {
   const [pending, setPending] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   async function handleResend(e: React.FormEvent) {
     e.preventDefault();
-    if (pending || !email.trim()) return;
+    if (pending || cooldown > 0 || !email.trim()) return;
 
     setPending(true);
     setSuccess(null);
@@ -288,6 +295,7 @@ function ResendVerificationForm() {
 
       if (resp.ok) {
         setSuccess(data?.message ?? t("verify.resendSuccess"));
+        setCooldown(30);
       } else {
         setError(data?.error ?? t("verify.genericError"));
       }
@@ -297,6 +305,8 @@ function ResendVerificationForm() {
       setPending(false);
     }
   }
+
+  const isDisabled = pending || cooldown > 0;
 
   return (
     <form onSubmit={handleResend} className="space-y-3.5">
@@ -308,7 +318,7 @@ function ResendVerificationForm() {
         placeholder={t("auth.emailPlaceholder")}
         required
         autoComplete="email"
-        disabled={pending}
+        disabled={isDisabled}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
@@ -327,8 +337,8 @@ function ResendVerificationForm() {
         </div>
       )}
 
-      <Button type="submit" className="w-full" size="lg" isLoading={pending} disabled={pending}>
-        {t("verify.resendBtn")}
+      <Button type="submit" className="w-full" size="lg" isLoading={pending} disabled={isDisabled}>
+        {cooldown > 0 ? `${t("verify.resendBtn")} (${cooldown}s)` : t("verify.resendBtn")}
       </Button>
     </form>
   );
