@@ -1,25 +1,15 @@
 # syntax=docker/dockerfile:1.7
-FROM golang:1.24-alpine AS builder
-
-# GOTOOLCHAIN=auto lets Go 1.24 auto-download the Go 1.25 toolchain
-# required by go.mod, without needing a golang:1.25 base image.
-ENV GOTOOLCHAIN=auto
+# Use golang:1.25-alpine directly — avoids GOTOOLCHAIN=auto downloading the
+# 1.25 toolchain on every cold build (~150 MB, adds 10-20 min to VPS builds).
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-# Cache the module download layer separately so changing source files does
-# not re-download dependencies.
 COPY go.mod ./
 COPY go.sum* ./
 RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download 2>/dev/null || true
+    go mod download
 
-# Copy source AFTER module download so source edits don't bust the module cache.
-# Cache mounts target only the Go module + build caches — never source dirs —
-# so the actual binary is always recompiled from the freshly copied source on
-# every build (this is the bug the previous "remove cache mounts" commit was
-# trying to fix; the real cause was a missing source COPY ordering, not the
-# caches themselves).
 COPY . .
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
