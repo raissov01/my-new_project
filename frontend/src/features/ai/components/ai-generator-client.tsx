@@ -81,6 +81,8 @@ const ERROR_MAP: Record<string, string> = {
   GENERATION_FAILED: "ai.errorGeneric",
   PDF_PARSER_UNAVAILABLE: "ai.errorExtraction",
   DOCX_PARSER_UNAVAILABLE: "ai.errorExtraction",
+  PDF_EXTRACTION_FAILED: "ai.errorExtraction",
+  DOCX_EXTRACTION_FAILED: "ai.errorExtraction",
 };
 
 function buildUiError(

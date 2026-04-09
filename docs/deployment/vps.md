@@ -1,81 +1,80 @@
-# VPS Deployment Guide
+# VPS Deployment Guide (DigitalOcean)
 
-## Production Setup
+## Architecture
 
-This project is deployed to the VPS with Docker Swarm, not Docker Compose.
-
-Runtime services:
-
-- `swr_frontend`
-- `swr_backend`
-- `swr_nginx`
-- `swr_postgres`
-
-The server keeps `frontend/.env` and `backend/.env` on disk under:
-
-```bash
-/opt/studywithraissov
+```text
+Internet
+    ↓
+  Nginx (port 80/443)
+    ├── /api/v1/*  → Go backend (port 5000)
+    └── /*         → Next.js frontend (port 3000)
 ```
 
-## First-Time Setup
+## Prerequisites
+
+- Ubuntu 22.04+ VPS
+- Docker Engine + Docker Compose plugin
+- Optional: host Nginx + certbot if you want TLS outside containers
+
+## Setup
+
+### 1. Clone and prepare env files
 
 ```bash
 git clone <repo> /opt/studywithraissov
 cd /opt/studywithraissov
 cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
-bash docker/swarm-init.sh
 ```
 
-## Smart Deploy
+### 2. Configure production values
 
-Pushes to `main` trigger `.github/workflows/deploy.yml`.
+`frontend/.env`
 
-The workflow:
+```env
+NEXT_PUBLIC_APP_URL=https://studywithraissov.com
+NEXT_PUBLIC_API_URL=https://studywithraissov.com/api/v1
+BACKEND_INTERNAL_TOKEN=replace-with-a-long-random-secret
+```
 
-1. Detects what changed.
-2. Skips deploy if only docs or deploy-tooling changed.
-3. Builds only changed runtime images.
-4. Updates only changed services.
-5. Applies `docker/stack.yml` only when stack-level runtime config changed.
+`backend/.env`
 
-## Manual Smart Deploy
+```env
+PORT=5000
+ENVIRONMENT=production
+CORS_ORIGINS=https://studywithraissov.com
+DATABASE_URL=postgresql://...
+JWT_SECRET=replace-with-a-long-random-secret
+BACKEND_INTERNAL_TOKEN=replace-with-the-same-secret
+OPENAI_API_KEY=
+```
 
-If you need to run the selective deploy logic directly on the server:
+### 3. Start the stack
 
 ```bash
-cd /opt/studywithraissov
-DEPLOY_FRONTEND=true \
-DEPLOY_BACKEND=false \
-DEPLOY_NGINX=false \
-APPLY_STACK=false \
-RUN_MIGRATIONS=false \
-bash docker/smart-deploy.sh
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
-## Manual Full Deploy
-
-If you intentionally want a full runtime rollout:
+### 4. Check health
 
 ```bash
-cd /opt/studywithraissov
-bash docker/swarm-deploy.sh
+docker compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml logs -f
 ```
 
-## Health Checks
+### 5. TLS options
 
-```bash
-docker stack services swr
-docker stack ps swr --no-trunc
-docker service logs swr_backend --tail 80
-docker service logs swr_frontend --tail 80
-curl -sf https://studywithraissov.com/health
-curl -sf https://studywithraissov.com
-```
+- Option A: terminate TLS on the host with `docker/nginx.host.conf` + certbot
+- Option B: put Cloudflare or a load balancer in front of the droplet
+- Option C: replace the nginx container with Traefik or Caddy
 
-## Runtime Config Notes
+## Environment Strategy
 
-- Active production Nginx config: `docker/nginx.conf`
-- `docker/nginx.host.conf` is an alternative host-nginx setup, not the active Swarm runtime path
-- Active production stack file: `docker/stack.yml`
-- `docker/docker-compose.yml` is kept for non-Swarm/local use and is not the current production deploy path
+| Variable | Example |
+|----------|---------|
+| `NEXT_PUBLIC_APP_URL` | `https://studywithraissov.com` |
+| `NEXT_PUBLIC_API_URL` | `https://studywithraissov.com/api/v1` |
+| `BACKEND_URL` | `http://backend:5000` |
+| `BACKEND_INTERNAL_TOKEN` | `<secret>` |
+
+If `NEXT_PUBLIC_API_URL` is unset, the frontend falls back to `/api/v1` on the same host.

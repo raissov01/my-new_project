@@ -26,8 +26,6 @@ import { fetchIELTSMockExam, fetchIELTSQuestions } from "@/features/ielts/api";
 import { useAutosave } from "@/features/ielts/use-autosave";
 import { useExamMode } from "@/features/ielts/use-exam-mode";
 import { ExamViolationModal } from "@/features/ielts/components/exam-violation-modal";
-import { ListeningSectionPlayer } from "@/features/ielts/components/listening-section-player";
-import { ReadingSplitScreen } from "@/features/ielts/components/reading-split-screen";
 import { SpeakingRecorderPanel } from "@/features/ielts/components/speaking-recorder-panel";
 import {
   abandonAttempt,
@@ -82,10 +80,8 @@ export function SimulatorClient() {
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptStartedAt, setAttemptStartedAt] = useState<number | null>(null);
   const [isTerminating, setIsTerminating] = useState(false);
-  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
-  const [speakingPrepTime, setSpeakingPrepTime] = useState(0);
-  const prepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasUserInteractionRef = useRef(false);
 
   const goToConfigure = useCallback(() => {
     setStage("configure");
@@ -110,6 +106,10 @@ export function SimulatorClient() {
       window.speechSynthesis.cancel();
     }
     setPlayingGroupKey(null);
+  }, []);
+
+  const markUserInteraction = useCallback(() => {
+    hasUserInteractionRef.current = true;
   }, []);
 
   useEffect(
@@ -229,14 +229,6 @@ export function SimulatorClient() {
   }, [activeSectionIndex, currentSection, stage, startSectionTimer]);
 
   async function handleStartMock() {
-    // Request fullscreen immediately — must happen in the user-gesture call stack
-    // before any await, otherwise the browser blocks it.
-    if (strictMode && typeof document !== "undefined" && !document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {
-        // Some browsers may still block; exam will work without fullscreen.
-      });
-    }
-
     setStage("loading");
     setError(null);
     stopSpeaking();
@@ -291,6 +283,12 @@ export function SimulatorClient() {
       setShowListeningTranscript({});
       setAttemptId(startedAttempt.id);
       setAttemptStartedAt(Date.now());
+      hasUserInteractionRef.current = false;
+
+      if (strictMode) {
+        await examMode.requestFullscreen();
+      }
+
       setStage("exam");
     } catch (loadError) {
       setError(
@@ -444,19 +442,8 @@ export function SimulatorClient() {
   }
 
   function handleObjectiveAnswer(questionId: string, value: string) {
+    markUserInteraction();
     setObjectiveAnswers((prev) => ({ ...prev, [questionId]: value }));
-  }
-
-  function handleFlagQuestion(questionId: string) {
-    setFlaggedQuestions((prev) => {
-      const next = new Set(prev);
-      if (next.has(questionId)) {
-        next.delete(questionId);
-      } else {
-        next.add(questionId);
-      }
-      return next;
-    });
   }
 
   function handlePlayListening(group: QuestionGroup) {
@@ -557,6 +544,26 @@ export function SimulatorClient() {
       await autosaveAttempt(attemptId, payload);
     },
   });
+
+  useEffect(() => {
+    if (stage !== "exam" || !attemptId || !hasUserInteractionRef.current) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void autosaveAttempt(attemptId, {
+        answers: answersPayload,
+        sectionProgress,
+        timeTakenSecs: attemptStartedAt
+          ? Math.max(0, Math.floor((Date.now() - attemptStartedAt) / 1000))
+          : 0,
+      });
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [answersPayload, attemptId, attemptStartedAt, sectionProgress, stage]);
 
   useEffect(() => {
     if (!isTerminating) return;
@@ -907,24 +914,13 @@ export function SimulatorClient() {
               {currentSection.instructions}
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            {autosave.lastSavedAt && (
-              <div className="text-right text-xs text-[var(--text-muted)]">
-                {autosave.isSaving ? (
-                  <span className="text-amber-400">Saving...</span>
-                ) : (
-                  <span>Saved {Math.max(0, Math.floor((Date.now() - autosave.lastSavedAt.getTime()) / 1000))}s ago</span>
-                )}
-              </div>
-            )}
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-right">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                Section timer
-              </p>
-              <p className={`mt-1 text-2xl font-semibold ${timeLeft < 60 ? "text-red-400" : "text-[var(--text-primary)]"}`}>
-                {formatTime(timeLeft)}
-              </p>
-            </div>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-right">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
+              Section timer
+            </p>
+            <p className={`mt-1 text-2xl font-semibold ${timeLeft < 60 ? "text-red-400" : "text-[var(--text-primary)]"}`}>
+              {formatTime(timeLeft)}
+            </p>
           </div>
         </div>
 
@@ -945,71 +941,93 @@ export function SimulatorClient() {
         </div>
       </div>
 
-      {currentSection.key === "reading" && currentSection.passages && currentSection.passages.length > 0 && (
-        <ReadingSplitScreen
-          passages={currentSection.passages}
-          answers={objectiveAnswers}
-          flagged={flaggedQuestions}
-          revealed={isCurrentSectionRevealed}
-          onAnswer={handleObjectiveAnswer}
-          onFlag={handleFlagQuestion}
-        />
-      )}
-
-      {currentSection.key === "reading" && (!currentSection.passages || currentSection.passages.length === 0) && (
+      {(currentSection.key === "reading" || currentSection.key === "listening") && (
         <div className="space-y-5">
-          {groupedQuestions.map((group, groupIndex) => {
-            const qOffset = groupedQuestions.slice(0, groupIndex).reduce((sum, g) => sum + g.questions.length, 0);
-            return (
-              <section key={group.key} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{group.title}</h3>
-                {group.content ? (
-                  <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-                    <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.content}</p>
+          {groupedQuestions.map((group) => (
+            <section
+              key={group.key}
+              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                    {group.title}
+                  </h3>
+                  {group.topic ? (
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                      Topic: {group.topic}
+                    </p>
+                  ) : null}
+                </div>
+
+                {currentSection.key === "listening" && group.audioScript ? (
+                  <div className="flex flex-wrap gap-2">
+                    {speechEnabled ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handlePlayListening(group)}
+                      >
+                        {playingGroupKey === group.key ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                        {playingGroupKey === group.key ? "Stop audio" : "Play audio"}
+                      </Button>
+                    ) : null}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setShowListeningTranscript((prev) => ({
+                          ...prev,
+                          [group.key]: !prev[group.key],
+                        }))
+                      }
+                    >
+                      <Volume2 className="h-4 w-4" />
+                      {showListeningTranscript[group.key] ? "Hide script" : "Show script"}
+                    </Button>
                   </div>
                 ) : null}
-                <div className="mt-5 space-y-4">
-                  {group.questions.map((question, index) => (
-                    <ObjectiveQuestionCard key={question.id} index={qOffset + index + 1} question={question} value={objectiveAnswers[question.id] ?? ""} revealed={isCurrentSectionRevealed} onChange={handleObjectiveAnswer} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      )}
+              </div>
 
-      {currentSection.key === "listening" && currentSection.passages && currentSection.passages.length > 0 && (
-        <ListeningSectionPlayer
-          sections={currentSection.passages}
-          answers={objectiveAnswers}
-          flagged={flaggedQuestions}
-          revealed={isCurrentSectionRevealed}
-          onAnswer={handleObjectiveAnswer}
-          onFlag={handleFlagQuestion}
-        />
-      )}
-
-      {currentSection.key === "listening" && (!currentSection.passages || currentSection.passages.length === 0) && (
-        <div className="space-y-5">
-          {groupedQuestions.map((group, groupIndex) => {
-            const qOffset = groupedQuestions.slice(0, groupIndex).reduce((sum, g) => sum + g.questions.length, 0);
-            return (
-              <section key={group.key} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{group.title}</h3>
-                {group.audioScript ? (
-                  <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-                    <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{group.audioScript}</p>
-                  </div>
-                ) : null}
-                <div className="mt-5 space-y-4">
-                  {group.questions.map((question, index) => (
-                    <ObjectiveQuestionCard key={question.id} index={qOffset + index + 1} question={question} value={objectiveAnswers[question.id] ?? ""} revealed={isCurrentSectionRevealed} onChange={handleObjectiveAnswer} />
-                  ))}
+              {group.content ? (
+                <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
+                    {group.content}
+                  </p>
                 </div>
-              </section>
-            );
-          })}
+              ) : null}
+
+              {currentSection.key === "listening" &&
+              group.audioScript &&
+              showListeningTranscript[group.key] ? (
+                <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-400">
+                    Audio script
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
+                    {group.audioScript}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="mt-5 space-y-4">
+                {group.questions.map((question, index) => (
+                  <ObjectiveQuestionCard
+                    key={question.id}
+                    index={index + 1}
+                    question={question}
+                    value={objectiveAnswers[question.id] ?? ""}
+                    revealed={isCurrentSectionRevealed}
+                    onChange={handleObjectiveAnswer}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       )}
 
@@ -1069,12 +1087,13 @@ export function SimulatorClient() {
 
                 <textarea
                   value={essay}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    markUserInteraction();
                     setWritingResponses((prev) => ({
                       ...prev,
                       [question.id]: event.target.value,
-                    }))
-                  }
+                    }));
+                  }}
                   rows={14}
                   placeholder={t("ielts.wr.essayPlaceholder")}
                   className="mt-4 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
@@ -1130,7 +1149,7 @@ export function SimulatorClient() {
                 {cuePoints.length > 0 ? (
                   <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                      Cue card
+                      Cue points
                     </p>
                     <ul className="mt-3 space-y-1.5">
                       {cuePoints.map((item, index) => (
@@ -1143,78 +1162,50 @@ export function SimulatorClient() {
                         </li>
                       ))}
                     </ul>
-                    {question.questionType === "part2" && speakingPrepTime === 0 && !speakingResponses[question.id] && (
-                      <button
-                        className="mt-4 rounded-[var(--radius-md)] border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-400 transition-all hover:bg-violet-500/20"
-                        onClick={() => {
-                          setSpeakingPrepTime(60);
-                          if (prepTimerRef.current) clearInterval(prepTimerRef.current);
-                          prepTimerRef.current = setInterval(() => {
-                            setSpeakingPrepTime((prev) => {
-                              if (prev <= 1) {
-                                if (prepTimerRef.current) clearInterval(prepTimerRef.current);
-                                return 0;
-                              }
-                              return prev - 1;
-                            });
-                          }, 1000);
-                        }}
-                      >
-                        Start 1-minute preparation
-                      </button>
-                    )}
-                    {speakingPrepTime > 0 && (
-                      <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-amber-400">
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-                        Preparation time: {Math.floor(speakingPrepTime / 60)}:{String(speakingPrepTime % 60).padStart(2, "0")}
-                      </div>
-                    )}
                   </div>
                 ) : null}
 
-                {(question.questionType !== "part2" || speakingPrepTime === 0) && (
-                  <>
-                    <div className="mt-4">
-                      <SpeakingRecorderPanel
-                        compact
-                        onUseTranscript={(value) =>
-                          setSpeakingResponses((prev) => ({
-                            ...prev,
-                            [question.id]: value,
-                          }))
-                        }
-                      />
-                    </div>
+                <div className="mt-4">
+                  <SpeakingRecorderPanel
+                    compact
+                    onUseTranscript={(value) => {
+                      markUserInteraction();
+                      setSpeakingResponses((prev) => ({
+                        ...prev,
+                        [question.id]: value,
+                      }));
+                    }}
+                  />
+                </div>
 
-                    <textarea
-                      value={transcript}
-                      onChange={(event) =>
-                        setSpeakingResponses((prev) => ({
-                          ...prev,
-                          [question.id]: event.target.value,
-                        }))
-                      }
-                      rows={8}
-                      placeholder={t("ielts.sp.responsePlaceholder")}
-                      className="mt-4 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violet-400 focus:ring-2 focus:ring-violet-500/40"
-                    />
+                <textarea
+                  value={transcript}
+                  onChange={(event) => {
+                    markUserInteraction();
+                    setSpeakingResponses((prev) => ({
+                      ...prev,
+                      [question.id]: event.target.value,
+                    }));
+                  }}
+                  rows={8}
+                  placeholder={t("ielts.sp.responsePlaceholder")}
+                  className="mt-4 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-violet-400 focus:ring-2 focus:ring-violet-500/40"
+                />
 
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <Button
-                        size="sm"
-                        onClick={() => handleEvaluateSpeaking(question)}
-                        disabled={evaluatingQuestionId === question.id}
-                      >
-                        {evaluatingQuestionId === question.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-4 w-4" />
-                        )}
-                        Get AI evaluation
-                      </Button>
-                    </div>
-                  </>
-                )}
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button
+                    size="sm"
+                    onClick={() => handleEvaluateSpeaking(question)}
+                    disabled={evaluatingQuestionId === question.id}
+                  >
+                    {evaluatingQuestionId === question.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                    Get AI evaluation
+                  </Button>
+                </div>
 
                 {result ? (
                   <div className="mt-4 rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
@@ -1406,13 +1397,7 @@ function objectiveOptions(question: IELTSQuestion) {
   }
 
   if (question.questionType === "true_false") {
-    return ["True", "False"];
-  }
-  if (question.questionType === "true_false_not_given") {
-    return ["True", "False", "Not Given"];
-  }
-  if (question.questionType === "yes_no_not_given") {
-    return ["Yes", "No", "Not Given"];
+    return ["true", "false", "not given"];
   }
 
   return [];
