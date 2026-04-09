@@ -130,20 +130,10 @@ jobs:
           port: 22
           script_stop: true
           command_timeout: 20m
+          # envs passes these as environment variables into the remote shell
+          envs: DEPLOY_FRONTEND,DEPLOY_BACKEND,DEPLOY_NGINX,APPLY_STACK,RUN_MIGRATIONS,CHANGED_FILES_B64,DEPLOY_SUMMARY_B64,PREBUILT_BACKEND_IMAGE,PREBUILT_FRONTEND_IMAGE,GHCR_ACTOR,GHCR_TOKEN
           script: |
             set -euo pipefail
-
-            export DEPLOY_FRONTEND='${{ needs.detect.outputs.deploy_frontend }}'
-            export DEPLOY_BACKEND='${{ needs.detect.outputs.deploy_backend }}'
-            export DEPLOY_NGINX='${{ needs.detect.outputs.deploy_nginx }}'
-            export APPLY_STACK='${{ needs.detect.outputs.apply_stack }}'
-            export RUN_MIGRATIONS='${{ needs.detect.outputs.run_migrations }}'
-            export CHANGED_FILES_B64='${{ needs.detect.outputs.changed_files_b64 }}'
-            export DEPLOY_SUMMARY_B64='${{ needs.detect.outputs.summary_b64 }}'
-
-            # Pre-built images from GHCR — VPS only needs to pull, not build
-            export PREBUILT_BACKEND_IMAGE='${{ needs.build.outputs.backend_image }}'
-            export PREBUILT_FRONTEND_IMAGE='${{ needs.build.outputs.frontend_image }}'
 
             cd /opt/studywithraissov
 
@@ -160,9 +150,20 @@ jobs:
             cp "$FRONTEND_ENV_BACKUP" frontend/.env 2>/dev/null || true
             rm -f "$BACKEND_ENV_BACKUP" "$FRONTEND_ENV_BACKUP"
 
-            # Log in to GHCR so VPS can pull private images
-            echo "${{ secrets.GITHUB_TOKEN }}" | \
-              docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            # Log in to GHCR so VPS can pull the pre-built images
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
 
             chmod +x docker/smart-deploy.sh
             bash docker/smart-deploy.sh
+        env:
+          DEPLOY_FRONTEND: ${{ needs.detect.outputs.deploy_frontend }}
+          DEPLOY_BACKEND: ${{ needs.detect.outputs.deploy_backend }}
+          DEPLOY_NGINX: ${{ needs.detect.outputs.deploy_nginx }}
+          APPLY_STACK: ${{ needs.detect.outputs.apply_stack }}
+          RUN_MIGRATIONS: ${{ needs.detect.outputs.run_migrations }}
+          CHANGED_FILES_B64: ${{ needs.detect.outputs.changed_files_b64 }}
+          DEPLOY_SUMMARY_B64: ${{ needs.detect.outputs.summary_b64 }}
+          PREBUILT_BACKEND_IMAGE: ${{ needs.build.outputs.backend_image }}
+          PREBUILT_FRONTEND_IMAGE: ${{ needs.build.outputs.frontend_image }}
+          GHCR_ACTOR: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
