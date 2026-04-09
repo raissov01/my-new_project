@@ -242,25 +242,44 @@ IMAGES_BUILT=false
 
 if bool "$DEPLOY_BACKEND"; then
   BACKEND_DEPLOY_VERSION="${DEPLOY_NONCE}-backend"
-  BACKEND_IMAGE="swr-backend:${BACKEND_DEPLOY_VERSION}"
-  echo ""
-  echo "=== Building backend image: ${BACKEND_IMAGE} ==="
-  DOCKER_BUILDKIT=1 docker build -t "$BACKEND_IMAGE" -f docker/backend.Dockerfile backend/
+  if [[ -n "${PREBUILT_BACKEND_IMAGE:-}" ]]; then
+    # Image was built on GitHub Actions runner and pushed to GHCR — just pull it.
+    echo ""
+    echo "=== Pulling pre-built backend image: ${PREBUILT_BACKEND_IMAGE} ==="
+    docker pull "$PREBUILT_BACKEND_IMAGE"
+    docker tag  "$PREBUILT_BACKEND_IMAGE" "swr-backend:${BACKEND_DEPLOY_VERSION}"
+    BACKEND_IMAGE="swr-backend:${BACKEND_DEPLOY_VERSION}"
+  else
+    BACKEND_IMAGE="swr-backend:${BACKEND_DEPLOY_VERSION}"
+    echo ""
+    echo "=== Building backend image locally: ${BACKEND_IMAGE} ==="
+    DOCKER_BUILDKIT=1 docker build -t "$BACKEND_IMAGE" -f docker/backend.Dockerfile backend/
+  fi
   IMAGES_BUILT=true
 fi
 
 if bool "$DEPLOY_FRONTEND"; then
   FRONTEND_DEPLOY_VERSION="${DEPLOY_NONCE}-frontend"
-  FRONTEND_IMAGE="swr-frontend:${FRONTEND_DEPLOY_VERSION}"
-  echo ""
-  echo "=== Building frontend image: ${FRONTEND_IMAGE} ==="
-  DOCKER_BUILDKIT=1 docker build \
-    --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
-    --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
-    -t "$FRONTEND_IMAGE" \
-    -f docker/frontend.Dockerfile \
-    frontend/
-  IMAGES_BUILT=true
+  if [[ -n "${PREBUILT_FRONTEND_IMAGE:-}" ]]; then
+    # Image was built on GitHub Actions runner and pushed to GHCR — just pull it.
+    echo ""
+    echo "=== Pulling pre-built frontend image: ${PREBUILT_FRONTEND_IMAGE} ==="
+    docker pull "$PREBUILT_FRONTEND_IMAGE"
+    docker tag  "$PREBUILT_FRONTEND_IMAGE" "swr-frontend:${FRONTEND_DEPLOY_VERSION}"
+    FRONTEND_IMAGE="swr-frontend:${FRONTEND_DEPLOY_VERSION}"
+    IMAGES_BUILT=true
+  else
+    FRONTEND_IMAGE="swr-frontend:${FRONTEND_DEPLOY_VERSION}"
+    echo ""
+    echo "=== Building frontend image locally: ${FRONTEND_IMAGE} ==="
+    DOCKER_BUILDKIT=1 docker build \
+      --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
+      --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+      -t "$FRONTEND_IMAGE" \
+      -f docker/frontend.Dockerfile \
+      frontend/
+    IMAGES_BUILT=true
+  fi
 fi
 
 if bool "$DEPLOY_NGINX"; then

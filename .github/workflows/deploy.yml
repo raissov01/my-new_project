@@ -56,10 +56,69 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+  build:
+    name: Build Images (GHA runner)
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.skip_deploy != 'true'
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      backend_image: ${{ steps.backend.outputs.image }}
+      frontend_image: ${{ steps.frontend.outputs.image }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        id: backend
+        if: needs.detect.outputs.deploy_backend == 'true' || needs.detect.outputs.apply_stack == 'true'
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/swr-backend:${{ github.sha }}"
+          docker buildx build \
+            --platform linux/amd64 \
+            --cache-from type=gha,scope=backend \
+            --cache-to   type=gha,scope=backend,mode=max \
+            --provenance=false \
+            -t "$IMAGE" \
+            -f docker/backend.Dockerfile \
+            --push \
+            backend/
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push frontend image
+        id: frontend
+        if: needs.detect.outputs.deploy_frontend == 'true' || needs.detect.outputs.apply_stack == 'true'
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/swr-frontend:${{ github.sha }}"
+          docker buildx build \
+            --platform linux/amd64 \
+            --cache-from type=gha,scope=frontend \
+            --cache-to   type=gha,scope=frontend,mode=max \
+            --provenance=false \
+            --build-arg NEXT_PUBLIC_APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL || 'https://studywithraissov.com' }}" \
+            --build-arg NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL || '/api/v1' }}" \
+            -t "$IMAGE" \
+            -f docker/frontend.Dockerfile \
+            --push \
+            frontend/
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
   deploy:
     name: Deploy (Smart Swarm)
     runs-on: ubuntu-latest
-    needs: detect
+    needs: [detect, build]
     if: needs.detect.outputs.skip_deploy != 'true'
     steps:
       - name: Deploy over SSH
@@ -70,7 +129,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script_stop: true
-          command_timeout: 60m
+          command_timeout: 20m
           script: |
             set -euo pipefail
 
@@ -81,6 +140,10 @@ jobs:
             export RUN_MIGRATIONS='${{ needs.detect.outputs.run_migrations }}'
             export CHANGED_FILES_B64='${{ needs.detect.outputs.changed_files_b64 }}'
             export DEPLOY_SUMMARY_B64='${{ needs.detect.outputs.summary_b64 }}'
+
+            # Pre-built images from GHCR — VPS only needs to pull, not build
+            export PREBUILT_BACKEND_IMAGE='${{ needs.build.outputs.backend_image }}'
+            export PREBUILT_FRONTEND_IMAGE='${{ needs.build.outputs.frontend_image }}'
 
             cd /opt/studywithraissov
 
@@ -96,6 +159,10 @@ jobs:
             cp "$BACKEND_ENV_BACKUP" backend/.env 2>/dev/null || true
             cp "$FRONTEND_ENV_BACKUP" frontend/.env 2>/dev/null || true
             rm -f "$BACKEND_ENV_BACKUP" "$FRONTEND_ENV_BACKUP"
+
+            # Log in to GHCR so VPS can pull private images
+            echo "${{ secrets.GITHUB_TOKEN }}" | \
+              docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             chmod +x docker/smart-deploy.sh
             bash docker/smart-deploy.sh
