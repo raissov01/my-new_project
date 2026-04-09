@@ -25,8 +25,6 @@ import {
   checkAdaptive,
   completeStudyTask,
   getPlanHistory,
-  getStudyPlan,
-  getTaskCompletions,
   pollStudyPlanJob,
   startStudyPlanGeneration,
   submitReflection,
@@ -121,10 +119,15 @@ type WizardData = {
   struggles: string[];
 };
 
-export function IELTSStudyPlanClient() {
+export function IELTSStudyPlanClient({
+  initialPlan,
+  initialTaskStatuses,
+}: {
+  initialPlan: Record<string, unknown> | null;
+  initialTaskStatuses: Record<string, string>;
+}) {
   const { user } = useAuth();
-  const [plan, setPlan] = useState<StudyPlan | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<StudyPlan | null>(initialPlan as StudyPlan | null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"roadmap" | "checklist" | "guide">("roadmap");
@@ -142,40 +145,8 @@ export function IELTSStudyPlanClient() {
     struggles: ["timing", "grammar"],
   });
 
-  // taskKey → status
-  const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        const resp = await getStudyPlan();
-        if (!mounted) return;
-        if (resp.plan) {
-          const p = resp.plan as StudyPlan;
-          setPlan(p);
-          // Load task completions
-          try {
-            const completionsResp = await getTaskCompletions(p.id);
-            if (!mounted) return;
-            const map: Record<string, string> = {};
-            for (const c of completionsResp.completions ?? []) {
-              map[`${c.week}-${c.day}-${c.skill}`] = c.status;
-            }
-            setTaskStatuses(map);
-          } catch {
-            // ignore — completions just won't show
-          }
-        }
-      } catch (err) {
-        if (mounted) setError(err instanceof Error ? err.message : "Failed to load study plan.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    void load();
-    return () => { mounted = false; };
-  }, []);
+  // taskKey → status (pre-populated from server-side load)
+  const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>(initialTaskStatuses);
 
   async function handleTaskToggle(week: number, day: string, skill: string, activity: string) {
     if (!plan) return;
@@ -237,15 +208,6 @@ export function IELTSStudyPlanClient() {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--primary)]" />
-        <p className="text-sm text-[var(--text-muted)]">Loading your study plan...</p>
-      </div>
-    );
   }
 
   if (showWizard || !plan) {
