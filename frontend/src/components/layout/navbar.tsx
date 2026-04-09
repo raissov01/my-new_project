@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   GraduationCap,
+  Ghost,
   HelpCircle,
   UserCircle2,
   Settings,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useGhostMode } from "@/features/auth/hooks/use-ghost-mode";
 import { Button } from "@/components/ui/button";
 import { AvatarMenu } from "@/components/layout/avatar-menu";
 import { BrandLogo } from "@/components/layout";
@@ -26,6 +28,7 @@ import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 export function Navbar() {
   const { user, loading } = useAuth();
   const { t } = useLocale();
+  const { isGhost, enableGhostMode } = useGhostMode();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const homeHref = user ? "/dashboard" : "/";
@@ -117,9 +120,15 @@ export function Navbar() {
                 <>
                   {!DEV_MODE ? (
                     <>
-                      <Link href="/ielts">
-                        <Button variant="outline" size="sm">{t("nav.ieltsPrep")}</Button>
-                      </Link>
+                      {!isGhost && (
+                        <button
+                          onClick={enableGhostMode}
+                          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                        >
+                          <Ghost className="h-4 w-4" />
+                          {t("ghost.browseAsGuest")}
+                        </button>
+                      )}
                       <Link
                         href="/login"
                         className="rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
@@ -212,6 +221,16 @@ export function Navbar() {
 
                 {!user && !DEV_MODE && (
                   <div className="mt-5 space-y-2.5">
+                    {!isGhost && (
+                      <Button
+                        variant="ghost"
+                        className="w-full gap-2"
+                        onClick={() => { enableGhostMode(); setDrawerOpen(false); }}
+                      >
+                        <Ghost className="h-4 w-4" />
+                        {t("ghost.browseAsGuest")}
+                      </Button>
+                    )}
                     <Link href="/login" onClick={() => setDrawerOpen(false)} className="block">
                       <Button variant="outline" className="w-full">{t("nav.logIn")}</Button>
                     </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,6 +19,8 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import {
   checkAdaptive,
   completeStudyTask,
@@ -120,6 +122,7 @@ type WizardData = {
 };
 
 export function IELTSStudyPlanClient() {
+  const { user } = useAuth();
   const [plan, setPlan] = useState<StudyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -252,6 +255,7 @@ export function IELTSStudyPlanClient() {
           step={wizardStep}
           data={wizardData}
           submitting={submitting}
+          isLoggedIn={Boolean(user)}
           onChange={(updates) => setWizardData((prev) => ({ ...prev, ...updates }))}
           onNext={() => setWizardStep((s) => s + 1)}
           onBack={() => setWizardStep((s) => s - 1)}
@@ -769,6 +773,7 @@ function WizardFlow({
   step,
   data,
   submitting,
+  isLoggedIn,
   onChange,
   onNext,
   onBack,
@@ -777,6 +782,7 @@ function WizardFlow({
   step: number;
   data: WizardData;
   submitting: boolean;
+  isLoggedIn: boolean;
   onChange: (updates: Partial<WizardData>) => void;
   onNext: () => void;
   onBack: () => void;
@@ -944,11 +950,21 @@ function WizardFlow({
           <Button onClick={onNext}>
             Next <ArrowRight className="h-4 w-4" />
           </Button>
-        ) : (
+        ) : isLoggedIn ? (
           <Button onClick={onGenerate} disabled={submitting}>
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {submitting ? "Generating roadmap..." : "Generate my roadmap"}
           </Button>
+        ) : (
+          <AuthRequiredPrompt
+            triggerLabel="Generate my roadmap"
+            title="Sign in to generate your roadmap"
+            description="Your personalized IELTS study plan will be created with AI based on your profile. Create a free account to save and access it anytime."
+            loginLabel="Log in"
+            signupLabel="Sign up free"
+            cancelLabel="Continue browsing"
+            icon={<Sparkles className="h-4 w-4" />}
+          />
         )}
       </div>
     </div>

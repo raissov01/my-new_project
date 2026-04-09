@@ -4,6 +4,7 @@ import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { isAdminSessionCookie, ADMIN_COOKIE_NAME } from "@/lib/shared/auth/admin";
 
 const TOKEN_COOKIE = "swr_token";
+const GHOST_COOKIE = "swr_ghost";
 
 export async function updateSession(request: NextRequest) {
   const response = NextResponse.next({ request });
@@ -48,8 +49,14 @@ export async function updateSession(request: NextRequest) {
   const token = request.cookies.get(TOKEN_COOKIE)?.value;
   const isLoggedIn = Boolean(token);
 
+  // Ghost mode: unauthenticated users who opted in can browse all pages.
+  // They will be prompted to sign in when they try to perform any action.
+  const isGhostMode = request.cookies.get(GHOST_COOKIE)?.value === "1";
+
   if (!isLoggedIn) {
     if (isProtectedRoute || isChooseRole) {
+      // Ghost users can browse — don't redirect to login.
+      if (isGhostMode) return response;
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
