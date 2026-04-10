@@ -13,7 +13,9 @@ import (
 	"github.com/gotd/td/session"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
+	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/tg"
+	"github.com/gotd/td/tgerr"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -25,6 +27,18 @@ type ImporterConfig struct {
 	Phone         string
 	SessionPath   string // file path for persistent session storage
 	TargetChannel string // channel username without @, e.g. "studywithme_r"
+	MediaDir      string // directory to save downloaded files (default: ./telegram-media)
+}
+
+// allowedMimeTypes defines which document types to download.
+var allowedMimeTypes = map[string]bool{
+	"application/pdf": true,
+	"application/msword": true,
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+	"application/vnd.ms-excel": true,
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":       true,
+	"application/vnd.ms-powerpoint": true,
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
 }
 
 // Importer imports full message history from exactly one Telegram channel.
@@ -94,15 +108,25 @@ func (imp *Importer) Run(ctx context.Context) error {
 		log.Printf("[telegram-import] importing from @%s (id=%d, title=%q)",
 			target, channel.ID, channel.Title)
 
-		return imp.importAll(ctx, api, peer, channel.ID, target)
+		mediaDir := imp.cfg.MediaDir
+		if mediaDir == "" {
+			mediaDir = "telegram-media"
+		}
+		if err := os.MkdirAll(mediaDir, 0755); err != nil {
+			return fmt.Errorf("create media dir: %w", err)
+		}
+
+		return imp.importAll(ctx, client, api, peer, channel.ID, target, mediaDir)
 	})
 }
 
 // importAll pages through the entire channel history and saves posts.
-func (imp *Importer) importAll(ctx context.Context, api *tg.Client, peer *tg.InputPeerChannel, channelID int64, username string) error {
+func (imp *Importer) importAll(ctx context.Context, client *telegram.Client, api *tg.Client, peer *tg.InputPeerChannel, channelID int64, username, mediaDir string) error {
 	totalImported := 0
 	totalSkipped := 0
 	offsetID := 0
+
+	dl := downloader.NewDownloader()
 
 	for {
 		select {
@@ -112,11 +136,7 @@ func (imp *Importer) importAll(ctx context.Context, api *tg.Client, peer *tg.Inp
 		default:
 		}
 
-		messages, err := api.MessagesGetHistory(ctx, &tg.MessagesGetHistoryRequest{
-			Peer:     peer,
-			OffsetID: offsetID,
-			Limit:    100,
-		})
+		messages, err := getHistoryWithRetry(ctx, api, peer, offsetID)
 		if err != nil {
 			return fmt.Errorf("get history (offset=%d): %w", offsetID, err)
 		}
@@ -126,7 +146,7 @@ func (imp *Importer) importAll(ctx context.Context, api *tg.Client, peer *tg.Inp
 			break
 		}
 
-		imported, skipped := imp.saveBatch(msgs, channelID, username)
+		imported, skipped := imp.saveBatch(ctx, dl, client, msgs, channelID, username, mediaDir)
 		totalImported += imported
 		totalSkipped += skipped
 
@@ -153,7 +173,7 @@ func (imp *Importer) importAll(ctx context.Context, api *tg.Client, peer *tg.Inp
 }
 
 // saveBatch persists a page of messages, skipping duplicates and non-target messages.
-func (imp *Importer) saveBatch(msgs []tg.MessageClass, expectedChannelID int64, username string) (imported, skipped int) {
+func (imp *Importer) saveBatch(ctx context.Context, dl *downloader.Downloader, client *telegram.Client, msgs []tg.MessageClass, expectedChannelID int64, username, mediaDir string) (imported, skipped int) {
 	for _, mc := range msgs {
 		msg, ok := mc.(*tg.Message)
 		if !ok {
@@ -170,10 +190,22 @@ func (imp *Importer) saveBatch(msgs []tg.MessageClass, expectedChannelID int64, 
 			continue
 		}
 
-		// Deduplicate
-		var count int64
-		imp.db.Model(&models.TelegramPost{}).Where("telegram_post_id = ?", int64(msg.ID)).Count(&count)
-		if count > 0 {
+		// Deduplicate — if exists but has no file yet, try to download
+		var existing models.TelegramPost
+		err := imp.db.Where("telegram_post_id = ?", int64(msg.ID)).First(&existing).Error
+		if err == nil {
+			if existing.FilePath == "" && msg.Media != nil {
+				fileName, filePath, mimeType := imp.downloadDocument(ctx, dl, client, msg, mediaDir)
+				if filePath != "" {
+					imp.db.Model(&existing).Updates(map[string]interface{}{
+						"file_name": fileName,
+						"file_path": filePath,
+						"mime_type": mimeType,
+					})
+					imported++
+					continue
+				}
+			}
 			skipped++
 			continue
 		}
@@ -191,14 +223,20 @@ func (imp *Importer) saveBatch(msgs []tg.MessageClass, expectedChannelID int64, 
 			raw = []byte("{}")
 		}
 
+		// Download document if it's an allowed file type (PDF, Word, Excel, etc.)
+		fileName, filePath, mimeType := imp.downloadDocument(ctx, dl, client, msg, mediaDir)
+
 		post := models.TelegramPost{
 			TelegramPostID:  int64(msg.ID),
 			ChannelID:       msgChannelID,
-			ChannelUsername:  username,
+			ChannelUsername: username,
 			Text:            text,
 			Caption:         caption,
 			RawJSON:         string(raw),
 			HasMedia:        hasMedia,
+			FileName:        fileName,
+			FilePath:        filePath,
+			MimeType:        mimeType,
 			PostDate:        time.Unix(int64(msg.Date), 0),
 		}
 
@@ -210,6 +248,112 @@ func (imp *Importer) saveBatch(msgs []tg.MessageClass, expectedChannelID int64, 
 		imported++
 	}
 	return
+}
+
+// downloadDocument downloads a document attachment if it matches an allowed MIME type.
+// Returns fileName, filePath, mimeType (all empty if no download).
+func (imp *Importer) downloadDocument(ctx context.Context, dl *downloader.Downloader, client *telegram.Client, msg *tg.Message, mediaDir string) (fileName, filePath, mimeType string) {
+	if msg.Media == nil {
+		return
+	}
+
+	mediaDoc, ok := msg.Media.(*tg.MessageMediaDocument)
+	if !ok {
+		return
+	}
+
+	doc, ok := mediaDoc.Document.(*tg.Document)
+	if !ok {
+		return
+	}
+
+	if !allowedMimeTypes[doc.MimeType] {
+		return
+	}
+
+	// Extract filename from attributes
+	for _, attr := range doc.Attributes {
+		if a, ok := attr.(*tg.DocumentAttributeFilename); ok {
+			fileName = a.FileName
+			break
+		}
+	}
+	if fileName == "" {
+		fileName = fmt.Sprintf("msg_%d%s", msg.ID, mimeToExt(doc.MimeType))
+	}
+
+	filePath = filepath.Join(mediaDir, fmt.Sprintf("%d_%s", msg.ID, fileName))
+
+	loc := &tg.InputDocumentFileLocation{
+		ID:            doc.ID,
+		AccessHash:    doc.AccessHash,
+		FileReference: doc.FileReference,
+	}
+
+	_, err := dl.Download(client.API(), loc).ToPath(ctx, filePath)
+	if err != nil {
+		log.Printf("[telegram-import] download failed msg=%d file=%s: %v", msg.ID, fileName, err)
+		filePath = ""
+		return "", "", ""
+	}
+
+	log.Printf("[telegram-import] downloaded msg=%d → %s", msg.ID, filePath)
+	mimeType = doc.MimeType
+	return
+}
+
+// getHistoryWithRetry calls MessagesGetHistory and retries on FLOOD_WAIT.
+func getHistoryWithRetry(ctx context.Context, api *tg.Client, peer *tg.InputPeerChannel, offsetID int) (tg.MessagesMessagesClass, error) {
+	for {
+		result, err := api.MessagesGetHistory(ctx, &tg.MessagesGetHistoryRequest{
+			Peer:     peer,
+			OffsetID: offsetID,
+			Limit:    100,
+		})
+		if err == nil {
+			return result, nil
+		}
+
+		d, ok := tgerr.AsFloodWait(err)
+		if !ok {
+			return nil, err
+		}
+
+		wait := d + 2*time.Second
+		log.Printf("[telegram-import] FLOOD_WAIT %s, sleeping...", wait.String())
+
+		// Use the exact wait seconds from the error argument
+		if rpcErr, ok := err.(*tgerr.Error); ok {
+			wait = time.Duration(rpcErr.Argument+2) * time.Second
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(wait):
+		}
+	}
+}
+
+func mimeToExt(mime string) string {
+	switch mime {
+	case "application/pdf":
+		return ".pdf"
+	case "application/msword":
+		return ".doc"
+	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+		return ".docx"
+	case "application/vnd.ms-excel":
+		return ".xls"
+	case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+		return ".xlsx"
+	case "application/vnd.ms-powerpoint":
+		return ".ppt"
+	case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+		return ".pptx"
+	default:
+		return ""
+	}
 }
 
 // resolveAndValidate resolves a channel by @username and refuses if it doesn't match exactly.

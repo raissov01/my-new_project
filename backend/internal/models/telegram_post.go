@@ -12,6 +12,9 @@ type TelegramPost struct {
 	Caption         string    `gorm:"type:text;not null;default:''" json:"caption"`
 	RawJSON         string    `gorm:"type:jsonb;not null" json:"rawJson"`
 	HasMedia        bool      `gorm:"not null;default:false" json:"hasMedia"`
+	FileName        string    `gorm:"not null;default:''" json:"fileName"`
+	FilePath        string    `gorm:"not null;default:''" json:"filePath"`
+	MimeType        string    `gorm:"not null;default:''" json:"mimeType"`
 	PostDate        time.Time `gorm:"not null" json:"postDate"`
 	CreatedAt       time.Time `gorm:"autoCreateTime" json:"createdAt"`
 }

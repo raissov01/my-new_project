@@ -4,3 +4,5 @@
 *.exe
 backend/telegram-auth
 backend/telegram-import
+telegram-media/
+.telegram-session
