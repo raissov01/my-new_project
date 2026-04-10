@@ -479,7 +479,7 @@ func (h *IELTSExaminerHandler) callLLM(prompt string) (string, string, error) {
 func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error) {
 	// Primary: OpenAI (GPT-5.4)
 	if strings.TrimSpace(h.openAIKey) != "" {
-		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, prompt, h.timeout)
+		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, masterIELTSSystemPrompt, prompt, h.timeout)
 		if err == nil {
 			return raw, h.openAIModel, nil
 		}
@@ -548,13 +548,17 @@ func callGeminiRaw(apiKey, model, prompt string, timeout time.Duration) (string,
 }
 
 // callClaudeChatCompletion calls the Claude API via do-ai.run (OpenAI-compatible Chat Completions format).
-func callClaudeChatCompletion(apiKey, model, apiURL, prompt string, timeout time.Duration) (string, error) {
+// If systemPrompt is empty, only the user message is sent.
+func callClaudeChatCompletion(apiKey, model, apiURL, systemPrompt, prompt string, timeout time.Duration) (string, error) {
+	messages := []map[string]string{}
+	if strings.TrimSpace(systemPrompt) != "" {
+		messages = append(messages, map[string]string{"role": "system", "content": systemPrompt})
+	}
+	messages = append(messages, map[string]string{"role": "user", "content": prompt})
+
 	body := map[string]any{
-		"model": model,
-		"messages": []map[string]string{
-			{"role": "system", "content": masterIELTSSystemPrompt},
-			{"role": "user", "content": prompt},
-		},
+		"model":       model,
+		"messages":    messages,
 		"temperature": 0.3,
 		"max_tokens":  40000,
 	}
@@ -600,13 +604,17 @@ func callClaudeChatCompletion(apiKey, model, apiURL, prompt string, timeout time
 
 // callOpenAIChatCompletion uses the standard Chat Completions API — faster and
 // more reliable than the Responses API for structured JSON output.
-func callOpenAIChatCompletion(apiKey, model, prompt string, timeout time.Duration) (string, error) {
+// If systemPrompt is empty, only the user message is sent.
+func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeout time.Duration) (string, error) {
+	messages := []map[string]string{}
+	if strings.TrimSpace(systemPrompt) != "" {
+		messages = append(messages, map[string]string{"role": "system", "content": systemPrompt})
+	}
+	messages = append(messages, map[string]string{"role": "user", "content": prompt})
+
 	body := map[string]any{
-		"model": model,
-		"messages": []map[string]string{
-			{"role": "system", "content": masterIELTSSystemPrompt},
-			{"role": "user", "content": prompt},
-		},
+		"model":                 model,
+		"messages":              messages,
 		"max_completion_tokens": 40000,
 	}
 

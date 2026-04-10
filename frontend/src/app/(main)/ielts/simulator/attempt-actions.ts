@@ -176,9 +176,8 @@ export async function getStudyPlan() {
 export async function startStudyPlanGeneration(
   payload: Record<string, unknown>
 ): Promise<{ jobId: string; error?: never } | { jobId?: never; error: string }> {
-  const user = await requireUser();
-
   try {
+    const user = await requireUser();
     const data = await fetchBackendJson<{ jobId: string; status: string }>({
       path: "/api/v1/ielts/study-plan",
       userId: user.id,
@@ -205,9 +204,8 @@ export async function pollStudyPlanJob(
   | { status: "failed"; plan?: never; error: string }
   | { status: "error"; plan?: never; error: string }
 > {
-  const user = await requireUser();
-
   try {
+    const user = await requireUser();
     const data = await fetchBackendJson<{
       jobId: string;
       status: "pending" | "running" | "done" | "failed";

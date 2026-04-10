@@ -53,7 +53,7 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 
 	// Primary: Claude via do-ai.run (llama3.3-70b) — non-reasoning model, fast & cheap.
 	if strings.TrimSpace(h.claudeKey) != "" && strings.TrimSpace(h.claudeURL) != "" {
-		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, prompt, perProviderTimeout)
+		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, "", prompt, perProviderTimeout)
 		if err == nil {
 			log.Printf("[study-plan-llm] success via Claude: model=%s time=%v len=%d", h.claudeModel, time.Since(start), len(raw))
 			return raw, h.claudeModel, nil
@@ -64,7 +64,7 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 	// Fallback 1: OpenAI gpt-5-mini — much faster than gpt-5 (no heavy reasoning).
 	if strings.TrimSpace(h.openAIKey) != "" {
 		fastModel := "gpt-5-mini"
-		raw, err := callOpenAIChatCompletion(h.openAIKey, fastModel, prompt, perProviderTimeout)
+		raw, err := callOpenAIChatCompletion(h.openAIKey, fastModel, "", prompt, perProviderTimeout)
 		if err == nil {
 			log.Printf("[study-plan-llm] success via OpenAI: model=%s time=%v len=%d", fastModel, time.Since(start), len(raw))
 			return raw, fastModel, nil
