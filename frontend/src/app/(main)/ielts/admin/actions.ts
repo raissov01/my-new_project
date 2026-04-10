@@ -7,9 +7,12 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 export type IELTSMaterial = {
   id: string;
   title: string;
+  description: string;
   content: string;
-  category: "reading" | "writing" | "speaking" | "listening";
-  type: "lesson" | "practice" | "tip";
+  category: "reading" | "writing" | "speaking" | "listening" | "vocabulary" | "grammar" | "general";
+  type: "lesson" | "practice" | "tip" | "book" | "mock_test" | "feedback_prompt";
+  difficulty: string;
+  filePath: string;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;

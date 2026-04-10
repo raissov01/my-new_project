@@ -14,28 +14,37 @@ import {
   type IELTSMaterial,
 } from "./actions";
 
-const CATEGORIES = ["reading", "writing", "speaking", "listening"] as const;
-const TYPES = ["lesson", "practice", "tip"] as const;
+const CATEGORIES = ["reading", "writing", "speaking", "listening", "vocabulary", "grammar", "general"] as const;
+const TYPES = ["lesson", "practice", "tip", "book", "mock_test", "feedback_prompt"] as const;
 
-const categoryIcons = {
+const categoryIcons: Record<string, typeof BookOpen> = {
   reading: BookOpen,
   writing: PenLine,
   speaking: Mic,
   listening: Headphones,
+  vocabulary: BookOpen,
+  grammar: BookOpen,
+  general: BookOpen,
 };
 
-const categoryColors = {
+const categoryColors: Record<string, string> = {
   reading: "text-blue-400",
   writing: "text-emerald-400",
   speaking: "text-violet-400",
   listening: "text-cyan-400",
+  vocabulary: "text-orange-400",
+  grammar: "text-rose-400",
+  general: "text-slate-400",
 };
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
   lesson: "admin.typeLesson",
   practice: "admin.typePractice",
   tip: "admin.typeTip",
-} as const;
+  book: "admin.typeBook",
+  mock_test: "admin.typeMockTest",
+  feedback_prompt: "admin.typeFeedback",
+};
 
 type FormData = {
   title: string;

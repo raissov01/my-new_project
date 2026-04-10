@@ -18,8 +18,8 @@ func NewIELTSMaterial(db *gorm.DB) *IELTSMaterialHandler {
 	return &IELTSMaterialHandler{db: db}
 }
 
-var validCategories = []string{"reading", "writing", "speaking", "listening"}
-var validTypes = []string{"lesson", "practice", "tip"}
+var validCategories = []string{"reading", "writing", "speaking", "listening", "vocabulary", "grammar", "general"}
+var validTypes = []string{"lesson", "practice", "tip", "book", "mock_test", "feedback_prompt"}
 
 type materialRequest struct {
 	Title     string `json:"title" binding:"required"`
@@ -37,10 +37,10 @@ func (r *materialRequest) validate() string {
 		return "Content is required."
 	}
 	if !slices.Contains(validCategories, r.Category) {
-		return "Category must be one of: reading, writing, speaking, listening."
+		return "Category must be one of: reading, writing, speaking, listening, vocabulary, grammar, general."
 	}
 	if !slices.Contains(validTypes, r.Type) {
-		return "Type must be one of: lesson, practice, tip."
+		return "Type must be one of: lesson, practice, tip, book, mock_test, feedback_prompt."
 	}
 	return ""
 }

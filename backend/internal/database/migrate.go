@@ -58,9 +58,9 @@ func AutoMigrate(db *gorm.DB) error {
 	// caused a CHECK violation crash on every server startup after a1fb332.
 	db.Exec(`ALTER TABLE ielts_materials DROP CONSTRAINT IF EXISTS chk_ielts_materials_category`)
 	db.Exec(`ALTER TABLE ielts_materials ADD CONSTRAINT chk_ielts_materials_category CHECK (category IN ('reading','writing','speaking','listening','vocabulary','grammar','general'))`)
-	// Old type constraint only had lesson/practice/tip; library adds book/mock.
+	// Old type constraint only had lesson/practice/tip; library adds book/mock_test/feedback_prompt.
 	db.Exec(`ALTER TABLE ielts_materials DROP CONSTRAINT IF EXISTS chk_ielts_materials_type`)
-	db.Exec(`ALTER TABLE ielts_materials ADD CONSTRAINT chk_ielts_materials_type CHECK (type IN ('lesson','practice','tip','book','mock'))`)
+	db.Exec(`ALTER TABLE ielts_materials ADD CONSTRAINT chk_ielts_materials_type CHECK (type IN ('lesson','practice','tip','book','mock','mock_test','feedback_prompt'))`)
 
 	// Mark all existing users (who registered before email verification was added)
 	// as verified so they are not locked out of their accounts.

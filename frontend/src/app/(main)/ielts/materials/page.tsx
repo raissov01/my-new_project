@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, BookOpen, BookOpenText, GraduationCap, Headphones, Languages, Lightbulb, Mic, PenLine, Settings } from "lucide-react";
+import { ArrowLeft, BookOpen, BookOpenText, ClipboardCheck, FileText, GraduationCap, Headphones, Lightbulb, MessageSquare, Mic, PenLine, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cookies } from "next/headers";
 import { createTranslator } from "@/lib/shared/i18n";
@@ -7,18 +7,27 @@ import { getServerLocale } from "@/server/i18n";
 import { isAdminSessionCookie, ADMIN_COOKIE_NAME } from "@/lib/shared/auth/admin";
 import { getMaterials, type IELTSMaterial } from "@/app/(main)/ielts/admin/actions";
 
+/* ─── Section top-level groups (user's 4 categories) ─── */
+
+type TopGroup = {
+  key: string;
+  label: string;
+  icon: typeof BookOpenText;
+  tone: string;
+  types: string[];
+};
+
 const categoryMeta = {
   reading: { icon: BookOpen, tone: "from-blue-500/18 to-indigo-500/10" },
   listening: { icon: Headphones, tone: "from-cyan-500/18 to-sky-500/10" },
   writing: { icon: PenLine, tone: "from-emerald-500/18 to-teal-500/10" },
   speaking: { icon: Mic, tone: "from-violet-500/18 to-fuchsia-500/10" },
+  vocabulary: { icon: BookOpen, tone: "from-orange-500/18 to-amber-500/10" },
+  grammar: { icon: BookOpen, tone: "from-rose-500/18 to-pink-500/10" },
+  general: { icon: BookOpen, tone: "from-slate-500/18 to-zinc-500/10" },
 } as const;
 
-const typeMeta = {
-  lesson: { icon: BookOpenText, color: "border-blue-500/20 bg-blue-500/10 text-blue-400" },
-  practice: { icon: GraduationCap, color: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" },
-  tip: { icon: Lightbulb, color: "border-amber-500/20 bg-amber-500/10 text-amber-400" },
-} as const;
+const categoryOrder = ["writing", "speaking", "reading", "listening", "vocabulary", "grammar", "general"] as const;
 
 export default async function IELTSMaterialsPage() {
   const locale = await getServerLocale();
@@ -27,24 +36,24 @@ export default async function IELTSMaterialsPage() {
   const isAdmin = isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME));
   const allMaterials = await getMaterials();
 
-  // Group by category
-  const categories = ["reading", "listening", "writing", "speaking"] as const;
-  const grouped = new Map<string, IELTSMaterial[]>();
-  for (const cat of categories) {
-    grouped.set(cat, allMaterials.filter((m) => m.category === cat));
-  }
+  /* ─── Split into 4 top-level groups ─── */
+  const materials = allMaterials.filter((m) => ["book", "lesson", "practice"].includes(m.type));
+  const tips = allMaterials.filter((m) => m.type === "tip");
+  const mockTests = allMaterials.filter((m) => m.type === "mock_test");
+  const feedbackPrompts = allMaterials.filter((m) => m.type === "feedback_prompt");
 
-  const typeLabels = {
-    lesson: t("admin.typeLesson"),
-    practice: t("admin.typePractice"),
-    tip: t("admin.typeTip"),
-  };
+  const topGroups: TopGroup[] = [
+    { key: "materials", label: t("ielts.matGroupMaterials"), icon: BookOpenText, tone: "from-indigo-500/18 to-blue-500/10", types: ["book", "lesson", "practice"] },
+    { key: "tips", label: t("ielts.matGroupTips"), icon: Lightbulb, tone: "from-amber-500/18 to-orange-500/10", types: ["tip"] },
+    { key: "mock_tests", label: t("ielts.matGroupMockTests"), icon: ClipboardCheck, tone: "from-emerald-500/18 to-teal-500/10", types: ["mock_test"] },
+    { key: "feedback_prompts", label: t("ielts.matGroupFeedback"), icon: MessageSquare, tone: "from-violet-500/18 to-fuchsia-500/10", types: ["feedback_prompt"] },
+  ];
 
-  const categoryLabels = {
-    reading: t("ielts.matReading"),
-    listening: t("ielts.matListening"),
-    writing: t("ielts.writingTitle"),
-    speaking: t("ielts.speakingTitle"),
+  const groupedItems: Record<string, IELTSMaterial[]> = {
+    materials,
+    tips,
+    mock_tests: mockTests,
+    feedback_prompts: feedbackPrompts,
   };
 
   return (
@@ -69,6 +78,22 @@ export default async function IELTSMaterialsPage() {
           {t("ielts.materialsTitle")}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">{t("ielts.materialsSubtitle")}</p>
+
+        {/* ─── Quick stats ─── */}
+        <div className="mt-5 flex flex-wrap gap-3">
+          {topGroups.map((g) => {
+            const count = groupedItems[g.key]?.length ?? 0;
+            if (count === 0) return null;
+            const Icon = g.icon;
+            return (
+              <a key={g.key} href={`#${g.key}`} className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3.5 py-2 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
+                <Icon className="h-3.5 w-3.5" />
+                {g.label}
+                <span className="rounded-full bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-muted)]">{count}</span>
+              </a>
+            );
+          })}
+        </div>
       </div>
 
       {allMaterials.length === 0 ? (
@@ -78,66 +103,82 @@ export default async function IELTSMaterialsPage() {
           <p className="mt-2 text-sm text-[var(--text-secondary)]">{t("admin.emptyPublicBody")}</p>
         </div>
       ) : (
-        <div className="mt-8 space-y-10">
-          {categories.map((cat) => {
-            const items = grouped.get(cat) ?? [];
+        <div className="mt-8 space-y-12">
+          {topGroups.map((group) => {
+            const items = groupedItems[group.key] ?? [];
             if (items.length === 0) return null;
 
-            const meta = categoryMeta[cat];
-            const Icon = meta.icon;
+            const GroupIcon = group.icon;
 
-            // Sub-group by type
-            const lessons = items.filter((m) => m.type === "lesson");
-            const practices = items.filter((m) => m.type === "practice");
-            const tips = items.filter((m) => m.type === "tip");
+            // Sub-group by category
+            const byCategory = new Map<string, IELTSMaterial[]>();
+            for (const cat of categoryOrder) {
+              const catItems = items.filter((m) => m.category === cat);
+              if (catItems.length > 0) byCategory.set(cat, catItems);
+            }
 
             return (
-              <section key={cat}>
+              <section key={group.key} id={group.key}>
+                {/* ─── Group header ─── */}
                 <div className="flex items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl border border-white/8 bg-gradient-to-br ${meta.tone}`}>
-                    <Icon className="h-5 w-5 text-[var(--text-primary)]" />
+                  <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8 bg-gradient-to-br ${group.tone}`}>
+                    <GroupIcon className="h-5 w-5 text-[var(--text-primary)]" />
                   </div>
-                  <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                    {categoryLabels[cat]}
-                  </h2>
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                      {group.label}
+                    </h2>
+                    <p className="text-xs text-[var(--text-muted)]">{items.length} items</p>
+                  </div>
                 </div>
 
+                {/* ─── Category sub-sections ─── */}
                 <div className="mt-5 space-y-6">
-                  {[
-                    { label: typeLabels.lesson, items: lessons, type: "lesson" as const },
-                    { label: typeLabels.practice, items: practices, type: "practice" as const },
-                    { label: typeLabels.tip, items: tips, type: "tip" as const },
-                  ]
-                    .filter((group) => group.items.length > 0)
-                    .map((group) => {
-                      const tm = typeMeta[group.type];
-                      return (
-                        <div key={group.type}>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${tm.color}`}>
-                              <tm.icon className="h-3.5 w-3.5" />
-                              {group.label}
-                            </span>
-                            <span className="text-xs text-[var(--text-muted)]">({group.items.length})</span>
-                          </div>
-                          <div className="mt-3 grid gap-4 lg:grid-cols-2">
-                            {group.items.map((material) => (
-                              <article
-                                key={material.id}
-                                className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]"
-                              >
-                                <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                                  {material.title}
-                                </h3>
+                  {Array.from(byCategory.entries()).map(([cat, catItems]) => {
+                    const meta = categoryMeta[cat as keyof typeof categoryMeta];
+                    const CatIcon = meta?.icon ?? BookOpen;
+                    const catLabel = t(`ielts.matCat_${cat}`);
+
+                    return (
+                      <div key={cat}>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
+                            <CatIcon className="h-3.5 w-3.5" />
+                            {catLabel}
+                          </span>
+                          <span className="text-xs text-[var(--text-muted)]">({catItems.length})</span>
+                        </div>
+                        <div className="mt-3 grid gap-4 lg:grid-cols-2">
+                          {catItems.map((material) => (
+                            <article
+                              key={material.id}
+                              className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]"
+                            >
+                              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                                {material.title}
+                              </h3>
+                              {material.description && (
+                                <p className="mt-1.5 text-xs leading-5 text-[var(--text-muted)]">
+                                  {material.description}
+                                </p>
+                              )}
+                              {material.content && (
                                 <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
                                   {material.content}
                                 </div>
-                              </article>
-                            ))}
-                          </div>
+                              )}
+                              {material.filePath && (
+                                <div className="mt-3 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                                  <FileText className="h-3.5 w-3.5" />
+                                  PDF
+                                </div>
+                              )}
+                            </article>
+                          ))}
                         </div>
-                      );
-                    })}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             );

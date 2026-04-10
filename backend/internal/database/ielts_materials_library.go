@@ -20,10 +20,15 @@ import (
 
 // SeedIELTSMaterialsLibrary seeds the full materials library from the
 // telegram-media file mapping. Safe to call multiple times (upserts by title).
+// Includes: study materials, mock tests, tips, and AI feedback prompts.
 func SeedIELTSMaterialsLibrary(db *gorm.DB) error {
-	materials := buildMaterialsLibrary()
+	// Combine all entry sources
+	all := buildMaterialsLibrary()
+	all = append(all, buildMockTests()...)
+	all = append(all, buildFeedbackPrompts()...)
+
 	created, skipped := 0, 0
-	for _, m := range materials {
+	for _, m := range all {
 		var existing models.IELTSMaterial
 		res := db.Where("title = ?", m.Title).First(&existing)
 		if res.Error == nil {
@@ -35,7 +40,7 @@ func SeedIELTSMaterialsLibrary(db *gorm.DB) error {
 		}
 		created++
 	}
-	log.Printf("[library] materials: created=%d skipped=%d total=%d", created, skipped, len(materials))
+	log.Printf("[library] materials: created=%d skipped=%d total=%d", created, skipped, len(all))
 	return nil
 }
 
@@ -849,15 +854,6 @@ func buildMaterialsLibrary() []models.IELTSMaterial {
 			SortOrder:   next(),
 		},
 		{
-			Title:       "Complete IELTS Bands 6.5–7.5",
-			Description: "Cambridge Complete IELTS targeting Band 6.5–7.5. All four skills with integrated exam practice.",
-			Category:    "general",
-			Type:        "book",
-			Difficulty:  "intermediate",
-			FilePath:    "telegram-media/88_Complete_IELTS_Bands_6_5-7_5.pdf",
-			SortOrder:   next(),
-		},
-		{
 			Title:       "Official Guide to IELTS (British Council)",
 			Description: "The British Council's official IELTS guide. Authoritative overview of test format, scoring, and preparation strategies.",
 			Category:    "general",
@@ -921,39 +917,12 @@ func buildMaterialsLibrary() []models.IELTSMaterial {
 			SortOrder:   next(),
 		},
 		{
-			Title:       "IELTS Trainer (Cambridge)",
-			Description: "Cambridge IELTS Trainer with six practice tests and detailed skill-building activities.",
-			Category:    "general",
-			Type:        "book",
-			Difficulty:  "intermediate",
-			FilePath:    "telegram-media/374_IELTS-Trainer.pdf",
-			SortOrder:   next(),
-		},
-		{
-			Title:       "IELTS Trainer 2 (Cambridge)",
-			Description: "Cambridge IELTS Trainer 2 with additional practice tests and updated exam content.",
-			Category:    "general",
-			Type:        "book",
-			Difficulty:  "intermediate",
-			FilePath:    "telegram-media/3350_IELTS_Trainer_2.pdf",
-			SortOrder:   next(),
-		},
-		{
 			Title:       "202 Useful Exercises for IELTS",
 			Description: "202 targeted exercises covering all skills and question types. Ideal for focused weakness practice.",
 			Category:    "general",
 			Type:        "practice",
 			Difficulty:  "intermediate",
 			FilePath:    "telegram-media/42_202_useful_exercises_for_IELTS.pdf",
-			SortOrder:   next(),
-		},
-		{
-			Title:       "IELTS Writing Review — Nov 2019",
-			Description: "Post-exam analysis of November 2019 IELTS Writing questions with model answers and scoring commentary.",
-			Category:    "writing",
-			Type:        "practice",
-			Difficulty:  "intermediate",
-			FilePath:    "telegram-media/276_IELTS Writing Review Nov 2019.pdf",
 			SortOrder:   next(),
 		},
 	}

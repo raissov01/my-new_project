@@ -15,7 +15,7 @@ type IELTSMaterial struct {
 	Description string    `gorm:"type:text;not null;default:''" json:"description"`
 	Content     string    `gorm:"type:text;not null;default:''" json:"content"`
 	Category    string    `gorm:"not null;check:category IN ('reading','writing','speaking','listening','vocabulary','grammar','general')" json:"category"`
-	Type        string    `gorm:"not null;check:type IN ('lesson','practice','tip','book','mock')" json:"type"`
+	Type        string    `gorm:"not null;check:type IN ('lesson','practice','tip','book','mock_test','feedback_prompt')" json:"type"`
 	Difficulty  string    `gorm:"not null;default:'all';check:difficulty IN ('beginner','intermediate','advanced','all')" json:"difficulty"`
 	FilePath    string    `gorm:"type:text;not null;default:''" json:"filePath"`
 	IsPremium   bool      `gorm:"not null;default:false" json:"isPremium"`
