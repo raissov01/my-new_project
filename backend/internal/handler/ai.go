@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
@@ -29,7 +31,8 @@ const (
 	defaultAICardCount      = 15
 	minAICardCount          = 5
 	maxAICardCount          = 600
-	maxCardsPerAIBatch      = 50
+	maxCardsPerAIBatch      = 100
+	maxParallelBatches      = 4
 	defaultAITextLimitRunes = 30000
 	maxAITextLimitRunes     = 360000
 )
@@ -113,26 +116,58 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 func (h *AIHandler) generateCards(text, mode, language string, count int) ([]generatedCard, string, error) {
 	batches := buildGenerationBatches(text, mode, language, count)
+
+	type batchResult struct {
+		cards []generatedCard
+		model string
+		err   error
+	}
+
+	results := make([]batchResult, len(batches))
+	sem := make(chan struct{}, maxParallelBatches)
+	var wg sync.WaitGroup
+
+	for i, prompt := range batches {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(idx int, p string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			cards, model, err := h.generateBatch(p)
+			results[idx] = batchResult{cards: cards, model: model, err: err}
+		}(i, prompt)
+	}
+
+	wg.Wait()
+
 	allCards := make([]generatedCard, 0, count)
 	modelName := ""
+	var lastErr error
 
-	for _, batch := range batches {
-		cards, batchModel, err := h.generateBatch(batch)
-		if err != nil {
-			return nil, "", err
+	for i, r := range results {
+		if r.err != nil {
+			log.Printf("[ai] batch %d/%d failed: %v", i+1, len(results), r.err)
+			lastErr = r.err
+			continue
 		}
 		if modelName == "" {
-			modelName = batchModel
+			modelName = r.model
 		}
-		allCards = append(allCards, cards...)
-		if len(allCards) >= count {
-			break
-		}
+		allCards = append(allCards, r.cards...)
 	}
 
 	allCards = dedupeCards(allCards, count)
+
 	if len(allCards) == 0 {
+		if lastErr != nil {
+			return nil, "", fmt.Errorf("all batches failed, last error: %w", lastErr)
+		}
 		return nil, "", fmt.Errorf("no flashcards were generated")
+	}
+
+	if lastErr != nil {
+		log.Printf("[ai] %d/%d batches succeeded, returning %d cards (some batches failed)", len(results), len(results), len(allCards))
 	}
 
 	return allCards, modelName, nil
