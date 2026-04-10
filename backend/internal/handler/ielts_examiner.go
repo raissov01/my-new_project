@@ -111,12 +111,18 @@ func (h *IELTSExaminerHandler) EvaluateWriting(w http.ResponseWriter, r *http.Re
 	// Enforce realistic minimum word counts
 	minWords := 50
 	if req.TaskType == "task1" {
-		minWords = 100
+		minWords = 120
 	} else if req.TaskType == "task2" {
-		minWords = 150
+		minWords = 200
 	}
 	if wordCount < minWords {
 		writeError(w, http.StatusBadRequest, fmt.Sprintf("essay is too short (minimum %d words for %s, you wrote %d)", minWords, req.TaskType, wordCount), nil)
+		return
+	}
+
+	maxWords := 3000
+	if wordCount > maxWords {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("essay is too long (maximum %d words, you wrote %d)", maxWords, wordCount), nil)
 		return
 	}
 
@@ -198,7 +204,7 @@ Return ONLY valid JSON:
 
 	raw, modelName, err := h.callLLM(prompt)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "AI evaluation failed: "+err.Error(), err)
+		writeError(w, http.StatusBadGateway, "AI evaluation is temporarily unavailable. Please try again.", err)
 		return
 	}
 
@@ -214,6 +220,17 @@ Return ONLY valid JSON:
 	scores.Coherence = clampBand(scores.Coherence)
 	scores.LexicalResource = clampBand(scores.LexicalResource)
 	scores.Grammar = clampBand(scores.Grammar)
+
+	// Validate: overall band must be arithmetic mean of criteria, rounded to nearest 0.5
+	computedOverall := (scores.TaskAchievement + scores.Coherence + scores.LexicalResource + scores.Grammar) / 4.0
+	computedOverall = math.Round(computedOverall*2) / 2
+	if computedOverall < 0 {
+		computedOverall = 0
+	}
+	if computedOverall > 9 {
+		computedOverall = 9
+	}
+	scores.OverallBand = computedOverall
 
 	feedbackJSON, _ := json.Marshal(scores.Feedback)
 
@@ -259,7 +276,7 @@ func (h *IELTSExaminerHandler) GetWritingHistory(w http.ResponseWriter, r *http.
 	}
 
 	var submissions []models.IELTSWritingSubmission
-	if err := h.db.Where("user_id = ?", userID).Order("created_at DESC").Limit(50).Find(&submissions).Error; err != nil {
+	if err := h.db.Select("id, user_id, task_type, prompt, word_count, time_taken_secs, overall_band, task_achievement, coherence, lexical_resource, grammar, ai_model, created_at").Where("user_id = ?", userID).Order("created_at DESC").Limit(50).Find(&submissions).Error; err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to load history", err)
 		return
 	}
@@ -323,6 +340,12 @@ func (h *IELTSExaminerHandler) EvaluateSpeaking(w http.ResponseWriter, r *http.R
 	}
 	if strings.TrimSpace(req.Prompt) == "" || strings.TrimSpace(req.Transcript) == "" {
 		writeError(w, http.StatusBadRequest, "prompt and transcript are required", nil)
+		return
+	}
+
+	transcriptWords := len(strings.Fields(strings.TrimSpace(req.Transcript)))
+	if transcriptWords > 2000 {
+		writeError(w, http.StatusBadRequest, "transcript is too long (maximum 2000 words)", nil)
 		return
 	}
 
@@ -392,7 +415,7 @@ Return ONLY valid JSON:
 
 	raw, modelName, err := h.callLLM(prompt)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "AI evaluation failed: "+err.Error(), err)
+		writeError(w, http.StatusBadGateway, "AI evaluation is temporarily unavailable. Please try again.", err)
 		return
 	}
 
@@ -407,6 +430,17 @@ Return ONLY valid JSON:
 	scores.LexicalResource = clampBand(scores.LexicalResource)
 	scores.Grammar = clampBand(scores.Grammar)
 	scores.Pronunciation = clampBand(scores.Pronunciation)
+
+	// Validate: overall band must be arithmetic mean of criteria, rounded to nearest 0.5
+	computedOverall := (scores.FluencyCoherence + scores.LexicalResource + scores.Grammar + scores.Pronunciation) / 4.0
+	computedOverall = math.Round(computedOverall*2) / 2
+	if computedOverall < 0 {
+		computedOverall = 0
+	}
+	if computedOverall > 9 {
+		computedOverall = 9
+	}
+	scores.OverallBand = computedOverall
 
 	feedbackJSON, _ := json.Marshal(scores.Feedback)
 
@@ -449,7 +483,7 @@ func (h *IELTSExaminerHandler) GetSpeakingHistory(w http.ResponseWriter, r *http
 	}
 
 	var sessions []models.IELTSSpeakingSession
-	if err := h.db.Where("user_id = ?", userID).Order("created_at DESC").Limit(50).Find(&sessions).Error; err != nil {
+	if err := h.db.Select("id, user_id, part, prompt, overall_band, fluency_coherence, lexical_resource, grammar, pronunciation, ai_model, created_at").Where("user_id = ?", userID).Order("created_at DESC").Limit(50).Find(&sessions).Error; err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to load history", err)
 		return
 	}

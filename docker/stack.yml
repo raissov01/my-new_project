@@ -34,6 +34,11 @@ services:
     networks:
       - internal
     deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
       replicas: 1
       labels:
         com.studywithraissov.deploy-version: ${POSTGRES_DEPLOY_VERSION:-postgres-stable}
@@ -75,6 +80,11 @@ services:
     networks:
       - internal
     deploy:
+      resources:
+        limits:
+          memory: 384M
+        reservations:
+          memory: 192M
       replicas: 2
       labels:
         com.studywithraissov.deploy-version: ${BACKEND_DEPLOY_VERSION:-backend-stable}
@@ -107,6 +117,11 @@ services:
     networks:
       - internal
     deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
       replicas: 2
       labels:
         com.studywithraissov.deploy-version: ${FRONTEND_DEPLOY_VERSION:-frontend-stable}
@@ -141,6 +156,11 @@ services:
     networks:
       - internal
     deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
       replicas: 1
       labels:
         com.studywithraissov.deploy-version: ${NGINX_DEPLOY_VERSION:-nginx-stable}

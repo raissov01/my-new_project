@@ -38,6 +38,7 @@ export function WritingPracticeClient() {
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedSecs, setElapsedSecs] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const wordCount = essay.trim() ? essay.trim().split(/\s+/).length : 0;
@@ -52,6 +53,25 @@ export function WritingPracticeClient() {
   }, []);
 
   useEffect(() => () => stopTimer(), [stopTimer]);
+
+  useEffect(() => {
+    if (phase !== "evaluating") {
+      setProgressMessage("");
+      return;
+    }
+
+    setProgressMessage(t("ielts.evalStep1"));
+
+    const t1 = setTimeout(() => setProgressMessage(t("ielts.evalStep2")), 5000);
+    const t2 = setTimeout(() => setProgressMessage(t("ielts.evalStep3")), 15000);
+    const t3 = setTimeout(() => setProgressMessage(t("ielts.evalStep4")), 30000);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [phase, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,13 +189,17 @@ export function WritingPracticeClient() {
     );
 
     if (submitError) {
-      setError(submitError);
+      setError(t("ielts.evalError"));
       setPhase("write");
       return;
     }
 
     setResult(response ?? null);
     setPhase("results");
+  }
+
+  function handleRetry() {
+    setError(null);
   }
 
   function handleReset() {
@@ -389,7 +413,15 @@ export function WritingPracticeClient() {
           className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50"
         />
 
-        {error ? <ErrorBanner message={error} /> : null}
+        {error ? (
+          <div className="space-y-3">
+            <ErrorBanner message={error} />
+            <Button onClick={handleRetry} variant="outline" size="sm">
+              <RotateCcw className="h-4 w-4" />
+              {t("ielts.retryBtn")}
+            </Button>
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -404,7 +436,7 @@ export function WritingPracticeClient() {
           {t("ielts.wr.evaluating")}
         </h2>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">
-          {t("ielts.wr.evaluatingHint")}
+          {progressMessage || t("ielts.wr.evaluatingHint")}
         </p>
       </div>
     );

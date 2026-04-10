@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
@@ -45,12 +46,14 @@ func RegisterRoutes(router *gin.Engine) {
 	})
 
 	api := router.Group("/api/v1")
+	api.Use(middleware.NewRateLimiter(120, 1*time.Minute).LimitByIP())
 
 	// ── Public auth routes (no token required) ──────────────────────────
-	api.POST("/auth/register", deps.Auth.Register)
-	api.POST("/auth/login", deps.Auth.Login)
+	authLimiter := middleware.NewRateLimiter(10, 1*time.Minute).LimitByIP()
+	api.POST("/auth/register", authLimiter, deps.Auth.Register)
+	api.POST("/auth/login", authLimiter, deps.Auth.Login)
 	api.GET("/auth/verify-email", deps.Auth.VerifyEmail)
-	api.POST("/auth/resend-verification", deps.Auth.ResendVerification)
+	api.POST("/auth/resend-verification", authLimiter, deps.Auth.ResendVerification)
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
 
@@ -115,12 +118,13 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.PUT("/account/email", deps.Auth.UpdateEmail)
 		internal.PUT("/account/password", deps.Auth.UpdatePassword)
 		internal.DELETE("/account", deps.Auth.DeleteAccount)
-		internal.POST("/ai/generate", wrapHTTP(deps.AI.Generate))
+		aiLimiter := middleware.NewRateLimiter(5, 1*time.Minute).LimitByUser()
+		internal.POST("/ai/generate", aiLimiter, wrapHTTP(deps.AI.Generate))
 
 		// IELTS AI examiner (requires internal auth)
-		internal.POST("/ielts/writing/evaluate", wrapHTTP(deps.IELTSExaminer.EvaluateWriting))
+		internal.POST("/ielts/writing/evaluate", aiLimiter, wrapHTTP(deps.IELTSExaminer.EvaluateWriting))
 		internal.GET("/ielts/writing/history", wrapHTTP(deps.IELTSExaminer.GetWritingHistory))
-		internal.POST("/ielts/speaking/evaluate", wrapHTTP(deps.IELTSExaminer.EvaluateSpeaking))
+		internal.POST("/ielts/speaking/evaluate", aiLimiter, wrapHTTP(deps.IELTSExaminer.EvaluateSpeaking))
 		internal.GET("/ielts/speaking/history", wrapHTTP(deps.IELTSExaminer.GetSpeakingHistory))
 
 		// IELTS material admin CRUD (requires internal auth — teacher/admin)

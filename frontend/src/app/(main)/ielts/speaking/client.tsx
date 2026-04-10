@@ -49,6 +49,7 @@ export function SpeakingPracticeClient() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [prepTime, setPrepTime] = useState(0);
   const [activeFollowUps, setActiveFollowUps] = useState<string[]>([]);
+  const [progressMessage, setProgressMessage] = useState("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopTimer = useCallback(() => {
@@ -59,6 +60,25 @@ export function SpeakingPracticeClient() {
   }, []);
 
   useEffect(() => () => stopTimer(), [stopTimer]);
+
+  useEffect(() => {
+    if (phase !== "evaluating") {
+      setProgressMessage("");
+      return;
+    }
+
+    setProgressMessage(t("ielts.speakEvalStep1"));
+
+    const t1 = setTimeout(() => setProgressMessage(t("ielts.evalStep2")), 5000);
+    const t2 = setTimeout(() => setProgressMessage(t("ielts.evalStep3")), 15000);
+    const t3 = setTimeout(() => setProgressMessage(t("ielts.evalStep4")), 30000);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [phase, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -213,7 +233,7 @@ export function SpeakingPracticeClient() {
     );
 
     if (submitError) {
-      setError(submitError);
+      setError(t("ielts.evalError"));
       setPhase("practice");
       return;
     }
@@ -221,6 +241,10 @@ export function SpeakingPracticeClient() {
     setResult(response ?? null);
     setActiveFollowUps(extractFollowUps(response?.feedback));
     setPhase("results");
+  }
+
+  function handleRetry() {
+    setError(null);
   }
 
   function handleReset() {
@@ -515,7 +539,15 @@ export function SpeakingPracticeClient() {
           </>
         )}
 
-        {error ? <ErrorBanner message={error} /> : null}
+        {error ? (
+          <div className="space-y-3">
+            <ErrorBanner message={error} />
+            <Button onClick={handleRetry} variant="outline" size="sm">
+              <RotateCcw className="h-4 w-4" />
+              {t("ielts.retryBtn")}
+            </Button>
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -530,7 +562,7 @@ export function SpeakingPracticeClient() {
           {t("ielts.sp.evaluating")}
         </h2>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">
-          {t("ielts.sp.evaluatingHint")}
+          {progressMessage || t("ielts.sp.evaluatingHint")}
         </p>
       </div>
     );
