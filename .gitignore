@@ -19,6 +19,7 @@
 /out/
 /frontend/.next/
 /frontend/out/
+/backend/.next/
 
 # production
 /build
