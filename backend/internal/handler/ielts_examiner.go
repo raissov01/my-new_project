@@ -552,7 +552,7 @@ func callClaudeChatCompletion(apiKey, model, apiURL, prompt string, timeout time
 	body := map[string]any{
 		"model": model,
 		"messages": []map[string]string{
-			{"role": "system", "content": "You are an expert IELTS examiner. Return ONLY valid JSON with no markdown, no backticks, no commentary."},
+			{"role": "system", "content": masterIELTSSystemPrompt},
 			{"role": "user", "content": prompt},
 		},
 		"temperature": 0.3,
@@ -604,7 +604,7 @@ func callOpenAIChatCompletion(apiKey, model, prompt string, timeout time.Duratio
 	body := map[string]any{
 		"model": model,
 		"messages": []map[string]string{
-			{"role": "system", "content": "You are an expert IELTS examiner. Return ONLY valid JSON with no markdown, no backticks, no commentary."},
+			{"role": "system", "content": masterIELTSSystemPrompt},
 			{"role": "user", "content": prompt},
 		},
 		"max_completion_tokens": 40000,

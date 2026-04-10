@@ -65,5 +65,9 @@ func AutoMigrate(db *gorm.DB) error {
 		return err
 	}
 
+	if err := SeedIELTSMaterialsLibrary(db); err != nil {
+		return err
+	}
+
 	return nil
 }
