@@ -26,6 +26,15 @@
 /backend/bin
 /backend/.cache
 
+# compiled Go binaries in backend root
+/backend/telegram-auth
+/backend/telegram-import
+/backend/pdf-flashcards
+
+# local Docker overrides
+/docker/docker-compose.override.yml
+/docker/nginx.local.conf
+
 # misc
 .DS_Store
 *.pem
