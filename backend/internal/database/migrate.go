@@ -52,6 +52,16 @@ func AutoMigrate(db *gorm.DB) error {
 	// Expand task_completion status to include 'rescheduled'
 	db.Exec(`ALTER TABLE ielts_task_completions DROP CONSTRAINT IF EXISTS chk_ielts_task_completions_status`)
 
+	// Expand ielts_materials constraints to support the 900+ materials library.
+	// Old category constraint only had reading/writing/speaking/listening;
+	// SeedIELTSMaterialsLibrary inserts vocabulary/grammar/general rows which
+	// caused a CHECK violation crash on every server startup after a1fb332.
+	db.Exec(`ALTER TABLE ielts_materials DROP CONSTRAINT IF EXISTS chk_ielts_materials_category`)
+	db.Exec(`ALTER TABLE ielts_materials ADD CONSTRAINT chk_ielts_materials_category CHECK (category IN ('reading','writing','speaking','listening','vocabulary','grammar','general'))`)
+	// Old type constraint only had lesson/practice/tip; library adds book/mock.
+	db.Exec(`ALTER TABLE ielts_materials DROP CONSTRAINT IF EXISTS chk_ielts_materials_type`)
+	db.Exec(`ALTER TABLE ielts_materials ADD CONSTRAINT chk_ielts_materials_type CHECK (type IN ('lesson','practice','tip','book','mock'))`)
+
 	// Mark all existing users (who registered before email verification was added)
 	// as verified so they are not locked out of their accounts.
 	result := db.Exec(`UPDATE users SET email_verified = true WHERE email_verified = false AND verification_token IS NULL`)
