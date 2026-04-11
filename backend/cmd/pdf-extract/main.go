@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/joho/godotenv"
 	"github.com/ledongthuc/pdf"
@@ -136,6 +137,9 @@ func extractPDFText(filePath string) (string, error) {
 }
 
 func cleanExtractedText(text string) string {
+	// Strip invalid UTF-8 bytes (prevents PostgreSQL SQLSTATE 22021 errors)
+	text = sanitizeUTF8(text)
+
 	// Remove excessive whitespace
 	lines := strings.Split(text, "\n")
 	var cleaned []string
@@ -155,4 +159,27 @@ func cleanExtractedText(text string) string {
 	}
 
 	return strings.TrimSpace(strings.Join(cleaned, "\n"))
+}
+
+// sanitizeUTF8 removes invalid UTF-8 bytes and null bytes from text.
+func sanitizeUTF8(s string) string {
+	if utf8.ValidString(s) && !strings.ContainsRune(s, 0) {
+		return s
+	}
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		if r == utf8.RuneError && size <= 1 {
+			i++
+			continue // skip invalid byte
+		}
+		if r == 0 {
+			i++
+			continue // skip null byte
+		}
+		b.WriteRune(r)
+		i += size
+	}
+	return b.String()
 }
