@@ -225,20 +225,30 @@ func (h *ChatHandler) ClearHistory(w http.ResponseWriter, r *http.Request) {
 // --- AI call with fallback ---
 
 func (h *ChatHandler) callAI(messages []map[string]string) (string, error) {
-	// Try Claude first
+	var lastErr error
+
+	// Try OpenAI first (primary — gpt-4.1)
+	if h.openaiKey != "" {
+		reply, err := h.callOpenAI(messages)
+		if err == nil {
+			return reply, nil
+		}
+		lastErr = fmt.Errorf("openai: %w", err)
+	}
+
+	// Fallback to Claude via do-ai.run
 	if h.claudeKey != "" {
 		reply, err := h.callClaude(messages)
 		if err == nil {
 			return reply, nil
 		}
+		lastErr = fmt.Errorf("claude: %w", err)
 	}
 
-	// Fallback to OpenAI
-	if h.openaiKey != "" {
-		return h.callOpenAI(messages)
+	if lastErr != nil {
+		return "", lastErr
 	}
-
-	return "", fmt.Errorf("no AI provider configured")
+	return "", fmt.Errorf("no AI provider configured — set OPENAI_API_KEY or CLAUDE_API_KEY")
 }
 
 func (h *ChatHandler) callClaude(messages []map[string]string) (string, error) {

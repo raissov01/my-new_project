@@ -38,16 +38,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const data = await fetchBackendJson<SendMessageResponse>({
-    path: "/api/v1/chat/message",
-    userId: user.id,
-    method: "POST",
-    body: JSON.stringify({ message }),
-    headers: { "Content-Type": "application/json" },
-    timeoutMs: 120_000,
-  });
+  try {
+    const data = await fetchBackendJson<SendMessageResponse>({
+      path: "/api/v1/chat/message",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify({ message }),
+      headers: { "Content-Type": "application/json" },
+      timeoutMs: 120_000,
+    });
 
-  return NextResponse.json(data);
+    return NextResponse.json(data);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Backend request failed";
+    console.error("[chat] POST error:", msg);
+    return NextResponse.json({ error: msg }, { status: 502 });
+  }
 }
 
 // GET /api/chat — get history
@@ -57,12 +63,18 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const data = await fetchBackendJson<HistoryResponse>({
-    path: "/api/v1/chat/history",
-    userId: user.id,
-  });
+  try {
+    const data = await fetchBackendJson<HistoryResponse>({
+      path: "/api/v1/chat/history",
+      userId: user.id,
+    });
 
-  return NextResponse.json(data);
+    return NextResponse.json(data);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Backend request failed";
+    console.error("[chat] GET error:", msg);
+    return NextResponse.json({ messages: [] });
+  }
 }
 
 // DELETE /api/chat — clear history
@@ -72,11 +84,17 @@ export async function DELETE() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const data = await fetchBackendJson<{ ok: boolean }>({
-    path: "/api/v1/chat/history",
-    userId: user.id,
-    method: "DELETE",
-  });
+  try {
+    const data = await fetchBackendJson<{ ok: boolean }>({
+      path: "/api/v1/chat/history",
+      userId: user.id,
+      method: "DELETE",
+    });
 
-  return NextResponse.json(data);
+    return NextResponse.json(data);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Backend request failed";
+    console.error("[chat] DELETE error:", msg);
+    return NextResponse.json({ error: msg }, { status: 502 });
+  }
 }
