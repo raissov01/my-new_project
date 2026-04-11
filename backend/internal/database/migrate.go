@@ -38,6 +38,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.IELTSWeeklyReflection{},
 		&models.TelegramPost{},
 		&models.ChatMessage{},
+		&models.MaterialNote{},
 		&models.EngSimPlacement{},
 		&models.EngSimUnit{},
 		&models.EngSimLesson{},

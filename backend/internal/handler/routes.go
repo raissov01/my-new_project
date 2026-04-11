@@ -34,6 +34,7 @@ type Dependencies struct {
 	Chat               *ChatHandler
 	Files              *FilesHandler
 	EngSim             *EngSimHandler
+	MaterialNotes      *MaterialNotesHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -132,6 +133,10 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/ielts/writing/history", wrapHTTP(deps.IELTSExaminer.GetWritingHistory))
 		internal.POST("/ielts/speaking/evaluate", aiLimiter, wrapHTTP(deps.IELTSExaminer.EvaluateSpeaking))
 		internal.GET("/ielts/speaking/history", wrapHTTP(deps.IELTSExaminer.GetSpeakingHistory))
+
+		// Material notes (user's reading progress, notes, exercise answers)
+		internal.GET("/materials/:materialID/notes", wrapHTTP(deps.MaterialNotes.GetNote))
+		internal.POST("/materials/:materialID/notes", wrapHTTP(deps.MaterialNotes.SaveNote))
 
 		// IELTS material admin CRUD (requires internal auth — teacher/admin)
 		internal.POST("/ielts/materials", deps.IELTSMaterial.Create)

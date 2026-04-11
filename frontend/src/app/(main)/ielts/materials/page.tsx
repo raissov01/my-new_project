@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, BookOpen, BookOpenText, ClipboardCheck, Download, Eye, FileText, GraduationCap, Headphones, Lightbulb, MessageSquare, Mic, PenLine, Settings } from "lucide-react";
+import { ArrowLeft, BookOpen, BookOpenText, ClipboardCheck, Download, FileText, GraduationCap, Headphones, Lightbulb, MessageSquare, Mic, PenLine, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cookies } from "next/headers";
 import { createTranslator } from "@/lib/shared/i18n";
@@ -156,34 +156,38 @@ export default async function IELTSMaterialsPage() {
                               key={material.id}
                               className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]"
                             >
-                              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                                {material.title}
-                              </h3>
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="text-base font-semibold text-[var(--text-primary)] sm:text-lg">
+                                  {material.title}
+                                </h3>
+                                {material.difficulty && material.difficulty !== "all" && (
+                                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                                    material.difficulty === "beginner" ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" :
+                                    material.difficulty === "intermediate" ? "text-blue-500 bg-blue-500/10 border-blue-500/20" :
+                                    "text-orange-500 bg-orange-500/10 border-orange-500/20"
+                                  }`}>
+                                    {material.difficulty}
+                                  </span>
+                                )}
+                              </div>
                               {material.description && (
                                 <p className="mt-1.5 text-xs leading-5 text-[var(--text-muted)]">
                                   {material.description}
                                 </p>
                               )}
-                              {material.content && (
-                                <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
-                                  {material.content}
-                                </div>
-                              )}
                               {material.filePath && (
                                 <div className="mt-3 flex items-center gap-2">
-                                  <a
-                                    href={`${filesBaseUrl}/api/v1/files/${encodeURI(material.filePath)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/15"
+                                  <Link
+                                    href={`/ielts/materials/${material.id}`}
+                                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-4 py-1.5 text-xs font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/15 active:scale-95"
                                   >
-                                    <Eye className="h-3.5 w-3.5" />
-                                    View PDF
-                                  </a>
+                                    <BookOpen className="h-3.5 w-3.5" />
+                                    Read
+                                  </Link>
                                   <a
                                     href={`${filesBaseUrl}/api/v1/files/${encodeURI(material.filePath)}?download=1`}
                                     download
-                                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
                                   >
                                     <Download className="h-3.5 w-3.5" />
                                     Download
