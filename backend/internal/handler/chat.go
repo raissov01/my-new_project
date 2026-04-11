@@ -302,7 +302,6 @@ func (h *ChatHandler) callOpenAI(messages []map[string]string) (string, error) {
 	body := map[string]any{
 		"model":                 h.openaiModel,
 		"messages":              messages,
-		"temperature":           0.4,
 		"max_completion_tokens": 4000,
 	}
 
