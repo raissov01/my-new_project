@@ -60,7 +60,7 @@ func Load() (*Config, error) {
 		InternalAPIToken:   os.Getenv("BACKEND_INTERNAL_TOKEN"),
 		Environment:        getEnv("ENVIRONMENT", "development"),
 		OpenAIAPIKey:       os.Getenv("OPENAI_API_KEY"),
-		OpenAIModel:        getEnv("OPENAI_MODEL", "gpt-4.1"),
+		OpenAIModel:        getEnv("OPENAI_MODEL", "gpt-4.1-mini"),
 		ClaudeAPIKey:       os.Getenv("CLAUDE_API_KEY"),
 		ClaudeModel:           getEnv("CLAUDE_MODEL", "anthropic-claude-opus-4.6"),
 		ClaudeFallbackModel:  getEnv("CLAUDE_FALLBACK_MODEL", "anthropic-claude-sonnet-4.6"),
