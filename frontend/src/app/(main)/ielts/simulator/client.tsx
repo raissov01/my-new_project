@@ -647,30 +647,6 @@ export function SimulatorClient() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_0.7fr]">
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-              {t("ielts.sim.targetBand")}
-            </h2>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Pick the band profile you want the prompts and feedback to aim at.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {bands.map((band) => (
-                <button
-                  key={band}
-                  onClick={() => setBandTarget(band)}
-                  className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
-                    bandTarget === band
-                      ? "border-indigo-500 bg-indigo-500/10 text-indigo-400"
-                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-indigo-500/30"
-                  }`}
-                >
-                  Band {band}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {mockType === "cambridge_style" ? (
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
               <label className="block text-sm font-medium text-[var(--text-primary)]">
@@ -724,7 +700,7 @@ export function SimulatorClient() {
               </h3>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
                 {mockTypes.find((item) => item.key === mockType)?.title} ·{" "}
-                {sections.find((item) => item.key === section)?.title} · Band {bandTarget}
+                {sections.find((item) => item.key === section)?.title}
               </p>
             </div>
             <Button size="lg" onClick={handleStartMock}>
@@ -900,9 +876,7 @@ export function SimulatorClient() {
               {formatExamSetLabel(mock.examSet)}
             </span>
           ) : null}
-          <span className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
-            Band {mock.bandTarget || bandTarget}
-          </span>
+          {/* band target badge removed */}
         </div>
 
         <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
