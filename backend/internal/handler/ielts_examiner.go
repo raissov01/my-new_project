@@ -649,7 +649,7 @@ func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeou
 	body := map[string]any{
 		"model":                 model,
 		"messages":              messages,
-		"max_completion_tokens": 40000,
+		"max_completion_tokens": 16000,
 	}
 
 	bodyBytes, _ := json.Marshal(body)
