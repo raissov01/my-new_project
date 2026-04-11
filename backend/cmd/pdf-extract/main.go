@@ -161,25 +161,39 @@ func cleanExtractedText(text string) string {
 	return strings.TrimSpace(strings.Join(cleaned, "\n"))
 }
 
-// sanitizeUTF8 removes invalid UTF-8 bytes and null bytes from text.
+// sanitizeUTF8 removes invalid UTF-8 bytes, null bytes, and non-printable
+// control characters from text. Only keeps printable runes, newlines, and tabs.
 func sanitizeUTF8(s string) string {
-	if utf8.ValidString(s) && !strings.ContainsRune(s, 0) {
-		return s
-	}
 	var b strings.Builder
 	b.Grow(len(s))
 	for i := 0; i < len(s); {
 		r, size := utf8.DecodeRuneInString(s[i:])
-		if r == utf8.RuneError && size <= 1 {
+		if r == utf8.RuneError {
 			i++
-			continue // skip invalid byte
+			continue
 		}
 		if r == 0 {
-			i++
-			continue // skip null byte
+			i += size
+			continue
 		}
-		b.WriteRune(r)
+		// Keep printable runes, newlines, tabs, spaces
+		if r == '\n' || r == '\t' || r == '\r' || r >= 32 {
+			b.WriteRune(r)
+		}
 		i += size
 	}
-	return b.String()
+	// Final safety: ensure the entire string is valid UTF-8
+	result := b.String()
+	if !utf8.ValidString(result) {
+		// Nuclear option: drop everything non-ASCII
+		var safe strings.Builder
+		safe.Grow(len(result))
+		for _, r := range result {
+			if r < 128 && r >= 32 || r == '\n' || r == '\t' {
+				safe.WriteRune(r)
+			}
+		}
+		return safe.String()
+	}
+	return result
 }
