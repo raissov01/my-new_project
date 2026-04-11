@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Heart, Star, Lock, Trophy, Zap, ChevronDown, ChevronUp,
+  Heart, Star, Lock, Trophy, Zap, ChevronDown, ChevronUp, Mic,
 } from "lucide-react";
 import type { EngSimUnit, UserProgress } from "@/features/learn/api";
 
@@ -44,11 +44,17 @@ export function MapClient({
         </div>
       </div>
 
-      {/* ── Level badge ── */}
-      <div className="mb-6 text-center">
+      {/* ── Quick actions ── */}
+      <div className="mb-6 flex items-center justify-center gap-3">
         <span className="inline-flex items-center gap-2 rounded-full border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-4 py-1.5 text-sm font-bold text-[var(--primary)]">
           Level {userLevel}
         </span>
+        <Link
+          href="/learn/speak"
+          className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm font-bold text-emerald-600 transition-colors hover:bg-emerald-500/20"
+        >
+          <Mic className="h-4 w-4" /> Speaking Practice
+        </Link>
       </div>
 
       {/* ── Road map ── */}

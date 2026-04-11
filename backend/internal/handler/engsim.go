@@ -49,7 +49,7 @@ func (h *EngSimHandler) GetPlacement(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]any{"placement": p})
 }
 
-// StartPlacement generates placement test questions via AI.
+// StartPlacement returns 60 static placement test questions (instant, no AI call).
 func (h *EngSimHandler) StartPlacement(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 
@@ -60,14 +60,8 @@ func (h *EngSimHandler) StartPlacement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate questions via AI
-	result, err := h.callAI(placementSystemPrompt, "Generate the placement test now.")
-	if err != nil {
-		jsonErr(w, "Failed to generate placement test: "+err.Error(), http.StatusBadGateway)
-		return
-	}
-
-	jsonOK(w, map[string]any{"questions": json.RawMessage(result)})
+	// Return static questions — no AI call needed, instant response
+	jsonOK(w, map[string]any{"questions": staticPlacementQuestions})
 }
 
 // SubmitPlacement processes placement test answers and assigns a level.
@@ -438,6 +432,71 @@ func (h *EngSimHandler) CompleteLesson(w http.ResponseWriter, r *http.Request) {
 		"totalXP":    progress.TotalXP,
 		"streak":     progress.CurrentStreak,
 	})
+}
+
+// ── Speaking Practice ──────────────────────────────────────────────────
+
+const engSimSpeakingPrompt = `You are an IELTS Speaking examiner and English conversation partner. The student is practicing IELTS Speaking.
+
+Your role:
+1. Evaluate the student's spoken English (transcribed text)
+2. Give specific, actionable feedback on grammar, vocabulary, fluency, and pronunciation
+3. Provide a corrected version of their response if needed
+4. Ask a natural follow-up question to continue the conversation
+5. Keep the conversation flowing like a real IELTS Speaking test
+
+Respond in JSON format:
+{
+  "feedback": "Your feedback here — be specific about errors and strengths",
+  "corrected": "Corrected version of their speech (or empty if no errors)",
+  "score": 6.5,
+  "strengths": ["good vocabulary range", "natural flow"],
+  "improvements": ["watch article usage", "practice past tense"],
+  "followUp": "Your next question to the student",
+  "followUpContext": "brief context for the AI to remember"
+}
+
+Be encouraging but honest. Score on the IELTS 1-9 band scale.
+If this is the start of conversation (empty transcript), introduce yourself and ask the first Part 1 question.`
+
+// SpeakingPractice handles POST /api/v1/engsim/speaking — processes user's speech and returns AI feedback + response.
+func (h *EngSimHandler) SpeakingPractice(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		jsonErr(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		Transcript string `json:"transcript"` // user's speech-to-text
+		Topic      string `json:"topic"`       // current topic/part
+		Context    string `json:"context"`     // previous conversation context
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Get user level
+	progress := h.ensureUserProgress(userID, "B1")
+
+	userMsg := req.Transcript
+	if userMsg == "" {
+		userMsg = "START_CONVERSATION"
+	}
+
+	prompt := fmt.Sprintf("Student level: %s\nTopic: %s\nPrevious context: %s\n\nStudent said: \"%s\"\n\nRespond with JSON.",
+		progress.CurrentLevel, req.Topic, req.Context, userMsg)
+
+	result, err := h.callAI(engSimSpeakingPrompt, prompt)
+	if err != nil {
+		jsonErr(w, "AI service error: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	// Return raw AI response (frontend parses JSON)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(result))
 }
 
 // GetHearts returns current hearts and refill time.

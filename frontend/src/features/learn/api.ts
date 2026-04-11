@@ -189,3 +189,30 @@ export async function completeLesson(lessonId: string, data: {
     body: JSON.stringify(data),
   });
 }
+
+export type SpeakingResponse = {
+  feedback: string;
+  corrected: string;
+  score: number;
+  strengths: string[];
+  improvements: string[];
+  followUp: string;
+  followUpContext: string;
+};
+
+export async function speakingPractice(data: {
+  transcript: string;
+  topic: string;
+  context: string;
+}) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
+  return fetchBackendJson<SpeakingResponse>({
+    path: "/api/v1/engsim/speaking",
+    userId: user.id,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    timeoutMs: 60_000,
+  });
+}

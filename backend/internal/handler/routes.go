@@ -176,6 +176,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/engsim/lessons/:lessonID/start", simLimiter, wrapHTTP(deps.EngSim.StartLesson))
 		internal.POST("/engsim/lessons/:lessonID/answer", wrapHTTP(deps.EngSim.SubmitAnswer))
 		internal.POST("/engsim/lessons/:lessonID/complete", wrapHTTP(deps.EngSim.CompleteLesson))
+		internal.POST("/engsim/speaking", simLimiter, wrapHTTP(deps.EngSim.SpeakingPractice))
 
 		// AI tutor chat
 		chatLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()
