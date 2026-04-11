@@ -61,9 +61,9 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 		log.Printf("[study-plan-llm] Claude failed: %v", err)
 	}
 
-	// Fallback 1: OpenAI gpt-5-mini — much faster than gpt-5 (no heavy reasoning).
+	// Fallback 1: OpenAI — use the configured primary model (GPT-5 for IELTS prep).
 	if strings.TrimSpace(h.openAIKey) != "" {
-		fastModel := "gpt-5-mini"
+		fastModel := h.openAIModel
 		raw, err := callOpenAIChatCompletion(h.openAIKey, fastModel, "", prompt, perProviderTimeout)
 		if err == nil {
 			log.Printf("[study-plan-llm] success via OpenAI: model=%s time=%v len=%d", fastModel, time.Since(start), len(raw))

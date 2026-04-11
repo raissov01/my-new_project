@@ -174,8 +174,8 @@ func (h *AIHandler) generateCards(text, mode, language string, count int) ([]gen
 }
 
 func (h *AIHandler) generateBatch(prompt string) ([]generatedCard, string, error) {
-	// Use gpt-5-mini for flashcards — faster and cheaper than the main IELTS model
-	flashcardModel := "gpt-5-mini"
+	// Use the configured mini model for flashcards (faster and cheaper)
+	flashcardModel := h.openAIModel
 	if strings.TrimSpace(h.openAIKey) != "" {
 		cards, err := callOpenAI(h.openAIKey, flashcardModel, prompt, h.requestTimeout)
 		if err == nil {
@@ -425,7 +425,7 @@ func callOpenAI(apiKey, model, prompt string, timeout time.Duration) ([]generate
 			{"role": "system", "content": "Return ONLY a valid JSON array of flashcards. No markdown, no backticks, no commentary."},
 			{"role": "user", "content": prompt},
 		},
-		"max_completion_tokens": 40000,
+		"max_completion_tokens": 16000,
 	}
 
 	bodyBytes, _ := json.Marshal(body)
