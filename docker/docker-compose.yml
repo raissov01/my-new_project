@@ -81,7 +81,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./certs:/etc/letsencrypt/live/studywithraissov.com:ro
     depends_on:
       frontend:
         condition: service_healthy
