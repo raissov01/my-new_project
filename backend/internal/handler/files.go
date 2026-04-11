@@ -28,14 +28,23 @@ func (h *FilesHandler) Serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Security: clean path and prevent directory traversal
+	// The reqPath already includes "telegram-media/..." since the route is /files/*filepath
+	// and the frontend sends /files/telegram-media/filename.pdf
+	// So reqPath = "telegram-media/filename.pdf" and baseDir = "telegram-media"
+	// We need to strip the baseDir prefix if present to avoid double path
 	cleaned := filepath.Clean(reqPath)
 	if strings.Contains(cleaned, "..") {
 		http.Error(w, `{"error":"invalid path"}`, http.StatusBadRequest)
 		return
 	}
 
-	fullPath := filepath.Join(h.baseDir, cleaned)
+	// If the path already starts with the base dir name, use it directly
+	var fullPath string
+	if strings.HasPrefix(cleaned, filepath.Base(h.baseDir)) {
+		fullPath = cleaned
+	} else {
+		fullPath = filepath.Join(h.baseDir, cleaned)
+	}
 
 	// Verify the resolved path is still under baseDir
 	absBase, _ := filepath.Abs(h.baseDir)
