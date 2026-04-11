@@ -16,6 +16,7 @@ import {
   LibraryBig,
   BookMarked,
   MessageSquareText,
+  Gamepad2,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -38,6 +39,7 @@ export function Navbar() {
     ? [
         { href: homeHref, label: t("nav.home"), icon: Home, exact: false },
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
+        { href: "/learn", label: t("nav.learn"), icon: Gamepad2, exact: false },
         { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },

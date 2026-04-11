@@ -33,6 +33,7 @@ type Dependencies struct {
 	AI                 *AIHandler
 	Chat               *ChatHandler
 	Files              *FilesHandler
+	EngSim             *EngSimHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -163,6 +164,18 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/ielts/study-plan/reflection", wrapHTTP(deps.IELTSStudyPlan.SubmitReflection))
 		internal.GET("/ielts/study-plan/reflections", wrapHTTP(deps.IELTSStudyPlan.GetReflections))
 		internal.GET("/ielts/study-plan/adaptive", wrapHTTP(deps.IELTSStudyPlan.CheckAdaptive))
+
+		// English Learning Simulator
+		internal.GET("/engsim/placement", wrapHTTP(deps.EngSim.GetPlacement))
+		internal.POST("/engsim/placement/start", wrapHTTP(deps.EngSim.StartPlacement))
+		internal.POST("/engsim/placement/submit", wrapHTTP(deps.EngSim.SubmitPlacement))
+		internal.GET("/engsim/map", wrapHTTP(deps.EngSim.GetMap))
+		internal.GET("/engsim/progress", wrapHTTP(deps.EngSim.GetProgress))
+		internal.GET("/engsim/hearts", wrapHTTP(deps.EngSim.GetHearts))
+		simLimiter := middleware.NewRateLimiter(10, 1*time.Minute).LimitByUser()
+		internal.POST("/engsim/lessons/:lessonID/start", simLimiter, wrapHTTP(deps.EngSim.StartLesson))
+		internal.POST("/engsim/lessons/:lessonID/answer", wrapHTTP(deps.EngSim.SubmitAnswer))
+		internal.POST("/engsim/lessons/:lessonID/complete", wrapHTTP(deps.EngSim.CompleteLesson))
 
 		// AI tutor chat
 		chatLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()

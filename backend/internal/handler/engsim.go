@@ -1,0 +1,631 @@
+package handler
+
+import (
+	"encoding/json"
+	"fmt"
+	"math"
+	"net/http"
+	"time"
+
+	"github.com/midoriya/flashlearn-backend/internal/models"
+	"gorm.io/gorm"
+)
+
+type EngSimHandler struct {
+	db             *gorm.DB
+	claudeKey      string
+	claudeModel    string
+	claudeFallback string
+	claudeURL      string
+	openAIKey      string
+	openAIModel    string
+	timeout        time.Duration
+}
+
+func NewEngSim(
+	db *gorm.DB,
+	claudeKey, claudeModel, claudeFallback, claudeURL string,
+	openAIKey, openAIModel string,
+	timeout time.Duration,
+) *EngSimHandler {
+	return &EngSimHandler{
+		db: db, claudeKey: claudeKey, claudeModel: claudeModel,
+		claudeFallback: claudeFallback, claudeURL: claudeURL,
+		openAIKey: openAIKey, openAIModel: openAIModel, timeout: timeout,
+	}
+}
+
+// ── Placement Test ─────────────────────────────────────────────────────
+
+// GetPlacement returns the user's existing placement or null.
+func (h *EngSimHandler) GetPlacement(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	var p models.EngSimPlacement
+	err := h.db.Where("user_id = ?", userID).First(&p).Error
+	if err != nil {
+		jsonOK(w, map[string]any{"placement": nil})
+		return
+	}
+	jsonOK(w, map[string]any{"placement": p})
+}
+
+// StartPlacement generates placement test questions via AI.
+func (h *EngSimHandler) StartPlacement(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+
+	// Check if already done
+	var existing models.EngSimPlacement
+	if h.db.Where("user_id = ?", userID).First(&existing).Error == nil {
+		jsonOK(w, map[string]any{"placement": existing, "alreadyDone": true})
+		return
+	}
+
+	// Generate questions via AI
+	result, err := h.callAI(placementSystemPrompt, "Generate the placement test now.")
+	if err != nil {
+		jsonErr(w, "Failed to generate placement test: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	jsonOK(w, map[string]any{"questions": json.RawMessage(result)})
+}
+
+// SubmitPlacement processes placement test answers and assigns a level.
+func (h *EngSimHandler) SubmitPlacement(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+
+	var req struct {
+		Answers        []int `json:"answers"`
+		TotalQuestions int   `json:"totalQuestions"`
+		CorrectAnswers int   `json:"correctAnswers"`
+		LevelScores    map[string]int `json:"levelScores"` // e.g. {"A1": 3, "A2": 2, "B1": 1, ...}
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Determine level: highest level where user got >= 2/3 correct
+	levels := []string{"A1", "A2", "B1", "B2", "C1", "C2"}
+	assignedLevel := "A1"
+	for _, lvl := range levels {
+		score, ok := req.LevelScores[lvl]
+		if ok && score >= 2 {
+			assignedLevel = lvl
+		}
+	}
+
+	detailedJSON, _ := json.Marshal(req.LevelScores)
+
+	placement := models.EngSimPlacement{
+		UserID:          userID,
+		Level:           assignedLevel,
+		Score:           req.CorrectAnswers * 100 / max(req.TotalQuestions, 1),
+		TotalQuestions:  req.TotalQuestions,
+		CorrectAnswers:  req.CorrectAnswers,
+		DetailedResults: string(detailedJSON),
+		CompletedAt:     time.Now(),
+	}
+
+	if err := h.db.Create(&placement).Error; err != nil {
+		// Might already exist — update
+		h.db.Where("user_id = ?", userID).Updates(&placement)
+	}
+
+	// Initialize user progress
+	h.ensureUserProgress(userID, assignedLevel)
+
+	// Unlock first units for the user's level
+	h.unlockInitialUnits(userID, assignedLevel)
+
+	jsonOK(w, map[string]any{"placement": placement, "level": assignedLevel})
+}
+
+// ── Learning Map ───────────────────────────────────────────────────────
+
+// GetMap returns the full roadmap with units, lessons, and user progress.
+func (h *EngSimHandler) GetMap(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+
+	// Get all units ordered
+	var units []models.EngSimUnit
+	h.db.Order("sort_order ASC").Find(&units)
+
+	// Get all lessons
+	var lessons []models.EngSimLesson
+	h.db.Order("sort_order ASC").Find(&lessons)
+
+	// Get user's unit progress
+	var unitProgress []models.EngSimUnitProgress
+	h.db.Where("user_id = ?", userID).Find(&unitProgress)
+
+	// Get user's lesson progress
+	var lessonProgress []models.EngSimLessonProgress
+	h.db.Where("user_id = ?", userID).Find(&lessonProgress)
+
+	// Build response
+	upMap := map[string]models.EngSimUnitProgress{}
+	for _, up := range unitProgress {
+		upMap[up.UnitID] = up
+	}
+
+	lpMap := map[string]models.EngSimLessonProgress{}
+	for _, lp := range lessonProgress {
+		lpMap[lp.LessonID] = lp
+	}
+
+	type lessonResp struct {
+		models.EngSimLesson
+		BestStars    int  `json:"bestStars"`
+		Attempts     int  `json:"attempts"`
+		BestAccuracy int  `json:"bestAccuracy"`
+		IsCompleted  bool `json:"isCompleted"`
+	}
+
+	type unitResp struct {
+		models.EngSimUnit
+		Lessons    []lessonResp `json:"lessons"`
+		TotalStars int          `json:"totalStars"`
+		MaxStars   int          `json:"maxStars"`
+		IsUnlocked bool         `json:"isUnlocked"`
+	}
+
+	var result []unitResp
+	for _, u := range units {
+		ur := unitResp{EngSimUnit: u}
+		if up, ok := upMap[u.ID]; ok {
+			ur.TotalStars = up.TotalStars
+			ur.MaxStars = up.MaxStars
+			ur.IsUnlocked = up.IsUnlocked
+		}
+
+		for _, l := range lessons {
+			if l.UnitID != u.ID {
+				continue
+			}
+			lr := lessonResp{EngSimLesson: l}
+			if lp, ok := lpMap[l.ID]; ok {
+				lr.BestStars = lp.BestStars
+				lr.Attempts = lp.Attempts
+				lr.BestAccuracy = lp.BestAccuracy
+				lr.IsCompleted = lp.BestStars > 0
+			}
+			ur.Lessons = append(ur.Lessons, lr)
+			ur.MaxStars += 3
+		}
+		result = append(result, ur)
+	}
+
+	jsonOK(w, map[string]any{"units": result})
+}
+
+// GetProgress returns user's overall simulator progress.
+func (h *EngSimHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	progress := h.ensureUserProgress(userID, "A1")
+	h.refreshHearts(progress)
+	jsonOK(w, map[string]any{"progress": progress})
+}
+
+// ── Lesson Flow ────────────────────────────────────────────────────────
+
+// StartLesson generates AI exercises and creates a session.
+func (h *EngSimHandler) StartLesson(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	lessonID := r.PathValue("lessonID")
+
+	// Get lesson + unit
+	var lesson models.EngSimLesson
+	if err := h.db.First(&lesson, "id = ?", lessonID).Error; err != nil {
+		jsonErr(w, "Lesson not found", http.StatusNotFound)
+		return
+	}
+
+	var unit models.EngSimUnit
+	h.db.First(&unit, "id = ?", lesson.UnitID)
+
+	// Check hearts
+	progress := h.ensureUserProgress(userID, unit.Level)
+	h.refreshHearts(progress)
+	if progress.Hearts <= 0 {
+		jsonErr(w, "No hearts left! Wait for them to regenerate.", http.StatusForbidden)
+		return
+	}
+
+	// Generate exercises
+	exerciseCount := 8
+	if lesson.LessonType == "boss" {
+		exerciseCount = 12
+	}
+
+	exerciseTypes := "fill_blank, grammar_choice, word_order"
+	prompt := fmt.Sprintf(exerciseGenerationPrompt,
+		exerciseCount, unit.Level, unit.IELTSSkill,
+		unit.Title, lesson.Title, exerciseTypes, unit.Level,
+	)
+
+	result, err := h.callAI("", prompt)
+	if err != nil {
+		jsonErr(w, "Failed to generate exercises: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	// Create session
+	session := models.EngSimLessonSession{
+		UserID:         userID,
+		LessonID:       lessonID,
+		UnitID:         lesson.UnitID,
+		Status:         "in_progress",
+		Exercises:      result,
+		Answers:        "[]",
+		TotalExercises: exerciseCount,
+	}
+
+	if err := h.db.Create(&session).Error; err != nil {
+		jsonErr(w, "Failed to create session", http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, map[string]any{
+		"session":   session,
+		"exercises": json.RawMessage(result),
+	})
+}
+
+// SubmitAnswer processes a single answer within a lesson session.
+func (h *EngSimHandler) SubmitAnswer(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	lessonID := r.PathValue("lessonID")
+
+	var req struct {
+		SessionID    string `json:"sessionId"`
+		ExerciseIdx  int    `json:"exerciseIndex"`
+		IsCorrect    bool   `json:"isCorrect"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	var session models.EngSimLessonSession
+	if err := h.db.Where("id = ? AND user_id = ? AND lesson_id = ?", req.SessionID, userID, lessonID).First(&session).Error; err != nil {
+		jsonErr(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Update answers
+	var answers []map[string]any
+	json.Unmarshal([]byte(session.Answers), &answers)
+	answers = append(answers, map[string]any{
+		"exerciseIndex": req.ExerciseIdx,
+		"isCorrect":     req.IsCorrect,
+		"answeredAt":    time.Now(),
+	})
+	answersJSON, _ := json.Marshal(answers)
+
+	updates := map[string]any{"answers": string(answersJSON)}
+
+	if req.IsCorrect {
+		updates["correct_answers"] = gorm.Expr("correct_answers + 1")
+	} else {
+		updates["hearts_used"] = gorm.Expr("hearts_used + 1")
+		// Deduct heart from user progress
+		h.db.Model(&models.EngSimUserProgress{}).
+			Where("user_id = ? AND hearts > 0", userID).
+			Update("hearts", gorm.Expr("hearts - 1"))
+	}
+
+	h.db.Model(&session).Updates(updates)
+
+	// Get updated hearts
+	progress := h.ensureUserProgress(userID, "")
+	h.refreshHearts(progress)
+
+	jsonOK(w, map[string]any{
+		"recorded":       true,
+		"heartsRemaining": progress.Hearts,
+	})
+}
+
+// CompleteLesson finalizes a lesson session and awards XP/stars.
+func (h *EngSimHandler) CompleteLesson(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	lessonID := r.PathValue("lessonID")
+
+	var req struct {
+		SessionID     string `json:"sessionId"`
+		TimeTakenSecs int    `json:"timeTakenSecs"`
+		ComboMax      int    `json:"comboMax"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	var session models.EngSimLessonSession
+	if err := h.db.Where("id = ? AND user_id = ? AND lesson_id = ?", req.SessionID, userID, lessonID).First(&session).Error; err != nil {
+		jsonErr(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Calculate results
+	total := max(session.TotalExercises, 1)
+	accuracy := session.CorrectAnswers * 100 / total
+
+	var stars int
+	switch {
+	case accuracy >= 90 && session.HeartsUsed == 0:
+		stars = 3
+	case accuracy >= 70:
+		stars = 2
+	case accuracy > 0:
+		stars = 1
+	}
+
+	// XP calculation
+	baseXP := session.CorrectAnswers * 10
+	comboBonus := req.ComboMax * 2
+	perfectBonus := 0
+	if accuracy == 100 {
+		perfectBonus = 25
+	}
+	totalXP := baseXP + comboBonus + perfectBonus
+
+	now := time.Now()
+	session.Status = "completed"
+	session.StarsEarned = stars
+	session.XPEarned = totalXP
+	session.ComboMax = req.ComboMax
+	session.TimeTakenSecs = req.TimeTakenSecs
+	session.CompletedAt = &now
+	h.db.Save(&session)
+
+	// Update lesson progress (best result)
+	var lp models.EngSimLessonProgress
+	if h.db.Where("user_id = ? AND lesson_id = ?", userID, lessonID).First(&lp).Error != nil {
+		lp = models.EngSimLessonProgress{
+			UserID:   userID,
+			LessonID: lessonID,
+		}
+	}
+	lp.Attempts++
+	if stars > lp.BestStars {
+		lp.BestStars = stars
+	}
+	if accuracy > lp.BestAccuracy {
+		lp.BestAccuracy = accuracy
+	}
+	lp.LastPlayedAt = &now
+	h.db.Save(&lp)
+
+	// Update unit progress
+	h.recalculateUnitProgress(userID, session.UnitID)
+
+	// Update user progress
+	progress := h.ensureUserProgress(userID, "")
+	progress.TotalXP += totalXP
+	progress.LessonsCompleted++
+
+	// Streak
+	today := time.Now().Format("2006-01-02")
+	if progress.LastPracticeDate == nil || *progress.LastPracticeDate != today {
+		if progress.LastPracticeDate != nil {
+			last, _ := time.Parse("2006-01-02", *progress.LastPracticeDate)
+			diff := int(math.Floor(time.Since(last).Hours() / 24))
+			if diff == 1 {
+				progress.CurrentStreak++
+			} else if diff > 1 {
+				progress.CurrentStreak = 1
+			}
+		} else {
+			progress.CurrentStreak = 1
+		}
+		if progress.CurrentStreak > progress.LongestStreak {
+			progress.LongestStreak = progress.CurrentStreak
+		}
+		progress.LastPracticeDate = &today
+	}
+	h.db.Save(progress)
+
+	// Check if next unit should unlock
+	h.tryUnlockNextUnit(userID, session.UnitID)
+
+	jsonOK(w, map[string]any{
+		"stars":      stars,
+		"xpEarned":   totalXP,
+		"accuracy":   accuracy,
+		"comboMax":   req.ComboMax,
+		"totalXP":    progress.TotalXP,
+		"streak":     progress.CurrentStreak,
+	})
+}
+
+// GetHearts returns current hearts and refill time.
+func (h *EngSimHandler) GetHearts(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	progress := h.ensureUserProgress(userID, "")
+	h.refreshHearts(progress)
+	jsonOK(w, map[string]any{
+		"hearts":       progress.Hearts,
+		"refillAt":     progress.HeartsRefillAt,
+		"maxHearts":    5,
+	})
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────
+
+func (h *EngSimHandler) ensureUserProgress(userID, defaultLevel string) *models.EngSimUserProgress {
+	var p models.EngSimUserProgress
+	if h.db.Where("user_id = ?", userID).First(&p).Error != nil {
+		if defaultLevel == "" {
+			defaultLevel = "A1"
+		}
+		p = models.EngSimUserProgress{
+			UserID:       userID,
+			CurrentLevel: defaultLevel,
+			Hearts:       5,
+		}
+		h.db.Create(&p)
+	}
+	return &p
+}
+
+func (h *EngSimHandler) refreshHearts(p *models.EngSimUserProgress) {
+	if p.Hearts >= 5 {
+		return
+	}
+	if p.HeartsRefillAt == nil {
+		now := time.Now().Add(30 * time.Minute)
+		p.HeartsRefillAt = &now
+		h.db.Save(p)
+		return
+	}
+	// Regenerate hearts (1 per 30 min)
+	elapsed := time.Since(*p.HeartsRefillAt)
+	if elapsed > 0 {
+		recovered := int(elapsed.Minutes()/30) + 1
+		p.Hearts = min(p.Hearts+recovered, 5)
+		if p.Hearts >= 5 {
+			p.HeartsRefillAt = nil
+		} else {
+			next := time.Now().Add(30 * time.Minute)
+			p.HeartsRefillAt = &next
+		}
+		h.db.Save(p)
+	}
+}
+
+func (h *EngSimHandler) unlockInitialUnits(userID, level string) {
+	// Unlock all units at or below user's level
+	levelOrder := map[string]int{"A1": 1, "A2": 2, "B1": 3, "B2": 4, "C1": 5, "C2": 6}
+	userLvl := levelOrder[level]
+
+	var units []models.EngSimUnit
+	h.db.Order("sort_order ASC").Find(&units)
+
+	for _, u := range units {
+		if levelOrder[u.Level] <= userLvl {
+			// Count lessons for max_stars
+			var lessonCount int64
+			h.db.Model(&models.EngSimLesson{}).Where("unit_id = ?", u.ID).Count(&lessonCount)
+
+			var existing models.EngSimUnitProgress
+			if h.db.Where("user_id = ? AND unit_id = ?", userID, u.ID).First(&existing).Error != nil {
+				h.db.Create(&models.EngSimUnitProgress{
+					UserID:     userID,
+					UnitID:     u.ID,
+					IsUnlocked: true,
+					MaxStars:   int(lessonCount) * 3,
+				})
+			} else if !existing.IsUnlocked {
+				h.db.Model(&existing).Update("is_unlocked", true)
+			}
+		}
+	}
+}
+
+func (h *EngSimHandler) recalculateUnitProgress(userID, unitID string) {
+	var lessons []models.EngSimLesson
+	h.db.Where("unit_id = ?", unitID).Find(&lessons)
+
+	totalStars := 0
+	for _, l := range lessons {
+		var lp models.EngSimLessonProgress
+		if h.db.Where("user_id = ? AND lesson_id = ?", userID, l.ID).First(&lp).Error == nil {
+			totalStars += lp.BestStars
+		}
+	}
+
+	h.db.Model(&models.EngSimUnitProgress{}).
+		Where("user_id = ? AND unit_id = ?", userID, unitID).
+		Updates(map[string]any{
+			"total_stars": totalStars,
+			"max_stars":   len(lessons) * 3,
+		})
+}
+
+func (h *EngSimHandler) tryUnlockNextUnit(userID, currentUnitID string) {
+	// Get current unit's sort order
+	var current models.EngSimUnit
+	if h.db.First(&current, "id = ?", currentUnitID).Error != nil {
+		return
+	}
+
+	// Check if boss lesson is completed
+	var bossLesson models.EngSimLesson
+	if h.db.Where("unit_id = ? AND lesson_type = 'boss'", currentUnitID).First(&bossLesson).Error != nil {
+		return
+	}
+
+	var lp models.EngSimLessonProgress
+	if h.db.Where("user_id = ? AND lesson_id = ? AND best_stars > 0", userID, bossLesson.ID).First(&lp).Error != nil {
+		return // Boss not completed yet
+	}
+
+	// Find next unit
+	var nextUnit models.EngSimUnit
+	if h.db.Where("sort_order > ?", current.SortOrder).Order("sort_order ASC").First(&nextUnit).Error != nil {
+		return // No next unit
+	}
+
+	// Unlock it
+	var lessonCount int64
+	h.db.Model(&models.EngSimLesson{}).Where("unit_id = ?", nextUnit.ID).Count(&lessonCount)
+
+	var existing models.EngSimUnitProgress
+	if h.db.Where("user_id = ? AND unit_id = ?", userID, nextUnit.ID).First(&existing).Error != nil {
+		h.db.Create(&models.EngSimUnitProgress{
+			UserID:     userID,
+			UnitID:     nextUnit.ID,
+			IsUnlocked: true,
+			MaxStars:   int(lessonCount) * 3,
+		})
+	} else if !existing.IsUnlocked {
+		h.db.Model(&existing).Update("is_unlocked", true)
+	}
+}
+
+func (h *EngSimHandler) callAI(systemPrompt, userPrompt string) (string, error) {
+	messages := []map[string]string{}
+	if systemPrompt != "" {
+		messages = append(messages, map[string]string{"role": "system", "content": systemPrompt})
+	}
+	messages = append(messages, map[string]string{"role": "user", "content": userPrompt})
+
+	// Try Claude
+	if h.claudeKey != "" {
+		result, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, systemPrompt, userPrompt, h.timeout)
+		if err == nil {
+			return result, nil
+		}
+		// Try fallback model
+		if h.claudeFallback != "" {
+			result, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, systemPrompt, userPrompt, h.timeout)
+			if err == nil {
+				return result, nil
+			}
+		}
+	}
+
+	// Try OpenAI
+	if h.openAIKey != "" {
+		return callOpenAIChatCompletion(h.openAIKey, h.openAIModel, systemPrompt, userPrompt, h.timeout)
+	}
+
+	return "", fmt.Errorf("no AI provider configured")
+}
+
+// ── JSON helpers ───────────────────────────────────────────────────────
+
+func jsonOK(w http.ResponseWriter, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+func jsonErr(w http.ResponseWriter, msg string, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+}
+
+// max/min are declared in ai.go — reuse those

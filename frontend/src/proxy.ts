@@ -8,6 +8,7 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/chat/:path*",
+    "/learn/:path*",
     "/classes/:path*",
     "/collections/:path*",
     "/dashboard/:path*",

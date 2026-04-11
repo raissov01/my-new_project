@@ -38,6 +38,13 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.IELTSWeeklyReflection{},
 		&models.TelegramPost{},
 		&models.ChatMessage{},
+		&models.EngSimPlacement{},
+		&models.EngSimUnit{},
+		&models.EngSimLesson{},
+		&models.EngSimLessonSession{},
+		&models.EngSimUserProgress{},
+		&models.EngSimUnitProgress{},
+		&models.EngSimLessonProgress{},
 	)
 	if err != nil {
 		return err
@@ -77,6 +84,10 @@ func AutoMigrate(db *gorm.DB) error {
 	}
 
 	if err := SeedIELTSMaterialsLibrary(db); err != nil {
+		return err
+	}
+
+	if err := SeedEngSimCurriculum(db); err != nil {
 		return err
 	}
 

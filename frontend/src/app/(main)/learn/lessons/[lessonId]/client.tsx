@@ -1,0 +1,395 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Heart, Star, Zap, Loader2, CheckCircle2, XCircle,
+  ArrowRight, Trophy, X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { startLesson, submitAnswer, completeLesson, type Exercise } from "@/features/learn/api";
+
+type Phase = "loading" | "playing" | "result";
+
+export function LessonClient({ lessonId }: { lessonId: string }) {
+  const router = useRouter();
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [sessionId, setSessionId] = useState("");
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [hearts, setHearts] = useState(5);
+  const [combo, setCombo] = useState(0);
+  const [comboMax, setComboMax] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [selected, setSelected] = useState<any>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [result, setResult] = useState<any>(null);
+  const startTime = useRef(Date.now());
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const res = await startLesson(lessonId);
+        setSessionId(res.session.id);
+        const exData = typeof res.exercises === "string" ? JSON.parse(res.exercises) : res.exercises;
+        setExercises(exData.exercises || exData || []);
+        setHearts(5);
+        setPhase("playing");
+        startTime.current = Date.now();
+      } catch (err: any) {
+        alert(err.message || "Failed to start lesson");
+        router.push("/learn/map");
+      }
+    }
+    init();
+  }, [lessonId, router]);
+
+  const ex = exercises[currentIdx];
+
+  function checkAnswer(answer: any) {
+    if (isCorrect !== null) return;
+
+    let correct = false;
+
+    if (ex.type === "fill_blank") {
+      correct = answer === ex.data.correctWord;
+    } else if (ex.type === "grammar_choice") {
+      correct = answer === ex.data.correct;
+    } else if (ex.type === "word_order") {
+      const userSentence = typeof answer === "string" ? answer : answer.join(" ");
+      correct = userSentence.toLowerCase().trim() === ex.data.correctSentence.toLowerCase().trim();
+    }
+
+    setIsCorrect(correct);
+    setSelected(answer);
+
+    if (correct) {
+      setCorrectCount((c) => c + 1);
+      setCombo((c) => {
+        const next = c + 1;
+        setComboMax((m) => Math.max(m, next));
+        return next;
+      });
+    } else {
+      setCombo(0);
+      setHearts((h) => Math.max(0, h - 1));
+    }
+
+    // Report to backend
+    submitAnswer(lessonId, {
+      sessionId,
+      exerciseIndex: currentIdx,
+      isCorrect: correct,
+    }).then((res) => {
+      if (res.heartsRemaining !== undefined) {
+        setHearts(res.heartsRemaining);
+      }
+    });
+  }
+
+  function nextExercise() {
+    if (currentIdx + 1 < exercises.length && hearts > 0) {
+      setCurrentIdx(currentIdx + 1);
+      setSelected(null);
+      setIsCorrect(null);
+    } else {
+      finishLesson();
+    }
+  }
+
+  async function finishLesson() {
+    setPhase("loading");
+    try {
+      const elapsed = Math.floor((Date.now() - startTime.current) / 1000);
+      const res = await completeLesson(lessonId, {
+        sessionId,
+        timeTakenSecs: elapsed,
+        comboMax,
+      });
+      setResult(res);
+      setPhase("result");
+    } catch {
+      router.push("/learn/map");
+    }
+  }
+
+  // ── Loading ──
+  if (phase === "loading") {
+    return (
+      <div className="flex h-[60vh] flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-[var(--primary)]" />
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
+          {result ? "Calculating results..." : "Preparing your lesson..."}
+        </p>
+      </div>
+    );
+  }
+
+  // ── Result ──
+  if (phase === "result" && result) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-12 text-center">
+        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[var(--primary-soft)]">
+          <Trophy className="h-10 w-10 text-[var(--primary)]" />
+        </div>
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Lesson Complete!</h2>
+
+        {/* Stars */}
+        <div className="mt-4 flex justify-center gap-2">
+          {[1, 2, 3].map((s) => (
+            <Star
+              key={s}
+              className={`h-10 w-10 transition-all duration-500 ${
+                s <= result.stars
+                  ? "fill-yellow-400 text-yellow-400 scale-110"
+                  : "text-[var(--text-muted)] opacity-20"
+              }`}
+              style={{ transitionDelay: `${s * 200}ms` }}
+            />
+          ))}
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
+            <p className="text-2xl font-bold text-[var(--primary)]">+{result.xpEarned}</p>
+            <p className="text-xs text-[var(--text-muted)]">XP Earned</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
+            <p className="text-2xl font-bold text-emerald-500">{result.accuracy}%</p>
+            <p className="text-xs text-[var(--text-muted)]">Accuracy</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
+            <p className="text-2xl font-bold text-orange-500">{result.comboMax}x</p>
+            <p className="text-xs text-[var(--text-muted)]">Best Combo</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
+            <p className="text-2xl font-bold text-amber-500">{result.streak}</p>
+            <p className="text-xs text-[var(--text-muted)]">Day Streak</p>
+          </div>
+        </div>
+
+        <Button className="mt-8 w-full" size="lg" onClick={() => router.push("/learn/map")}>
+          Continue
+        </Button>
+      </div>
+    );
+  }
+
+  // ── Playing ──
+  if (!ex) return null;
+
+  const progress = ((currentIdx + 1) / exercises.length) * 100;
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-6">
+      {/* ── Top bar ── */}
+      <div className="mb-4 flex items-center gap-4">
+        <button onClick={() => router.push("/learn/map")} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+          <X className="h-5 w-5" />
+        </button>
+        <div className="flex-1">
+          <div className="h-2.5 w-full rounded-full bg-[var(--bg-muted)]">
+            <div className="h-2.5 rounded-full bg-[var(--primary)] transition-all" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-red-500">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Heart key={i} className={`h-4 w-4 ${i < hearts ? "fill-red-500" : "fill-none opacity-30"}`} />
+          ))}
+        </div>
+        {combo >= 2 && (
+          <span className="flex items-center gap-1 rounded-full bg-orange-500/15 px-2 py-0.5 text-xs font-bold text-orange-500">
+            <Zap className="h-3 w-3 fill-orange-500" /> {combo}x
+          </span>
+        )}
+      </div>
+
+      {/* ── Exercise card ── */}
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-md)]">
+        <p className="mb-1 text-xs font-medium uppercase text-[var(--text-muted)]">
+          {ex.type.replace("_", " ")}
+        </p>
+        <p className="mb-5 text-lg font-semibold text-[var(--text-primary)]">{ex.prompt}</p>
+
+        {/* ── Fill Blank ── */}
+        {ex.type === "fill_blank" && (
+          <div>
+            <p className="mb-4 text-base text-[var(--text-secondary)]">
+              {ex.data.sentence}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {(ex.data.options || []).map((opt: string, i: number) => {
+                let cls = "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--primary)]";
+                if (isCorrect !== null) {
+                  if (opt === ex.data.correctWord) cls = "border-emerald-500 bg-emerald-500/10";
+                  else if (opt === selected) cls = "border-red-500 bg-red-500/10";
+                }
+                return (
+                  <button
+                    key={i}
+                    onClick={() => checkAnswer(opt)}
+                    disabled={isCorrect !== null}
+                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${cls}`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Grammar Choice ── */}
+        {ex.type === "grammar_choice" && (
+          <div>
+            <p className="mb-4 text-base text-[var(--text-secondary)]">{ex.data.sentence}</p>
+            <div className="space-y-2">
+              {(ex.data.options || []).map((opt: string, i: number) => {
+                let cls = "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--primary)]";
+                if (isCorrect !== null) {
+                  if (i === ex.data.correct) cls = "border-emerald-500 bg-emerald-500/10";
+                  else if (i === selected) cls = "border-red-500 bg-red-500/10";
+                }
+                return (
+                  <button
+                    key={i}
+                    onClick={() => checkAnswer(i)}
+                    disabled={isCorrect !== null}
+                    className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all ${cls}`}
+                  >
+                    {opt}
+                    {isCorrect !== null && i === ex.data.correct && <CheckCircle2 className="ml-auto h-5 w-5 text-emerald-500" />}
+                    {isCorrect !== null && i === selected && i !== ex.data.correct && <XCircle className="ml-auto h-5 w-5 text-red-500" />}
+                  </button>
+                );
+              })}
+            </div>
+            {isCorrect !== null && ex.data.rule && (
+              <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3 text-xs text-[var(--text-secondary)]">
+                {ex.data.rule}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Word Order ── */}
+        {ex.type === "word_order" && (
+          <WordOrderExercise
+            words={ex.data.words || []}
+            correctSentence={ex.data.correctSentence || ""}
+            isCorrect={isCorrect}
+            onSubmit={checkAnswer}
+          />
+        )}
+
+        {/* ── Feedback + Next ── */}
+        {isCorrect !== null && (
+          <div className={`mt-4 flex items-center justify-between rounded-xl p-3 ${
+            isCorrect ? "bg-emerald-500/10" : "bg-red-500/10"
+          }`}>
+            <div className="flex items-center gap-2">
+              {isCorrect ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              ) : (
+                <XCircle className="h-5 w-5 text-red-500" />
+              )}
+              <span className={`text-sm font-semibold ${isCorrect ? "text-emerald-500" : "text-red-500"}`}>
+                {isCorrect ? "Correct!" : "Wrong!"}
+                {isCorrect && combo >= 2 && ` (${combo}x combo!)`}
+              </span>
+            </div>
+            <Button size="sm" onClick={nextExercise}>
+              {currentIdx + 1 < exercises.length ? (
+                <>Continue <ArrowRight className="h-4 w-4" /></>
+              ) : (
+                "Finish"
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Word Order sub-component ──
+
+function WordOrderExercise({
+  words,
+  correctSentence,
+  isCorrect,
+  onSubmit,
+}: {
+  words: string[];
+  correctSentence: string;
+  isCorrect: boolean | null;
+  onSubmit: (answer: string) => void;
+}) {
+  const [available, setAvailable] = useState(words);
+  const [placed, setPlaced] = useState<string[]>([]);
+
+  function addWord(word: string, idx: number) {
+    if (isCorrect !== null) return;
+    setPlaced([...placed, word]);
+    setAvailable(available.filter((_, i) => i !== idx));
+  }
+
+  function removeWord(idx: number) {
+    if (isCorrect !== null) return;
+    const word = placed[idx];
+    setAvailable([...available, word]);
+    setPlaced(placed.filter((_, i) => i !== idx));
+  }
+
+  function handleCheck() {
+    onSubmit(placed.join(" "));
+  }
+
+  return (
+    <div>
+      {/* Placed area */}
+      <div className="mb-4 min-h-[48px] flex flex-wrap gap-2 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-soft)] p-3">
+        {placed.length === 0 && (
+          <span className="text-xs text-[var(--text-muted)]">Tap words below to build the sentence...</span>
+        )}
+        {placed.map((w, i) => (
+          <button
+            key={i}
+            onClick={() => removeWord(i)}
+            className="rounded-lg bg-[var(--primary)] px-3 py-1.5 text-sm font-medium text-white transition-transform hover:scale-105"
+          >
+            {w}
+          </button>
+        ))}
+      </div>
+
+      {/* Available words */}
+      <div className="flex flex-wrap gap-2">
+        {available.map((w, i) => (
+          <button
+            key={i}
+            onClick={() => addWord(w, i)}
+            disabled={isCorrect !== null}
+            className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] transition-all hover:border-[var(--primary)]"
+          >
+            {w}
+          </button>
+        ))}
+      </div>
+
+      {/* Submit */}
+      {isCorrect === null && placed.length > 0 && (
+        <Button className="mt-4 w-full" onClick={handleCheck}>
+          Check Answer
+        </Button>
+      )}
+
+      {/* Show correct answer if wrong */}
+      {isCorrect === false && (
+        <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm text-emerald-500">
+          Correct: <strong>{correctSentence}</strong>
+        </div>
+      )}
+    </div>
+  );
+}
