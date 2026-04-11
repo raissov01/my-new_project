@@ -187,7 +187,7 @@ export function SpeakClient() {
 
   // ── Conversation ──
   return (
-    <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-2xl flex-col px-4 py-4">
+    <div className="mx-auto flex h-[calc(100dvh-4rem)] max-w-2xl flex-col px-3 py-3 sm:h-[calc(100vh-8rem)] sm:px-4 sm:py-4">
       {/* Header */}
       <div className="mb-3 flex items-center justify-between">
         <button onClick={() => { setTopic(null); setMessages([]); window.speechSynthesis?.cancel(); }} className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
@@ -271,17 +271,17 @@ export function SpeakClient() {
         </div>
       )}
 
-      {/* Controls */}
-      <div className="flex items-center gap-3 border-t border-[var(--border)] pt-3">
+      {/* Controls — safe area for mobile */}
+      <div className="flex items-center gap-3 border-t border-[var(--border)] pt-3" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         {!isRecording ? (
           <Button
             onClick={startRecording}
             disabled={isProcessing || isSpeaking}
             size="lg"
-            className="flex-1 gap-2 rounded-xl"
+            className="flex-1 gap-2 rounded-xl min-h-[52px] text-base"
           >
-            <Mic className="h-5 w-5" />
-            {isSpeaking ? "AI is speaking..." : "Hold to Speak"}
+            <Mic className="h-6 w-6" />
+            {isSpeaking ? "AI is speaking..." : "Tap to Speak"}
           </Button>
         ) : (
           <div className="flex flex-1 gap-2">

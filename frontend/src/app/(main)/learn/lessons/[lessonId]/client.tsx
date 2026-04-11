@@ -191,31 +191,31 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
   const progress = ((currentIdx + 1) / exercises.length) * 100;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
-      {/* ── Top bar ── */}
-      <div className="mb-4 flex items-center gap-4">
-        <button onClick={() => router.push("/learn/map")} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+    <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4 sm:py-6">
+      {/* ── Top bar (sticky on mobile) ── */}
+      <div className="sticky top-14 z-20 -mx-3 mb-3 flex items-center gap-3 border-b border-[var(--border)] bg-[var(--bg-base)]/95 px-3 py-2.5 backdrop-blur-md sm:-mx-4 sm:static sm:mb-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+        <button onClick={() => router.push("/learn/map")} className="flex h-10 w-10 items-center justify-center rounded-xl text-[var(--text-secondary)] active:scale-95">
           <X className="h-5 w-5" />
         </button>
         <div className="flex-1">
-          <div className="h-2.5 w-full rounded-full bg-[var(--bg-muted)]">
-            <div className="h-2.5 rounded-full bg-[var(--primary)] transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-3 w-full rounded-full bg-[var(--bg-muted)]">
+            <div className="h-3 rounded-full bg-[var(--primary)] transition-all" style={{ width: `${progress}%` }} />
           </div>
         </div>
-        <div className="flex items-center gap-1 text-red-500">
+        <div className="flex items-center gap-0.5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Heart key={i} className={`h-4 w-4 ${i < hearts ? "fill-red-500" : "fill-none opacity-30"}`} />
+            <Heart key={i} className={`h-5 w-5 ${i < hearts ? "fill-red-500 text-red-500" : "fill-none text-[var(--text-muted)] opacity-30"}`} />
           ))}
         </div>
         {combo >= 2 && (
-          <span className="flex items-center gap-1 rounded-full bg-orange-500/15 px-2 py-0.5 text-xs font-bold text-orange-500">
-            <Zap className="h-3 w-3 fill-orange-500" /> {combo}x
+          <span className="flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-1 text-xs font-bold text-orange-500">
+            <Zap className="h-3.5 w-3.5 fill-orange-500" /> {combo}x
           </span>
         )}
       </div>
 
       {/* ── Exercise card ── */}
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-md)]">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-md)] sm:p-6">
         <p className="mb-1 text-xs font-medium uppercase text-[var(--text-muted)]">
           {ex.type.replace("_", " ")}
         </p>

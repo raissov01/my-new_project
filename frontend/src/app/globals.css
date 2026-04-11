@@ -776,3 +776,39 @@ a, button, input, textarea, select {
   font-size: 0.8em;
   font-family: "Consolas", "Monaco", "Courier New", monospace;
 }
+
+/* ── Mobile optimizations ──────────────────────────────────────────── */
+
+/* Prevent overscroll bounce on iOS in scrollable containers */
+.overscroll-contain {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS viewport height fix — use 100dvh where possible */
+@supports (height: 100dvh) {
+  .h-screen-safe { height: 100dvh; }
+}
+
+/* Very small phones (iPhone SE, 375px) */
+@media (max-width: 374px) {
+  .page-shell { padding-left: 0.75rem; padding-right: 0.75rem; }
+}
+
+/* Landscape mode — reduce vertical spacing */
+@media (max-height: 500px) and (orientation: landscape) {
+  .page-shell { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+}
+
+/* Disable text selection on interactive elements (Duolingo-style) */
+.select-none-touch {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Smooth press animation for mobile buttons */
+@media (hover: none) {
+  .active\:scale-95:active { transform: scale(0.95); }
+  .active\:scale-\[0\.98\]:active { transform: scale(0.98); }
+}
