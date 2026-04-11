@@ -58,6 +58,16 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
     } else if (ex.type === "word_order") {
       const userSentence = typeof answer === "string" ? answer : answer.join(" ");
       correct = userSentence.toLowerCase().trim() === ex.data.correctSentence.toLowerCase().trim();
+    } else if (ex.type === "matching") {
+      // answer is an array of matched pairs — check all correct
+      correct = answer === true; // matching component passes true/false
+    } else if (ex.type === "error_correction") {
+      correct = typeof answer === "string" && answer.toLowerCase().trim() === ex.data.correction.toLowerCase().trim();
+    } else if (ex.type === "translation") {
+      const userText = (typeof answer === "string" ? answer : "").toLowerCase().trim();
+      correct = (ex.data.acceptedAnswers || []).some(
+        (a: string) => a.toLowerCase().trim() === userText
+      );
     }
 
     setIsCorrect(correct);
@@ -282,6 +292,39 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
           />
         )}
 
+        {/* ── Matching ── */}
+        {ex.type === "matching" && (
+          <MatchingExercise
+            pairs={ex.data.pairs || []}
+            isCorrect={isCorrect}
+            onSubmit={checkAnswer}
+          />
+        )}
+
+        {/* ── Error Correction ── */}
+        {ex.type === "error_correction" && (
+          <ErrorCorrectionExercise
+            sentence={ex.data.sentence || ""}
+            errorWord={ex.data.errorWord || ""}
+            correction={ex.data.correction || ""}
+            rule={ex.data.rule || ""}
+            isCorrect={isCorrect}
+            onSubmit={checkAnswer}
+          />
+        )}
+
+        {/* ── Translation ── */}
+        {ex.type === "translation" && (
+          <TranslationExercise
+            sourceText={ex.data.sourceText || ""}
+            sourceLang={ex.data.sourceLang || "Russian"}
+            acceptedAnswers={ex.data.acceptedAnswers || []}
+            hint={ex.data.hint || ""}
+            isCorrect={isCorrect}
+            onSubmit={checkAnswer}
+          />
+        )}
+
         {/* ── Feedback + Next ── */}
         {isCorrect !== null && (
           <div className={`mt-4 flex items-center justify-between rounded-xl p-3 ${
@@ -388,6 +431,214 @@ function WordOrderExercise({
       {isCorrect === false && (
         <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm text-emerald-500">
           Correct: <strong>{correctSentence}</strong>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Matching Exercise ──
+
+function MatchingExercise({
+  pairs,
+  isCorrect,
+  onSubmit,
+}: {
+  pairs: { term: string; definition: string }[];
+  isCorrect: boolean | null;
+  onSubmit: (answer: any) => void;
+}) {
+  const [selectedTerm, setSelectedTerm] = useState<number | null>(null);
+  const [matched, setMatched] = useState<Map<number, number>>(new Map());
+  const [shuffledDefs] = useState(() => {
+    const defs = pairs.map((p, i) => ({ def: p.definition, origIdx: i }));
+    for (let i = defs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [defs[i], defs[j]] = [defs[j], defs[i]];
+    }
+    return defs;
+  });
+
+  function handleTermClick(idx: number) {
+    if (isCorrect !== null) return;
+    setSelectedTerm(idx);
+  }
+
+  function handleDefClick(defIdx: number) {
+    if (isCorrect !== null || selectedTerm === null) return;
+    const newMatched = new Map(matched);
+    newMatched.set(selectedTerm, defIdx);
+    setMatched(newMatched);
+    setSelectedTerm(null);
+
+    // Check if all matched
+    if (newMatched.size === pairs.length) {
+      const allCorrect = Array.from(newMatched.entries()).every(
+        ([termIdx, dIdx]) => shuffledDefs[dIdx].origIdx === termIdx
+      );
+      onSubmit(allCorrect);
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-[var(--text-muted)]">📝 Terms</p>
+        {pairs.map((p, i) => {
+          const isMatched = matched.has(i);
+          const isSelected = selectedTerm === i;
+          return (
+            <button
+              key={i}
+              onClick={() => handleTermClick(i)}
+              disabled={isCorrect !== null || isMatched}
+              className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-all ${
+                isSelected ? "border-[var(--primary)] bg-[var(--primary-soft)]" :
+                isMatched ? "border-emerald-500/30 bg-emerald-500/5 opacity-60" :
+                "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--primary)]"
+              }`}
+            >
+              {p.term}
+            </button>
+          );
+        })}
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-[var(--text-muted)]">📖 Definitions</p>
+        {shuffledDefs.map((d, i) => {
+          const isUsed = Array.from(matched.values()).includes(i);
+          return (
+            <button
+              key={i}
+              onClick={() => handleDefClick(i)}
+              disabled={isCorrect !== null || isUsed || selectedTerm === null}
+              className={`w-full rounded-lg border px-3 py-2 text-left text-xs leading-relaxed transition-all ${
+                isUsed ? "border-emerald-500/30 bg-emerald-500/5 opacity-60" :
+                selectedTerm !== null ? "border-[var(--border)] bg-[var(--bg-surface)] hover:border-amber-500" :
+                "border-[var(--border)] bg-[var(--bg-surface)] opacity-70"
+              }`}
+            >
+              {d.def}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Error Correction Exercise ──
+
+function ErrorCorrectionExercise({
+  sentence,
+  errorWord,
+  correction,
+  rule,
+  isCorrect,
+  onSubmit,
+}: {
+  sentence: string;
+  errorWord: string;
+  correction: string;
+  rule: string;
+  isCorrect: boolean | null;
+  onSubmit: (answer: string) => void;
+}) {
+  const [input, setInput] = useState("");
+
+  return (
+    <div>
+      <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+        <p className="text-sm text-[var(--text-primary)]">
+          {sentence.split(errorWord).map((part, i, arr) => (
+            <span key={i}>
+              {part}
+              {i < arr.length - 1 && (
+                <span className="rounded bg-red-500/20 px-1 font-bold text-red-500 underline">{errorWord}</span>
+              )}
+            </span>
+          ))}
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && input.trim() && onSubmit(input)}
+          placeholder={`Replace "${errorWord}" with...`}
+          disabled={isCorrect !== null}
+          className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:outline-none"
+        />
+        {isCorrect === null && (
+          <Button onClick={() => onSubmit(input)} disabled={!input.trim()}>Check</Button>
+        )}
+      </div>
+      {isCorrect === false && (
+        <div className="mt-3 space-y-2">
+          <div className="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-600">
+            ✅ Correct answer: <strong>{correction}</strong>
+          </div>
+          <div className="rounded-xl bg-[var(--bg-soft)] p-3 text-xs text-[var(--text-secondary)]">
+            💡 {rule}
+          </div>
+        </div>
+      )}
+      {isCorrect === true && rule && (
+        <div className="mt-3 rounded-xl bg-[var(--bg-soft)] p-3 text-xs text-[var(--text-secondary)]">
+          💡 {rule}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Translation Exercise ──
+
+function TranslationExercise({
+  sourceText,
+  sourceLang,
+  acceptedAnswers,
+  hint,
+  isCorrect,
+  onSubmit,
+}: {
+  sourceText: string;
+  sourceLang: string;
+  acceptedAnswers: string[];
+  hint: string;
+  isCorrect: boolean | null;
+  onSubmit: (answer: string) => void;
+}) {
+  const [input, setInput] = useState("");
+
+  return (
+    <div>
+      <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+        <p className="text-xs font-medium text-blue-500 mb-1">🌐 {sourceLang}</p>
+        <p className="text-lg font-semibold text-[var(--text-primary)]">{sourceText}</p>
+        {hint && <p className="mt-2 text-xs text-[var(--text-muted)]">💡 Hint: {hint}</p>}
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && input.trim() && onSubmit(input)}
+          placeholder="Type the English translation..."
+          disabled={isCorrect !== null}
+          className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:outline-none"
+        />
+        {isCorrect === null && (
+          <Button onClick={() => onSubmit(input)} disabled={!input.trim()}>Check</Button>
+        )}
+      </div>
+      {isCorrect === false && acceptedAnswers.length > 0 && (
+        <div className="mt-3 rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-600">
+          ✅ Accepted answers:
+          <ul className="mt-1 list-inside list-disc">
+            {acceptedAnswers.map((a, i) => <li key={i}>{a}</li>)}
+          </ul>
         </div>
       )}
     </div>

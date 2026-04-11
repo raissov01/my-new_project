@@ -4,8 +4,72 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Heart, Star, Lock, Trophy, Zap, ChevronDown, ChevronUp, Mic,
+  CalendarDays, CheckCircle2, Target, Flame,
 } from "lucide-react";
 import type { EngSimUnit, UserProgress } from "@/features/learn/api";
+
+// ── Daily Tasks ──
+
+type DailyTask = {
+  id: string;
+  emoji: string;
+  title: string;
+  desc: string;
+  href: string;
+  xp: number;
+};
+
+function getDailyTasks(units: EngSimUnit[]): DailyTask[] {
+  // Find first unlocked unit with incomplete lessons
+  const activeUnit = units.find(u => u.isUnlocked && u.totalStars < u.maxStars);
+  const nextLesson = activeUnit?.lessons?.find(l => !l.isCompleted);
+
+  const tasks: DailyTask[] = [];
+
+  if (nextLesson && activeUnit) {
+    tasks.push({
+      id: "lesson",
+      emoji: "📚",
+      title: `Complete: ${nextLesson.title}`,
+      desc: activeUnit.title,
+      href: `/learn/lessons/${nextLesson.id}`,
+      xp: 50,
+    });
+  }
+
+  tasks.push({
+    id: "speaking",
+    emoji: "🗣️",
+    title: "Speaking Practice",
+    desc: "5 min conversation with AI",
+    href: "/learn/speak",
+    xp: 30,
+  });
+
+  // Find a completed lesson to review
+  const reviewLesson = units.flatMap(u => u.lessons || []).find(l => l.isCompleted && l.bestStars < 3);
+  if (reviewLesson) {
+    tasks.push({
+      id: "review",
+      emoji: "🔄",
+      title: `Review: ${reviewLesson.title}`,
+      desc: "Get 3 stars!",
+      href: `/learn/lessons/${reviewLesson.id}`,
+      xp: 20,
+    });
+  }
+
+  tasks.push({
+    id: "vocab",
+    emoji: "🧠",
+    title: "Learn 10 New Words",
+    desc: "Expand your vocabulary",
+    href: "/learn/speak",
+    xp: 25,
+  });
+
+  return tasks;
+}
 
 export function MapClient({
   units,
@@ -55,6 +119,33 @@ export function MapClient({
         >
           <Mic className="h-4 w-4" /> Speaking Practice
         </Link>
+      </div>
+
+      {/* ── Daily Tasks ── */}
+      <div className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <CalendarDays className="h-5 w-5 text-amber-500" />
+          <h3 className="font-semibold text-[var(--text-primary)]">Today's Tasks</h3>
+          <Flame className="h-4 w-4 text-orange-500" />
+        </div>
+        <div className="space-y-2">
+          {getDailyTasks(units).map(task => (
+            <Link
+              key={task.id}
+              href={task.href}
+              className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 transition-all hover:border-[var(--primary)] hover:shadow-sm"
+            >
+              <span className="text-xl">{task.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[var(--text-primary)] truncate">{task.title}</p>
+                <p className="text-xs text-[var(--text-muted)]">{task.desc}</p>
+              </div>
+              <span className="shrink-0 rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-xs font-bold text-[var(--primary)]">
+                +{task.xp} XP
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* ── Road map ── */}

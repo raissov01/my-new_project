@@ -64,7 +64,7 @@ export type UserProgress = {
 };
 
 export type Exercise = {
-  type: "fill_blank" | "grammar_choice" | "word_order";
+  type: "fill_blank" | "grammar_choice" | "word_order" | "matching" | "error_correction" | "translation";
   prompt: string;
   data: any;
 };

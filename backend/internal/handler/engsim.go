@@ -232,7 +232,7 @@ func (h *EngSimHandler) StartLesson(w http.ResponseWriter, r *http.Request) {
 		exerciseCount = 12
 	}
 
-	exerciseTypes := "fill_blank, grammar_choice, word_order"
+	exerciseTypes := "fill_blank, grammar_choice, word_order, matching, error_correction, translation"
 	prompt := fmt.Sprintf(exerciseGenerationPrompt,
 		exerciseCount, unit.Level, unit.IELTSSkill,
 		unit.Title, lesson.Title, exerciseTypes, unit.Level,

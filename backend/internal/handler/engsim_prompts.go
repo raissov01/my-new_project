@@ -1,43 +1,15 @@
 package handler
 
-const placementSystemPrompt = `You are an English level assessment engine. Generate a placement test to determine a student's CEFR level (A1-C2).
-
-Generate exactly 18 multiple-choice questions (3 per level from A1 to C1, plus 3 C2).
-Each question tests grammar, vocabulary, or reading comprehension appropriate for that level.
-
-Return ONLY valid JSON in this format:
-{
-  "questions": [
-    {
-      "level": "A1",
-      "type": "grammar",
-      "question": "She ___ a teacher.",
-      "options": ["am", "is", "are", "be"],
-      "correct": 1,
-      "explanation": "'is' is used with third person singular (she/he/it)"
-    }
-  ]
-}
-
-Rules:
-- Exactly 3 questions per level: A1, A2, B1, B2, C1, C2
-- Mix of grammar (50%), vocabulary (30%), reading (20%)
-- 4 options per question
-- "correct" is 0-indexed
-- Questions must clearly differentiate levels
-- A1: very basic (to be, simple present, basic nouns)
-- A2: elementary (past tense, comparatives, daily vocab)
-- B1: intermediate (present perfect, conditionals, academic vocab)
-- B2: upper-intermediate (passive voice, reported speech, collocations)
-- C1: advanced (inversion, subjunctive, nuanced vocab)
-- C2: proficiency (rare idioms, subtle grammar, near-native distinctions)`
+// placementSystemPrompt is no longer used — placement uses static questions.
+// Kept for reference.
+const placementSystemPrompt = `unused — placement test uses 60 static hardcoded questions`
 
 const exerciseGenerationPrompt = `You are an IELTS-focused English exercise generator. Generate exactly %d exercises for a %s level student.
 
 Skill focus: %s
 Topic: %s — %s
 
-Exercise types to generate (mix them): %s
+Exercise types to generate (use ALL of these, mix them evenly): %s
 
 Return ONLY valid JSON:
 {
@@ -68,16 +40,57 @@ Return ONLY valid JSON:
         "words": ["significant", "was", "a", "increase", "there"],
         "correctSentence": "There was a significant increase"
       }
+    },
+    {
+      "type": "matching",
+      "prompt": "Match the words with their definitions:",
+      "data": {
+        "pairs": [
+          {"term": "substantial", "definition": "large in amount or importance"},
+          {"term": "fluctuate", "definition": "change frequently in size or amount"},
+          {"term": "comprise", "definition": "consist of or be made up of"},
+          {"term": "adjacent", "definition": "next to or near something"}
+        ]
+      }
+    },
+    {
+      "type": "error_correction",
+      "prompt": "Find and correct the error in this sentence:",
+      "data": {
+        "sentence": "The number of students have increased significantly.",
+        "errorWord": "have",
+        "correction": "has",
+        "rule": "'The number of' takes a singular verb (has), not plural (have)."
+      }
+    },
+    {
+      "type": "translation",
+      "prompt": "Translate this phrase into English:",
+      "data": {
+        "sourceText": "Значительный рост населения",
+        "sourceLang": "Russian",
+        "acceptedAnswers": ["A significant increase in population", "A substantial growth in population", "Significant population growth"],
+        "hint": "Think about IELTS Task 1 vocabulary"
+      }
     }
   ]
 }
 
 Rules:
-- Target IELTS academic English, NOT casual English
-- Difficulty MUST match %s level exactly
-- For fill_blank: provide exactly 4 options, one correct
-- For grammar_choice: include a "rule" explanation, "correct" is 0-indexed
-- For word_order: 4-8 words, "correctSentence" is the expected result
-- Make exercises varied and interesting, not repetitive
-- Include real IELTS-style content (graphs, academic topics, formal language)
-- Return ONLY the JSON, no markdown or extra text`
+- Target IELTS academic English, NOT casual conversation
+- Difficulty MUST match %s level exactly:
+  A1 = very basic everyday English
+  A2 = elementary, simple past, comparatives
+  B1 = intermediate, present perfect, conditionals, academic vocab
+  B2 = upper-intermediate, passive, reported speech, collocations
+  C1 = advanced, inversion, subjunctive, nuanced vocab
+  C2 = near-native, rare idioms, subtle distinctions
+- For fill_blank: exactly 4 options, one correct
+- For grammar_choice: include "rule" explanation, "correct" is 0-indexed
+- For word_order: 4-8 shuffled words, "correctSentence" is the answer
+- For matching: exactly 4 pairs (term + definition)
+- For error_correction: highlight the wrong word and provide correction + rule
+- For translation: provide source in Russian, 2-3 accepted English translations, a hint
+- Make exercises practical and useful — real IELTS vocabulary and structures
+- NO filler, NO trivial questions — every exercise should teach something valuable
+- Return ONLY valid JSON, no markdown`
