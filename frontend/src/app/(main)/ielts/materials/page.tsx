@@ -6,7 +6,6 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { isAdminSessionCookie, ADMIN_COOKIE_NAME } from "@/lib/shared/auth/admin";
 import { getMaterials, type IELTSMaterial } from "@/app/(main)/ielts/admin/actions";
-import { getBackendBaseUrl } from "@/server/integrations/go-backend/env";
 
 /* ─── Section top-level groups (user's 4 categories) ─── */
 
@@ -36,7 +35,8 @@ export default async function IELTSMaterialsPage() {
   const cookieStore = await cookies();
   const isAdmin = isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME));
   const allMaterials = await getMaterials();
-  const backendUrl = getBackendBaseUrl() ?? "http://localhost:5000";
+  // Use relative URL for PDF links — browser accesses via nginx proxy, not internal backend URL
+  const filesBaseUrl = "";
 
   /* ─── Split into 4 top-level groups ─── */
   const materials = allMaterials.filter((m) => ["book", "lesson", "practice"].includes(m.type));
@@ -172,7 +172,7 @@ export default async function IELTSMaterialsPage() {
                               {material.filePath && (
                                 <div className="mt-3 flex items-center gap-2">
                                   <a
-                                    href={`${backendUrl}/api/v1/files/${encodeURI(material.filePath)}`}
+                                    href={`${filesBaseUrl}/api/v1/files/${encodeURI(material.filePath)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/15"
@@ -181,7 +181,7 @@ export default async function IELTSMaterialsPage() {
                                     View PDF
                                   </a>
                                   <a
-                                    href={`${backendUrl}/api/v1/files/${encodeURI(material.filePath)}?download=1`}
+                                    href={`${filesBaseUrl}/api/v1/files/${encodeURI(material.filePath)}?download=1`}
                                     download
                                     className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
                                   >
