@@ -21,6 +21,8 @@ func NewFiles(baseDir string) *FilesHandler {
 func (h *FilesHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	// Extract the file path from the URL after /api/v1/files/
 	reqPath := r.PathValue("filepath")
+	// Gin wildcard params start with "/" — strip it
+	reqPath = strings.TrimPrefix(reqPath, "/")
 	if reqPath == "" {
 		http.Error(w, `{"error":"file path required"}`, http.StatusBadRequest)
 		return
