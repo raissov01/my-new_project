@@ -77,6 +77,8 @@ services:
       CLAUDE_API_URL: ${CLAUDE_API_URL:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+    volumes:
+      - /opt/studywithraissov/backend/telegram-media:/app/telegram-media:ro
     networks:
       - internal
     deploy:
