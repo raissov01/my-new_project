@@ -32,6 +32,7 @@ type Dependencies struct {
 	ProfileWrite       *ProfileWriteHandler
 	AI                 *AIHandler
 	Chat               *ChatHandler
+	Files              *FilesHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -57,6 +58,9 @@ func RegisterRoutes(router *gin.Engine) {
 	api.POST("/auth/resend-verification", authLimiter, deps.Auth.ResendVerification)
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
+
+	// ── Public file serving (materials PDFs) ────────────────────────────
+	api.GET("/files/*filepath", wrapHTTP(deps.Files.Serve))
 
 	// ── Public IELTS routes (no auth required for reading) ──────────────
 	api.GET("/ielts/materials", deps.IELTSMaterial.List)

@@ -177,6 +177,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		IELTSDashboard:     handler.NewIELTSDashboard(gormDB),
 		IELTSQuestionAdmin: handler.NewIELTSQuestionAdmin(gormDB),
 		Chat:               handler.NewChat(chatRepo, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
+		Files:              handler.NewFiles("telegram-media"),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),
 	}
 }

@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ArrowLeft, BookOpen, BookOpenText, ClipboardCheck, FileText, GraduationCap, Headphones, Lightbulb, MessageSquare, Mic, PenLine, Settings } from "lucide-react";
+import { ArrowLeft, BookOpen, BookOpenText, ClipboardCheck, Download, Eye, FileText, GraduationCap, Headphones, Lightbulb, MessageSquare, Mic, PenLine, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cookies } from "next/headers";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { isAdminSessionCookie, ADMIN_COOKIE_NAME } from "@/lib/shared/auth/admin";
 import { getMaterials, type IELTSMaterial } from "@/app/(main)/ielts/admin/actions";
+import { getBackendBaseUrl } from "@/server/integrations/go-backend/env";
 
 /* ─── Section top-level groups (user's 4 categories) ─── */
 
@@ -35,6 +36,7 @@ export default async function IELTSMaterialsPage() {
   const cookieStore = await cookies();
   const isAdmin = isAdminSessionCookie(cookieStore.get(ADMIN_COOKIE_NAME));
   const allMaterials = await getMaterials();
+  const backendUrl = getBackendBaseUrl() ?? "http://localhost:5000";
 
   /* ─── Split into 4 top-level groups ─── */
   const materials = allMaterials.filter((m) => ["book", "lesson", "practice"].includes(m.type));
@@ -168,9 +170,24 @@ export default async function IELTSMaterialsPage() {
                                 </div>
                               )}
                               {material.filePath && (
-                                <div className="mt-3 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
-                                  <FileText className="h-3.5 w-3.5" />
-                                  PDF
+                                <div className="mt-3 flex items-center gap-2">
+                                  <a
+                                    href={`${backendUrl}/api/v1/files/${encodeURI(material.filePath)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/15"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                    View PDF
+                                  </a>
+                                  <a
+                                    href={`${backendUrl}/api/v1/files/${encodeURI(material.filePath)}?download=1`}
+                                    download
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                                  >
+                                    <Download className="h-3.5 w-3.5" />
+                                    Download
+                                  </a>
                                 </div>
                               )}
                             </article>

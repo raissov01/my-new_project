@@ -343,46 +343,72 @@ func (h *ChatHandler) buildMaterialsContext(keywords []string) string {
 	}
 
 	var parts []string
+	totalLen := 0
+	const maxContextLen = 6000 // keep context under ~6k chars to leave room for conversation
 
-	// Search IELTS materials
+	// Search IELTS materials — include extracted PDF content
 	materials, err := h.repo.SearchMaterials(keywords, 5)
 	if err == nil && len(materials) > 0 {
 		for _, m := range materials {
-			entry := fmt.Sprintf("- [%s] %s (%s, %s)", m.Category, m.Title, m.Type, m.Difficulty)
+			entry := fmt.Sprintf("**[%s] %s** (%s, %s)", m.Category, m.Title, m.Type, m.Difficulty)
+			if m.FilePath != "" {
+				entry += "\n  Available as PDF on the platform — students can find it in IELTS Materials section."
+			}
 			if m.Description != "" {
 				desc := m.Description
-				if len(desc) > 200 {
-					desc = desc[:200] + "..."
+				if len(desc) > 300 {
+					desc = desc[:300] + "..."
 				}
-				entry += "\n  " + desc
+				entry += "\n  Description: " + desc
+			}
+			// Include actual content from PDF extraction for richer AI context
+			if m.Content != "" {
+				content := m.Content
+				remaining := maxContextLen - totalLen - len(entry) - 100
+				if remaining > 500 {
+					if len(content) > remaining {
+						content = content[:remaining] + "..."
+					}
+					entry += "\n  Content excerpt:\n  " + content
+				}
 			}
 			parts = append(parts, entry)
+			totalLen += len(entry)
+			if totalLen > maxContextLen {
+				break
+			}
 		}
 	}
 
-	// Search Telegram posts
-	posts, err := h.repo.SearchTelegramPosts(keywords, 5)
-	if err == nil && len(posts) > 0 {
-		for _, p := range posts {
-			text := p.Text
-			if text == "" {
-				text = p.Caption
+	// Search Telegram posts (only if we have room)
+	if totalLen < maxContextLen {
+		posts, err := h.repo.SearchTelegramPosts(keywords, 3)
+		if err == nil && len(posts) > 0 {
+			for _, p := range posts {
+				text := p.Text
+				if text == "" {
+					text = p.Caption
+				}
+				if len(text) > 400 {
+					text = text[:400] + "..."
+				}
+				entry := fmt.Sprintf("**[Telegram channel material]** %s", p.FileName)
+				if text != "" {
+					entry += "\n  " + text
+				}
+				parts = append(parts, entry)
+				totalLen += len(entry)
+				if totalLen > maxContextLen {
+					break
+				}
 			}
-			if len(text) > 300 {
-				text = text[:300] + "..."
-			}
-			entry := fmt.Sprintf("- [Telegram material] %s", p.FileName)
-			if text != "" {
-				entry += "\n  " + text
-			}
-			parts = append(parts, entry)
 		}
 	}
 
 	if len(parts) == 0 {
 		return ""
 	}
-	return strings.Join(parts, "\n")
+	return strings.Join(parts, "\n\n")
 }
 
 // extractKeywords pulls meaningful words from the user's message for material search.
