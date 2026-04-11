@@ -751,3 +751,28 @@ a, button, input, textarea, select {
   outline: none;
   box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--primary);
 }
+
+/* ── AI Chat content ───────────────────────────────────────────────────── */
+
+.chat-ai-content strong { font-weight: 600; }
+.chat-ai-content em { font-style: italic; }
+.chat-ai-content br { display: block; content: ""; margin-top: 0.25rem; }
+
+.chat-code-block {
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+  line-height: 1.5;
+}
+
+.chat-inline-code {
+  background: var(--bg-muted);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.8em;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+}

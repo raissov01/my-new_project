@@ -150,6 +150,8 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 	challengeRepo := repository.NewChallenge(pool)
 	challengeSvc := service.NewChallenge(challengeRepo)
 
+	chatRepo := repository.NewChat(gormDB)
+
 	emailSender := email.NewSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPFrom)
 
 	return handler.Dependencies{
@@ -174,6 +176,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		IELTSStudyPlan:     handler.NewIELTSStudyPlan(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.AIRequestTimeout),
 		IELTSDashboard:     handler.NewIELTSDashboard(gormDB),
 		IELTSQuestionAdmin: handler.NewIELTSQuestionAdmin(gormDB),
+		Chat:               handler.NewChat(chatRepo, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),
 	}
 }

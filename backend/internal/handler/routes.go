@@ -31,6 +31,7 @@ type Dependencies struct {
 	Challenge          *ChallengeHandler
 	ProfileWrite       *ProfileWriteHandler
 	AI                 *AIHandler
+	Chat               *ChatHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -158,6 +159,12 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/ielts/study-plan/reflection", wrapHTTP(deps.IELTSStudyPlan.SubmitReflection))
 		internal.GET("/ielts/study-plan/reflections", wrapHTTP(deps.IELTSStudyPlan.GetReflections))
 		internal.GET("/ielts/study-plan/adaptive", wrapHTTP(deps.IELTSStudyPlan.CheckAdaptive))
+
+		// AI tutor chat
+		chatLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()
+		internal.POST("/chat/message", chatLimiter, wrapHTTP(deps.Chat.SendMessage))
+		internal.GET("/chat/history", wrapHTTP(deps.Chat.GetHistory))
+		internal.DELETE("/chat/history", wrapHTTP(deps.Chat.ClearHistory))
 
 		// IELTS admin question management
 		internal.POST("/ielts/admin/questions", wrapHTTP(deps.IELTSQuestionAdmin.CreateQuestion))

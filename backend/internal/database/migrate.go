@@ -37,6 +37,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.IELTSTaskCompletion{},
 		&models.IELTSWeeklyReflection{},
 		&models.TelegramPost{},
+		&models.ChatMessage{},
 	)
 	if err != nil {
 		return err
