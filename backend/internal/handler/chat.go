@@ -32,10 +32,16 @@ func NewChat(
 	claudeKey, claudeModel, claudeFallback, claudeURL string,
 	timeout time.Duration,
 ) *ChatHandler {
+	// Chat needs a fast model for instant responses.
+	// GPT-5 is too slow (30-120s). Use gpt-4.1-mini (1-3s).
+	chatModel := openaiModel
+	if chatModel == "gpt-5" || chatModel == "o3" || chatModel == "o4-mini" {
+		chatModel = "gpt-4.1-mini"
+	}
 	return &ChatHandler{
 		repo:           repo,
 		openaiKey:      openaiKey,
-		openaiModel:    openaiModel,
+		openaiModel:    chatModel,
 		claudeKey:      claudeKey,
 		claudeModel:    claudeModel,
 		claudeFallback: claudeFallback,

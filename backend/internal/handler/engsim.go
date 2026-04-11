@@ -28,10 +28,15 @@ func NewEngSim(
 	openAIKey, openAIModel string,
 	timeout time.Duration,
 ) *EngSimHandler {
+	// Simulator needs fast responses for exercise generation.
+	simModel := openAIModel
+	if simModel == "gpt-5" || simModel == "o3" || simModel == "o4-mini" {
+		simModel = "gpt-4.1-mini"
+	}
 	return &EngSimHandler{
 		db: db, claudeKey: claudeKey, claudeModel: claudeModel,
 		claudeFallback: claudeFallback, claudeURL: claudeURL,
-		openAIKey: openAIKey, openAIModel: openAIModel, timeout: timeout,
+		openAIKey: openAIKey, openAIModel: simModel, timeout: timeout,
 	}
 }
 
