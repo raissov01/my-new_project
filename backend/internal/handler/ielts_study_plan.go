@@ -30,8 +30,14 @@ func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeMod
 	if timeout < 30*time.Second {
 		timeout = 60 * time.Second
 	}
+	// GPT-5 is too slow for study plan generation (45s+ timeout).
+	// Use gpt-4.1-mini for fast, reliable responses.
+	planModel := openAIModel
+	if planModel == "gpt-5" || planModel == "o3" || planModel == "o4-mini" {
+		planModel = "gpt-4.1-mini"
+	}
 	return &IELTSStudyPlanHandler{
-		db: db, openAIKey: openAIKey, openAIModel: openAIModel,
+		db: db, openAIKey: openAIKey, openAIModel: planModel,
 		claudeKey: claudeKey, claudeModel: claudeModel, claudeFallback: claudeFallback, claudeURL: claudeURL,
 		geminiKey: geminiKey, geminiModel: geminiModel, timeout: timeout,
 	}

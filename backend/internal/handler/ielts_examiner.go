@@ -33,8 +33,13 @@ func NewIELTSExaminer(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeMode
 	if timeout < 30*time.Second {
 		timeout = 60 * time.Second
 	}
+	// GPT-5 is too slow for interactive evaluation (timeout issues).
+	examModel := openAIModel
+	if examModel == "gpt-5" || examModel == "o3" || examModel == "o4-mini" {
+		examModel = "gpt-4.1-mini"
+	}
 	return &IELTSExaminerHandler{
-		db: db, openAIKey: openAIKey, openAIModel: openAIModel,
+		db: db, openAIKey: openAIKey, openAIModel: examModel,
 		claudeKey: claudeKey, claudeModel: claudeModel, claudeFallback: claudeFallback, claudeURL: claudeURL,
 		geminiKey: geminiKey, geminiModel: geminiModel, timeout: timeout,
 	}
