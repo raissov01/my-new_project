@@ -31,16 +31,22 @@ type PublicAuthResponse = {
 
 function getPublicApiBaseUrl() {
   const publicApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (publicApiUrl) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  // If NEXT_PUBLIC_API_URL is absolute (http/https), use it directly.
+  if (publicApiUrl && /^https?:\/\//i.test(publicApiUrl)) {
     return publicApiUrl.replace(/\/+$/, "");
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  // Server actions run under Node.js fetch which REJECTS relative URLs.
+  // When NEXT_PUBLIC_API_URL is a path like "/api/v1", combine it with
+  // NEXT_PUBLIC_APP_URL to build an absolute URL that fetch() accepts.
   if (appUrl) {
-    return `${appUrl.replace(/\/+$/, "")}/api/v1`;
+    const apiPath = publicApiUrl && publicApiUrl.startsWith("/") ? publicApiUrl : "/api/v1";
+    return `${appUrl.replace(/\/+$/, "")}${apiPath}`.replace(/\/+$/, "");
   }
 
-  return "/api/v1";
+  return publicApiUrl ?? "/api/v1";
 }
 
 async function fetchPublicAuthJson<T>(
@@ -73,6 +79,14 @@ function friendlyError(rawMessage: string, t: (key: string) => string): string {
   if (lower.includes("password") && lower.includes("min")) return t("action.passwordMin");
   if (lower.includes("bridge_not_configured") || lower.includes("go_backend_bridge_not_configured")) {
     return "Server auth connection is not configured.";
+  }
+  // Surface infrastructure / config bugs instead of hiding them behind the
+  // generic error — these are NOT user-fixable and should be visible in logs.
+  if (lower.includes("failed to parse url") || lower.includes("invalid url")) {
+    return "Auth service URL is misconfigured. Please contact support.";
+  }
+  if (lower.includes("fetch failed") || lower.includes("econnrefused") || lower.includes("enotfound")) {
+    return "Cannot reach auth service. Please try again in a moment.";
   }
   return t("action.genericError");
 }
