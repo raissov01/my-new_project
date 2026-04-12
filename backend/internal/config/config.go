@@ -35,12 +35,9 @@ type Config struct {
 	GoogleRedirectURL  string
 	FrontendURL        string
 
-	// SMTP settings for email verification
-	SMTPHost     string
-	SMTPPort     string
-	SMTPUser     string
-	SMTPPassword string
-	SMTPFrom     string
+	// Resend HTTP API for transactional email (replaces SMTP).
+	ResendAPIKey string
+	ResendFrom   string
 
 	// Telegram channel history importer (MTProto user session)
 	TelegramAppID         int
@@ -76,11 +73,8 @@ func Load() (*Config, error) {
 		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", "http://localhost:5000/api/v1/auth/google/callback"),
 		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:3000"),
 
-		SMTPHost:     getEnv("SMTP_HOST", ""),
-		SMTPPort:     getEnv("SMTP_PORT", "587"),
-		SMTPUser:     getEnv("SMTP_USER", ""),
-		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
-		SMTPFrom:     getEnv("SMTP_FROM", ""),
+		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
+		ResendFrom:   getEnv("RESEND_FROM", ""),
 
 		TelegramAppID:         getEnvInt("TELEGRAM_APP_ID", 0),
 		TelegramAppHash:       os.Getenv("TELEGRAM_APP_HASH"),

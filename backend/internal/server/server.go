@@ -152,7 +152,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 
 	chatRepo := repository.NewChat(gormDB)
 
-	emailSender := email.NewSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPFrom)
+	emailSender := email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom)
 
 	return handler.Dependencies{
 		InternalAPIToken: cfg.InternalAPIToken,

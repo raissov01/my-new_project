@@ -1,43 +1,45 @@
 package email
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"net/smtp"
+	"io"
+	"net/http"
 	"strings"
+	"time"
 )
 
-// Sender handles sending emails via SMTP.
+// Sender sends transactional email via the Resend HTTP API (https://resend.com/docs/api-reference/emails/send-email).
+// Resend replaces the previous net/smtp implementation — simpler, no SMTP
+// port/TLS dance, and works from inside Docker containers without extra config.
 type Sender struct {
-	host     string
-	port     string
-	user     string
-	password string
-	from     string
+	apiKey string
+	from   string
+	client *http.Client
 }
 
-// NewSender creates an email sender. Returns nil if SMTP is not configured.
-func NewSender(host, port, user, password, from string) *Sender {
-	if host == "" || from == "" {
+// NewSender creates an email sender. Returns nil if Resend is not configured
+// (apiKey or from empty) so callers can no-op gracefully in dev.
+func NewSender(apiKey, from string) *Sender {
+	if apiKey == "" || from == "" {
 		return nil
 	}
 	return &Sender{
-		host:     host,
-		port:     port,
-		user:     user,
-		password: password,
-		from:     from,
+		apiKey: apiKey,
+		from:   from,
+		client: &http.Client{Timeout: 15 * time.Second},
 	}
 }
 
-// SendVerificationEmail sends an email with the verification link.
+// SendVerificationEmail sends an HTML email with the verification link.
 func (s *Sender) SendVerificationEmail(toEmail, fullName, verificationURL string) error {
-	subject := "Verify your email address"
 	displayName := fullName
 	if displayName == "" {
 		displayName = strings.Split(toEmail, "@")[0]
 	}
 
-	body := fmt.Sprintf(`<!DOCTYPE html>
+	html := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a2e;">
@@ -60,15 +62,39 @@ func (s *Sender) SendVerificationEmail(toEmail, fullName, verificationURL string
 </body>
 </html>`, displayName, verificationURL, verificationURL, verificationURL)
 
-	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s",
-		s.from, toEmail, subject, body)
-
-	addr := fmt.Sprintf("%s:%s", s.host, s.port)
-
-	var auth smtp.Auth
-	if s.user != "" && s.password != "" {
-		auth = smtp.PlainAuth("", s.user, s.password, s.host)
+	payload, err := json.Marshal(map[string]any{
+		"from":    s.from,
+		"to":      []string{toEmail},
+		"subject": "Verify your email address",
+		"html":    html,
+	})
+	if err != nil {
+		return fmt.Errorf("marshal payload: %w", err)
 	}
 
-	return smtp.SendMail(addr, auth, s.from, []string{toEmail}, []byte(msg))
+	req, err := http.NewRequest(http.MethodPost, "https://api.resend.com/emails", bytes.NewReader(payload))
+	if err != nil {
+		return fmt.Errorf("build request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("resend request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("resend %d: %s", resp.StatusCode, truncate(string(body), 300))
+	}
+	return nil
+}
+
+func truncate(s string, n int) string {
+	if len(s) > n {
+		return s[:n] + "..."
+	}
+	return s
 }
