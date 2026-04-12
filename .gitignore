@@ -31,6 +31,8 @@
 /backend/telegram-auth
 /backend/telegram-import
 /backend/pdf-flashcards
+/backend/pdf-extract
+/backend/server
 
 # local Docker overrides
 /docker/docker-compose.override.yml

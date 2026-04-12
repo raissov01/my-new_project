@@ -56,7 +56,7 @@ func RegisterRoutes(router *gin.Engine) {
 	authLimiter := middleware.NewRateLimiter(10, 1*time.Minute).LimitByIP()
 	api.POST("/auth/register", authLimiter, deps.Auth.Register)
 	api.POST("/auth/login", authLimiter, deps.Auth.Login)
-	api.GET("/auth/verify-email", deps.Auth.VerifyEmail)
+	api.POST("/auth/verify-email", authLimiter, deps.Auth.VerifyEmail)
 	api.POST("/auth/resend-verification", authLimiter, deps.Auth.ResendVerification)
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)

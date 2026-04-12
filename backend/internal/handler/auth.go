@@ -2,9 +2,9 @@ package handler
 
 import (
 	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"strings"
 	"time"
@@ -28,13 +28,19 @@ func NewAuth(db *gorm.DB, jwtSecret string, emailSender *email.Sender, frontendU
 	return &AuthHandler{db: db, jwtSecret: jwtSecret, emailSender: emailSender, frontendURL: frontendURL}
 }
 
-func generateVerificationToken() (string, error) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
+// generateVerificationCode returns a cryptographically random 6-digit decimal
+// code (e.g. "042913"). Uses crypto/rand.Int to avoid modulo bias.
+func generateVerificationCode() (string, error) {
+	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
 		return "", err
 	}
-	return hex.EncodeToString(b), nil
+	return fmt.Sprintf("%06d", n.Int64()), nil
 }
+
+// verificationCodeExpiry is how long a code remains valid. Short window
+// because 6-digit codes are brute-forceable in a longer window.
+const verificationCodeExpiry = 30 * time.Minute
 
 type registerRequest struct {
 	Email    string `json:"email" binding:"required,email"`
@@ -87,13 +93,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Generate email verification token
-	verificationToken, err := generateVerificationToken()
+	// Generate 6-digit verification code (replaces long token + link).
+	verificationCode, err := generateVerificationCode()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate verification token."})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate verification code."})
 		return
 	}
-	tokenExpiry := time.Now().Add(24 * time.Hour)
+	codeExpiry := time.Now().Add(verificationCodeExpiry)
 
 	user := models.User{
 		Email:                   strings.ToLower(strings.TrimSpace(req.Email)),
@@ -102,8 +108,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Username:                strings.TrimSpace(req.Username),
 		Role:                    req.Role,
 		EmailVerified:           false,
-		VerificationToken:       &verificationToken,
-		VerificationTokenExpiry: &tokenExpiry,
+		VerificationToken:       &verificationCode,
+		VerificationTokenExpiry: &codeExpiry,
 	}
 
 	if err := h.db.Create(&user).Error; err != nil {
@@ -111,11 +117,10 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Send verification email (non-blocking — don't fail registration if email fails)
+	// Send verification code (non-blocking — don't fail registration if email fails)
 	if h.emailSender != nil {
 		go func() {
-			verifyURL := fmt.Sprintf("%s/verify-email?token=%s", h.frontendURL, verificationToken)
-			if err := h.emailSender.SendVerificationEmail(user.Email, user.FullName, verifyURL); err != nil {
+			if err := h.emailSender.SendVerificationEmail(user.Email, user.FullName, verificationCode); err != nil {
 				log.Printf("[register] failed to send verification email to %s: %v", user.Email, err)
 			}
 		}()
@@ -397,17 +402,30 @@ func (h *AuthHandler) DeleteAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-// VerifyEmail verifies a user's email using the token from the verification link.
+// VerifyEmail verifies a user's email using a 6-digit code sent to their inbox.
+// POST /auth/verify-email with body {"email": "...", "code": "123456"}.
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
-	token := c.Query("token")
-	if token == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Verification token is required."})
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+		Code  string `json:"code" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email and 6-digit code are required."})
+		return
+	}
+
+	emailAddr := strings.ToLower(strings.TrimSpace(req.Email))
+	code := strings.TrimSpace(req.Code)
+
+	if len(code) != 6 || !isAllDigits(code) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Code must be 6 digits."})
 		return
 	}
 
 	var user models.User
-	if err := h.db.Where("verification_token = ?", token).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired verification link."})
+	if err := h.db.Where("email = ?", emailAddr).First(&user).Error; err != nil {
+		// Generic message — don't reveal whether the email exists.
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired verification code."})
 		return
 	}
 
@@ -416,8 +434,13 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
+	if user.VerificationToken == nil || *user.VerificationToken != code {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired verification code."})
+		return
+	}
+
 	if user.VerificationTokenExpiry != nil && time.Now().After(*user.VerificationTokenExpiry) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Verification link has expired. Please request a new one."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Verification code has expired. Please request a new one."})
 		return
 	}
 
@@ -433,6 +456,15 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Email verified successfully."})
 }
 
+func isAllDigits(s string) bool {
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 // ResendVerification generates a new verification token and resends the email.
 func (h *AuthHandler) ResendVerification(c *gin.Context) {
 	var req struct {
@@ -446,7 +478,7 @@ func (h *AuthHandler) ResendVerification(c *gin.Context) {
 	var user models.User
 	if err := h.db.Where("email = ?", strings.ToLower(strings.TrimSpace(req.Email))).First(&user).Error; err != nil {
 		// Don't reveal whether the email exists
-		c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "If an account exists with that email, a verification link has been sent."})
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "If an account exists with that email, a verification code has been sent."})
 		return
 	}
 
@@ -455,31 +487,30 @@ func (h *AuthHandler) ResendVerification(c *gin.Context) {
 		return
 	}
 
-	newToken, err := generateVerificationToken()
+	newCode, err := generateVerificationCode()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate verification token."})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate verification code."})
 		return
 	}
-	tokenExpiry := time.Now().Add(24 * time.Hour)
+	codeExpiry := time.Now().Add(verificationCodeExpiry)
 
 	if err := h.db.Model(&user).Updates(map[string]any{
-		"verification_token":        newToken,
-		"verification_token_expiry": tokenExpiry,
+		"verification_token":        newCode,
+		"verification_token_expiry": codeExpiry,
 	}).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update verification token."})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update verification code."})
 		return
 	}
 
 	if h.emailSender != nil {
 		go func() {
-			verifyURL := fmt.Sprintf("%s/verify-email?token=%s", h.frontendURL, newToken)
-			if err := h.emailSender.SendVerificationEmail(user.Email, user.FullName, verifyURL); err != nil {
+			if err := h.emailSender.SendVerificationEmail(user.Email, user.FullName, newCode); err != nil {
 				log.Printf("[resend-verification] failed to send verification email to %s: %v", user.Email, err)
 			}
 		}()
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "If an account exists with that email, a verification link has been sent."})
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "If an account exists with that email, a verification code has been sent."})
 }
 
 func valueOrEmpty(value *string) string {

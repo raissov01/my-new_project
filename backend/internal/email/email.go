@@ -32,8 +32,8 @@ func NewSender(apiKey, from string) *Sender {
 	}
 }
 
-// SendVerificationEmail sends an HTML email with the verification link.
-func (s *Sender) SendVerificationEmail(toEmail, fullName, verificationURL string) error {
+// SendVerificationEmail sends an HTML email containing a 6-digit verification code.
+func (s *Sender) SendVerificationEmail(toEmail, fullName, code string) error {
 	displayName := fullName
 	if displayName == "" {
 		displayName = strings.Split(toEmail, "@")[0]
@@ -42,30 +42,32 @@ func (s *Sender) SendVerificationEmail(toEmail, fullName, verificationURL string
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a2e;">
-  <h2 style="margin: 0 0 16px;">Welcome, %s!</h2>
-  <p style="font-size: 15px; line-height: 1.6; color: #4a4a6a;">
-    Thanks for signing up. Please verify your email address by clicking the button below.
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a2e; background: #ffffff;">
+  <h2 style="margin: 0 0 16px; font-size: 24px; font-weight: 700;">Welcome, %s!</h2>
+  <p style="font-size: 15px; line-height: 1.6; color: #4a4a6a; margin: 0 0 24px;">
+    Thanks for signing up to StudyWithRaissov. Enter the code below on the verification screen to confirm your email address.
   </p>
-  <div style="margin: 32px 0; text-align: center;">
-    <a href="%s" style="display: inline-block; padding: 12px 32px; background: #635bff; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">
-      Verify Email
-    </a>
+  <div style="margin: 32px 0; padding: 28px 24px; background: #f5f5fa; border: 1px solid #e6e6f0; border-radius: 14px; text-align: center;">
+    <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #7a7a9a; margin-bottom: 10px;">
+      Your verification code
+    </div>
+    <div style="font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 36px; font-weight: 700; letter-spacing: 0.32em; color: #1a1a2e;">
+      %s
+    </div>
   </div>
-  <p style="font-size: 13px; color: #7a7a9a;">
-    This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.
+  <p style="font-size: 13px; line-height: 1.6; color: #7a7a9a; margin: 0 0 8px;">
+    This code expires in 30 minutes. If you didn't create an account, you can safely ignore this email — no further action is required.
   </p>
-  <p style="font-size: 13px; color: #7a7a9a;">
-    If the button doesn't work, copy and paste this URL into your browser:<br>
-    <a href="%s" style="color: #635bff;">%s</a>
+  <p style="font-size: 12px; color: #a0a0b8; margin: 24px 0 0;">
+    — StudyWithRaissov
   </p>
 </body>
-</html>`, displayName, verificationURL, verificationURL, verificationURL)
+</html>`, displayName, code)
 
 	payload, err := json.Marshal(map[string]any{
 		"from":    s.from,
 		"to":      []string{toEmail},
-		"subject": "Verify your email address",
+		"subject": fmt.Sprintf("Your StudyWithRaissov code: %s", code),
 		"html":    html,
 	})
 	if err != nil {

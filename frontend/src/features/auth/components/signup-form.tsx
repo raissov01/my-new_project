@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, GraduationCap, ShieldCheck } from "lucide-react";
 import { signup } from "@/app/(auth)/actions";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -24,6 +25,7 @@ function GoogleIcon({ className }: { className?: string }) {
 
 export function SignupForm() {
   const { t } = useLocale();
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -61,11 +63,18 @@ export function SignupForm() {
       });
     }
 
+    const submittedEmail = String(formData.get("email") ?? "").trim();
+
     startTransition(async () => {
       try {
         const result = await signup(formData);
-        if (result?.error) setError(result.error);
-        else if (result?.message) setMessage(result.message);
+        if (result?.error) {
+          setError(result.error);
+        } else if (result?.message) {
+          // Success — backend queued the 6-digit code email.
+          // Redirect to the verify page with the email pre-filled.
+          router.push(`/verify-email?email=${encodeURIComponent(submittedEmail)}`);
+        }
       } catch (submitError) {
         // redirect() throws NEXT_REDIRECT — that's normal on success.
         // Any other throw means something broke; reset the form state.
