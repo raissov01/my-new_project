@@ -131,7 +131,7 @@ jobs:
           script_stop: true
           command_timeout: 20m
           # envs passes these as environment variables into the remote shell
-          envs: DEPLOY_FRONTEND,DEPLOY_BACKEND,DEPLOY_NGINX,APPLY_STACK,RUN_MIGRATIONS,CHANGED_FILES_B64,DEPLOY_SUMMARY_B64,PREBUILT_BACKEND_IMAGE,PREBUILT_FRONTEND_IMAGE,GHCR_ACTOR,GHCR_TOKEN
+          envs: DEPLOY_FRONTEND,DEPLOY_BACKEND,DEPLOY_NGINX,APPLY_STACK,RUN_MIGRATIONS,CHANGED_FILES_B64,DEPLOY_SUMMARY_B64,PREBUILT_BACKEND_IMAGE,PREBUILT_FRONTEND_IMAGE,GHCR_ACTOR,GHCR_TOKEN,RESEND_API_KEY,RESEND_FROM
           script: |
             set -euo pipefail
 
@@ -167,3 +167,6 @@ jobs:
           PREBUILT_FRONTEND_IMAGE: ${{ needs.build.outputs.frontend_image }}
           GHCR_ACTOR: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Resend email — passed through to docker stack deploy for stack.yml variable substitution.
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
