@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/midoriya/flashlearn-backend/internal/model"
 )
@@ -276,14 +277,39 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 		return "", fmt.Errorf("insert quiz: %w", err)
 	}
 
+	rows := make([][]any, 0, len(req.Questions))
 	for i, q := range req.Questions {
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO quiz_questions (quiz_id, question_text, option_a, option_b, option_c, option_d, correct_option, order_index, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-		`,
-			quizID, q.QuestionText, q.OptionA, q.OptionB, q.OptionC, q.OptionD, q.CorrectOption, i,
+		rows = append(rows, []any{
+			quizID,
+			q.QuestionText,
+			q.OptionA,
+			q.OptionB,
+			q.OptionC,
+			q.OptionD,
+			q.CorrectOption,
+			i,
+			time.Now().UTC(),
+		})
+	}
+
+	if len(rows) > 0 {
+		if _, err := tx.CopyFrom(
+			ctx,
+			pgx.Identifier{"quiz_questions"},
+			[]string{
+				"quiz_id",
+				"question_text",
+				"option_a",
+				"option_b",
+				"option_c",
+				"option_d",
+				"correct_option",
+				"order_index",
+				"created_at",
+			},
+			pgx.CopyFromRows(rows),
 		); err != nil {
-			return "", fmt.Errorf("insert question %d: %w", i, err)
+			return "", fmt.Errorf("bulk insert questions: %w", err)
 		}
 	}
 

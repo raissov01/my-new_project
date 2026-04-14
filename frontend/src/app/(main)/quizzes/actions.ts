@@ -53,6 +53,9 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
 }
 
 function formatBackendError(message: string, t: (key: string) => string) {
+  if (message.includes("aborted") || message.includes("AbortError")) {
+    return t("quiz.errPublishTimeout");
+  }
   if (message.includes("title is required")) return t("quiz.errTitleRequired");
   if (message.includes("at least")) return t("quiz.errAtLeastOneQuestion");
   if (message.includes("four options")) return t("quiz.errFourOptions");
@@ -89,7 +92,7 @@ export async function createQuiz(input: CreateQuizInput): Promise<QuizFormState>
         questions,
       }),
       headers: { "Content-Type": "application/json" },
-      timeoutMs: 60_000,
+      timeoutMs: 120_000,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
@@ -128,7 +131,7 @@ export async function updateQuiz(
         questions,
       }),
       headers: { "Content-Type": "application/json" },
-      timeoutMs: 60_000,
+      timeoutMs: 120_000,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
