@@ -116,6 +116,15 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
           hideLabel={t("auth.hidePassword")}
         />
 
+        <div className="flex justify-end -mt-1">
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]"
+          >
+            {t("auth.forgotPassword")}
+          </Link>
+        </div>
+
         {error && (
           <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-200 bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)] dark:border-red-500/20 dark:text-red-300">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />

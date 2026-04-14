@@ -3,10 +3,11 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Mail } from "lucide-react";
+import { AlertCircle, CheckCircle2, Mail, PencilLine, X } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { getApiBaseUrl } from "@/lib/client/api";
 
 function VerifyEmailContent() {
@@ -25,6 +26,14 @@ function VerifyEmailContent() {
   const [resendPending, setResendPending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendError, setResendError] = useState<string | null>(null);
+
+  // Change-email modal state. Requires password so we can authenticate the
+  // unverified account before moving its pending verification to a new address.
+  const [changeOpen, setChangeOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [changePassword, setChangePassword] = useState("");
+  const [changePending, setChangePending] = useState(false);
+  const [changeError, setChangeError] = useState<string | null>(null);
 
   const codeInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -107,6 +116,52 @@ function VerifyEmailContent() {
       setResendError(t("verify.genericError"));
     } finally {
       setResendPending(false);
+    }
+  }
+
+  async function handleChangeEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (changePending) return;
+
+    const trimmedOld = email.trim();
+    const trimmedNew = newEmail.trim();
+    if (!trimmedOld || !trimmedNew || !changePassword) {
+      setChangeError(t("verify.changeEmailRequired"));
+      return;
+    }
+    if (trimmedOld.toLowerCase() === trimmedNew.toLowerCase()) {
+      setChangeError(t("verify.changeEmailSame"));
+      return;
+    }
+
+    setChangePending(true);
+    setChangeError(null);
+
+    try {
+      const resp = await fetch(`${getApiBaseUrl()}/auth/change-verification-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldEmail: trimmedOld, newEmail: trimmedNew, password: changePassword }),
+      });
+      const data = await resp.json().catch(() => null);
+
+      if (resp.ok) {
+        setEmail(trimmedNew);
+        setCode("");
+        setErrorMessage(null);
+        setResendMessage(data?.message ?? t("verify.changeEmailSuccess"));
+        setResendError(null);
+        setChangeOpen(false);
+        setNewEmail("");
+        setChangePassword("");
+        codeInputRef.current?.focus();
+      } else {
+        setChangeError(data?.error ?? t("verify.genericError"));
+      }
+    } catch {
+      setChangeError(t("verify.genericError"));
+    } finally {
+      setChangePending(false);
     }
   }
 
@@ -231,6 +286,99 @@ function VerifyEmailContent() {
       >
         {t("verify.resendBtn")}
       </Button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setChangeOpen(true);
+          setChangeError(null);
+        }}
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+      >
+        <PencilLine className="h-4 w-4" />
+        {t("verify.changeEmailBtn")}
+      </button>
+
+      {changeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 backdrop-blur-sm">
+          <div className="animate-scale-in w-full max-w-md rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-7">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+                  {t("verify.changeEmailTitle")}
+                </h3>
+                <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">
+                  {t("verify.changeEmailSubtitle")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setChangeOpen(false)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+                aria-label={t("common.close")}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangeEmail} className="mt-5 space-y-3.5">
+              <Input
+                id="change-email-new"
+                name="newEmail"
+                type="email"
+                label={t("verify.changeEmailNewLabel")}
+                placeholder={t("auth.emailPlaceholder")}
+                required
+                autoComplete="email"
+                disabled={changePending}
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
+
+              <PasswordInput
+                id="change-email-password"
+                name="changePassword"
+                label={t("auth.password")}
+                placeholder={t("auth.passwordPlaceholder")}
+                required
+                autoComplete="current-password"
+                disabled={changePending}
+                value={changePassword}
+                onChange={(e) => setChangePassword(e.target.value)}
+                showLabel={t("auth.showPassword")}
+                hideLabel={t("auth.hidePassword")}
+              />
+
+              {changeError && (
+                <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{changeError}</span>
+                </div>
+              )}
+
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  disabled={changePending}
+                  onClick={() => setChangeOpen(false)}
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  size="lg"
+                  isLoading={changePending}
+                  disabled={changePending || !newEmail.trim() || !changePassword}
+                >
+                  {t("verify.changeEmailSubmit")}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("verify.alreadyVerified")}{" "}

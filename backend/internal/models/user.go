@@ -15,6 +15,8 @@ type User struct {
 	EmailVerified            bool       `gorm:"not null;default:false" json:"emailVerified"`
 	VerificationToken        *string    `gorm:"index" json:"-"`
 	VerificationTokenExpiry  *time.Time `json:"-"`
+	PasswordResetToken       *string    `gorm:"index" json:"-"`
+	PasswordResetTokenExpiry *time.Time `json:"-"`
 	StreakDays               int        `gorm:"not null;default:0" json:"streakDays"`
 	Points                   int        `gorm:"not null;default:0" json:"points"`
 	LastActiveDate           *string    `json:"lastActiveDate"`

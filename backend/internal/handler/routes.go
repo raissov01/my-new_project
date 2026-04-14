@@ -58,6 +58,9 @@ func RegisterRoutes(router *gin.Engine) {
 	api.POST("/auth/login", authLimiter, deps.Auth.Login)
 	api.POST("/auth/verify-email", authLimiter, deps.Auth.VerifyEmail)
 	api.POST("/auth/resend-verification", authLimiter, deps.Auth.ResendVerification)
+	api.POST("/auth/forgot-password", authLimiter, deps.Auth.ForgotPassword)
+	api.POST("/auth/reset-password", authLimiter, deps.Auth.ResetPassword)
+	api.POST("/auth/change-verification-email", authLimiter, deps.Auth.ChangeVerificationEmail)
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
 

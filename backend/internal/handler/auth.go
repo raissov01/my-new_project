@@ -513,6 +513,181 @@ func (h *AuthHandler) ResendVerification(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "If an account exists with that email, a verification code has been sent."})
 }
 
+// passwordResetCodeExpiry mirrors verification code expiry — short window since
+// 6-digit codes are brute-forceable over a longer period.
+const passwordResetCodeExpiry = 30 * time.Minute
+
+// ForgotPassword issues a 6-digit password reset code and emails it to the user.
+// Always returns a generic success response to avoid revealing which emails exist.
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	genericResponse := gin.H{"status": "ok", "message": "If an account exists with that email, a password reset code has been sent."}
+
+	var user models.User
+	if err := h.db.Where("email = ?", strings.ToLower(strings.TrimSpace(req.Email))).First(&user).Error; err != nil {
+		c.JSON(http.StatusOK, genericResponse)
+		return
+	}
+
+	code, err := generateVerificationCode()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate reset code."})
+		return
+	}
+	expiry := time.Now().Add(passwordResetCodeExpiry)
+
+	if err := h.db.Model(&user).Updates(map[string]any{
+		"password_reset_token":        code,
+		"password_reset_token_expiry": expiry,
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store reset code."})
+		return
+	}
+
+	if h.emailSender != nil {
+		go func() {
+			if err := h.emailSender.SendPasswordResetEmail(user.Email, user.FullName, code); err != nil {
+				log.Printf("[forgot-password] failed to send reset email to %s: %v", user.Email, err)
+			}
+		}()
+	}
+
+	c.JSON(http.StatusOK, genericResponse)
+}
+
+// ResetPassword verifies a 6-digit reset code and sets a new password for the
+// user. POST /auth/reset-password with body {"email","code","password"}.
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	var req struct {
+		Email    string `json:"email" binding:"required,email"`
+		Code     string `json:"code" binding:"required"`
+		Password string `json:"password" binding:"required,min=6"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email, 6-digit code and new password are required."})
+		return
+	}
+
+	emailAddr := strings.ToLower(strings.TrimSpace(req.Email))
+	code := strings.TrimSpace(req.Code)
+
+	if len(code) != 6 || !isAllDigits(code) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Code must be 6 digits."})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("email = ?", emailAddr).First(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired reset code."})
+		return
+	}
+
+	if user.PasswordResetToken == nil || *user.PasswordResetToken != code {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired reset code."})
+		return
+	}
+
+	if user.PasswordResetTokenExpiry != nil && time.Now().After(*user.PasswordResetTokenExpiry) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Reset code has expired. Please request a new one."})
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process password."})
+		return
+	}
+
+	if err := h.db.Model(&user).Updates(map[string]any{
+		"password_hash":               string(hash),
+		"password_reset_token":        nil,
+		"password_reset_token_expiry": nil,
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset password."})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Password reset successfully. You can now log in."})
+}
+
+// ChangeVerificationEmail lets an unverified user move their pending verification
+// to a new email address. Requires the old email and current password so the
+// endpoint can't be used to hijack accounts.
+func (h *AuthHandler) ChangeVerificationEmail(c *gin.Context) {
+	var req struct {
+		OldEmail string `json:"oldEmail" binding:"required,email"`
+		NewEmail string `json:"newEmail" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	oldEmail := strings.ToLower(strings.TrimSpace(req.OldEmail))
+	newEmail := strings.ToLower(strings.TrimSpace(req.NewEmail))
+
+	if oldEmail == newEmail {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "New email must be different from the current one."})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("email = ?", oldEmail).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials."})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials."})
+		return
+	}
+
+	if user.EmailVerified {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is already verified — use the account settings page to change it."})
+		return
+	}
+
+	var existing models.User
+	if err := h.db.Where("email = ? AND id <> ?", newEmail, user.ID).First(&existing).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "An account with this email already exists."})
+		return
+	}
+
+	newCode, err := generateVerificationCode()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate verification code."})
+		return
+	}
+	codeExpiry := time.Now().Add(verificationCodeExpiry)
+
+	if err := h.db.Model(&user).Updates(map[string]any{
+		"email":                     newEmail,
+		"verification_token":        newCode,
+		"verification_token_expiry": codeExpiry,
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update email."})
+		return
+	}
+
+	if h.emailSender != nil {
+		go func() {
+			if err := h.emailSender.SendVerificationEmail(newEmail, user.FullName, newCode); err != nil {
+				log.Printf("[change-verification-email] failed to send verification email to %s: %v", newEmail, err)
+			}
+		}()
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "email": newEmail, "message": "Verification code sent to your new email."})
+}
+
 func valueOrEmpty(value *string) string {
 	if value == nil {
 		return ""
