@@ -225,32 +225,83 @@ func splitTextIntoChunks(text string, chunkCount int) []string {
 		return []string{text}
 	}
 
-	runes := []rune(text)
-	if len(runes) == 0 {
-		return []string{text}
+	// Split on paragraph boundaries first so individual questions/items are
+	// not cut in half across chunks. Fall back to single-line splits, then to
+	// a raw rune-based split only as a last resort.
+	paragraphs := strings.Split(text, "\n\n")
+	if len(paragraphs) < chunkCount {
+		paragraphs = strings.Split(text, "\n")
+	}
+	// Drop empty paragraphs.
+	cleaned := paragraphs[:0]
+	for _, p := range paragraphs {
+		if strings.TrimSpace(p) != "" {
+			cleaned = append(cleaned, p)
+		}
+	}
+	paragraphs = cleaned
+
+	if len(paragraphs) < chunkCount {
+		// Too few paragraphs to split cleanly — fall back to rune-based split.
+		runes := []rune(text)
+		if len(runes) == 0 {
+			return []string{text}
+		}
+		chunks := make([]string, 0, chunkCount)
+		start := 0
+		for i := 0; i < chunkCount && start < len(runes); i++ {
+			remainingRunes := len(runes) - start
+			remainingChunks := chunkCount - i
+			size := (remainingRunes + remainingChunks - 1) / remainingChunks
+			end := start + size
+			if end > len(runes) {
+				end = len(runes)
+			}
+			chunk := strings.TrimSpace(string(runes[start:end]))
+			if chunk != "" {
+				chunks = append(chunks, chunk)
+			}
+			start = end
+		}
+		if len(chunks) == 0 {
+			return []string{text}
+		}
+		return chunks
+	}
+
+	// Balance paragraphs across chunks by rune count so chunks are roughly equal.
+	totalRunes := 0
+	paragraphRunes := make([]int, len(paragraphs))
+	for i, p := range paragraphs {
+		paragraphRunes[i] = len([]rune(p))
+		totalRunes += paragraphRunes[i]
+	}
+	targetPerChunk := totalRunes / chunkCount
+	if targetPerChunk <= 0 {
+		targetPerChunk = 1
 	}
 
 	chunks := make([]string, 0, chunkCount)
-	start := 0
-	for i := 0; i < chunkCount && start < len(runes); i++ {
-		remainingRunes := len(runes) - start
-		remainingChunks := chunkCount - i
-		size := (remainingRunes + remainingChunks - 1) / remainingChunks
-		end := start + size
-		if end > len(runes) {
-			end = len(runes)
+	var current strings.Builder
+	currentRunes := 0
+	for i, p := range paragraphs {
+		if current.Len() > 0 {
+			current.WriteString("\n\n")
 		}
-		chunk := strings.TrimSpace(string(runes[start:end]))
-		if chunk != "" {
-			chunks = append(chunks, chunk)
+		current.WriteString(p)
+		currentRunes += paragraphRunes[i]
+		if currentRunes >= targetPerChunk && len(chunks) < chunkCount-1 {
+			chunks = append(chunks, strings.TrimSpace(current.String()))
+			current.Reset()
+			currentRunes = 0
 		}
-		start = end
 	}
-
+	if current.Len() > 0 {
+		chunks = append(chunks, strings.TrimSpace(current.String()))
+	}
 	if len(chunks) == 0 {
 		return []string{text}
 	}
-
 	return chunks
 }
 
@@ -281,17 +332,21 @@ func limitTextForGeneration(text string, requestedCount int) string {
 
 func dedupeCards(cards []generatedCard, limit int) []generatedCard {
 	seen := make(map[string]struct{}, len(cards))
-	deduped := make([]generatedCard, 0, min(limit, len(cards)))
+	deduped := make([]generatedCard, 0, len(cards))
+	skippedEmpty := 0
+	skippedDuplicate := 0
 
 	for _, card := range cards {
 		front := strings.TrimSpace(card.Front)
 		back := strings.TrimSpace(card.Back)
 		if front == "" || back == "" {
+			skippedEmpty++
 			continue
 		}
 
 		key := strings.ToLower(front) + "\x00" + strings.ToLower(back)
 		if _, exists := seen[key]; exists {
+			skippedDuplicate++
 			continue
 		}
 		seen[key] = struct{}{}
@@ -304,6 +359,11 @@ func dedupeCards(cards []generatedCard, limit int) []generatedCard {
 		if len(deduped) >= limit {
 			break
 		}
+	}
+
+	if skippedEmpty > 0 || skippedDuplicate > 0 {
+		log.Printf("[ai] dedupe: kept=%d skipped_empty=%d skipped_duplicate=%d input=%d",
+			len(deduped), skippedEmpty, skippedDuplicate, len(cards))
 	}
 
 	return deduped
@@ -329,18 +389,22 @@ func buildPrompt(text, mode, language string, count int) string {
 		mi = modeInstr["mixed"]
 	}
 
-	return fmt.Sprintf(`Generate exactly %d flashcards from the following text.
+	return fmt.Sprintf(`Generate flashcards from the following text.
 Output language: %s. %s
 
 Rules:
-- "front" = question/term, "back" = answer/definition (max 2-3 sentences)
-- No duplicates. Prioritize study value. Assign difficulty: easy/medium/hard.
+- Create ONE flashcard for EVERY distinct question, term, concept, or item present in the text. Do NOT skip, merge, or summarize items — preserve all of them, even if they look similar.
+- If the text has a document title, topic name, heading, or section label (typically at the very top or as a standalone line like "Exam questions", "Глава 1", "Тақырып: ..."), DO NOT create a flashcard for that title itself. Only create cards for items within the body.
+- If there is no title or heading at all, treat the entire text as content and create cards for every item you find.
+- Target up to %d cards, but let the content decide the actual count — return as many cards as the text genuinely contains. Never pad with fabricated or duplicate entries to hit the target.
+- "front" = question/term, "back" = answer/definition (max 2-3 sentences).
+- Assign difficulty: easy/medium/hard.
 - Return ONLY valid JSON with this structure: {"cards": [...]}
 
 Each element in "cards": {"front":"...","back":"...","category":"...","difficulty":"easy|medium|hard","source":"..."}
 
 Text:
-%s`, count, langName, mi, text)
+%s`, langName, mi, count, text)
 }
 
 func callGemini(apiKey, model, prompt string, timeout time.Duration) ([]generatedCard, error) {
