@@ -147,6 +147,9 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 	flashcardRepo := repository.NewFlashcard(pool)
 	flashcardSvc := service.NewFlashcard(flashcardRepo)
 
+	quizRepo := repository.NewQuiz(pool)
+	quizSvc := service.NewQuiz(quizRepo)
+
 	challengeRepo := repository.NewChallenge(pool)
 	challengeSvc := service.NewChallenge(challengeRepo)
 
@@ -167,6 +170,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Classroom:        handler.NewClassroom(classroomSvc, cfg.Environment),
 		Progress:         handler.NewProgress(progressSvc, cfg.Environment),
 		Flashcard:        handler.NewFlashcard(flashcardSvc, cfg.Environment),
+		Quiz:             handler.NewQuiz(quizSvc, cfg.Environment),
 		Challenge:        handler.NewChallengeHandler(challengeSvc, cfg.Environment),
 		ProfileWrite:     handler.NewProfileWrite(classroomRepo, cfg.Environment),
 		AI:               handler.NewAI(cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.AIRequestTimeout, cfg.MaxUploadBytes),

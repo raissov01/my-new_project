@@ -28,6 +28,7 @@ type Dependencies struct {
 	Classroom          *Classroom
 	Progress           *Progress
 	Flashcard          *FlashcardHandler
+	Quiz               *QuizHandler
 	Challenge          *ChallengeHandler
 	ProfileWrite       *ProfileWriteHandler
 	AI                 *AIHandler
@@ -118,6 +119,17 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.PUT("/sets/:setID", wrapHTTP(deps.Flashcard.UpdateSet))
 		internal.DELETE("/sets/:setID", wrapHTTP(deps.Flashcard.DeleteSet))
 		internal.POST("/sets/:setID/clone", wrapHTTP(deps.Flashcard.CloneSet))
+
+		// Quizizz-style quiz module
+		internal.GET("/quizzes/overview", wrapHTTP(deps.Quiz.GetOverview))
+		internal.GET("/quizzes/mine", wrapHTTP(deps.Quiz.GetMine))
+		internal.GET("/quizzes/attempts/:attemptID", wrapHTTP(deps.Quiz.GetAttempt))
+		internal.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
+		internal.POST("/quizzes", wrapHTTP(deps.Quiz.CreateQuiz))
+		internal.PUT("/quizzes/:quizID", wrapHTTP(deps.Quiz.UpdateQuiz))
+		internal.DELETE("/quizzes/:quizID", wrapHTTP(deps.Quiz.DeleteQuiz))
+		internal.POST("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.SubmitAttempt))
+		internal.GET("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.ListAttempts))
 
 		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
 		internal.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))
