@@ -99,3 +99,43 @@ export async function createQuiz(input: CreateQuizInput): Promise<QuizFormState>
   revalidatePath("/quizzes");
   redirect(`/quizzes/${response.id}`);
 }
+
+export async function updateQuiz(
+  quizId: string,
+  input: CreateQuizInput
+): Promise<QuizFormState> {
+  const t = createTranslator(await getServerLocale());
+  const user = await getCurrentUser();
+
+  if (!user) return { error: t("action.notAuthenticated") };
+  if (!input.title.trim()) return { error: t("quiz.errTitleRequired") };
+
+  const questions = sanitizeQuestions(input.questions);
+  if (questions.length === 0) return { error: t("quiz.errAtLeastOneQuestion") };
+
+  try {
+    await fetchBackendJson({
+      path: `/api/v1/quizzes/${encodeURIComponent(quizId)}`,
+      userId: user.id,
+      method: "PUT",
+      body: JSON.stringify({
+        title: input.title.trim(),
+        description: input.description.trim(),
+        subject: input.subject.trim(),
+        isPublic: input.isPublic,
+        timePerQuestion: input.timePerQuestion,
+        shuffleOptions: input.shuffleOptions,
+        questions,
+      }),
+      headers: { "Content-Type": "application/json" },
+      timeoutMs: 60_000,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    return { error: formatBackendError(message, t) };
+  }
+
+  revalidatePath("/quizzes");
+  revalidatePath(`/quizzes/${quizId}`);
+  redirect(`/quizzes/${quizId}`);
+}

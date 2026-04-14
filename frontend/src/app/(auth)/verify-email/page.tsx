@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Mail, PencilLine, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Mail } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,10 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const prefilledEmail = searchParams.get("email") ?? "";
 
+  // `currentEmail` is the address the backend is actively holding a pending
+  // verification for. `email` is what's in the input — they diverge while the
+  // user is editing, then snap back together after a successful save.
+  const [currentEmail, setCurrentEmail] = useState(prefilledEmail);
   const [email, setEmail] = useState(prefilledEmail);
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -27,26 +31,24 @@ function VerifyEmailContent() {
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendError, setResendError] = useState<string | null>(null);
 
-  // Change-email modal state. Requires password so we can authenticate the
-  // unverified account before moving its pending verification to a new address.
-  const [changeOpen, setChangeOpen] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
+  // Inline change-email state. Shown only when the user edits the email field
+  // away from `currentEmail` — we ask for password so an attacker can't hijack
+  // the unverified account by guessing the email alone.
   const [changePassword, setChangePassword] = useState("");
   const [changePending, setChangePending] = useState(false);
   const [changeError, setChangeError] = useState<string | null>(null);
 
   const codeInputRef = useRef<HTMLInputElement | null>(null);
 
-  // When the page loads with an email in the query string, jump focus straight
-  // to the code input so users can paste/type without extra clicks.
   useEffect(() => {
     if (prefilledEmail && codeInputRef.current) {
       codeInputRef.current.focus();
     }
   }, [prefilledEmail]);
 
+  const emailDirty = email.trim().toLowerCase() !== currentEmail.trim().toLowerCase() && email.trim().length > 0;
+
   function handleCodeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    // Only allow digits, cap at 6 characters.
     const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
     setCode(digits);
   }
@@ -55,7 +57,12 @@ function VerifyEmailContent() {
     e.preventDefault();
     if (submitting) return;
 
-    const trimmedEmail = email.trim();
+    if (emailDirty) {
+      setErrorMessage(t("verify.saveEmailFirst"));
+      return;
+    }
+
+    const trimmedEmail = currentEmail.trim();
     if (!trimmedEmail || code.length !== 6) {
       setErrorMessage(t("verify.codeHelper"));
       return;
@@ -77,7 +84,6 @@ function VerifyEmailContent() {
 
       if (resp.ok) {
         setSuccessMessage(data?.message ?? t("verify.successBody"));
-        // Auto-redirect to login after a short moment so users see the success state.
         setTimeout(() => router.push("/login"), 1500);
       } else {
         setErrorMessage(data?.error ?? t("verify.genericError"));
@@ -90,7 +96,7 @@ function VerifyEmailContent() {
   }
 
   async function handleResend() {
-    const trimmedEmail = email.trim();
+    const trimmedEmail = currentEmail.trim();
     if (!trimmedEmail || resendPending) return;
 
     setResendPending(true);
@@ -119,12 +125,11 @@ function VerifyEmailContent() {
     }
   }
 
-  async function handleChangeEmail(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSaveEmail() {
     if (changePending) return;
 
-    const trimmedOld = email.trim();
-    const trimmedNew = newEmail.trim();
+    const trimmedOld = currentEmail.trim();
+    const trimmedNew = email.trim();
     if (!trimmedOld || !trimmedNew || !changePassword) {
       setChangeError(t("verify.changeEmailRequired"));
       return;
@@ -136,6 +141,8 @@ function VerifyEmailContent() {
 
     setChangePending(true);
     setChangeError(null);
+    setErrorMessage(null);
+    setResendError(null);
 
     try {
       const resp = await fetch(`${getApiBaseUrl()}/auth/change-verification-email`, {
@@ -146,14 +153,11 @@ function VerifyEmailContent() {
       const data = await resp.json().catch(() => null);
 
       if (resp.ok) {
+        setCurrentEmail(trimmedNew);
         setEmail(trimmedNew);
         setCode("");
-        setErrorMessage(null);
-        setResendMessage(data?.message ?? t("verify.changeEmailSuccess"));
-        setResendError(null);
-        setChangeOpen(false);
-        setNewEmail("");
         setChangePassword("");
+        setResendMessage(data?.message ?? t("verify.changeEmailSuccess"));
         codeInputRef.current?.focus();
       } else {
         setChangeError(data?.error ?? t("verify.genericError"));
@@ -165,7 +169,12 @@ function VerifyEmailContent() {
     }
   }
 
-  // Success screen — brief, then auto-redirects.
+  function handleCancelEmailEdit() {
+    setEmail(currentEmail);
+    setChangePassword("");
+    setChangeError(null);
+  }
+
   if (successMessage) {
     return (
       <div className="animate-confetti-pop rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 text-center shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
@@ -201,18 +210,77 @@ function VerifyEmailContent() {
       </div>
 
       <form onSubmit={handleVerify} className="mt-6 space-y-3.5 sm:mt-7 sm:space-y-4">
-        <Input
-          id="verify-email"
-          name="email"
-          type="email"
-          label={t("auth.email")}
-          placeholder={t("auth.emailPlaceholder")}
-          required
-          autoComplete="email"
-          disabled={submitting}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div>
+          <Input
+            id="verify-email"
+            name="email"
+            type="email"
+            label={t("auth.email")}
+            placeholder={t("auth.emailPlaceholder")}
+            required
+            autoComplete="email"
+            disabled={submitting || changePending}
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setChangeError(null);
+            }}
+          />
+          <p className="mt-1.5 px-1 text-xs leading-5 text-[var(--text-muted)]">
+            {emailDirty ? t("verify.emailEditHint") : t("verify.emailEditable")}
+          </p>
+        </div>
+
+        {emailDirty && (
+          <div className="space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)] p-4">
+            <p className="text-sm leading-5 text-[var(--text-secondary)]">
+              {t("verify.changeEmailSubtitle")}
+            </p>
+            <PasswordInput
+              id="verify-change-password"
+              name="changePassword"
+              label={t("auth.password")}
+              placeholder={t("auth.passwordPlaceholder")}
+              required
+              autoComplete="current-password"
+              disabled={changePending}
+              value={changePassword}
+              onChange={(e) => setChangePassword(e.target.value)}
+              showLabel={t("auth.showPassword")}
+              hideLabel={t("auth.hidePassword")}
+            />
+
+            {changeError && (
+              <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{changeError}</span>
+              </div>
+            )}
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full sm:flex-1"
+                disabled={changePending}
+                onClick={handleCancelEmailEdit}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="button"
+                size="lg"
+                className="w-full sm:flex-1"
+                isLoading={changePending}
+                disabled={changePending || !email.trim() || !changePassword}
+                onClick={handleSaveEmail}
+              >
+                {t("verify.changeEmailSubmit")}
+              </Button>
+            </div>
+          </div>
+        )}
 
         <Input
           ref={codeInputRef}
@@ -226,7 +294,7 @@ function VerifyEmailContent() {
           placeholder="000000"
           required
           autoComplete="one-time-code"
-          disabled={submitting}
+          disabled={submitting || emailDirty}
           value={code}
           onChange={handleCodeChange}
           className="text-center text-2xl font-semibold tracking-[0.5em]"
@@ -244,7 +312,7 @@ function VerifyEmailContent() {
           className="w-full"
           size="lg"
           isLoading={submitting}
-          disabled={submitting || code.length !== 6}
+          disabled={submitting || code.length !== 6 || emailDirty}
         >
           {t("verify.verifyBtn")}
         </Button>
@@ -281,104 +349,11 @@ function VerifyEmailContent() {
         className="w-full"
         size="lg"
         isLoading={resendPending}
-        disabled={resendPending || !email.trim()}
+        disabled={resendPending || !currentEmail.trim() || emailDirty}
         onClick={handleResend}
       >
         {t("verify.resendBtn")}
       </Button>
-
-      <button
-        type="button"
-        onClick={() => {
-          setChangeOpen(true);
-          setChangeError(null);
-        }}
-        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-      >
-        <PencilLine className="h-4 w-4" />
-        {t("verify.changeEmailBtn")}
-      </button>
-
-      {changeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 backdrop-blur-sm">
-          <div className="animate-scale-in w-full max-w-md rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-7">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-                  {t("verify.changeEmailTitle")}
-                </h3>
-                <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">
-                  {t("verify.changeEmailSubtitle")}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setChangeOpen(false)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-                aria-label={t("common.close")}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleChangeEmail} className="mt-5 space-y-3.5">
-              <Input
-                id="change-email-new"
-                name="newEmail"
-                type="email"
-                label={t("verify.changeEmailNewLabel")}
-                placeholder={t("auth.emailPlaceholder")}
-                required
-                autoComplete="email"
-                disabled={changePending}
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-              />
-
-              <PasswordInput
-                id="change-email-password"
-                name="changePassword"
-                label={t("auth.password")}
-                placeholder={t("auth.passwordPlaceholder")}
-                required
-                autoComplete="current-password"
-                disabled={changePending}
-                value={changePassword}
-                onChange={(e) => setChangePassword(e.target.value)}
-                showLabel={t("auth.showPassword")}
-                hideLabel={t("auth.hidePassword")}
-              />
-
-              {changeError && (
-                <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{changeError}</span>
-                </div>
-              )}
-
-              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  disabled={changePending}
-                  onClick={() => setChangeOpen(false)}
-                >
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  type="submit"
-                  size="lg"
-                  isLoading={changePending}
-                  disabled={changePending || !newEmail.trim() || !changePassword}
-                >
-                  {t("verify.changeEmailSubmit")}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("verify.alreadyVerified")}{" "}
