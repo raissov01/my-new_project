@@ -1,9 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { QuizForm } from "@/features/quizzes/components";
-import { updateQuiz, type QuizQuestionInput } from "@/app/(main)/quizzes/actions";
+import type {
+  CreateQuizInput,
+  QuizFormState,
+  QuizQuestionInput,
+} from "@/app/(main)/quizzes/actions";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useToast } from "@/components/ui/toast";
 
 interface EditQuizClientProps {
   quizId: string;
@@ -27,7 +31,26 @@ export function EditQuizClient({
   initialQuestions,
 }: EditQuizClientProps) {
   const { t } = useLocale();
-  const { toast } = useToast();
+  const router = useRouter();
+
+  async function submitQuiz(input: CreateQuizInput): Promise<QuizFormState> {
+    const response = await fetch(`/api/quizzes/${quizId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const data = (await response.json().catch(() => null)) as
+      | { ok?: boolean; error?: string }
+      | null;
+
+    if (!response.ok) {
+      return { error: data?.error ?? t("quiz.errCreateFailed") };
+    }
+
+    router.push(`/quizzes/${quizId}`);
+    return { error: null };
+  }
 
   return (
     <QuizForm
@@ -41,13 +64,7 @@ export function EditQuizClient({
       submitLabel={t("form.saveChanges")}
       cancelHref={`/quizzes/${quizId}`}
       cancelLabel={t("quiz.cancel")}
-      onSubmit={async (input) => {
-        const result = await updateQuiz(quizId, input);
-        if (result?.error) {
-          toast("error", result.error);
-        }
-        return result;
-      }}
+      onSubmit={submitQuiz}
     />
   );
 }

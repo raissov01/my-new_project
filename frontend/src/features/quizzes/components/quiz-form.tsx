@@ -156,20 +156,24 @@ export function QuizForm({
     }
 
     startTransition(async () => {
-      const result = await onSubmit({
-        title,
-        description,
-        subject,
-        isPublic,
-        timePerQuestion,
-        shuffleOptions,
-        questions: filled.map(({ _key: _ignored, ...rest }) => {
-          void _ignored;
-          return rest;
-        }),
-      });
-      if (result?.error) {
-        toast("error", result.error);
+      try {
+        const result = await onSubmit({
+          title,
+          description,
+          subject,
+          isPublic,
+          timePerQuestion,
+          shuffleOptions,
+          questions: filled.map(({ _key: _ignored, ...rest }) => {
+            void _ignored;
+            return rest;
+          }),
+        });
+        if (result?.error) {
+          toast("error", result.error);
+        }
+      } catch {
+        toast("error", t("quiz.errCreateFailed"));
       }
     });
   };
