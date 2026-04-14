@@ -44,14 +44,14 @@ function getOptionText(question: QuizQuestionDTO, letter: OptionLetter): string 
   }
 }
 
-function buildDisplayOptions(
-  question: QuizQuestionDTO,
-  shuffle: boolean
-): DisplayOption[] {
-  const base: DisplayOption[] = (["a", "b", "c", "d"] as OptionLetter[]).map(
-    (letter) => ({ letter, text: getOptionText(question, letter) })
-  );
-  if (!shuffle) return base;
+function buildBaseOptions(question: QuizQuestionDTO): DisplayOption[] {
+  return (["a", "b", "c", "d"] as OptionLetter[]).map((letter) => ({
+    letter,
+    text: getOptionText(question, letter),
+  }));
+}
+
+function shuffleOptions(base: DisplayOption[]): DisplayOption[] {
   // Fisher-Yates; re-shuffle on the rare identity permutation so the
   // canonical order is never shown when shuffle is enabled.
   const copy = [...base];
@@ -88,10 +88,19 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const question = quiz.questions[currentIdx];
-  const displayOptions = useMemo(
-    () => buildDisplayOptions(question, quiz.shuffleOptions),
-    [question, quiz.shuffleOptions]
+  // Shuffle is client-only: SSR renders the base order so hydration matches,
+  // then useEffect below replaces it with a randomized order on mount and on
+  // each question transition. Without this, Math.random() in render produces
+  // a hydration mismatch and the server's HTML (unshuffled) ends up sticking,
+  // which made the correct answer appear to always sit in position A.
+  const [displayOptions, setDisplayOptions] = useState<DisplayOption[]>(() =>
+    buildBaseOptions(question)
   );
+
+  useEffect(() => {
+    const base = buildBaseOptions(quiz.questions[currentIdx]);
+    setDisplayOptions(quiz.shuffleOptions ? shuffleOptions(base) : base);
+  }, [currentIdx, quiz.questions, quiz.shuffleOptions]);
 
   const clearAdvanceTimer = () => {
     if (advanceTimerRef.current) {
