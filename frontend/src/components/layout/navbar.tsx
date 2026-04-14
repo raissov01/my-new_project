@@ -17,6 +17,7 @@ import {
   BookMarked,
   MessageSquareText,
   Gamepad2,
+  ListChecks,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -42,12 +43,14 @@ export function Navbar() {
         { href: "/learn", label: t("nav.learn"), icon: Gamepad2, exact: false },
         { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
+        { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks, exact: false },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
       ]
     : [
         { href: "/", label: t("nav.home"), icon: Home, exact: true },
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
+        { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks, exact: false },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
       ];
 
