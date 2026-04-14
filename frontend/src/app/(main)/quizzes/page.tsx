@@ -43,7 +43,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
               <ListChecks className="h-3.5 w-3.5 text-indigo-300" />
               {t("quiz.navLabel")}
             </div>
-            <h1 className="mt-4 max-w-[12ch] text-3xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] sm:text-5xl">
+            <h1 className="mt-4 max-w-[12ch] text-3xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
               {t("quiz.libraryTitle")}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">

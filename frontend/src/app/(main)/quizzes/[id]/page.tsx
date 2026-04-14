@@ -67,7 +67,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
               </span>
             </div>
 
-            <h1 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
+            <h1 className="mt-5 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
               {quiz.title}
             </h1>
 
@@ -109,7 +109,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
             </div>
           </div>
 
-          <div className="grid min-w-[220px] gap-3 sm:min-w-[260px]">
+          <div className="grid w-full gap-3 sm:grid-cols-3 lg:w-auto lg:min-w-[260px] lg:grid-cols-1">
             <MetricCard
               label={t("quiz.attempts")}
               value={String(quiz.attemptsCount)}

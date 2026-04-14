@@ -242,13 +242,15 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
             </p>
           ) : null}
 
-          <div className="max-h-64 overflow-y-auto rounded-[var(--radius-md)] border border-[var(--border)]">
-            <table className="w-full text-xs">
+          <div className="max-h-64 overflow-auto rounded-[var(--radius-md)] border border-[var(--border)]">
+            <table className="w-full min-w-[520px] text-xs">
               <thead className="bg-[var(--bg-soft)] text-[var(--text-muted)]">
                 <tr>
                   <th className="px-2 py-2 text-left">#</th>
                   <th className="px-2 py-2 text-left">{t("quiz.colQuestion")}</th>
-                  <th className="px-2 py-2 text-left">A/B/C/D</th>
+                  <th className="hidden px-2 py-2 text-left sm:table-cell">
+                    A/B/C/D
+                  </th>
                   <th className="px-2 py-2 text-left">{t("quiz.colCorrect")}</th>
                   <th className="px-2 py-2 text-left">{t("quiz.colStatus")}</th>
                 </tr>
@@ -264,20 +266,22 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
                       <td className="px-2 py-2 text-[var(--text-muted)]">
                         {row.row}
                       </td>
-                      <td className="px-2 py-2">
+                      <td className="max-w-[160px] px-2 py-2 sm:max-w-[260px]">
                         <span className="line-clamp-1 text-[var(--text-primary)]">
                           {row.question.questionText || "—"}
                         </span>
                       </td>
-                      <td className="px-2 py-2 text-[var(--text-secondary)]">
-                        {[
-                          row.question.optionA,
-                          row.question.optionB,
-                          row.question.optionC,
-                          row.question.optionD,
-                        ]
-                          .map((s) => s || "—")
-                          .join(" · ")}
+                      <td className="hidden max-w-[260px] px-2 py-2 text-[var(--text-secondary)] sm:table-cell">
+                        <span className="line-clamp-1">
+                          {[
+                            row.question.optionA,
+                            row.question.optionB,
+                            row.question.optionC,
+                            row.question.optionD,
+                          ]
+                            .map((s) => s || "—")
+                            .join(" · ")}
+                        </span>
                       </td>
                       <td className="px-2 py-2 font-semibold uppercase">
                         {row.question.correctOption || "—"}

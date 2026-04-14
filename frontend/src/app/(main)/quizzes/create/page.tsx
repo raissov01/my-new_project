@@ -28,7 +28,7 @@ export default async function CreateQuizPage() {
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
           {t("quiz.createEyebrow")}
         </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
+        <h1 className="mt-4 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
           {t("quiz.createTitle")}
         </h1>
         <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">

@@ -59,7 +59,7 @@ export default async function ClassQuizLeaderboardPage({
           <Trophy className="h-3.5 w-3.5 text-amber-400" />
           {t("classroom.leaderboardTitle")}
         </div>
-        <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+        <h1 className="mt-4 break-words text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
           {board.quizTitle}
         </h1>
         {board.deadline ? (
@@ -136,20 +136,22 @@ function LeaderboardRow({
 
   return (
     <div
-      className={`flex flex-wrap items-center gap-4 rounded-[var(--radius-lg)] border p-4 ${
+      className={`flex flex-wrap items-center gap-3 rounded-[var(--radius-lg)] border p-3 sm:gap-4 sm:p-4 ${
         notStarted
           ? "border-[var(--border)] bg-[var(--bg-base)] opacity-70"
           : "border-[var(--border)] bg-[var(--bg-surface)]"
       }`}
     >
       <div
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${rankClasses}`}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-bold sm:h-11 sm:w-11 ${rankClasses}`}
       >
         {rank === null ? "—" : rank === 1 ? <Medal className="h-5 w-5" /> : rank}
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-[var(--text-primary)]">{username}</p>
+        <p className="truncate font-semibold text-[var(--text-primary)]">
+          {username}
+        </p>
         <p className="text-xs text-[var(--text-muted)]">
           {notStarted
             ? t("classroom.statusNotStarted")
@@ -158,22 +160,22 @@ function LeaderboardRow({
         </p>
       </div>
 
-      <div className="flex items-center gap-6 text-sm">
+      <div className="ml-auto flex items-center gap-4 text-sm sm:gap-6">
         <div className="text-right">
-          <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-xs">
             {t("quiz.results.title")}
           </p>
-          <p className="mt-0.5 font-semibold text-[var(--text-primary)]">
+          <p className="mt-0.5 whitespace-nowrap font-semibold text-[var(--text-primary)]">
             {notStarted
               ? "—"
               : `${score ?? 0}/${total ?? 0} · ${percentage}%`}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-xs">
             {t("quiz.results.totalTime")}
           </p>
-          <p className="mt-0.5 font-semibold text-[var(--text-primary)]">
+          <p className="mt-0.5 whitespace-nowrap font-semibold text-[var(--text-primary)]">
             {formatTime(timeSpent)}
           </p>
         </div>

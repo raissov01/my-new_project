@@ -51,7 +51,7 @@ export default async function ClassQuizStatsPage({ params }: StatsPageProps) {
           <BarChart3 className="h-3.5 w-3.5 text-indigo-400" />
           {t("classroom.teacherStatsTitle")}
         </div>
-        <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+        <h1 className="mt-4 break-words text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
           {stats.quizTitle}
         </h1>
         {stats.deadline ? (
@@ -132,7 +132,7 @@ export default async function ClassQuizStatsPage({ params }: StatsPageProps) {
                   </span>
                 </div>
 
-                <div className="mt-4 grid gap-2 sm:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <QuestionMetric
                     label={t("classroom.statsAttempts")}
                     value={q.attempts}

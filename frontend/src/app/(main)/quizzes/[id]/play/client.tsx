@@ -268,7 +268,7 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-start px-4 py-6 sm:px-6 sm:py-10">
+      <div className="flex flex-1 flex-col items-center justify-start px-3 py-5 sm:px-6 sm:py-10">
         {streak > 1 ? (
           <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-3.5 py-1.5 text-sm font-semibold text-amber-300">
             <Flame className="h-4 w-4" />
@@ -277,16 +277,16 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
         ) : null}
 
         <div key={currentIdx} className="w-full max-w-3xl animate-fade-in-up">
-          <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-surface)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-10">
+          <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8 md:p-10">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
               {t("quiz.question")} {currentIdx + 1}
             </p>
-            <h1 className="mt-3 text-2xl font-semibold leading-tight tracking-[-0.03em] text-[var(--text-primary)] sm:text-3xl md:text-4xl">
+            <h1 className="mt-3 break-words text-xl font-semibold leading-tight tracking-[-0.02em] text-[var(--text-primary)] sm:text-2xl md:text-3xl lg:text-4xl">
               {question.questionText}
             </h1>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4">
+          <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-4">
             {displayOptions.map((opt, index) => {
               const positionLabel = POSITION_LABELS[index];
               const isSelected = selectedLetter === opt.letter;
@@ -319,17 +319,17 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
                   type="button"
                   onClick={() => recordAnswer(opt.letter)}
                   disabled={revealed}
-                  className={`group flex min-h-[76px] items-center gap-4 rounded-[var(--radius-xl)] border-2 px-5 py-4 text-left transition-all duration-200 disabled:cursor-default ${stateClasses}`}
+                  className={`group flex min-h-[68px] items-center gap-3 rounded-[var(--radius-xl)] border-2 px-3 py-3 text-left transition-all duration-200 disabled:cursor-default sm:min-h-[76px] sm:gap-4 sm:px-5 sm:py-4 ${stateClasses}`}
                 >
                   <span
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 text-base font-bold uppercase transition-colors ${badgeClasses}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-base font-bold uppercase transition-colors sm:h-11 sm:w-11 ${badgeClasses}`}
                   >
                     {positionLabel}
                   </span>
-                  <span className="flex-1 text-base font-medium text-[var(--text-primary)] sm:text-lg">
+                  <span className="min-w-0 flex-1 break-words text-sm font-medium text-[var(--text-primary)] sm:text-base md:text-lg">
                     {opt.text}
                   </span>
-                  {icon}
+                  {icon ? <span className="shrink-0">{icon}</span> : null}
                 </button>
               );
             })}

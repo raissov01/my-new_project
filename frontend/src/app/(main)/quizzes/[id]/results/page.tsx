@@ -84,9 +84,9 @@ export default async function QuizResultsPage({
         {t("quiz.backToLibrary")}
       </Link>
 
-      <section className="mt-6 overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-10">
-        <div className="grid gap-8 lg:grid-cols-[auto_1fr] lg:items-center">
-          <div className="relative mx-auto h-48 w-48 sm:h-56 sm:w-56">
+      <section className="mt-6 overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:p-8 lg:p-10">
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[auto_1fr] lg:items-center">
+          <div className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56">
             <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
               <circle
                 cx="100"
@@ -114,22 +114,22 @@ export default async function QuizResultsPage({
                 </linearGradient>
               </defs>
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-4xl font-bold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-3">
+              <div className="text-2xl font-bold tracking-[-0.05em] text-[var(--text-primary)] sm:text-3xl md:text-4xl">
                 {attempt.score}/{attempt.totalQuestions}
               </div>
-              <div className="mt-1 text-lg font-semibold text-[var(--primary)]">
+              <div className="mt-1 text-base font-semibold text-[var(--primary)] sm:text-lg">
                 {percentage}%
               </div>
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <p className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3.5 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
               <Trophy className="h-3.5 w-3.5 text-amber-400" />
               {t("quiz.results.title")}
             </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
+            <h1 className="mt-4 break-words text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
               {grade}
             </h1>
             <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
