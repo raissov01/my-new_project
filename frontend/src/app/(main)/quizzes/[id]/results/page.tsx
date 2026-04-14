@@ -1,0 +1,320 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, Check, RotateCw, Timer, Trophy, X } from "lucide-react";
+import { getCurrentUser } from "@/server/auth";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
+import { Button } from "@/components/ui/button";
+import { getAttemptById, type AttemptAnswerResult } from "@/server/services/quizzes";
+
+interface ResultsPageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ attempt?: string }>;
+}
+
+function gradeKey(percentage: number): string {
+  if (percentage >= 90) return "quiz.results.gradeExcellent";
+  if (percentage >= 70) return "quiz.results.gradeGood";
+  if (percentage >= 50) return "quiz.results.gradeAverage";
+  return "quiz.results.gradeTryAgain";
+}
+
+function formatDuration(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const mm = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${mm}:${ss.toString().padStart(2, "0")}`;
+}
+
+function longestStreak(answers: AttemptAnswerResult[]): number {
+  let max = 0;
+  let cur = 0;
+  for (const a of answers) {
+    if (a.isCorrect) {
+      cur += 1;
+      if (cur > max) max = cur;
+    } else {
+      cur = 0;
+    }
+  }
+  return max;
+}
+
+export default async function QuizResultsPage({
+  params,
+  searchParams,
+}: ResultsPageProps) {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { id } = await params;
+  const { attempt: attemptId } = await searchParams;
+  if (!attemptId) {
+    redirect(`/quizzes/${encodeURIComponent(id)}`);
+  }
+
+  const attempt = await getAttemptById(attemptId);
+  if (!attempt) {
+    notFound();
+  }
+
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
+  const percentage = attempt.percentage;
+  const grade = t(gradeKey(percentage));
+  const avgSeconds =
+    attempt.totalQuestions > 0
+      ? attempt.timeSpent / attempt.totalQuestions
+      : 0;
+  const maxStreak = longestStreak(attempt.answers);
+
+  const dashArray = 2 * Math.PI * 88;
+  const dashOffset = dashArray * (1 - percentage / 100);
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <Link
+        href={`/quizzes/${encodeURIComponent(id)}`}
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        {t("quiz.backToLibrary")}
+      </Link>
+
+      <section className="mt-6 overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-10">
+        <div className="grid gap-8 lg:grid-cols-[auto_1fr] lg:items-center">
+          <div className="relative mx-auto h-48 w-48 sm:h-56 sm:w-56">
+            <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
+              <circle
+                cx="100"
+                cy="100"
+                r="88"
+                fill="none"
+                stroke="var(--border)"
+                strokeWidth="14"
+              />
+              <circle
+                cx="100"
+                cy="100"
+                r="88"
+                fill="none"
+                stroke="url(#scoreGradient)"
+                strokeWidth="14"
+                strokeLinecap="round"
+                strokeDasharray={dashArray}
+                strokeDashoffset={dashOffset}
+              />
+              <defs>
+                <linearGradient id="scoreGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#10b981" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
+                {attempt.score}/{attempt.totalQuestions}
+              </div>
+              <div className="mt-1 text-lg font-semibold text-[var(--primary)]">
+                {percentage}%
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3.5 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
+              <Trophy className="h-3.5 w-3.5 text-amber-400" />
+              {t("quiz.results.title")}
+            </p>
+            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
+              {grade}
+            </h1>
+            <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+              {t("quiz.results.subtitle")
+                .replace("{score}", String(attempt.score))
+                .replace("{total}", String(attempt.totalQuestions))}
+            </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <Stat
+                icon={<Timer className="h-4 w-4" />}
+                label={t("quiz.results.totalTime")}
+                value={formatDuration(attempt.timeSpent)}
+              />
+              <Stat
+                icon={<Timer className="h-4 w-4" />}
+                label={t("quiz.results.avgPerQuestion")}
+                value={formatDuration(avgSeconds)}
+              />
+              <Stat
+                icon={<Trophy className="h-4 w-4" />}
+                label={t("quiz.results.longestStreak")}
+                value={String(maxStreak)}
+              />
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href={`/quizzes/${encodeURIComponent(id)}/play`}>
+                <Button size="lg">
+                  <RotateCw className="h-4 w-4" />
+                  {t("quiz.results.retry")}
+                </Button>
+              </Link>
+              <Link href="/quizzes">
+                <Button variant="outline" size="lg">
+                  {t("quiz.results.backToLibrary")}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+          {t("quiz.results.breakdown")}
+        </h2>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          {t("quiz.results.breakdownBody")}
+        </p>
+
+        <div className="mt-5 space-y-3">
+          {attempt.answers.map((answer, idx) => (
+            <AnswerRow
+              key={`${answer.questionId || "removed"}-${idx}`}
+              index={idx}
+              answer={answer}
+              correctLabel={t("quiz.results.correctAnswer")}
+              yourLabel={t("quiz.results.yourAnswer")}
+              skippedLabel={t("quiz.results.skipped")}
+              correctText={t("quiz.play.correct")}
+              wrongText={t("quiz.play.wrong")}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Stat({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        {icon}
+        {label}
+      </div>
+      <p className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function AnswerRow({
+  index,
+  answer,
+  correctLabel,
+  yourLabel,
+  skippedLabel,
+  correctText,
+  wrongText,
+}: {
+  index: number;
+  answer: AttemptAnswerResult;
+  correctLabel: string;
+  yourLabel: string;
+  skippedLabel: string;
+  correctText: string;
+  wrongText: string;
+}) {
+  const letterToText: Record<string, string> = {
+    a: answer.optionA,
+    b: answer.optionB,
+    c: answer.optionC,
+    d: answer.optionD,
+  };
+  const selectedText = answer.selectedOption
+    ? letterToText[answer.selectedOption] ?? ""
+    : "";
+  const correctAnswerText = letterToText[answer.correctOption] ?? "";
+
+  return (
+    <article
+      className={`rounded-[var(--radius-xl)] border p-5 shadow-[var(--shadow-sm)] ${
+        answer.isCorrect
+          ? "border-emerald-500/30 bg-emerald-500/5"
+          : "border-rose-500/25 bg-rose-500/5"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            #{index + 1}
+          </p>
+          <h3 className="mt-1.5 text-base font-semibold text-[var(--text-primary)]">
+            {answer.questionText || "—"}
+          </h3>
+        </div>
+        <span
+          className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.14em] ${
+            answer.isCorrect
+              ? "bg-emerald-500/15 text-emerald-300"
+              : "bg-rose-500/15 text-rose-300"
+          }`}
+        >
+          {answer.isCorrect ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <X className="h-3.5 w-3.5" />
+          )}
+          {answer.isCorrect ? correctText : wrongText}
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            {yourLabel}
+          </p>
+          <p className="mt-1.5 text-sm text-[var(--text-primary)]">
+            {answer.selectedOption ? (
+              <>
+                <span className="font-semibold uppercase">
+                  {answer.selectedOption}
+                </span>{" "}
+                · {selectedText || "—"}
+              </>
+            ) : (
+              <span className="italic text-[var(--text-muted)]">
+                {skippedLabel}
+              </span>
+            )}
+          </p>
+        </div>
+        <div className="rounded-[var(--radius-md)] border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-emerald-300">
+            {correctLabel}
+          </p>
+          <p className="mt-1.5 text-sm text-[var(--text-primary)]">
+            <span className="font-semibold uppercase">
+              {answer.correctOption}
+            </span>{" "}
+            · {correctAnswerText || "—"}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}

@@ -124,3 +124,44 @@ export async function getQuizById(quizId: string): Promise<QuizDetail | null> {
     return null;
   }
 }
+
+export type AttemptAnswerResult = {
+  questionId: string;
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  selectedOption: string | null;
+  correctOption: string;
+  isCorrect: boolean;
+  timeSpent: number;
+  orderIndex: number;
+};
+
+export type AttemptResult = {
+  id: string;
+  quizId: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  timeSpent: number;
+  startedAt: string;
+  completedAt: string;
+  answers: AttemptAnswerResult[];
+};
+
+export async function getAttemptById(
+  attemptId: string
+): Promise<AttemptResult | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  try {
+    return await fetchBackendJson<AttemptResult>({
+      path: `/api/v1/quizzes/attempts/${encodeURIComponent(attemptId)}`,
+      userId: user.id,
+    });
+  } catch {
+    return null;
+  }
+}

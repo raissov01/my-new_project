@@ -6,9 +6,11 @@ import {
   Globe2,
   ListChecks,
   Lock,
+  Play,
   Target,
   UserRound,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
@@ -89,6 +91,22 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                 {t("quiz.created")} {formatDate(quiz.createdAt, locale)}
               </span>
             </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href={`/quizzes/${quiz.id}/play`}>
+                <Button size="lg">
+                  <Play className="h-4 w-4" />
+                  {t("quiz.startQuiz")}
+                </Button>
+              </Link>
+              {quiz.isAuthor ? (
+                <Link href={`/quizzes/${quiz.id}/edit`}>
+                  <Button variant="outline" size="lg">
+                    {t("quiz.edit")}
+                  </Button>
+                </Link>
+              ) : null}
+            </div>
           </div>
 
           <div className="grid min-w-[220px] gap-3 sm:min-w-[260px]">
@@ -133,7 +151,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                     {question.questionText}
                   </h3>
                 </div>
-                {question.correctOption ? (
+                {quiz.isAuthor && question.correctOption ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-emerald-400">
                     <Target className="h-3.5 w-3.5" />
                     {t("quiz.correctAnswer")}: {question.correctOption.toUpperCase()}
@@ -141,28 +159,30 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                 ) : null}
               </div>
 
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                {OPTION_KEYS.map((key) => {
-                  const text = getOptionText(question, key);
-                  const isCorrect = question.correctOption === key;
+              {quiz.isAuthor ? (
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {OPTION_KEYS.map((key) => {
+                    const text = getOptionText(question, key);
+                    const isCorrect = question.correctOption === key;
 
-                  return (
-                    <div
-                      key={key}
-                      className={`rounded-[1.2rem] border px-4 py-3 text-sm ${
-                        isCorrect
-                          ? "border-emerald-500/25 bg-emerald-500/10 text-[var(--text-primary)]"
-                          : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-secondary)]"
-                      }`}
-                    >
-                      <span className="font-semibold uppercase text-[var(--text-primary)]">
-                        {key}
-                      </span>{" "}
-                      {text}
-                    </div>
-                  );
-                })}
-              </div>
+                    return (
+                      <div
+                        key={key}
+                        className={`rounded-[1.2rem] border px-4 py-3 text-sm ${
+                          isCorrect
+                            ? "border-emerald-500/25 bg-emerald-500/10 text-[var(--text-primary)]"
+                            : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-secondary)]"
+                        }`}
+                      >
+                        <span className="font-semibold uppercase text-[var(--text-primary)]">
+                          {key}
+                        </span>{" "}
+                        {text}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
             </article>
           ))}
         </div>
