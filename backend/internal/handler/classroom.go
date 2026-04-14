@@ -389,6 +389,168 @@ func (h *Classroom) GetChallengeDetail(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+func (h *Classroom) AssignQuiz(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var req model.AssignQuizRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	req.GroupID = strings.TrimSpace(req.GroupID)
+	req.QuizID = strings.TrimSpace(req.QuizID)
+	if req.GroupID == "" || req.QuizID == "" {
+		writeError(w, http.StatusBadRequest, "class and quiz are required", nil)
+		return
+	}
+	if req.Deadline != nil {
+		trimmed := strings.TrimSpace(*req.Deadline)
+		if trimmed == "" {
+			req.Deadline = nil
+		} else {
+			req.Deadline = &trimmed
+		}
+	}
+
+	if err := h.svc.AssignQuiz(r.Context(), userID, req); err != nil {
+		log.Printf("assign quiz error: %v", err)
+		msg := "failed to assign quiz"
+		status := http.StatusInternalServerError
+		normalized := strings.ToLower(err.Error())
+		switch {
+		case strings.Contains(normalized, "quiz access denied"):
+			msg = "quiz access denied"
+			status = http.StatusForbidden
+		case strings.Contains(normalized, "access denied"):
+			msg = "access denied"
+			status = http.StatusForbidden
+		case h.isDev():
+			msg = err.Error()
+		}
+		writeError(w, status, msg, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (h *Classroom) GetClassQuizLeaderboard(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	groupID := strings.TrimSpace(r.PathValue("groupID"))
+	quizID := strings.TrimSpace(r.PathValue("quizID"))
+	if groupID == "" || quizID == "" {
+		writeError(w, http.StatusBadRequest, "group id and quiz id are required", nil)
+		return
+	}
+
+	resp, err := h.svc.GetClassQuizLeaderboard(r.Context(), userID, groupID, quizID)
+	if err != nil {
+		log.Printf("class quiz leaderboard error: %v", err)
+		msg := "failed to load quiz leaderboard"
+		status := http.StatusInternalServerError
+		normalized := strings.ToLower(err.Error())
+		switch {
+		case strings.Contains(normalized, "access denied"):
+			msg = "access denied"
+			status = http.StatusForbidden
+		case strings.Contains(normalized, "not found"):
+			msg = "quiz assignment not found"
+			status = http.StatusNotFound
+		case h.isDev():
+			msg = err.Error()
+		}
+		writeError(w, status, msg, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Classroom) GetClassQuizTeacherStats(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	groupID := strings.TrimSpace(r.PathValue("groupID"))
+	quizID := strings.TrimSpace(r.PathValue("quizID"))
+	if groupID == "" || quizID == "" {
+		writeError(w, http.StatusBadRequest, "group id and quiz id are required", nil)
+		return
+	}
+
+	resp, err := h.svc.GetClassQuizTeacherStats(r.Context(), userID, groupID, quizID)
+	if err != nil {
+		log.Printf("class quiz teacher stats error: %v", err)
+		msg := "failed to load quiz stats"
+		status := http.StatusInternalServerError
+		normalized := strings.ToLower(err.Error())
+		switch {
+		case strings.Contains(normalized, "access denied"):
+			msg = "access denied"
+			status = http.StatusForbidden
+		case strings.Contains(normalized, "not found"):
+			msg = "quiz assignment not found"
+			status = http.StatusNotFound
+		case h.isDev():
+			msg = err.Error()
+		}
+		writeError(w, status, msg, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Classroom) GetRecentTeacherQuizActivity(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	resp, err := h.svc.GetRecentTeacherQuizActivity(r.Context(), userID, 10)
+	if err != nil {
+		log.Printf("recent teacher quiz activity error: %v", err)
+		msg := "failed to load recent quiz activity"
+		if h.isDev() {
+			msg = err.Error()
+		}
+		writeError(w, http.StatusInternalServerError, msg, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": resp})
+}
+
+func (h *Classroom) GetStudentQuizAssignments(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	resp, err := h.svc.GetStudentQuizAssignments(r.Context(), userID)
+	if err != nil {
+		log.Printf("student quiz assignments error: %v", err)
+		msg := "failed to load quiz assignments"
+		if h.isDev() {
+			msg = err.Error()
+		}
+		writeError(w, http.StatusInternalServerError, msg, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": resp})
+}
+
 func (h *Classroom) GetChallengeRanking(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {

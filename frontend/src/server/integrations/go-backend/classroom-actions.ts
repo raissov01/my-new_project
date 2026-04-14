@@ -31,6 +31,22 @@ export async function assignClassSetViaGo(
   });
 }
 
+export async function assignClassQuizViaGo(
+  userId: string,
+  payload: { groupId: string; quizId: string; deadline: string | null }
+) {
+  return fetchBackendJson<{ status: string }>({
+    path: "/api/v1/classroom/assign-quiz",
+    userId,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    timeoutMs: 10_000,
+  });
+}
+
 export async function createClassChallengeViaGo(
   userId: string,
   payload: { groupId: string; setId: string; title: string; deadline: string | null }

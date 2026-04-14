@@ -7,6 +7,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { createClassGroupViaGo } from "@/server/integrations/go-backend/classroom-write";
 import {
+  assignClassQuizViaGo,
   assignClassSetViaGo,
   createClassChallengeViaGo,
   joinClassByCodeViaGo,
@@ -200,6 +201,38 @@ export async function assignClassSet(formData: FormData) {
     return { error: null };
   } catch (error) {
     return { error: normalizeBackendError(error, "Failed to assign flashcard set.") };
+  }
+}
+
+export async function assignClassQuiz(formData: FormData) {
+  const access = await requireTeacherProfile();
+  if (access.error || !access.user) {
+    return { error: access.error };
+  }
+
+  const groupId = String(formData.get("group_id") ?? "").trim();
+  const quizId = String(formData.get("quiz_id") ?? "").trim();
+  const deadline = String(formData.get("deadline") ?? "").trim();
+
+  if (!groupId || !quizId) {
+    return { error: "Class and quiz are required." };
+  }
+
+  try {
+    await assignClassQuizViaGo(access.user.id, {
+      groupId,
+      quizId,
+      deadline: deadline ? new Date(deadline).toISOString() : null,
+    });
+
+    revalidatePath(`/teacher/classes/${groupId}`);
+    revalidatePath("/teacher/dashboard");
+    revalidatePath("/student/classes");
+    revalidatePath("/student/dashboard");
+    revalidatePath("/quizzes");
+    return { error: null };
+  } catch (error) {
+    return { error: normalizeBackendError(error, "Failed to assign quiz.") };
   }
 }
 

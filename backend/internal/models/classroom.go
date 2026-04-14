@@ -77,6 +77,20 @@ func (ClassSetAssignment) TableName() string {
 	return "class_set_assignments"
 }
 
+// ClassQuizAssignment stores a quiz assigned to a classroom.
+type ClassQuizAssignment struct {
+	ID         string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	GroupID    string     `gorm:"type:uuid;not null;uniqueIndex:idx_class_quiz_group_quiz,priority:1" json:"groupId"`
+	QuizID     string     `gorm:"type:uuid;not null;uniqueIndex:idx_class_quiz_group_quiz,priority:2" json:"quizId"`
+	AssignedBy *string    `gorm:"type:uuid" json:"assignedBy"`
+	Deadline   *time.Time `json:"deadline"`
+	CreatedAt  time.Time  `gorm:"autoCreateTime" json:"createdAt"`
+}
+
+func (ClassQuizAssignment) TableName() string {
+	return "class_quiz_assignments"
+}
+
 // ChallengeAttempt is a user's submission for a set challenge.
 type ChallengeAttempt struct {
 	ID             string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`

@@ -1,11 +1,22 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookOpen, GraduationCap, Layers3, Sparkles, Trophy, Users } from "lucide-react";
+import {
+  BookOpen,
+  GraduationCap,
+  Layers3,
+  ListChecks,
+  Sparkles,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/server/auth";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { getTeacherDashboardSummary } from "@/server/services/classrooms";
+import {
+  getRecentTeacherQuizActivity,
+  getTeacherDashboardSummary,
+} from "@/server/services/classrooms";
 
 export default async function TeacherDashboardPage() {
   const locale = await getServerLocale();
@@ -16,7 +27,10 @@ export default async function TeacherDashboardPage() {
     redirect(access.redirectTo);
   }
 
-  const summary = await getTeacherDashboardSummary(access.user?.id);
+  const [summary, recentQuizActivity] = await Promise.all([
+    getTeacherDashboardSummary(access.user?.id),
+    getRecentTeacherQuizActivity(),
+  ]);
 
   if (!summary) {
     redirect("/login");
@@ -173,6 +187,63 @@ export default async function TeacherDashboardPage() {
                 ))
               ) : (
                 <EmptyState title={t("teacher.noRankingTitle")} body={t("teacher.noRankingBody")} />
+              )}
+            </div>
+          </section>
+
+          {/* Recent quiz activity */}
+          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                  {t("classroom.teacherRecentQuizzesEyebrow")}
+                </p>
+                <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
+                  {t("classroom.teacherRecentQuizzes")}
+                </h2>
+              </div>
+              <Link href="/quizzes">
+                <Button variant="outline" size="sm">
+                  <ListChecks className="h-4 w-4" />
+                  {t("quiz.navLabel")}
+                </Button>
+              </Link>
+            </div>
+
+            <div className="mt-4 space-y-2.5">
+              {recentQuizActivity.length > 0 ? (
+                recentQuizActivity.slice(0, 6).map((activity) => (
+                  <div
+                    key={activity.attemptId}
+                    className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-3.5"
+                  >
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                        activity.percentage >= 80
+                          ? "bg-emerald-500/15 text-emerald-300"
+                          : activity.percentage >= 50
+                            ? "bg-amber-500/15 text-amber-300"
+                            : "bg-rose-500/15 text-rose-300"
+                      }`}
+                    >
+                      {activity.percentage}%
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                        {activity.studentName}
+                      </p>
+                      <p className="truncate text-xs text-[var(--text-muted)]">
+                        {activity.quizTitle} ·{" "}
+                        {new Date(activity.completedAt).toLocaleDateString(locale)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <EmptyState
+                  title={t("classroom.teacherRecentQuizzesEmptyTitle")}
+                  body={t("classroom.teacherRecentQuizzesEmptyBody")}
+                />
               )}
             </div>
           </section>

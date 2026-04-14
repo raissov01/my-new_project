@@ -108,3 +108,40 @@ func (s *Classroom) GetChallengeRanking(
 ) (*model.ClassChallengeRankingResponse, error) {
 	return s.repo.GetChallengeRanking(ctx, userID, challengeID)
 }
+
+func (s *Classroom) AssignQuiz(
+	ctx context.Context,
+	userID string,
+	req model.AssignQuizRequest,
+) error {
+	return s.repo.AssignQuiz(ctx, userID, req)
+}
+
+func (s *Classroom) GetClassQuizLeaderboard(
+	ctx context.Context,
+	viewerID, groupID, quizID string,
+) (*model.QuizLeaderboard, error) {
+	return s.repo.GetClassQuizLeaderboard(ctx, viewerID, groupID, quizID)
+}
+
+func (s *Classroom) GetClassQuizTeacherStats(
+	ctx context.Context,
+	teacherID, groupID, quizID string,
+) (*model.QuizTeacherStats, error) {
+	return s.repo.GetClassQuizTeacherStats(ctx, teacherID, groupID, quizID)
+}
+
+func (s *Classroom) GetRecentTeacherQuizActivity(
+	ctx context.Context,
+	teacherID string,
+	limit int,
+) ([]model.RecentQuizActivity, error) {
+	return s.repo.GetRecentTeacherQuizActivity(ctx, teacherID, limit)
+}
+
+func (s *Classroom) GetStudentQuizAssignments(
+	ctx context.Context,
+	userID string,
+) ([]model.StudentQuizAssignment, error) {
+	return s.repo.GetStudentQuizAssignments(ctx, userID)
+}

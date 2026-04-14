@@ -100,10 +100,95 @@ export type TeacherClassroomProgress = {
   mistakes: number;
 };
 
+export type TeacherClassroomQuizAssignment = {
+  id: string;
+  quizId: string;
+  quizTitle: string;
+  questionCount: number;
+  deadline: string | null;
+  createdAt: string;
+  completedCount: number;
+  totalStudents: number;
+  averagePercent: number;
+};
+
 export type TeacherClassroomDetail = {
   group: TeacherClassroomGroup;
   members: TeacherClassroomMember[];
   assignments: TeacherClassroomAssignment[];
+  quizAssignments: TeacherClassroomQuizAssignment[];
   challenges: TeacherClassroomChallenge[];
   progress: TeacherClassroomProgress[];
+};
+
+export type StudentQuizAssignment = {
+  id: string;
+  groupId: string;
+  groupName: string;
+  quizId: string;
+  quizTitle: string;
+  questionCount: number;
+  deadline: string | null;
+  createdAt: string;
+  bestPercentage: number | null;
+  attemptsCount: number;
+  lastAttemptAt: string | null;
+  status: "not_started" | "completed" | "overdue" | "late";
+};
+
+export type QuizLeaderboardRow = {
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+  bestPercentage: number | null;
+  bestScore: number | null;
+  totalQuestions: number | null;
+  bestTimeSpent: number | null;
+  attemptsCount: number;
+  completedAt: string | null;
+  late: boolean;
+};
+
+export type QuizLeaderboard = {
+  quizId: string;
+  quizTitle: string;
+  groupId: string;
+  groupName: string;
+  deadline: string | null;
+  totalStudents: number;
+  rows: QuizLeaderboardRow[];
+};
+
+export type QuizQuestionStats = {
+  questionId: string;
+  questionText: string;
+  orderIndex: number;
+  attempts: number;
+  correct: number;
+  incorrect: number;
+  skipped: number;
+  errorRate: number;
+  correctOption: string;
+};
+
+export type QuizTeacherStats = {
+  quizId: string;
+  quizTitle: string;
+  groupId: string;
+  groupName: string;
+  deadline: string | null;
+  totalStudents: number;
+  completedCount: number;
+  averagePercent: number;
+  questions: QuizQuestionStats[];
+};
+
+export type RecentQuizActivity = {
+  attemptId: string;
+  quizId: string;
+  quizTitle: string;
+  studentId: string;
+  studentName: string;
+  percentage: number;
+  completedAt: string;
 };

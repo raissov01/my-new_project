@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   Flame,
   GraduationCap,
+  ListChecks,
+  Play,
   Sparkles,
   Star,
   Target,
@@ -14,7 +16,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getUserStats } from "@/app/(main)/sets/progress-actions";
-import { getStudentDashboardSummary } from "@/server/services/classrooms";
+import {
+  getStudentDashboardSummary,
+  getStudentQuizAssignments,
+} from "@/server/services/classrooms";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { requireRole } from "@/server/auth";
@@ -28,14 +33,19 @@ export default async function StudentDashboardPage() {
     redirect(access.redirectTo);
   }
 
-  const [summary, stats] = await Promise.all([
+  const [summary, stats, quizAssignments] = await Promise.all([
     getStudentDashboardSummary(access.user?.id),
     getUserStats(),
+    getStudentQuizAssignments(),
   ]);
 
   if (!summary) {
     redirect("/login");
   }
+
+  const pendingQuizzes = quizAssignments.filter(
+    (q) => q.status !== "completed"
+  );
 
   const firstName = access.profile?.username ?? t("student.dashboardTitle");
   const nextAssignment = summary.assignments[0] ?? null;
@@ -195,6 +205,65 @@ export default async function StudentDashboardPage() {
             <p className="mt-2 text-xs text-[var(--text-muted)]">
               {t("stats.level")} {stats.xpLevel} • {stats.levelName}
             </p>
+          </section>
+
+          {/* Assigned quizzes widget */}
+          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                  {t("classroom.studentAssignedQuizzesEyebrow")}
+                </p>
+                <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
+                  {t("classroom.assignedQuizzes")}
+                </h2>
+              </div>
+              <Link href="/student/classes">
+                <Button variant="outline" size="sm">
+                  <ListChecks className="h-4 w-4" />
+                  {t("classroom.seeAll")}
+                </Button>
+              </Link>
+            </div>
+
+            <div className="mt-4 space-y-2.5">
+              {pendingQuizzes.length > 0 ? (
+                pendingQuizzes.slice(0, 4).map((assignment) => (
+                  <Link
+                    key={assignment.id}
+                    href={`/quizzes/${assignment.quizId}/play`}
+                    className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-3.5 transition-all hover:border-[var(--border-strong)]"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--primary-soft)] text-[var(--primary)]">
+                      <Play className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--primary)]">
+                        {assignment.quizTitle}
+                      </p>
+                      <p className="truncate text-xs text-[var(--text-muted)]">
+                        {assignment.groupName}
+                        {assignment.status === "overdue"
+                          ? ` · ${t("classroom.statusOverdue")}`
+                          : ""}
+                      </p>
+                    </div>
+                  </Link>
+                ))
+              ) : quizAssignments.length > 0 ? (
+                <EmptyCard
+                  icon={CheckCircle2}
+                  title={t("classroom.allQuizzesDoneTitle")}
+                  body={t("classroom.allQuizzesDoneBody")}
+                />
+              ) : (
+                <EmptyCard
+                  icon={ListChecks}
+                  title={t("classroom.noQuizAssignmentsStudentTitle")}
+                  body={t("classroom.noQuizAssignmentsStudentBody")}
+                />
+              )}
+            </div>
           </section>
 
           {/* Next action */}

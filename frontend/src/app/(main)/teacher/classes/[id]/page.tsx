@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { BarChart3, Trophy } from "lucide-react";
 import {
+  assignClassQuiz,
   assignClassSet,
   createClassChallenge,
   removeStudentFromClass,
 } from "@/app/(main)/classes/challenges/actions";
 import { getAvailableSetsForClassChallenges } from "@/server/services/class-challenges";
 import { getTeacherClassroomDetail } from "@/server/services/classrooms";
+import { getMyQuizzes } from "@/server/services/quizzes";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { requireRole } from "@/server/auth";
@@ -28,9 +31,10 @@ export default async function TeacherClassDetailPage({
   }
 
   const { id } = await params;
-  const [detail, sets] = await Promise.all([
+  const [detail, sets, myQuizzes] = await Promise.all([
     getTeacherClassroomDetail(id, access.user?.id),
     getAvailableSetsForClassChallenges(access.user?.id),
+    getMyQuizzes(),
   ]);
 
   if (!detail) {
@@ -198,6 +202,96 @@ export default async function TeacherClassDetailPage({
                 ))
               ) : (
                 <p className="text-sm text-[var(--text-secondary)]">{t("teacher.noAssignments")}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
+            <h2 className="text-2xl font-semibold text-[var(--text-primary)]">
+              {t("classroom.assignQuiz")}
+            </h2>
+            <form
+              action={async (formData) => {
+                "use server";
+                await assignClassQuiz(formData);
+              }}
+              className="mt-5 space-y-4"
+            >
+              <input type="hidden" name="group_id" value={detail.group.id} />
+              <select
+                name="quiz_id"
+                required
+                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none"
+              >
+                <option value="">{t("classroom.selectQuiz")}</option>
+                {myQuizzes.map((quiz) => (
+                  <option key={quiz.id} value={quiz.id}>
+                    {quiz.title} · {quiz.questionCount}
+                  </option>
+                ))}
+              </select>
+              <input
+                name="deadline"
+                type="datetime-local"
+                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none"
+              />
+              <Button type="submit">{t("classroom.assignQuiz")}</Button>
+            </form>
+
+            <div className="mt-6 space-y-3">
+              {detail.quizAssignments.length > 0 ? (
+                detail.quizAssignments.map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className="rounded-2xl bg-[var(--bg-surface)] p-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-[var(--text-primary)]">
+                          {assignment.quizTitle}
+                        </p>
+                        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                          {assignment.deadline
+                            ? t("teacher.deadlineLabel", {
+                                value: new Date(assignment.deadline).toLocaleString(),
+                              })
+                            : t("teacher.noDeadline")}
+                        </p>
+                      </div>
+                      <div className="text-right text-xs font-medium text-[var(--text-muted)]">
+                        {t("classroom.quizCompletion", {
+                          completed: assignment.completedCount,
+                          total: assignment.totalStudents,
+                        })}
+                        <div className="mt-0.5 text-[var(--text-primary)]">
+                          {t("classroom.quizAverage", { value: assignment.averagePercent })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/teacher/classes/${detail.group.id}/quizzes/${assignment.quizId}/leaderboard`}
+                      >
+                        <Button variant="outline" size="sm">
+                          <Trophy className="h-4 w-4" />
+                          {t("classroom.viewLeaderboard")}
+                        </Button>
+                      </Link>
+                      <Link
+                        href={`/teacher/classes/${detail.group.id}/quizzes/${assignment.quizId}/stats`}
+                      >
+                        <Button variant="outline" size="sm">
+                          <BarChart3 className="h-4 w-4" />
+                          {t("classroom.viewStats")}
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {t("classroom.noQuizAssignments")}
+                </p>
               )}
             </div>
           </div>

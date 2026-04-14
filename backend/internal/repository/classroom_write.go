@@ -152,6 +152,29 @@ func (r *Classroom) AssignSet(ctx context.Context, ownerID string, req model.Ass
 	return err
 }
 
+// AssignQuiz assigns a quiz to a class group. Teacher must own both.
+func (r *Classroom) AssignQuiz(ctx context.Context, ownerID string, req model.AssignQuizRequest) error {
+	var gOwner string
+	err := r.pool.QueryRow(ctx, `SELECT owner_id FROM class_groups WHERE id = $1`, req.GroupID).Scan(&gOwner)
+	if err != nil || gOwner != ownerID {
+		return fmt.Errorf("access denied")
+	}
+
+	var qOwner string
+	err = r.pool.QueryRow(ctx, `SELECT user_id FROM quizzes WHERE id = $1`, req.QuizID).Scan(&qOwner)
+	if err != nil || qOwner != ownerID {
+		return fmt.Errorf("quiz access denied")
+	}
+
+	_, err = r.pool.Exec(ctx,
+		`INSERT INTO class_quiz_assignments (group_id, quiz_id, assigned_by, deadline, created_at)
+		 VALUES ($1, $2, $3, $4, NOW())
+		 ON CONFLICT (group_id, quiz_id) DO UPDATE SET deadline = EXCLUDED.deadline`,
+		req.GroupID, req.QuizID, ownerID, req.Deadline,
+	)
+	return err
+}
+
 // CreateChallenge creates a class challenge.
 func (r *Classroom) CreateChallenge(ctx context.Context, ownerID string, req model.CreateClassChallengeRequest) (string, error) {
 	// Verify ownership
