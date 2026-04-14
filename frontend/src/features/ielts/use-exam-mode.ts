@@ -44,8 +44,11 @@ export function useExamMode(options: UseExamModeOptions) {
   // Use refs for callbacks to avoid stale closures in event listeners
   const onViolationRef = useRef(options.onViolation);
   const onTerminateRef = useRef(options.onTerminate);
-  onViolationRef.current = options.onViolation;
-  onTerminateRef.current = options.onTerminate;
+
+  useEffect(() => {
+    onViolationRef.current = options.onViolation;
+    onTerminateRef.current = options.onTerminate;
+  }, [options.onTerminate, options.onViolation]);
 
   // Debounce ref to prevent double-counting the same tab-switch event.
   // When user switches tab: blur fires first, then visibilitychange fires ~0-5ms later.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, Volume2, Loader2, ArrowLeft, Star, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
+import { Mic, MicOff, Volume2, Loader2, ArrowLeft, Star, TrendingUp, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { speakingPractice, type SpeakingResponse } from "@/features/learn/api";
 import Link from "next/link";
@@ -29,7 +29,7 @@ export function SpeakClient() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [context, setContext] = useState("");
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,7 +74,8 @@ export function SpeakClient() {
 
   // Speech Recognition — user talks
   function startRecording() {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Speech recognition is not supported in your browser. Try Chrome.");
       return;
@@ -87,7 +88,7 @@ export function SpeakClient() {
 
     let finalTranscript = "";
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: BrowserSpeechRecognitionEvent) => {
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
@@ -145,7 +146,7 @@ export function SpeakClient() {
       }
 
       setContext(res.followUpContext || context);
-    } catch (err) {
+    } catch {
       setMessages(prev => [...prev, { role: "ai", text: "Sorry, I couldn't process that. Please try again." }]);
     } finally {
       setIsProcessing(false);

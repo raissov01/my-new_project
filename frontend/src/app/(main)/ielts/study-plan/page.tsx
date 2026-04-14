@@ -12,7 +12,7 @@ export default async function IELTSStudyPlanPage() {
   // which can trigger "An error occurred in the Server Components render"
   // in React 19 / Next.js 16 when the action throws (e.g. unauthenticated).
   let initialPlan: Record<string, unknown> | null = null;
-  let initialTaskStatuses: Record<string, string> = {};
+  const initialTaskStatuses: Record<string, string> = {};
 
   try {
     const user = await getCurrentUser();

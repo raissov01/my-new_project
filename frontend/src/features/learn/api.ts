@@ -6,8 +6,9 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 // ── Types ──
 
 export type PlacementQuestion = {
+  id: number;
   level: string;
-  type: string;
+  section: string;
   question: string;
   options: string[];
   correct: number;
@@ -63,10 +64,89 @@ export type UserProgress = {
   lessonsCompleted: number;
 };
 
-export type Exercise = {
-  type: "fill_blank" | "grammar_choice" | "word_order" | "matching" | "error_correction" | "translation";
-  prompt: string;
-  data: any;
+type FillBlankExerciseData = {
+  sentence: string;
+  options: string[];
+  correctWord: string;
+};
+
+type GrammarChoiceExerciseData = {
+  sentence: string;
+  options: string[];
+  correct: number;
+  rule?: string;
+};
+
+type WordOrderExerciseData = {
+  words: string[];
+  correctSentence: string;
+};
+
+type MatchingExerciseData = {
+  pairs: { term: string; definition: string }[];
+};
+
+type ErrorCorrectionExerciseData = {
+  sentence: string;
+  errorWord: string;
+  correction: string;
+  rule?: string;
+};
+
+type TranslationExerciseData = {
+  sourceText: string;
+  sourceLang: string;
+  acceptedAnswers: string[];
+  hint?: string;
+};
+
+export type Exercise =
+  | {
+      type: "fill_blank";
+      prompt: string;
+      data: FillBlankExerciseData;
+    }
+  | {
+      type: "grammar_choice";
+      prompt: string;
+      data: GrammarChoiceExerciseData;
+    }
+  | {
+      type: "word_order";
+      prompt: string;
+      data: WordOrderExerciseData;
+    }
+  | {
+      type: "matching";
+      prompt: string;
+      data: MatchingExerciseData;
+    }
+  | {
+      type: "error_correction";
+      prompt: string;
+      data: ErrorCorrectionExerciseData;
+    }
+  | {
+      type: "translation";
+      prompt: string;
+      data: TranslationExerciseData;
+    };
+
+export type LessonSession = {
+  id: string;
+};
+
+export type LessonExercisePayload = {
+  exercises?: Exercise[];
+};
+
+export type LessonResult = {
+  stars: number;
+  xpEarned: number;
+  accuracy: number;
+  comboMax: number;
+  totalXP: number;
+  streak: number;
 };
 
 // ── Server Actions ──
@@ -88,7 +168,7 @@ export async function getPlacement() {
 export async function startPlacement() {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
-  return fetchBackendJson<{ questions?: any; alreadyDone?: boolean; placement?: Placement }>({
+  return fetchBackendJson<{ questions?: PlacementQuestion[]; alreadyDone?: boolean; placement?: Placement }>({
     path: "/api/v1/engsim/placement/start",
     userId: user.id,
     method: "POST",
@@ -141,7 +221,7 @@ export async function getProgress() {
 export async function startLesson(lessonId: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
-  return fetchBackendJson<{ session: any; exercises: any }>({
+  return fetchBackendJson<{ session: LessonSession; exercises: LessonExercisePayload | Exercise[] | string }>({
     path: `/api/v1/engsim/lessons/${lessonId}/start`,
     userId: user.id,
     method: "POST",
@@ -174,14 +254,7 @@ export async function completeLesson(lessonId: string, data: {
 }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
-  return fetchBackendJson<{
-    stars: number;
-    xpEarned: number;
-    accuracy: number;
-    comboMax: number;
-    totalXP: number;
-    streak: number;
-  }>({
+  return fetchBackendJson<LessonResult>({
     path: `/api/v1/engsim/lessons/${lessonId}/complete`,
     userId: user.id,
     method: "POST",

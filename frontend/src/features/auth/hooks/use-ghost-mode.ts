@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 export const GHOST_COOKIE = "swr_ghost";
 
@@ -22,11 +22,7 @@ function deleteCookie(name: string) {
 }
 
 export function useGhostMode() {
-  const [isGhost, setIsGhost] = useState(false);
-
-  useEffect(() => {
-    setIsGhost(getCookie(GHOST_COOKIE) === "1");
-  }, []);
+  const [isGhost, setIsGhost] = useState(() => getCookie(GHOST_COOKIE) === "1");
 
   const enableGhostMode = useCallback(() => {
     setCookie(GHOST_COOKIE, "1", 1);

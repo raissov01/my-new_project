@@ -7,9 +7,21 @@ import {
   ArrowRight, Trophy, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { startLesson, submitAnswer, completeLesson, type Exercise } from "@/features/learn/api";
+import {
+  startLesson,
+  submitAnswer,
+  completeLesson,
+  type Exercise,
+  type LessonExercisePayload,
+  type LessonResult,
+} from "@/features/learn/api";
 
 type Phase = "loading" | "playing" | "result";
+type ExerciseAnswer = string | number | boolean | string[] | null;
+
+function parseExercises(payload: LessonExercisePayload | Exercise[]): Exercise[] {
+  return Array.isArray(payload) ? payload : (payload.exercises ?? []);
+}
 
 export function LessonClient({ lessonId }: { lessonId: string }) {
   const router = useRouter();
@@ -20,24 +32,26 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
   const [hearts, setHearts] = useState(5);
   const [combo, setCombo] = useState(0);
   const [comboMax, setComboMax] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [selected, setSelected] = useState<any>(null);
+  const [, setCorrectCount] = useState(0);
+  const [selected, setSelected] = useState<ExerciseAnswer>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [result, setResult] = useState<any>(null);
-  const startTime = useRef(Date.now());
+  const [result, setResult] = useState<LessonResult | null>(null);
+  const startTime = useRef<number>(0);
 
   useEffect(() => {
     async function init() {
       try {
         const res = await startLesson(lessonId);
         setSessionId(res.session.id);
-        const exData = typeof res.exercises === "string" ? JSON.parse(res.exercises) : res.exercises;
-        setExercises(exData.exercises || exData || []);
+        const exData = typeof res.exercises === "string"
+          ? (JSON.parse(res.exercises) as LessonExercisePayload | Exercise[])
+          : res.exercises;
+        setExercises(parseExercises(exData));
         setHearts(5);
         setPhase("playing");
         startTime.current = Date.now();
-      } catch (err: any) {
-        alert(err.message || "Failed to start lesson");
+      } catch (err: unknown) {
+        alert(err instanceof Error ? err.message : "Failed to start lesson");
         router.push("/learn/map");
       }
     }
@@ -46,7 +60,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
 
   const ex = exercises[currentIdx];
 
-  function checkAnswer(answer: any) {
+  function checkAnswer(answer: ExerciseAnswer) {
     if (isCorrect !== null) return;
 
     let correct = false;
@@ -56,7 +70,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
     } else if (ex.type === "grammar_choice") {
       correct = answer === ex.data.correct;
     } else if (ex.type === "word_order") {
-      const userSentence = typeof answer === "string" ? answer : answer.join(" ");
+      const userSentence = typeof answer === "string" ? answer : Array.isArray(answer) ? answer.join(" ") : "";
       correct = userSentence.toLowerCase().trim() === ex.data.correctSentence.toLowerCase().trim();
     } else if (ex.type === "matching") {
       // answer is an array of matched pairs — check all correct
@@ -446,7 +460,7 @@ function MatchingExercise({
 }: {
   pairs: { term: string; definition: string }[];
   isCorrect: boolean | null;
-  onSubmit: (answer: any) => void;
+  onSubmit: (answer: boolean) => void;
 }) {
   const [selectedTerm, setSelectedTerm] = useState<number | null>(null);
   const [matched, setMatched] = useState<Map<number, number>>(new Map());

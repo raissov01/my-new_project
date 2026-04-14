@@ -5,13 +5,21 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type MaterialNotePayload = {
+  note?: {
+    notes?: string;
+    exercises?: string;
+    lastPage?: number;
+  };
+};
+
 export async function GET(req: NextRequest, props: { params: Promise<{ materialId: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { materialId } = await props.params;
   try {
-    const data = await fetchBackendJson<any>({
+    const data = await fetchBackendJson<MaterialNotePayload>({
       path: `/api/v1/materials/${materialId}/notes`,
       userId: user.id,
     });
@@ -29,7 +37,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ material
   const body = await req.json();
 
   try {
-    const data = await fetchBackendJson<any>({
+    const data = await fetchBackendJson<MaterialNotePayload>({
       path: `/api/v1/materials/${materialId}/notes`,
       userId: user.id,
       method: "POST",
@@ -37,7 +45,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ material
       body: JSON.stringify(body),
     });
     return NextResponse.json(data);
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Failed to save" }, { status: 500 });
   }
 }

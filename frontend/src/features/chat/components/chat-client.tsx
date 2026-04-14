@@ -121,7 +121,7 @@ export function ChatClient() {
 
   function formatContent(content: string) {
     // Simple markdown rendering
-    let html = content
+    const html = content
       .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="chat-code-block"><code>$2</code></pre>')
       .replace(/`([^`]+)`/g, '<code class="chat-inline-code">$1</code>')
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
