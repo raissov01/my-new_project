@@ -51,14 +51,14 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 		where = append(where, fmt.Sprintf("(q.title ILIKE $%d OR q.description ILIKE $%d)", len(args), len(args)))
 	}
 
-	orderBy := "q.updated_at DESC"
+	orderBy := "v.updated_at DESC"
 	switch filters.Sort {
 	case "played":
-		orderBy = "attempts_count DESC, q.updated_at DESC"
+		orderBy = "attempts_count DESC, v.updated_at DESC"
 	case "rated":
 		orderBy = "average_percentage DESC, attempts_count DESC"
 	case "newest":
-		orderBy = "q.created_at DESC"
+		orderBy = "v.created_at DESC"
 	}
 
 	query := fmt.Sprintf(`
@@ -231,10 +231,8 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		); err != nil {
 			return nil, fmt.Errorf("scan question: %w", err)
 		}
-		if d.IsAuthor {
-			c := correct
-			q.CorrectOption = &c
-		}
+		c := correct
+		q.CorrectOption = &c
 		d.Questions = append(d.Questions, q)
 	}
 	if err := qRows.Err(); err != nil {
