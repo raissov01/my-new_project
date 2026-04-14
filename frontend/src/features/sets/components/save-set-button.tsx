@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { BookmarkPlus, Check } from "lucide-react";
+import { BookmarkPlus } from "lucide-react";
 import { cloneSet } from "@/app/(main)/sets/actions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";

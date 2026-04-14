@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, BookOpen, BookOpenText, ClipboardCheck, Download, FileText, GraduationCap, Headphones, Lightbulb, MessageSquare, Mic, PenLine, Settings } from "lucide-react";
+import { ArrowLeft, BookOpen, BookOpenText, ClipboardCheck, Download, Headphones, Lightbulb, MessageSquare, Mic, PenLine, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cookies } from "next/headers";
 import { createTranslator } from "@/lib/shared/i18n";

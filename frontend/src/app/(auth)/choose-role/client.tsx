@@ -17,17 +17,10 @@ export function ChooseRoleClient() {
   function handleSelect(role: Role) {
     if (isPending) return;
     setSelectedRole(role);
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[choose-role] Role card clicked:", role);
-    }
   }
 
   function handleContinue() {
     if (!selectedRole || isPending) return;
-
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[choose-role] Submitting selectedRole:", selectedRole);
-    }
 
     setError(null);
     startTransition(async () => {

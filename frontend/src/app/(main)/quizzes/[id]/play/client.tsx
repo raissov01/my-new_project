@@ -22,12 +22,14 @@ type RecordedAnswer = {
 
 type Phase = "asking" | "revealed" | "submitting";
 
-const ACCENT_BY_LETTER: Record<OptionLetter, string> = {
-  a: "from-indigo-500/25 to-indigo-500/5 border-indigo-400/30",
-  b: "from-rose-500/25 to-rose-500/5 border-rose-400/30",
-  c: "from-amber-500/25 to-amber-500/5 border-amber-400/30",
-  d: "from-emerald-500/25 to-emerald-500/5 border-emerald-400/30",
-};
+const POSITION_LABELS = ["A", "B", "C", "D"] as const;
+
+const ACCENT_BY_POSITION = [
+  "from-indigo-500/25 to-indigo-500/5 border-indigo-400/30",
+  "from-rose-500/25 to-rose-500/5 border-rose-400/30",
+  "from-amber-500/25 to-amber-500/5 border-amber-400/30",
+  "from-emerald-500/25 to-emerald-500/5 border-emerald-400/30",
+] as const;
 
 function getOptionText(question: QuizQuestionDTO, letter: OptionLetter): string {
   switch (letter) {
@@ -50,11 +52,15 @@ function buildDisplayOptions(
     (letter) => ({ letter, text: getOptionText(question, letter) })
   );
   if (!shuffle) return base;
+  // Fisher-Yates; re-shuffle on the rare identity permutation so the
+  // canonical order is never shown when shuffle is enabled.
   const copy = [...base];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
+  do {
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+  } while (copy.every((opt, idx) => opt.letter === base[idx].letter));
   return copy;
 }
 
@@ -272,12 +278,13 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
           </div>
 
           <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4">
-            {displayOptions.map((opt) => {
+            {displayOptions.map((opt, index) => {
+              const positionLabel = POSITION_LABELS[index];
               const isSelected = selectedLetter === opt.letter;
               const isCorrectOption = correctLetter === opt.letter;
               const revealed = phase !== "asking";
               let stateClasses =
-                "border-[var(--border)] bg-gradient-to-br " + ACCENT_BY_LETTER[opt.letter] + " hover:-translate-y-0.5";
+                "border-[var(--border)] bg-gradient-to-br " + ACCENT_BY_POSITION[index] + " hover:-translate-y-0.5";
               let badgeClasses =
                 "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]";
               let icon: React.ReactNode = null;
@@ -308,7 +315,7 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
                   <span
                     className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 text-base font-bold uppercase transition-colors ${badgeClasses}`}
                   >
-                    {opt.letter}
+                    {positionLabel}
                   </span>
                   <span className="flex-1 text-base font-medium text-[var(--text-primary)] sm:text-lg">
                     {opt.text}

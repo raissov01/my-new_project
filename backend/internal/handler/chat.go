@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -126,7 +127,7 @@ func (h *ChatHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		Content: msg,
 	}
 	if err := h.repo.SaveMessage(userMsg); err != nil {
-		fmt.Printf("[chat] failed to save message for user %s: %v\n", userID, err)
+		log.Printf("[chat] failed to save message for user %s: %v", userID, err)
 		http.Error(w, fmt.Sprintf(`{"error":"failed to save message: %s"}`, err.Error()), http.StatusInternalServerError)
 		return
 	}

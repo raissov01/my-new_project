@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Trophy, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { getMyClassChallenges } from "@/server/services/class-challenges";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";

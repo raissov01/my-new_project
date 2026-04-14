@@ -62,20 +62,22 @@ export function QuizCard({ quiz, locale, isOwner }: QuizCardProps) {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2.5">
-        <Link href={`/quizzes/${quiz.id}`} className="inline-flex">
-          <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-8px_rgba(37,99,235,0.4)] transition-all hover:bg-[var(--primary-hover)]">
-            {t("quiz.openQuiz")}
-          </span>
+        <Link
+          href={`/quizzes/${quiz.id}`}
+          className="relative z-10 inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-8px_rgba(37,99,235,0.4)] transition-all hover:bg-[var(--primary-hover)]"
+        >
+          {t("quiz.openQuiz")}
         </Link>
       </div>
 
       {isOwner ? (
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-4">
-          <Link href={`/quizzes/${quiz.id}/edit`} className="inline-flex">
-            <span className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[var(--radius-sm)] px-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]">
-              <Pencil className="h-3.5 w-3.5" />
-              {t("quiz.edit")}
-            </span>
+          <Link
+            href={`/quizzes/${quiz.id}/edit`}
+            className="relative z-10 inline-flex h-8 items-center justify-center gap-1.5 rounded-[var(--radius-sm)] px-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            {t("quiz.edit")}
           </Link>
         </div>
       ) : null}

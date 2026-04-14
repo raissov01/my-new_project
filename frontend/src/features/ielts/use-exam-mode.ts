@@ -79,9 +79,6 @@ export function useExamMode(options: UseExamModeOptions) {
 
       setViolationCount((prev) => {
         const next = prev + 1;
-        if (typeof window !== "undefined") {
-          console.info("[exam-mode] violation", { type, details, count: next });
-        }
         onViolationRef.current?.({ type, details, count: next });
 
         if (policy.immediateTerminate) {

@@ -37,9 +37,6 @@ export function SignupForm() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (submitLockRef.current || emailPending || socialPending) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[signup-form] duplicate submit blocked");
-      }
       return;
     }
 
@@ -54,14 +51,6 @@ export function SignupForm() {
         ? crypto.randomUUID()
         : `signup-${Date.now()}`;
     formData.set("client_request_id", clientRequestId);
-
-    if (process.env.NODE_ENV !== "production") {
-      console.debug("[signup-form] submit start", {
-        clientRequestId,
-        email: String(formData.get("email") ?? ""),
-        role: selectedRole,
-      });
-    }
 
     const submittedEmail = String(formData.get("email") ?? "").trim();
 
