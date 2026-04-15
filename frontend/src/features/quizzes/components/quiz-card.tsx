@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ListChecks, Target, Users, Timer, Pencil } from "lucide-react";
 import { formatDate } from "@/lib/shared/utils";
 import { type Locale, createTranslator } from "@/lib/shared/i18n";
@@ -11,16 +14,28 @@ interface QuizCardProps {
 }
 
 export function QuizCard({ quiz, locale, isOwner }: QuizCardProps) {
+  const router = useRouter();
   const t = createTranslator(locale);
   const quizHref = `/quizzes/${quiz.id}`;
 
+  function openQuiz() {
+    router.push(quizHref);
+  }
+
   return (
-    <article className="relative isolate z-50 flex h-full flex-col rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-strong)] sm:p-6">
-      <Link
-        href={quizHref}
-        aria-label={`${t("quiz.openQuiz")}: ${quiz.title}`}
-        className="absolute inset-0 z-10 rounded-[var(--radius-xl)]"
-      />
+    <article
+      className="relative isolate z-50 flex h-full cursor-pointer flex-col rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-strong)] sm:p-6"
+      onClick={openQuiz}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openQuiz();
+        }
+      }}
+      role="link"
+      tabIndex={0}
+      aria-label={`${t("quiz.openQuiz")}: ${quiz.title}`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="line-clamp-1 text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)] transition-colors group-hover:text-[var(--primary)]">
@@ -87,6 +102,7 @@ export function QuizCard({ quiz, locale, isOwner }: QuizCardProps) {
         <div className="relative z-20 mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-4">
           <Link
             href={`/quizzes/${quiz.id}/edit`}
+            onClick={(event) => event.stopPropagation()}
             className="relative z-20 pointer-events-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-[var(--radius-sm)] px-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
           >
             <Pencil className="h-3.5 w-3.5" />
