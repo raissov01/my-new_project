@@ -100,9 +100,20 @@ function arraysEqual(a: string[], b: string[]): boolean {
 interface PlayQuizClientProps {
   quiz: QuizDetail;
   locale: Locale;
+  // "play" — default graded attempt, timer enabled, submits to /attempts.
+  // "practice" — no timer, no submission; on completion route to returnHref.
+  mode?: "play" | "practice";
+  // Where to send the student when practice completes. Ignored in play mode.
+  returnHref?: string;
 }
 
-export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
+export function PlayQuizClient({
+  quiz,
+  locale,
+  mode = "play",
+  returnHref,
+}: PlayQuizClientProps) {
+  const isPractice = mode === "practice";
   const t = useMemo(() => createTranslator(locale), [locale]);
   const router = useRouter();
 
@@ -202,6 +213,10 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
   const advance = useCallback(() => {
     clearAdvanceTimer();
     if (currentIdx + 1 >= totalQuestions) {
+      if (isPractice) {
+        router.push(returnHref ?? `/quizzes/${encodeURIComponent(quiz.id)}`);
+        return;
+      }
       void submitAttempt();
       return;
     }
@@ -211,7 +226,16 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
     setPhase("asking");
     setTimeLeft(quiz.timePerQuestion);
     questionStartRef.current = Date.now();
-  }, [currentIdx, quiz.timePerQuestion, submitAttempt, totalQuestions]);
+  }, [
+    currentIdx,
+    quiz.id,
+    quiz.timePerQuestion,
+    submitAttempt,
+    totalQuestions,
+    isPractice,
+    router,
+    returnHref,
+  ]);
 
   // recordAnswer is the single chokepoint for every question type. Callers
   // build the record shape appropriate for their type; this function handles
@@ -319,12 +343,14 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
   }, [questionType, recordMcq, recordTrueFalse, recordBlank, recordReorder]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
+  // Practice mode disables the timer entirely so students can dwell on
+  // questions they previously got wrong.
   const handleTimeoutRef = useRef(handleTimeout);
   useEffect(() => {
     handleTimeoutRef.current = handleTimeout;
   });
   useEffect(() => {
-    if (phase !== "asking") return;
+    if (phase !== "asking" || isPractice) return;
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -336,7 +362,7 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [phase, currentIdx]);
+  }, [phase, currentIdx, isPractice]);
 
   useEffect(() => {
     return () => clearAdvanceTimer();
@@ -367,11 +393,17 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
           <div className="flex-1">
             <div className="flex items-center justify-between text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
               <span>{questionNumberLabel}</span>
-              <span className="inline-flex items-center gap-1.5 text-[var(--text-primary)]">
-                <Timer className="h-3.5 w-3.5" />
-                {timeLeft}
-                {t("quiz.secondsShort")}
-              </span>
+              {isPractice ? (
+                <span className="inline-flex items-center gap-1.5 text-[var(--primary)]">
+                  {t("quiz.practice.label")}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[var(--text-primary)]">
+                  <Timer className="h-3.5 w-3.5" />
+                  {timeLeft}
+                  {t("quiz.secondsShort")}
+                </span>
+              )}
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
               <div
@@ -390,12 +422,14 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
             <span className="hidden sm:inline">{t("quiz.play.exit")}</span>
           </button>
         </div>
-        <div className="h-1 bg-[var(--bg-soft)]">
-          <div
-            className="h-full bg-[var(--accent)] transition-[width] duration-1000 ease-linear"
-            style={{ width: `${timerProgress * 100}%` }}
-          />
-        </div>
+        {isPractice ? null : (
+          <div className="h-1 bg-[var(--bg-soft)]">
+            <div
+              className="h-full bg-[var(--accent)] transition-[width] duration-1000 ease-linear"
+              style={{ width: `${timerProgress * 100}%` }}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-start px-3 py-5 sm:px-6 sm:py-10">

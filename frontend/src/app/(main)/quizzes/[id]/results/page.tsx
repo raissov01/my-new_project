@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Check, RotateCw, Timer, Trophy, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Dumbbell,
+  RotateCw,
+  Timer,
+  Trophy,
+  X,
+} from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
@@ -70,6 +78,7 @@ export default async function QuizResultsPage({
       ? attempt.timeSpent / attempt.totalQuestions
       : 0;
   const maxStreak = longestStreak(attempt.answers);
+  const wrongCount = attempt.answers.filter((a) => !a.isCorrect).length;
 
   const dashArray = 2 * Math.PI * 88;
   const dashOffset = dashArray * (1 - percentage / 100);
@@ -163,6 +172,19 @@ export default async function QuizResultsPage({
                   {t("quiz.results.retry")}
                 </Button>
               </Link>
+              {wrongCount > 0 ? (
+                <Link
+                  href={`/quizzes/${encodeURIComponent(id)}/practice?attempt=${encodeURIComponent(attemptId)}`}
+                >
+                  <Button variant="outline" size="lg">
+                    <Dumbbell className="h-4 w-4" />
+                    {t("quiz.results.practiceMistakes").replace(
+                      "{n}",
+                      String(wrongCount)
+                    )}
+                  </Button>
+                </Link>
+              ) : null}
               <Link href="/quizzes">
                 <Button variant="outline" size="lg">
                   {t("quiz.results.backToLibrary")}
@@ -240,10 +262,10 @@ function AnswerRow({
   wrongText: string;
 }) {
   const letterToText: Record<string, string> = {
-    a: answer.optionA,
-    b: answer.optionB,
-    c: answer.optionC,
-    d: answer.optionD,
+    a: answer.optionA ?? "",
+    b: answer.optionB ?? "",
+    c: answer.optionC ?? "",
+    d: answer.optionD ?? "",
   };
   const selectedText = answer.selectedOption
     ? letterToText[answer.selectedOption] ?? ""

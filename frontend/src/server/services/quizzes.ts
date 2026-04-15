@@ -135,12 +135,19 @@ export async function getQuizById(quizId: string): Promise<QuizDetail | null> {
 export type AttemptAnswerResult = {
   questionId: string;
   questionText: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
+  questionType?: QuizQuestionType;
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
   selectedOption: string | null;
   correctOption: string;
+  textAnswer?: string | null;
+  blankAnswer?: string | null;
+  orderAnswer?: string[] | null;
+  reorderItems?: string[] | null;
+  imageUrl?: string | null;
+  explanation?: string | null;
   isCorrect: boolean;
   timeSpent: number;
   orderIndex: number;
