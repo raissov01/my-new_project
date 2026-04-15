@@ -146,7 +146,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
         </section>
       </form>
 
-      <section className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <section className="relative z-0 mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-[var(--text-primary)]">
             {quizzes.length}{" "}
@@ -180,7 +180,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
           body={t("quiz.guestEmptyBody")}
         />
       ) : quizzes.length > 0 ? (
-        <div className="mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="relative z-10 mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
           {quizzes.map((quiz) => (
             <QuizCard
               key={quiz.id}
