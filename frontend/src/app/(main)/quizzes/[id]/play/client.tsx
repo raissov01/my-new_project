@@ -9,11 +9,14 @@ import {
   Flame,
   LogOut,
   Timer,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createTranslator, type Locale } from "@/lib/shared/i18n";
+import { useQuizSounds } from "@/features/quizzes/use-sounds";
 import type {
   QuizDetail,
   QuizQuestionDTO,
@@ -114,6 +117,7 @@ export function PlayQuizClient({
   returnHref,
 }: PlayQuizClientProps) {
   const isPractice = mode === "practice";
+  const sounds = useQuizSounds();
   const t = useMemo(() => createTranslator(locale), [locale]);
   const router = useRouter();
 
@@ -180,6 +184,7 @@ export function PlayQuizClient({
   const submitAttempt = useCallback(async () => {
     setPhase("submitting");
     setSubmitError(null);
+    sounds.play("complete");
     try {
       const response = await fetch(
         `/api/quizzes/${encodeURIComponent(quiz.id)}/attempts`,
@@ -208,7 +213,7 @@ export function PlayQuizClient({
       setSubmitError(t("quiz.play.submitFailed"));
       setPhase("revealed");
     }
-  }, [quiz.id, router, t]);
+  }, [quiz.id, router, t, sounds]);
 
   const advance = useCallback(() => {
     clearAdvanceTimer();
@@ -256,9 +261,20 @@ export function PlayQuizClient({
       });
 
       if (isCorrect) {
-        setStreak((s) => s + 1);
+        setStreak((s) => {
+          const next = s + 1;
+          // Fire the streak flourish at 5, 10, 15… so early correct
+          // answers get the ordinary chime, not the bigger cue.
+          if (next > 1 && next % 5 === 0) {
+            sounds.play("streak");
+          } else {
+            sounds.play("correct");
+          }
+          return next;
+        });
       } else {
         setStreak(0);
+        sounds.play("wrong");
       }
       setLastCorrect(isCorrect);
       setPhase("revealed");
@@ -267,7 +283,7 @@ export function PlayQuizClient({
         advance();
       }, 1800);
     },
-    [advance, phase, question.id]
+    [advance, phase, question.id, sounds]
   );
 
   const recordMcq = useCallback(
@@ -358,11 +374,18 @@ export function PlayQuizClient({
           queueMicrotask(() => handleTimeoutRef.current());
           return 0;
         }
-        return prev - 1;
+        // Tick on the final five seconds (5 → 1) so the student hears a
+        // ramp before timeout fires. No tick at 0 because that frame is
+        // the timeout itself.
+        const next = prev - 1;
+        if (next <= 5 && next > 0) {
+          sounds.play("tick");
+        }
+        return next;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [phase, currentIdx, isPractice]);
+  }, [phase, currentIdx, isPractice, sounds]);
 
   useEffect(() => {
     return () => clearAdvanceTimer();
@@ -412,6 +435,19 @@ export function PlayQuizClient({
               />
             </div>
           </div>
+          <button
+            type="button"
+            onClick={sounds.toggle}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+            aria-label={sounds.enabled ? t("quiz.play.soundOff") : t("quiz.play.soundOn")}
+            title={sounds.enabled ? t("quiz.play.soundOff") : t("quiz.play.soundOn")}
+          >
+            {sounds.enabled ? (
+              <Volume2 className="h-4 w-4" />
+            ) : (
+              <VolumeX className="h-4 w-4" />
+            )}
+          </button>
           <button
             type="button"
             onClick={() => setShowExit(true)}
