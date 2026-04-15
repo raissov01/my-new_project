@@ -185,3 +185,24 @@ type AttemptSummary struct {
 	StartedAt      string `json:"startedAt"`
 	CompletedAt    string `json:"completedAt"`
 }
+
+// RecentAttemptItem is used for the "recent quiz results" dashboard widget.
+type RecentAttemptItem struct {
+	AttemptID      string `json:"attemptId"`
+	QuizID         string `json:"quizId"`
+	QuizTitle      string `json:"quizTitle"`
+	Score          int    `json:"score"`
+	TotalQuestions int    `json:"totalQuestions"`
+	Percentage     int    `json:"percentage"`
+	CompletedAt    string `json:"completedAt"`
+}
+
+// RecommendedQuizItem is used for the "recommended practice" dashboard widget.
+// It contains quizzes the user has attempted with a best score below the threshold.
+type RecommendedQuizItem struct {
+	QuizID         string `json:"quizId"`
+	QuizTitle      string `json:"quizTitle"`
+	BestPercentage int    `json:"bestPercentage"`
+	AttemptsCount  int    `json:"attemptsCount"`
+	LastAttemptAt  string `json:"lastAttemptAt"`
+}

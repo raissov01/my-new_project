@@ -288,3 +288,19 @@ func (s *Quiz) validateAndNormalize(
 		questions:       normalized,
 	}, nil
 }
+
+// GetRecentAttempts returns the user's last N completed attempts across all quizzes.
+func (s *Quiz) GetRecentAttempts(ctx context.Context, userID string, limit int) ([]model.RecentAttemptItem, error) {
+	if limit <= 0 || limit > 20 {
+		limit = 5
+	}
+	return s.repo.GetRecentAttempts(ctx, userID, limit)
+}
+
+// GetRecommendedPractice returns quizzes where the user scored below 70%.
+func (s *Quiz) GetRecommendedPractice(ctx context.Context, userID string, limit int) ([]model.RecommendedQuizItem, error) {
+	if limit <= 0 || limit > 20 {
+		limit = 5
+	}
+	return s.repo.GetRecommendedPractice(ctx, userID, 70, limit)
+}

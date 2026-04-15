@@ -8,10 +8,12 @@ import {
   GraduationCap,
   ListChecks,
   Play,
+  RefreshCw,
   Sparkles,
   Star,
   Target,
   Trophy,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,10 @@ import {
   getStudentDashboardSummary,
   getStudentQuizAssignments,
 } from "@/server/services/classrooms";
+import {
+  getRecentQuizAttempts,
+  getRecommendedQuizzes,
+} from "@/server/services/quizzes";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { requireRole } from "@/server/auth";
@@ -33,11 +39,14 @@ export default async function StudentDashboardPage() {
     redirect(access.redirectTo);
   }
 
-  const [summary, stats, quizAssignments] = await Promise.all([
-    getStudentDashboardSummary(access.user?.id),
-    getUserStats(),
-    getStudentQuizAssignments(),
-  ]);
+  const [summary, stats, quizAssignments, recentAttempts, recommendedQuizzes] =
+    await Promise.all([
+      getStudentDashboardSummary(access.user?.id),
+      getUserStats(),
+      getStudentQuizAssignments(),
+      getRecentQuizAttempts(),
+      getRecommendedQuizzes(),
+    ]);
 
   if (!summary) {
     redirect("/login");
@@ -265,6 +274,110 @@ export default async function StudentDashboardPage() {
               )}
             </div>
           </section>
+
+          {/* Recent quiz results */}
+          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                  {t("quiz.liveMode")}
+                </p>
+                <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
+                  {t("quiz.dashboard.recentTitle")}
+                </h2>
+              </div>
+              <Link href="/quizzes">
+                <Button variant="outline" size="sm">
+                  <TrendingUp className="h-4 w-4" />
+                  {t("quiz.backToLibrary")}
+                </Button>
+              </Link>
+            </div>
+
+            <div className="mt-4 space-y-2.5">
+              {recentAttempts.length > 0 ? (
+                recentAttempts.map((attempt) => {
+                  const pctColor =
+                    attempt.percentage >= 80
+                      ? "text-emerald-400"
+                      : attempt.percentage >= 60
+                        ? "text-amber-400"
+                        : "text-rose-400";
+                  return (
+                    <Link
+                      key={attempt.attemptId}
+                      href={`/quizzes/${attempt.quizId}/results?attempt=${attempt.attemptId}`}
+                      className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-3.5 transition-all hover:border-[var(--border-strong)]"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--primary-soft)] text-[var(--primary)]">
+                        <Star className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--primary)]">
+                          {attempt.quizTitle}
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {attempt.score}/{attempt.totalQuestions} {t("quiz.dashboard.score").toLowerCase()}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 font-mono text-sm font-bold ${pctColor}`}>
+                        {attempt.percentage}%
+                      </span>
+                    </Link>
+                  );
+                })
+              ) : (
+                <EmptyCard
+                  icon={Star}
+                  title={t("quiz.dashboard.recentEmpty")}
+                  body={t("quiz.browseHint")}
+                />
+              )}
+            </div>
+          </section>
+
+          {/* Recommended practice */}
+          {recommendedQuizzes.length > 0 ? (
+            <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                    Quiz
+                  </p>
+                  <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
+                    {t("quiz.dashboard.recommendedTitle")}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-2.5">
+                {recommendedQuizzes.map((q) => (
+                  <div
+                    key={q.quizId}
+                    className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] border-l-[3px] border-l-amber-500/60 bg-[var(--bg-soft)] p-3.5"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-amber-500/10 text-amber-500">
+                      <RefreshCw className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                        {q.quizTitle}
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {t("quiz.dashboard.bestScore")}: {q.bestPercentage}% · {q.attemptsCount}× {t("quiz.dashboard.attempts").toLowerCase()}
+                      </p>
+                    </div>
+                    <Link href={`/quizzes/${q.quizId}/play`}>
+                      <Button size="sm" variant="secondary">
+                        <Play className="h-3.5 w-3.5" />
+                        {t("quiz.dashboard.practiceNow")}
+                      </Button>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {/* Next action */}
           <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">

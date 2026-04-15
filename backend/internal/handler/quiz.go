@@ -276,3 +276,33 @@ func classifyQuizError(err error, fallbackMsg string) (int, string) {
 	}
 	return http.StatusInternalServerError, fallbackMsg
 }
+
+// GetRecentAttempts handles GET /api/v1/quizzes/dashboard/recent-attempts
+func (h *QuizHandler) GetRecentAttempts(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	items, err := h.svc.GetRecentAttempts(r.Context(), userID, 5)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, h.errorMessage(err, "failed to load recent attempts"), err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// GetRecommendedPractice handles GET /api/v1/quizzes/dashboard/recommended
+func (h *QuizHandler) GetRecommendedPractice(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	items, err := h.svc.GetRecommendedPractice(r.Context(), userID, 5)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, h.errorMessage(err, "failed to load recommendations"), err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}

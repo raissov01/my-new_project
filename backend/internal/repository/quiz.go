@@ -1076,3 +1076,90 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 
 	return &res, rows.Err()
 }
+
+// GetRecentAttempts returns the user's most recent completed quiz attempts
+// across all quizzes, enriched with quiz title.
+func (r *Quiz) GetRecentAttempts(ctx context.Context, userID string, limit int) ([]model.RecentAttemptItem, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT
+			a.id            AS attempt_id,
+			a.quiz_id,
+			COALESCE(q.title, 'Quiz') AS quiz_title,
+			a.score,
+			a.total_questions,
+			a.percentage,
+			a.completed_at
+		FROM quiz_attempts a
+		LEFT JOIN quizzes q ON q.id = a.quiz_id
+		WHERE a.user_id = $1 AND a.completed_at IS NOT NULL
+		ORDER BY a.completed_at DESC
+		LIMIT $2
+	`, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("recent attempts: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]model.RecentAttemptItem, 0, limit)
+	for rows.Next() {
+		var it model.RecentAttemptItem
+		var completedAt time.Time
+		if err := rows.Scan(
+			&it.AttemptID,
+			&it.QuizID,
+			&it.QuizTitle,
+			&it.Score,
+			&it.TotalQuestions,
+			&it.Percentage,
+			&completedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan recent attempt: %w", err)
+		}
+		it.CompletedAt = completedAt.UTC().Format(time.RFC3339)
+		items = append(items, it)
+	}
+	return items, rows.Err()
+}
+
+// GetRecommendedPractice returns quizzes where the user's best score is below
+// the given threshold (0-100). Results are ordered by last-attempt date so
+// recently-touched quizzes appear first.
+func (r *Quiz) GetRecommendedPractice(ctx context.Context, userID string, threshold, limit int) ([]model.RecommendedQuizItem, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT
+			a.quiz_id,
+			COALESCE(q.title, 'Quiz')   AS quiz_title,
+			MAX(a.percentage)           AS best_percentage,
+			COUNT(*)::int               AS attempts_count,
+			MAX(a.completed_at)         AS last_attempt_at
+		FROM quiz_attempts a
+		LEFT JOIN quizzes q ON q.id = a.quiz_id
+		WHERE a.user_id = $1 AND a.completed_at IS NOT NULL
+		GROUP BY a.quiz_id, q.title
+		HAVING MAX(a.percentage) < $2
+		ORDER BY MAX(a.completed_at) DESC
+		LIMIT $3
+	`, userID, threshold, limit)
+	if err != nil {
+		return nil, fmt.Errorf("recommended practice: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]model.RecommendedQuizItem, 0, limit)
+	for rows.Next() {
+		var it model.RecommendedQuizItem
+		var lastAt time.Time
+		if err := rows.Scan(
+			&it.QuizID,
+			&it.QuizTitle,
+			&it.BestPercentage,
+			&it.AttemptsCount,
+			&lastAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan recommended: %w", err)
+		}
+		it.LastAttemptAt = lastAt.UTC().Format(time.RFC3339)
+		items = append(items, it)
+	}
+	return items, rows.Err()
+}

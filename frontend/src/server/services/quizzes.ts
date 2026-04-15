@@ -185,3 +185,49 @@ export async function getAttemptById(
     return null;
   }
 }
+
+export type RecentAttemptItem = {
+  attemptId: string;
+  quizId: string;
+  quizTitle: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  completedAt: string;
+};
+
+export type RecommendedQuizItem = {
+  quizId: string;
+  quizTitle: string;
+  bestPercentage: number;
+  attemptsCount: number;
+  lastAttemptAt: string;
+};
+
+export async function getRecentQuizAttempts(): Promise<RecentAttemptItem[]> {
+  const user = await getCurrentUser();
+  if (!user) return [];
+  try {
+    const data = await fetchBackendJson<{ items: RecentAttemptItem[] }>({
+      path: "/api/v1/quizzes/dashboard/recent-attempts",
+      userId: user.id,
+    });
+    return data.items ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getRecommendedQuizzes(): Promise<RecommendedQuizItem[]> {
+  const user = await getCurrentUser();
+  if (!user) return [];
+  try {
+    const data = await fetchBackendJson<{ items: RecommendedQuizItem[] }>({
+      path: "/api/v1/quizzes/dashboard/recommended",
+      userId: user.id,
+    });
+    return data.items ?? [];
+  } catch {
+    return [];
+  }
+}

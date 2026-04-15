@@ -138,6 +138,8 @@ func RegisterRoutes(router *gin.Engine) {
 		// Quizizz-style quiz module
 		internal.GET("/quizzes/overview", wrapHTTP(deps.Quiz.GetOverview))
 		internal.GET("/quizzes/mine", wrapHTTP(deps.Quiz.GetMine))
+		internal.GET("/quizzes/dashboard/recent-attempts", wrapHTTP(deps.Quiz.GetRecentAttempts))
+		internal.GET("/quizzes/dashboard/recommended", wrapHTTP(deps.Quiz.GetRecommendedPractice))
 		internal.GET("/quizzes/attempts/:attemptID", wrapHTTP(deps.Quiz.GetAttempt))
 		internal.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
 		internal.POST("/quizzes", wrapHTTP(deps.Quiz.CreateQuiz))
