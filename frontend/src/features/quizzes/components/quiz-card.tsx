@@ -12,16 +12,20 @@ interface QuizCardProps {
 
 export function QuizCard({ quiz, locale, isOwner }: QuizCardProps) {
   const t = createTranslator(locale);
+  const quizHref = `/quizzes/${quiz.id}`;
 
   return (
     <article className="relative isolate z-50 flex h-full flex-col rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-strong)] sm:p-6">
+      <Link
+        href={quizHref}
+        aria-label={`${t("quiz.openQuiz")}: ${quiz.title}`}
+        className="absolute inset-0 z-10 rounded-[var(--radius-xl)]"
+      />
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <Link href={`/quizzes/${quiz.id}`} className="group block">
-            <h3 className="line-clamp-1 text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)] transition-colors group-hover:text-[var(--primary)]">
-              {quiz.title}
-            </h3>
-          </Link>
+          <h3 className="line-clamp-1 text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)] transition-colors group-hover:text-[var(--primary)]">
+            {quiz.title}
+          </h3>
           <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-6 text-[var(--text-secondary)]">
             {quiz.description || t("quiz.noDescription")}
           </p>
@@ -73,17 +77,14 @@ export function QuizCard({ quiz, locale, isOwner }: QuizCardProps) {
         </span>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2.5">
-        <Link
-          href={`/quizzes/${quiz.id}`}
-          className="relative z-20 pointer-events-auto inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-8px_rgba(37,99,235,0.4)] transition-all hover:bg-[var(--primary-hover)]"
-        >
+      <div className="relative z-20 mt-5 flex flex-wrap gap-2.5">
+        <span className="pointer-events-none inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-8px_rgba(37,99,235,0.4)] transition-all">
           {t("quiz.openQuiz")}
-        </Link>
+        </span>
       </div>
 
       {isOwner ? (
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-4">
+        <div className="relative z-20 mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-4">
           <Link
             href={`/quizzes/${quiz.id}/edit`}
             className="relative z-20 pointer-events-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-[var(--radius-sm)] px-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
