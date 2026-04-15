@@ -72,6 +72,7 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
           initialTimePerQuestion={quiz.timePerQuestion}
           initialShuffleOptions={quiz.shuffleOptions}
           initialShowAnswerAnimations={quiz.showAnswerAnimations ?? true}
+          initialTags={quiz.tags ?? []}
           initialQuestions={questions}
         />
       </div>

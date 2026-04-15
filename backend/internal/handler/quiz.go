@@ -43,6 +43,7 @@ func (h *QuizHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 	filters := repository.QuizListFilters{
 		Search:  r.URL.Query().Get("q"),
 		Subject: r.URL.Query().Get("subject"),
+		Tag:     r.URL.Query().Get("tag"),
 		Sort:    r.URL.Query().Get("sort"),
 	}
 
@@ -66,6 +67,7 @@ func (h *QuizHandler) GetMine(w http.ResponseWriter, r *http.Request) {
 	filters := repository.QuizListFilters{
 		Search:   r.URL.Query().Get("q"),
 		Subject:  r.URL.Query().Get("subject"),
+		Tag:      r.URL.Query().Get("tag"),
 		Sort:     r.URL.Query().Get("sort"),
 		OnlyMine: true,
 	}

@@ -20,6 +20,7 @@ export type QuizOverview = {
   attemptsCount: number;
   averagePercentage: number;
   bestPercentage: number | null;
+  tags?: string[];
 };
 
 export type QuizQuestionType = "mcq" | "true_false" | "fill_blank" | "reorder";
@@ -45,6 +46,7 @@ export type QuizDetail = {
   userId: string;
   authorName: string | null;
   showAnswerAnimations?: boolean;
+  tags?: string[];
   title: string;
   description: string | null;
   subject: string | null;
@@ -63,6 +65,7 @@ export type QuizDetail = {
 export type QuizListFilters = {
   q?: string;
   subject?: string;
+  tag?: string;
   sort?: "newest" | "played" | "rated";
 };
 
@@ -71,6 +74,7 @@ function buildQuery(filters?: QuizListFilters): string {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.subject) params.set("subject", filters.subject);
+  if (filters.tag) params.set("tag", filters.tag);
   if (filters.sort) params.set("sort", filters.sort);
   const qs = params.toString();
   return qs ? `?${qs}` : "";

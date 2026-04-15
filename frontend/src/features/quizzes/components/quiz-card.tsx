@@ -28,6 +28,18 @@ export function QuizCard({ quiz, locale, isOwner }: QuizCardProps) {
           {quiz.subject ? (
             <span className="badge-primary mt-3 text-[11px]">{quiz.subject}</span>
           ) : null}
+          {quiz.tags && quiz.tags.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {quiz.tags.slice(0, 4).map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center rounded-full bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
         <span className="badge-primary text-[11px]">
           <ListChecks className="h-3 w-3" />

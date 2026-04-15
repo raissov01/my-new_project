@@ -27,6 +27,8 @@ const (
 	minReorderItems    = 2
 	maxReorderItems    = 10
 	maxBlankAnswerLen  = 300
+	maxTagsPerQuiz     = 10
+	maxTagLen          = 40
 )
 
 // Supported question types. MCQ is the default for empty/unknown values.
@@ -64,6 +66,7 @@ func (s *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 	req.Subject = normalized.subject
 	req.TimePerQuestion = normalized.timePerQuestion
 	req.Questions = normalized.questions
+	req.Tags = normalizeTags(req.Tags)
 	return s.repo.CreateQuiz(ctx, userID, req)
 }
 
@@ -83,7 +86,39 @@ func (s *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 	req.Subject = normalized.subject
 	req.TimePerQuestion = normalized.timePerQuestion
 	req.Questions = normalized.questions
+	req.Tags = normalizeTags(req.Tags)
 	return s.repo.UpdateQuiz(ctx, userID, quizID, req)
+}
+
+// normalizeTags lowercases, trims, dedupes, and caps the tag list so the
+// repository layer doesn't have to worry about client-provided inconsistency
+// ("  Anatomy ", "anatomy", "ANATOMY" → "anatomy" once). Empty strings are
+// dropped and anything longer than maxTagLen is clipped rather than rejected
+// so a single overlong tag doesn't fail the whole save.
+func normalizeTags(tags []string) []string {
+	if len(tags) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{}, len(tags))
+	out := make([]string, 0, len(tags))
+	for _, t := range tags {
+		v := strings.ToLower(strings.TrimSpace(t))
+		if v == "" {
+			continue
+		}
+		if len(v) > maxTagLen {
+			v = v[:maxTagLen]
+		}
+		if _, dup := seen[v]; dup {
+			continue
+		}
+		seen[v] = struct{}{}
+		out = append(out, v)
+		if len(out) >= maxTagsPerQuiz {
+			break
+		}
+	}
+	return out
 }
 
 func (s *Quiz) DeleteQuiz(ctx context.Context, userID, quizID string) error {

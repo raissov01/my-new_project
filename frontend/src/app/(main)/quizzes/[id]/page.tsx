@@ -93,6 +93,20 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
               </span>
             </div>
 
+            {quiz.tags && quiz.tags.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {quiz.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/quizzes?tag=${encodeURIComponent(tag)}`}
+                    className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href={`/quizzes/${quiz.id}/play`}>
                 <Button size="lg">

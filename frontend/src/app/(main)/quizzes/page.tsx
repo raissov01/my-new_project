@@ -12,6 +12,7 @@ interface QuizzesPageProps {
   searchParams: Promise<{
     q?: string;
     subject?: string;
+    tag?: string;
     sort?: "newest" | "played" | "rated";
   }>;
 }
@@ -20,11 +21,12 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
   const user = await getCurrentUser();
   const locale = await getServerLocale();
   const t = createTranslator(locale);
-  const { q = "", subject = "", sort = "newest" } = await searchParams;
+  const { q = "", subject = "", tag = "", sort = "newest" } = await searchParams;
 
   const filters: QuizListFilters = {
     q: q.trim() || undefined,
     subject: subject.trim() || undefined,
+    tag: tag.trim() || undefined,
     sort,
   };
 
@@ -153,6 +155,18 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
             {q ? t("quiz.searchMatched").replace("{q}", q) : t("quiz.browseHint")}
           </p>
+          {tag ? (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/40 bg-[var(--primary)]/10 px-3 py-1 text-xs font-medium text-[var(--primary)]">
+              #{tag}
+              <Link
+                href="/quizzes"
+                className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-[var(--primary)]/20"
+                aria-label={t("quiz.tagClear")}
+              >
+                ×
+              </Link>
+            </div>
+          ) : null}
         </div>
         <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[rgba(255,255,255,0.04)] px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
           <Sparkles className="h-3.5 w-3.5 text-indigo-300" />

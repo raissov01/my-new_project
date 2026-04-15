@@ -83,6 +83,7 @@ func NewQuiz(pool *pgxpool.Pool) *Quiz {
 type QuizListFilters struct {
 	Search     string
 	Subject    string
+	Tag        string
 	Sort       string
 	OnlyMine   bool
 	IncludeAll bool
@@ -108,6 +109,11 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 	if s := strings.TrimSpace(filters.Search); s != "" {
 		args = append(args, "%"+s+"%")
 		where = append(where, fmt.Sprintf("(q.title ILIKE $%d OR q.description ILIKE $%d)", len(args), len(args)))
+	}
+
+	if s := strings.ToLower(strings.TrimSpace(filters.Tag)); s != "" {
+		args = append(args, s)
+		where = append(where, fmt.Sprintf("EXISTS (SELECT 1 FROM public.quiz_tags qt WHERE qt.quiz_id = q.id AND qt.tag = $%d)", len(args)))
 	}
 
 	orderBy := "v.updated_at DESC"
@@ -153,6 +159,12 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 			WHERE quiz_id IN (SELECT id FROM visible)
 			  AND completed_at IS NOT NULL
 			GROUP BY quiz_id
+		),
+		t_agg AS (
+			SELECT quiz_id, array_agg(tag ORDER BY tag) AS tags
+			FROM public.quiz_tags
+			WHERE quiz_id IN (SELECT id FROM visible)
+			GROUP BY quiz_id
 		)
 		SELECT
 			v.id,
@@ -170,11 +182,13 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 			COALESCE(qc.question_count, 0) AS question_count,
 			COALESCE(a.attempts_count, 0) AS attempts_count,
 			COALESCE(a.average_percentage, 0) AS average_percentage,
-			a.best_percentage
+			a.best_percentage,
+			COALESCE(t.tags, '{}') AS tags
 		FROM visible v
 		LEFT JOIN public.users u ON u.id = v.user_id
 		LEFT JOIN q_counts qc ON qc.quiz_id = v.id
 		LEFT JOIN a_stats a ON a.quiz_id = v.id
+		LEFT JOIN t_agg t ON t.quiz_id = v.id
 		ORDER BY %s
 	`, strings.Join(where, " AND "), orderBy)
 
@@ -206,6 +220,7 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 			&item.AttemptsCount,
 			&item.AveragePercentage,
 			&item.BestPercentage,
+			&item.Tags,
 		); err != nil {
 			return nil, fmt.Errorf("scan quiz overview: %w", err)
 		}
@@ -328,6 +343,23 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		return nil, fmt.Errorf("load attempt stats: %w", err)
 	}
 
+	tagRows, err := r.pool.Query(ctx,
+		`SELECT tag FROM public.quiz_tags WHERE quiz_id = $1 ORDER BY tag`,
+		quizID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("load tags: %w", err)
+	}
+	defer tagRows.Close()
+	d.Tags = make([]string, 0)
+	for tagRows.Next() {
+		var tag string
+		if err := tagRows.Scan(&tag); err != nil {
+			return nil, fmt.Errorf("scan tag: %w", err)
+		}
+		d.Tags = append(d.Tags, tag)
+	}
+
 	return &d, nil
 }
 
@@ -402,10 +434,35 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 		}
 	}
 
+	if err := insertQuizTags(ctx, tx, quizID, req.Tags); err != nil {
+		return "", err
+	}
+
 	if err := tx.Commit(ctx); err != nil {
 		return "", fmt.Errorf("commit: %w", err)
 	}
 	return quizID, nil
+}
+
+// insertQuizTags writes the full tag set for a quiz. Caller is responsible
+// for wiping previous rows first on updates — this helper only inserts.
+func insertQuizTags(ctx context.Context, tx pgx.Tx, quizID string, tags []string) error {
+	if len(tags) == 0 {
+		return nil
+	}
+	rows := make([][]any, 0, len(tags))
+	for _, t := range tags {
+		rows = append(rows, []any{quizID, t, time.Now().UTC()})
+	}
+	if _, err := tx.CopyFrom(
+		ctx,
+		pgx.Identifier{"quiz_tags"},
+		[]string{"quiz_id", "tag", "created_at"},
+		pgx.CopyFromRows(rows),
+	); err != nil {
+		return fmt.Errorf("insert tags: %w", err)
+	}
+	return nil
 }
 
 // UpdateQuiz replaces a quiz's metadata and questions.
@@ -534,14 +591,20 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 		if _, err := tx.Exec(ctx, `DELETE FROM quiz_questions WHERE quiz_id = $1`, quizID); err != nil {
 			return fmt.Errorf("delete questions: %w", err)
 		}
-		return tx.Commit(ctx)
-	}
-
-	if _, err := tx.Exec(ctx,
+	} else if _, err := tx.Exec(ctx,
 		`DELETE FROM quiz_questions WHERE quiz_id = $1 AND NOT (id = ANY($2::uuid[]))`,
 		quizID, keptIDs,
 	); err != nil {
 		return fmt.Errorf("delete removed questions: %w", err)
+	}
+
+	// Replace-all strategy for tags: the expected set is small (≤10) and
+	// users rarely edit them, so a blind delete+insert beats diffing.
+	if _, err := tx.Exec(ctx, `DELETE FROM quiz_tags WHERE quiz_id = $1`, quizID); err != nil {
+		return fmt.Errorf("delete tags: %w", err)
+	}
+	if err := insertQuizTags(ctx, tx, quizID, req.Tags); err != nil {
+		return err
 	}
 
 	return tx.Commit(ctx)
@@ -630,6 +693,13 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 		ORDER BY order_index, created_at
 	`, newQuizID, sourceQuizID); err != nil {
 		return "", fmt.Errorf("copy questions: %w", err)
+	}
+
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO quiz_tags (quiz_id, tag, created_at)
+		SELECT $1, tag, NOW() FROM quiz_tags WHERE quiz_id = $2
+	`, newQuizID, sourceQuizID); err != nil {
+		return "", fmt.Errorf("copy tags: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {

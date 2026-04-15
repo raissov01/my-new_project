@@ -54,6 +54,22 @@ func (QuizQuestion) TableName() string {
 	return "quiz_questions"
 }
 
+// QuizTag is a free-form tag attached to a quiz. Tags are plain strings
+// (lowercased in the service layer) so they can be typed without needing
+// a shared dictionary — a teacher just types "2-semester" or "анатомия"
+// and the library filter picks them up automatically.
+type QuizTag struct {
+	QuizID    string    `gorm:"type:uuid;not null;primaryKey;index:idx_quiz_tags_tag,priority:2" json:"quizId"`
+	Tag       string    `gorm:"type:varchar(40);not null;primaryKey;index:idx_quiz_tags_tag,priority:1" json:"tag"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"createdAt"`
+
+	Quiz Quiz `gorm:"foreignKey:QuizID;constraint:OnDelete:CASCADE" json:"-"`
+}
+
+func (QuizTag) TableName() string {
+	return "quiz_tags"
+}
+
 // QuizAttempt records a single play-through of a quiz by a user.
 type QuizAttempt struct {
 	ID             string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`

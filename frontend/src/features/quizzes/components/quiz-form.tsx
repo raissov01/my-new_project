@@ -42,6 +42,7 @@ interface QuizFormProps {
   initialTimePerQuestion?: number;
   initialShuffleOptions?: boolean;
   initialShowAnswerAnimations?: boolean;
+  initialTags?: string[];
   initialQuestions?: QuizQuestionInput[];
   submitLabel: string;
   cancelHref: string;
@@ -131,6 +132,7 @@ export function QuizForm({
   initialTimePerQuestion = 30,
   initialShuffleOptions = true,
   initialShowAnswerAnimations = true,
+  initialTags,
   initialQuestions,
   submitLabel,
   cancelHref,
@@ -151,6 +153,7 @@ export function QuizForm({
   const [showAnswerAnimations, setShowAnswerAnimations] = useState(
     initialShowAnswerAnimations
   );
+  const [tags, setTags] = useState<string[]>(() => initialTags ?? []);
 
   const [keyCounter, setKeyCounter] = useState(0);
   const [questions, setQuestions] = useState<QuestionEntry[]>(() => {
@@ -248,6 +251,7 @@ export function QuizForm({
           timePerQuestion,
           shuffleOptions,
           showAnswerAnimations,
+          tags,
           questions: filled.map(({ _key: _ignored, ...rest }) => {
             void _ignored;
             return rest;
@@ -321,6 +325,12 @@ export function QuizForm({
                 ))}
               </select>
             </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              {t("quiz.fieldTags")}
+            </label>
+            <TagsInput value={tags} onChange={setTags} />
           </div>
           <div className="flex flex-wrap gap-4">
             <label className="inline-flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-2.5 text-sm text-[var(--text-primary)]">
@@ -440,6 +450,77 @@ export function QuizForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+function TagsInput({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const { t } = useLocale();
+  const [draft, setDraft] = useState("");
+
+  const addDraft = () => {
+    const v = draft.trim().toLowerCase();
+    if (!v) return;
+    if (value.includes(v)) {
+      setDraft("");
+      return;
+    }
+    if (value.length >= 10) {
+      setDraft("");
+      return;
+    }
+    onChange([...value, v.slice(0, 40)]);
+    setDraft("");
+  };
+
+  const removeTag = (tag: string) => {
+    onChange(value.filter((v) => v !== tag));
+  };
+
+  return (
+    <div className="flex min-h-[44px] flex-wrap items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-base)] px-3 py-2">
+      {value.map((tag) => (
+        <span
+          key={tag}
+          className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-primary)]"
+        >
+          #{tag}
+          <button
+            type="button"
+            onClick={() => removeTag(tag)}
+            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
+            aria-label={t("quiz.tagRemove")}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          // Enter and comma both commit the draft tag so users can type
+          // comma-separated lists or chain with Enter — matching the
+          // familiar chip-input pattern across most modern tag pickers.
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            addDraft();
+          } else if (e.key === "Backspace" && draft === "" && value.length > 0) {
+            onChange(value.slice(0, -1));
+          }
+        }}
+        onBlur={addDraft}
+        placeholder={value.length === 0 ? t("quiz.tagPlaceholder") : ""}
+        className="min-w-[120px] flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+        maxLength={40}
+      />
+    </div>
   );
 }
 
