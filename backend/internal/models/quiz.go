@@ -13,6 +13,7 @@ type Quiz struct {
 	TimePerQuestion      int       `gorm:"not null;default:30" json:"timePerQuestion"`
 	ShuffleOptions       bool      `gorm:"not null;default:true" json:"shuffleOptions"`
 	ShowAnswerAnimations bool      `gorm:"not null;default:true" json:"showAnswerAnimations"`
+	PowerUpsEnabled      bool      `gorm:"not null;default:true" json:"powerUpsEnabled"`
 	CreatedAt            time.Time `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt            time.Time `gorm:"autoUpdateTime" json:"updatedAt"`
 

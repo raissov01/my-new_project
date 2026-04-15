@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { createTranslator, type Locale } from "@/lib/shared/i18n";
 import { useQuizSounds } from "@/features/quizzes/use-sounds";
 import { AnswerAnimation } from "@/features/quizzes/components/answer-animation";
+import { usePowerUps, type PowerUpKey } from "@/features/quizzes/use-power-ups";
+import { PowerUpBar } from "@/features/quizzes/components/power-up-bar";
 import type {
   QuizDetail,
   QuizQuestionDTO,
@@ -119,6 +121,14 @@ export function PlayQuizClient({
 }: PlayQuizClientProps) {
   const isPractice = mode === "practice";
   const sounds = useQuizSounds();
+  // Power-ups are disabled in practice mode (it's a focused review, not a
+  // gamified run) and when the quiz owner has turned them off.
+  const powerUpsEnabled = !isPractice && (quiz.powerUpsEnabled ?? true);
+  const powerUps = usePowerUps(powerUpsEnabled);
+  // Client-only coin counter so Double Points has something to multiply.
+  // Kept separate from the backend's authoritative % score so grading
+  // stays pure on the server.
+  const [coins, setCoins] = useState(0);
   // Counter ticks up on every answer so the AnswerAnimation overlay gets a
   // fresh `key` and remounts even if the same phase fires twice in a row.
   const [animationTick, setAnimationTick] = useState(0);
@@ -234,6 +244,7 @@ export function PlayQuizClient({
     setLastCorrect(null);
     setPhase("asking");
     setTimeLeft(quiz.timePerQuestion);
+    powerUps.resetPerQuestion();
     questionStartRef.current = Date.now();
   }, [
     currentIdx,
@@ -244,6 +255,7 @@ export function PlayQuizClient({
     isPractice,
     router,
     returnHref,
+    powerUps,
   ]);
 
   // recordAnswer is the single chokepoint for every question type. Callers
@@ -264,6 +276,14 @@ export function PlayQuizClient({
         timeSpent,
       });
 
+      // Consume per-answer power-up effects (Double Points gain, Streak
+      // Saver preservation). Returns the coin gain for this answer and
+      // whether a wrong answer should keep the streak intact.
+      const { coinsEarned, streakSaved } = powerUps.consumeOnAnswer(isCorrect);
+      if (coinsEarned > 0) {
+        setCoins((c) => c + coinsEarned);
+      }
+
       if (isCorrect) {
         setStreak((s) => {
           const next = s + 1;
@@ -274,13 +294,21 @@ export function PlayQuizClient({
           } else {
             sounds.play("correct");
           }
+          // Grant a new power-up every 3-streak.
+          powerUps.grant(next);
           return next;
         });
+      } else if (streakSaved) {
+        // Streak Saver ate the loss — keep the streak and play the
+        // success chime to underline that the save happened.
+        sounds.play("streak");
       } else {
         setStreak(0);
         sounds.play("wrong");
       }
       setAnimationTick((n) => n + 1);
+      // For UI purposes (green overlay + reveal colors), treat a saved
+      // wrong answer as "still wrong" but the streak reset is skipped.
       setLastCorrect(isCorrect);
       setPhase("revealed");
 
@@ -288,7 +316,7 @@ export function PlayQuizClient({
         advance();
       }, 1800);
     },
-    [advance, phase, question.id, sounds]
+    [advance, phase, question.id, sounds, powerUps]
   );
 
   const recordMcq = useCallback(
@@ -370,8 +398,9 @@ export function PlayQuizClient({
   useEffect(() => {
     handleTimeoutRef.current = handleTimeout;
   });
+  const timeFrozen = powerUps.effects.timeFrozen;
   useEffect(() => {
-    if (phase !== "asking" || isPractice) return;
+    if (phase !== "asking" || isPractice || timeFrozen) return;
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -390,7 +419,7 @@ export function PlayQuizClient({
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [phase, currentIdx, isPractice, sounds]);
+  }, [phase, currentIdx, isPractice, timeFrozen, sounds]);
 
   useEffect(() => {
     return () => clearAdvanceTimer();
@@ -426,10 +455,21 @@ export function PlayQuizClient({
                   {t("quiz.practice.label")}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-[var(--text-primary)]">
-                  <Timer className="h-3.5 w-3.5" />
-                  {timeLeft}
-                  {t("quiz.secondsShort")}
+                <span className="inline-flex items-center gap-2.5">
+                  {powerUpsEnabled && coins > 0 ? (
+                    <span className="inline-flex items-center gap-1 text-amber-300">
+                      ★ {coins}
+                    </span>
+                  ) : null}
+                  <span
+                    className={`inline-flex items-center gap-1.5 ${
+                      timeFrozen ? "text-sky-300" : "text-[var(--text-primary)]"
+                    }`}
+                  >
+                    <Timer className="h-3.5 w-3.5" />
+                    {timeLeft}
+                    {t("quiz.secondsShort")}
+                  </span>
                 </span>
               )}
             </div>
@@ -516,6 +556,7 @@ export function PlayQuizClient({
               displayOptions={displayOptions}
               selectedLetter={selectedLetter as OptionLetter | null}
               correctLetter={question.correctOption as OptionLetter | null | undefined}
+              hiddenLetters={powerUps.effects.hiddenLetters}
               revealed={revealed}
               onPick={recordMcq}
             />
@@ -552,6 +593,20 @@ export function PlayQuizClient({
             <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm italic text-[var(--text-secondary)]">
               {question.explanation}
             </div>
+          ) : null}
+
+          {powerUpsEnabled ? (
+            <PowerUpBar
+              inventory={powerUps.inventory}
+              activeEffects={powerUps.effects}
+              disabled={revealed}
+              onActivate={(key: PowerUpKey) => {
+                powerUps.activate(
+                  key,
+                  (question.correctOption as string | null | undefined) ?? null
+                );
+              }}
+            />
           ) : null}
 
           {phase === "submitting" ? (
@@ -616,21 +671,25 @@ function McqBody({
   displayOptions,
   selectedLetter,
   correctLetter,
+  hiddenLetters,
   revealed,
   onPick,
 }: {
   displayOptions: DisplayOption[];
   selectedLetter: OptionLetter | null;
   correctLetter: OptionLetter | null | undefined;
+  hiddenLetters: string[];
   revealed: boolean;
   onPick: (letter: OptionLetter) => void;
 }) {
+  const hidden = new Set(hiddenLetters);
   return (
     <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-4">
       {displayOptions.map((opt, index) => {
         const positionLabel = POSITION_LABELS[index];
         const isSelected = selectedLetter === opt.letter;
         const isCorrectOption = correctLetter === opt.letter;
+        const isHidden = hidden.has(opt.letter);
         let stateClasses =
           "border-[var(--border)] bg-gradient-to-br " +
           ACCENT_BY_POSITION[index] +
@@ -638,6 +697,11 @@ function McqBody({
         let badgeClasses =
           "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]";
         let icon: React.ReactNode = null;
+        if (isHidden && !revealed) {
+          // 50/50 removed this option — grey it out and make it unclickable.
+          stateClasses =
+            "border-[var(--border)] bg-[var(--bg-surface)] opacity-30 grayscale";
+        }
         if (revealed) {
           if (isCorrectOption) {
             stateClasses =
@@ -659,7 +723,7 @@ function McqBody({
             key={opt.letter}
             type="button"
             onClick={() => onPick(opt.letter)}
-            disabled={revealed}
+            disabled={revealed || isHidden}
             className={`group flex min-h-[68px] items-center gap-3 rounded-[var(--radius-xl)] border-2 px-3 py-3 text-left transition-all duration-200 disabled:cursor-default sm:min-h-[76px] sm:gap-4 sm:px-5 sm:py-4 ${stateClasses}`}
           >
             <span

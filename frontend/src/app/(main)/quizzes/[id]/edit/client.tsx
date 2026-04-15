@@ -18,6 +18,7 @@ interface EditQuizClientProps {
   initialTimePerQuestion: number;
   initialShuffleOptions: boolean;
   initialShowAnswerAnimations: boolean;
+  initialPowerUpsEnabled: boolean;
   initialTags: string[];
   initialQuestions: QuizQuestionInput[];
 }
@@ -31,6 +32,7 @@ export function EditQuizClient({
   initialTimePerQuestion,
   initialShuffleOptions,
   initialShowAnswerAnimations,
+  initialPowerUpsEnabled,
   initialTags,
   initialQuestions,
 }: EditQuizClientProps) {
@@ -65,6 +67,7 @@ export function EditQuizClient({
       initialTimePerQuestion={initialTimePerQuestion}
       initialShuffleOptions={initialShuffleOptions}
       initialShowAnswerAnimations={initialShowAnswerAnimations}
+      initialPowerUpsEnabled={initialPowerUpsEnabled}
       initialTags={initialTags}
       initialQuestions={initialQuestions}
       submitLabel={t("form.saveChanges")}

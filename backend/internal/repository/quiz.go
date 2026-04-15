@@ -138,6 +138,7 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 				q.time_per_question,
 				q.shuffle_options,
 				q.show_answer_animations,
+				q.power_ups_enabled,
 				COALESCE(q.created_at, NOW()) AS created_at,
 				COALESCE(q.updated_at, COALESCE(q.created_at, NOW())) AS updated_at
 			FROM public.quizzes q
@@ -177,6 +178,7 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 			v.time_per_question,
 			v.shuffle_options,
 			v.show_answer_animations,
+			v.power_ups_enabled,
 			v.created_at,
 			v.updated_at,
 			COALESCE(qc.question_count, 0) AS question_count,
@@ -214,6 +216,7 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 			&item.TimePerQuestion,
 			&item.ShuffleOptions,
 			&item.ShowAnswerAnimations,
+			&item.PowerUpsEnabled,
 			&createdAt,
 			&updatedAt,
 			&item.QuestionCount,
@@ -255,6 +258,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 			q.time_per_question,
 			q.shuffle_options,
 			q.show_answer_animations,
+			q.power_ups_enabled,
 			COALESCE(q.created_at, NOW()),
 			COALESCE(q.updated_at, COALESCE(q.created_at, NOW()))
 		FROM public.quizzes q
@@ -272,6 +276,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		&d.TimePerQuestion,
 		&d.ShuffleOptions,
 		&d.ShowAnswerAnimations,
+		&d.PowerUpsEnabled,
 		&createdAt,
 		&updatedAt,
 	)
@@ -373,12 +378,12 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 
 	var quizID string
 	err = tx.QueryRow(ctx, `
-		INSERT INTO quizzes (user_id, title, description, subject, is_public, time_per_question, shuffle_options, show_answer_animations, created_at, updated_at)
-		VALUES ($1, $2, NULLIF($3, ''), NULLIF($4, ''), $5, $6, $7, $8, NOW(), NOW())
+		INSERT INTO quizzes (user_id, title, description, subject, is_public, time_per_question, shuffle_options, show_answer_animations, power_ups_enabled, created_at, updated_at)
+		VALUES ($1, $2, NULLIF($3, ''), NULLIF($4, ''), $5, $6, $7, $8, $9, NOW(), NOW())
 		RETURNING id
 	`,
 		userID, req.Title, req.Description, req.Subject,
-		req.IsPublic, req.TimePerQuestion, req.ShuffleOptions, req.ShowAnswerAnimations,
+		req.IsPublic, req.TimePerQuestion, req.ShuffleOptions, req.ShowAnswerAnimations, req.PowerUpsEnabled,
 	).Scan(&quizID)
 	if err != nil {
 		return "", fmt.Errorf("insert quiz: %w", err)
@@ -493,11 +498,12 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 		    time_per_question = $6,
 		    shuffle_options = $7,
 		    show_answer_animations = $8,
+		    power_ups_enabled = $9,
 		    updated_at = NOW()
 		WHERE id = $1
 	`,
 		quizID, req.Title, req.Description, req.Subject,
-		req.IsPublic, req.TimePerQuestion, req.ShuffleOptions, req.ShowAnswerAnimations,
+		req.IsPublic, req.TimePerQuestion, req.ShuffleOptions, req.ShowAnswerAnimations, req.PowerUpsEnabled,
 	); err != nil {
 		return fmt.Errorf("update quiz: %w", err)
 	}
@@ -637,15 +643,15 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 	var srcTitle string
 	var srcDescription, srcSubject *string
 	var srcTimePerQuestion int
-	var srcShuffle, srcShowAnimations bool
+	var srcShuffle, srcShowAnimations, srcPowerUps bool
 	err = tx.QueryRow(ctx, `
-		SELECT title, description, subject, time_per_question, shuffle_options, show_answer_animations
+		SELECT title, description, subject, time_per_question, shuffle_options, show_answer_animations, power_ups_enabled
 		FROM quizzes
 		WHERE id = $1
 		  AND (is_public = true OR user_id::text = $2)
 	`, sourceQuizID, userID).Scan(
 		&srcTitle, &srcDescription, &srcSubject,
-		&srcTimePerQuestion, &srcShuffle, &srcShowAnimations,
+		&srcTimePerQuestion, &srcShuffle, &srcShowAnimations, &srcPowerUps,
 	)
 	if err != nil {
 		return "", fmt.Errorf("source quiz not found: %w", err)
@@ -662,14 +668,14 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 	if err := tx.QueryRow(ctx, `
 		INSERT INTO quizzes (
 			user_id, title, description, subject, is_public,
-			time_per_question, shuffle_options, show_answer_animations,
+			time_per_question, shuffle_options, show_answer_animations, power_ups_enabled,
 			created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, false, $5, $6, $7, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, false, $5, $6, $7, $8, NOW(), NOW())
 		RETURNING id
 	`,
 		userID, clonedTitle, srcDescription, srcSubject,
-		srcTimePerQuestion, srcShuffle, srcShowAnimations,
+		srcTimePerQuestion, srcShuffle, srcShowAnimations, srcPowerUps,
 	).Scan(&newQuizID); err != nil {
 		return "", fmt.Errorf("insert clone: %w", err)
 	}

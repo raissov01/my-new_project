@@ -42,6 +42,7 @@ interface QuizFormProps {
   initialTimePerQuestion?: number;
   initialShuffleOptions?: boolean;
   initialShowAnswerAnimations?: boolean;
+  initialPowerUpsEnabled?: boolean;
   initialTags?: string[];
   initialQuestions?: QuizQuestionInput[];
   submitLabel: string;
@@ -132,6 +133,7 @@ export function QuizForm({
   initialTimePerQuestion = 30,
   initialShuffleOptions = true,
   initialShowAnswerAnimations = true,
+  initialPowerUpsEnabled = true,
   initialTags,
   initialQuestions,
   submitLabel,
@@ -153,6 +155,7 @@ export function QuizForm({
   const [showAnswerAnimations, setShowAnswerAnimations] = useState(
     initialShowAnswerAnimations
   );
+  const [powerUpsEnabled, setPowerUpsEnabled] = useState(initialPowerUpsEnabled);
   const [tags, setTags] = useState<string[]>(() => initialTags ?? []);
 
   const [keyCounter, setKeyCounter] = useState(0);
@@ -251,6 +254,7 @@ export function QuizForm({
           timePerQuestion,
           shuffleOptions,
           showAnswerAnimations,
+          powerUpsEnabled,
           tags,
           questions: filled.map(({ _key: _ignored, ...rest }) => {
             void _ignored;
@@ -350,6 +354,15 @@ export function QuizForm({
                 className="h-4 w-4 accent-[var(--primary)]"
               />
               {t("quiz.showAnswerAnimations")}
+            </label>
+            <label className="inline-flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-2.5 text-sm text-[var(--text-primary)]">
+              <input
+                type="checkbox"
+                checked={powerUpsEnabled}
+                onChange={(e) => setPowerUpsEnabled(e.target.checked)}
+                className="h-4 w-4 accent-[var(--primary)]"
+              />
+              {t("quiz.powerUpsEnabled")}
             </label>
             <label className="inline-flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-2.5 text-sm text-[var(--text-primary)]">
               <input

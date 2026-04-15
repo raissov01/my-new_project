@@ -32,6 +32,7 @@ export type CreateQuizInput = {
   timePerQuestion: number;
   shuffleOptions: boolean;
   showAnswerAnimations: boolean;
+  powerUpsEnabled: boolean;
   tags: string[];
   questions: QuizQuestionInput[];
 };
@@ -112,6 +113,7 @@ export async function createQuiz(input: CreateQuizInput): Promise<QuizFormState>
         timePerQuestion: input.timePerQuestion,
         shuffleOptions: input.shuffleOptions,
         showAnswerAnimations: input.showAnswerAnimations,
+        powerUpsEnabled: input.powerUpsEnabled,
         tags: input.tags,
         questions,
       }),
@@ -153,6 +155,7 @@ export async function updateQuiz(
         timePerQuestion: input.timePerQuestion,
         shuffleOptions: input.shuffleOptions,
         showAnswerAnimations: input.showAnswerAnimations,
+        powerUpsEnabled: input.powerUpsEnabled,
         tags: input.tags,
         questions,
       }),

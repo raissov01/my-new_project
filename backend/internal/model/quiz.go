@@ -33,6 +33,7 @@ type CreateQuizRequest struct {
 	TimePerQuestion      int                 `json:"timePerQuestion"`
 	ShuffleOptions       bool                `json:"shuffleOptions"`
 	ShowAnswerAnimations bool                `json:"showAnswerAnimations"`
+	PowerUpsEnabled      bool                `json:"powerUpsEnabled"`
 	Tags                 []string            `json:"tags"`
 	Questions            []QuizQuestionInput `json:"questions"`
 }
@@ -46,6 +47,7 @@ type UpdateQuizRequest struct {
 	TimePerQuestion      int                 `json:"timePerQuestion"`
 	ShuffleOptions       bool                `json:"shuffleOptions"`
 	ShowAnswerAnimations bool                `json:"showAnswerAnimations"`
+	PowerUpsEnabled      bool                `json:"powerUpsEnabled"`
 	Tags                 []string            `json:"tags"`
 	Questions            []QuizQuestionInput `json:"questions"`
 }
@@ -62,6 +64,7 @@ type QuizOverview struct {
 	TimePerQuestion      int     `json:"timePerQuestion"`
 	ShuffleOptions       bool    `json:"shuffleOptions"`
 	ShowAnswerAnimations bool     `json:"showAnswerAnimations"`
+	PowerUpsEnabled      bool     `json:"powerUpsEnabled"`
 	CreatedAt            string   `json:"createdAt"`
 	UpdatedAt            string   `json:"updatedAt"`
 	QuestionCount        int      `json:"questionCount"`
@@ -103,6 +106,7 @@ type QuizDetail struct {
 	TimePerQuestion      int               `json:"timePerQuestion"`
 	ShuffleOptions       bool              `json:"shuffleOptions"`
 	ShowAnswerAnimations bool              `json:"showAnswerAnimations"`
+	PowerUpsEnabled      bool              `json:"powerUpsEnabled"`
 	CreatedAt            string            `json:"createdAt"`
 	UpdatedAt            string            `json:"updatedAt"`
 	Questions            []QuizQuestionDTO `json:"questions"`
