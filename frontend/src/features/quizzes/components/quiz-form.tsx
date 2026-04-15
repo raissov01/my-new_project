@@ -140,10 +140,12 @@ export function QuizForm({
     const filled = questions.filter(
       (q) =>
         q.questionText.trim() ||
-        q.optionA.trim() ||
-        q.optionB.trim() ||
-        q.optionC.trim() ||
-        q.optionD.trim()
+        (q.optionA ?? "").trim() ||
+        (q.optionB ?? "").trim() ||
+        (q.optionC ?? "").trim() ||
+        (q.optionD ?? "").trim() ||
+        (q.blankAnswer ?? "").trim() ||
+        (q.reorderItems?.length ?? 0) > 0
     );
 
     if (!title.trim()) {

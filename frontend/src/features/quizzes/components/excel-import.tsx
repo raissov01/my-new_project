@@ -4,7 +4,10 @@ import { useRef, useState } from "react";
 import { FileSpreadsheet, Upload, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { QuizQuestionInput } from "@/app/(main)/quizzes/actions";
+import type {
+  QuizQuestionInput,
+  QuizQuestionType,
+} from "@/app/(main)/quizzes/actions";
 
 interface ParsedRow {
   row: number;
@@ -34,6 +37,31 @@ function normalizeCorrect(value: string): string {
   if (v === "3" || v === "c") return "c";
   if (v === "4" || v === "d") return "d";
   return "";
+}
+
+function normalizeTrueFalse(value: string): "t" | "f" | "" {
+  const v = value.trim().toLowerCase();
+  if (v === "t" || v === "true" || v === "1" || v === "yes" || v === "y") return "t";
+  if (v === "f" || v === "false" || v === "0" || v === "no" || v === "n") return "f";
+  return "";
+}
+
+// Excel "type" column accepts synonyms so non-English templates still work.
+// Empty → 'mcq' for backwards-compatibility with existing quiz templates that
+// never populated column B.
+function normalizeQuestionType(value: string): QuizQuestionType {
+  const v = value.trim().toLowerCase();
+  if (!v) return "mcq";
+  if (v === "mcq" || v === "multiple" || v === "multiple_choice" || v === "choice") {
+    return "mcq";
+  }
+  if (v === "tf" || v === "true_false" || v === "truefalse" || v === "true/false" || v === "boolean") {
+    return "true_false";
+  }
+  if (v === "fill" || v === "fill_blank" || v === "blank" || v === "text" || v === "fillblank") {
+    return "fill_blank";
+  }
+  return "mcq";
 }
 
 export function ExcelImport({ onImport }: ExcelImportProps) {
@@ -86,46 +114,88 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
         return;
       }
 
+      // Column layout (A..H):
+      //   A: question text
+      //   B: type  (mcq | true_false | fill_blank) — empty defaults to mcq
+      //   C..F: option A..D                        (mcq only)
+      //   G: correct answer                        (a/b/c/d for mcq; t/f for true_false;
+      //                                             fill-blank answer for fill_blank)
+      //   H: explanation                           (optional, all types)
       const dataRows = rows.slice(1);
       const parsedRows: ParsedRow[] = [];
       dataRows.forEach((raw, idx) => {
         if (!Array.isArray(raw)) return;
         const warnings: string[] = [];
         const questionText = cellToString(raw[0]);
+        const typeCell = cellToString(raw[1]);
         const optionA = cellToString(raw[2]);
         const optionB = cellToString(raw[3]);
         const optionC = cellToString(raw[4]);
         const optionD = cellToString(raw[5]);
-        const correctRaw = cellToString(raw[6]);
-        const correct = normalizeCorrect(correctRaw);
+        const answerCell = cellToString(raw[6]);
+        const explanation = cellToString(raw[7]);
 
         if (
           !questionText &&
           !optionA &&
           !optionB &&
           !optionC &&
-          !optionD
+          !optionD &&
+          !answerCell
         ) {
           return;
         }
 
+        const questionType = normalizeQuestionType(typeCell);
         if (!questionText) warnings.push(t("quiz.warnMissingText"));
-        if (!optionA || !optionB || !optionC || !optionD) {
-          warnings.push(t("quiz.warnMissingOptions"));
+
+        let question: QuizQuestionInput;
+        switch (questionType) {
+          case "true_false": {
+            const tf = normalizeTrueFalse(answerCell);
+            if (!tf) warnings.push(t("quiz.warnBadTrueFalse"));
+            question = {
+              questionText,
+              questionType: "true_false",
+              correctOption: tf,
+              explanation,
+            };
+            break;
+          }
+          case "fill_blank": {
+            if (!answerCell) warnings.push(t("quiz.warnMissingBlankAnswer"));
+            question = {
+              questionText,
+              questionType: "fill_blank",
+              blankAnswer: answerCell,
+              explanation,
+            };
+            break;
+          }
+          default: {
+            const correct = normalizeCorrect(answerCell);
+            if (!optionA || !optionB || !optionC || !optionD) {
+              warnings.push(t("quiz.warnMissingOptions"));
+            }
+            if (!correct) warnings.push(t("quiz.warnBadCorrect"));
+            question = {
+              questionText,
+              questionType: "mcq",
+              optionA,
+              optionB,
+              optionC,
+              optionD,
+              correctOption: correct,
+              explanation,
+            };
+            break;
+          }
         }
-        if (!correct) warnings.push(t("quiz.warnBadCorrect"));
 
         parsedRows.push({
           row: idx + 2,
           warnings,
-          question: {
-            questionText,
-            optionA,
-            optionB,
-            optionC,
-            optionD,
-            correctOption: correct,
-          },
+          question,
         });
       });
 
@@ -249,7 +319,7 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
                   <th className="px-2 py-2 text-left">#</th>
                   <th className="px-2 py-2 text-left">{t("quiz.colQuestion")}</th>
                   <th className="hidden px-2 py-2 text-left sm:table-cell">
-                    A/B/C/D
+                    {t("quiz.colType")}
                   </th>
                   <th className="px-2 py-2 text-left">{t("quiz.colCorrect")}</th>
                   <th className="px-2 py-2 text-left">{t("quiz.colStatus")}</th>
@@ -258,6 +328,19 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
               <tbody>
                 {parsed.map((row) => {
                   const ok = row.warnings.length === 0;
+                  const q = row.question;
+                  let correctDisplay = "—";
+                  if (q.questionType === "fill_blank") {
+                    correctDisplay = q.blankAnswer || "—";
+                  } else if (q.questionType === "true_false") {
+                    correctDisplay = q.correctOption
+                      ? q.correctOption === "t"
+                        ? t("quiz.true")
+                        : t("quiz.false")
+                      : "—";
+                  } else {
+                    correctDisplay = (q.correctOption || "—").toUpperCase();
+                  }
                   return (
                     <tr
                       key={row.row}
@@ -268,23 +351,16 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
                       </td>
                       <td className="max-w-[160px] px-2 py-2 sm:max-w-[260px]">
                         <span className="line-clamp-1 text-[var(--text-primary)]">
-                          {row.question.questionText || "—"}
+                          {q.questionText || "—"}
                         </span>
                       </td>
-                      <td className="hidden max-w-[260px] px-2 py-2 text-[var(--text-secondary)] sm:table-cell">
-                        <span className="line-clamp-1">
-                          {[
-                            row.question.optionA,
-                            row.question.optionB,
-                            row.question.optionC,
-                            row.question.optionD,
-                          ]
-                            .map((s) => s || "—")
-                            .join(" · ")}
+                      <td className="hidden px-2 py-2 text-[var(--text-secondary)] sm:table-cell">
+                        <span className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-2 py-0.5 text-[10px] uppercase tracking-wide">
+                          {q.questionType ?? "mcq"}
                         </span>
                       </td>
-                      <td className="px-2 py-2 font-semibold uppercase">
-                        {row.question.correctOption || "—"}
+                      <td className="max-w-[140px] px-2 py-2 font-semibold">
+                        <span className="line-clamp-1">{correctDisplay}</span>
                       </td>
                       <td className="px-2 py-2">
                         {ok ? (

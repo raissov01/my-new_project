@@ -7,14 +7,21 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
+export type QuizQuestionType = "mcq" | "true_false" | "fill_blank" | "reorder";
+
 export type QuizQuestionInput = {
   id?: string;
   questionText: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  correctOption: string;
+  questionType?: QuizQuestionType;
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
+  correctOption?: string;
+  blankAnswer?: string;
+  reorderItems?: string[];
+  imageUrl?: string;
+  explanation?: string;
 };
 
 export type CreateQuizInput = {
@@ -33,22 +40,35 @@ export type QuizFormState = {
 
 function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] {
   return questions
-    .map((q) => ({
-      id: q.id,
-      questionText: (q.questionText ?? "").trim(),
-      optionA: (q.optionA ?? "").trim(),
-      optionB: (q.optionB ?? "").trim(),
-      optionC: (q.optionC ?? "").trim(),
-      optionD: (q.optionD ?? "").trim(),
-      correctOption: (q.correctOption ?? "").trim().toLowerCase(),
-    }))
+    .map<QuizQuestionInput>((q) => {
+      const type: QuizQuestionType = q.questionType ?? "mcq";
+      const reorderItems = (q.reorderItems ?? [])
+        .map((item) => (item ?? "").trim())
+        .filter((item) => item.length > 0);
+      return {
+        id: q.id,
+        questionText: (q.questionText ?? "").trim(),
+        questionType: type,
+        optionA: (q.optionA ?? "").trim(),
+        optionB: (q.optionB ?? "").trim(),
+        optionC: (q.optionC ?? "").trim(),
+        optionD: (q.optionD ?? "").trim(),
+        correctOption: (q.correctOption ?? "").trim().toLowerCase(),
+        blankAnswer: (q.blankAnswer ?? "").trim(),
+        reorderItems,
+        imageUrl: (q.imageUrl ?? "").trim(),
+        explanation: (q.explanation ?? "").trim(),
+      };
+    })
     .filter(
       (q) =>
         q.questionText ||
         q.optionA ||
         q.optionB ||
         q.optionC ||
-        q.optionD
+        q.optionD ||
+        q.blankAnswer ||
+        (q.reorderItems && q.reorderItems.length > 0)
     );
 }
 
