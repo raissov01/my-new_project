@@ -16,6 +16,7 @@ import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 import { formatDate } from "@/lib/shared/utils";
 import { getQuizById } from "@/server/services/quizzes";
+import { ShareQuizButton } from "@/features/quizzes/components/share-quiz-button";
 
 interface QuizDetailPageProps {
   params: Promise<{ id: string }>;
@@ -106,6 +107,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                   </Button>
                 </Link>
               ) : null}
+              <ShareQuizButton quizId={quiz.id} quizTitle={quiz.title} />
             </div>
           </div>
 

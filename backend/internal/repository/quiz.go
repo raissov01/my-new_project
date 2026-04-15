@@ -559,6 +559,85 @@ func (r *Quiz) DeleteQuiz(ctx context.Context, userID, quizID string) error {
 	return nil
 }
 
+// CloneQuiz copies a quiz (plus all its questions) into a new private quiz
+// owned by userID. The source must be visible to the user — public quizzes
+// or quizzes the user owns. The clone is always created as private so the
+// user can edit freely before publishing.
+func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (string, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return "", fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Verify visibility and load the source metadata.
+	var srcTitle string
+	var srcDescription, srcSubject *string
+	var srcTimePerQuestion int
+	var srcShuffle, srcShowAnimations bool
+	err = tx.QueryRow(ctx, `
+		SELECT title, description, subject, time_per_question, shuffle_options, show_answer_animations
+		FROM quizzes
+		WHERE id = $1
+		  AND (is_public = true OR user_id::text = $2)
+	`, sourceQuizID, userID).Scan(
+		&srcTitle, &srcDescription, &srcSubject,
+		&srcTimePerQuestion, &srcShuffle, &srcShowAnimations,
+	)
+	if err != nil {
+		return "", fmt.Errorf("source quiz not found: %w", err)
+	}
+
+	// Title gets a " (copy)" suffix so the user can tell the clone apart
+	// in their library even before editing.
+	clonedTitle := srcTitle + " (copy)"
+	if len(clonedTitle) > 200 {
+		clonedTitle = clonedTitle[:200]
+	}
+
+	var newQuizID string
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO quizzes (
+			user_id, title, description, subject, is_public,
+			time_per_question, shuffle_options, show_answer_animations,
+			created_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, false, $5, $6, $7, NOW(), NOW())
+		RETURNING id
+	`,
+		userID, clonedTitle, srcDescription, srcSubject,
+		srcTimePerQuestion, srcShuffle, srcShowAnimations,
+	).Scan(&newQuizID); err != nil {
+		return "", fmt.Errorf("insert clone: %w", err)
+	}
+
+	// Copy all questions in one statement — server-side SELECT ... INSERT
+	// is faster than round-tripping each row through the app layer and
+	// preserves order_index naturally.
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO quiz_questions (
+			quiz_id, question_text, question_type,
+			option_a, option_b, option_c, option_d,
+			correct_option, blank_answer, reorder_items,
+			image_url, explanation, order_index, created_at
+		)
+		SELECT $1, question_text, question_type,
+		       option_a, option_b, option_c, option_d,
+		       correct_option, blank_answer, reorder_items,
+		       image_url, explanation, order_index, NOW()
+		FROM quiz_questions
+		WHERE quiz_id = $2
+		ORDER BY order_index, created_at
+	`, newQuizID, sourceQuizID); err != nil {
+		return "", fmt.Errorf("copy questions: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return "", fmt.Errorf("commit clone: %w", err)
+	}
+	return newQuizID, nil
+}
+
 // questionAnswerRow holds the canonical data needed for server-side grading.
 type questionAnswerRow struct {
 	ID            string

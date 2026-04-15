@@ -93,6 +93,16 @@ func (s *Quiz) DeleteQuiz(ctx context.Context, userID, quizID string) error {
 	return s.repo.DeleteQuiz(ctx, userID, quizID)
 }
 
+func (s *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (string, error) {
+	if strings.TrimSpace(userID) == "" {
+		return "", fmt.Errorf("authentication required")
+	}
+	if strings.TrimSpace(sourceQuizID) == "" {
+		return "", fmt.Errorf("quiz id is required")
+	}
+	return s.repo.CloneQuiz(ctx, userID, sourceQuizID)
+}
+
 func (s *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req model.SubmitAttemptRequest) (*model.AttemptResult, error) {
 	if strings.TrimSpace(userID) == "" {
 		return nil, fmt.Errorf("authentication required")

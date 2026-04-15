@@ -145,6 +145,27 @@ func (h *QuizHandler) UpdateQuiz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+// CloneQuiz handles POST /api/v1/quizzes/{quizID}/clone
+func (h *QuizHandler) CloneQuiz(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || strings.TrimSpace(userID) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	quizID := r.PathValue("quizID")
+
+	newID, err := h.svc.CloneQuiz(r.Context(), userID, quizID)
+	if err != nil {
+		status, msg := classifyQuizError(err, "failed to clone quiz")
+		if h.isDev() {
+			msg = err.Error()
+		}
+		writeError(w, status, msg, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"id": newID})
+}
+
 // DeleteQuiz handles DELETE /api/v1/quizzes/{quizID}
 func (h *QuizHandler) DeleteQuiz(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())

@@ -141,6 +141,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.DELETE("/quizzes/:quizID", wrapHTTP(deps.Quiz.DeleteQuiz))
 		internal.POST("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.SubmitAttempt))
 		internal.GET("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.ListAttempts))
+		internal.POST("/quizzes/:quizID/clone", wrapHTTP(deps.Quiz.CloneQuiz))
 		internal.POST("/quizzes/images", wrapHTTP(deps.QuizImage.Upload))
 
 		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
