@@ -936,7 +936,7 @@ func (r *Classroom) GetClassQuizTeacherStats(
 			q.id,
 			q.question_text,
 			q.order_index,
-			q.correct_option,
+			COALESCE(q.correct_option, ''),
 			COALESCE(qs.attempts, 0) AS attempts,
 			COALESCE(qs.correct, 0) AS correct,
 			COALESCE(qs.incorrect, 0) AS incorrect,

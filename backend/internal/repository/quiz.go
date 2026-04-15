@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -10,6 +11,64 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/midoriya/flashlearn-backend/internal/model"
 )
+
+// encodeStringArray serializes a slice of strings to a JSON string pointer
+// for storage in a JSONB column. Returns nil for empty input so the column
+// stores SQL NULL rather than an empty array.
+func encodeStringArray(items []string) *string {
+	if len(items) == 0 {
+		return nil
+	}
+	buf, err := json.Marshal(items)
+	if err != nil {
+		return nil
+	}
+	s := string(buf)
+	return &s
+}
+
+// decodeStringArray parses a JSONB-stored string pointer back into a slice.
+// Returns nil for NULL or invalid JSON so callers can distinguish "not set"
+// from "empty array".
+func decodeStringArray(src *string) []string {
+	if src == nil || *src == "" {
+		return nil
+	}
+	var out []string
+	if err := json.Unmarshal([]byte(*src), &out); err != nil {
+		return nil
+	}
+	return out
+}
+
+// normalizeBlank lowercases and trims whitespace so fill_blank grading is
+// forgiving about case and leading/trailing spaces.
+func normalizeBlank(s string) string {
+	return strings.ToLower(strings.TrimSpace(s))
+}
+
+// nullableString returns a pointer to s for non-empty strings, or nil so the
+// target column receives SQL NULL instead of an empty string.
+func nullableString(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+// stringSlicesEqual reports whether two string slices contain the same items
+// in the same positions. Used for reorder grading.
+func stringSlicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
 
 // Quiz reads/writes quiz data from PostgreSQL via raw pgx.
 type Quiz struct {
@@ -205,7 +264,11 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 	d.IsAuthor = d.UserID == requesterUserID
 
 	qRows, err := r.pool.Query(ctx, `
-		SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, order_index
+		SELECT id, question_text, question_type,
+		       COALESCE(option_a, ''), COALESCE(option_b, ''),
+		       COALESCE(option_c, ''), COALESCE(option_d, ''),
+		       correct_option, blank_answer, reorder_items,
+		       image_url, explanation, order_index
 		FROM public.quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -218,21 +281,30 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 	d.Questions = make([]model.QuizQuestionDTO, 0)
 	for qRows.Next() {
 		var q model.QuizQuestionDTO
-		var correct string
+		var correct, blank, reorderJSON, imageURL, explanation *string
 		if err := qRows.Scan(
 			&q.ID,
 			&q.QuestionText,
+			&q.QuestionType,
 			&q.OptionA,
 			&q.OptionB,
 			&q.OptionC,
 			&q.OptionD,
 			&correct,
+			&blank,
+			&reorderJSON,
+			&imageURL,
+			&explanation,
 			&q.OrderIndex,
 		); err != nil {
 			return nil, fmt.Errorf("scan question: %w", err)
 		}
-		c := correct
-		q.CorrectOption = &c
+		q.CorrectOption = correct
+		q.BlankAnswer = blank
+		q.ReorderItems = decodeStringArray(reorderJSON)
+		q.ImageURL = imageURL
+		q.Explanation = explanation
+
 		d.Questions = append(d.Questions, q)
 	}
 	if err := qRows.Err(); err != nil {
@@ -277,14 +349,23 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 
 	rows := make([][]any, 0, len(req.Questions))
 	for i, q := range req.Questions {
+		qType := q.QuestionType
+		if qType == "" {
+			qType = "mcq"
+		}
 		rows = append(rows, []any{
 			quizID,
 			q.QuestionText,
-			q.OptionA,
-			q.OptionB,
-			q.OptionC,
-			q.OptionD,
-			q.CorrectOption,
+			qType,
+			nullableString(q.OptionA),
+			nullableString(q.OptionB),
+			nullableString(q.OptionC),
+			nullableString(q.OptionD),
+			nullableString(q.CorrectOption),
+			nullableString(q.BlankAnswer),
+			encodeStringArray(q.ReorderItems),
+			nullableString(q.ImageURL),
+			nullableString(q.Explanation),
 			i,
 			time.Now().UTC(),
 		})
@@ -297,11 +378,16 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 			[]string{
 				"quiz_id",
 				"question_text",
+				"question_type",
 				"option_a",
 				"option_b",
 				"option_c",
 				"option_d",
 				"correct_option",
+				"blank_answer",
+				"reorder_items",
+				"image_url",
+				"explanation",
 				"order_index",
 				"created_at",
 			},
@@ -378,20 +464,43 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 		if q.ID != nil {
 			id = strings.TrimSpace(*q.ID)
 		}
+		qType := q.QuestionType
+		if qType == "" {
+			qType = "mcq"
+		}
+		args := []any{
+			id,                              // $1
+			quizID,                          // $2
+			q.QuestionText,                  // $3
+			qType,                           // $4
+			nullableString(q.OptionA),       // $5
+			nullableString(q.OptionB),       // $6
+			nullableString(q.OptionC),       // $7
+			nullableString(q.OptionD),       // $8
+			nullableString(q.CorrectOption), // $9
+			nullableString(q.BlankAnswer),   // $10
+			encodeStringArray(q.ReorderItems), // $11
+			nullableString(q.ImageURL),      // $12
+			nullableString(q.Explanation),   // $13
+			i,                               // $14
+		}
 		if _, ok := existingIDs[id]; ok {
 			if _, err := tx.Exec(ctx, `
 				UPDATE quiz_questions
-				SET question_text = $3,
-				    option_a = $4,
-				    option_b = $5,
-				    option_c = $6,
-				    option_d = $7,
-				    correct_option = $8,
-				    order_index = $9
+				SET question_text  = $3,
+				    question_type  = $4,
+				    option_a       = $5,
+				    option_b       = $6,
+				    option_c       = $7,
+				    option_d       = $8,
+				    correct_option = $9,
+				    blank_answer   = $10,
+				    reorder_items  = $11,
+				    image_url      = $12,
+				    explanation    = $13,
+				    order_index    = $14
 				WHERE id = $1 AND quiz_id = $2
-			`,
-				id, quizID, q.QuestionText, q.OptionA, q.OptionB, q.OptionC, q.OptionD, q.CorrectOption, i,
-			); err != nil {
+			`, args...); err != nil {
 				return fmt.Errorf("update question %d: %w", i, err)
 			}
 			keptIDs = append(keptIDs, id)
@@ -400,12 +509,15 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 
 		var newID string
 		err := tx.QueryRow(ctx, `
-			INSERT INTO quiz_questions (quiz_id, question_text, option_a, option_b, option_c, option_d, correct_option, order_index, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+			INSERT INTO quiz_questions (
+				quiz_id, question_text, question_type,
+				option_a, option_b, option_c, option_d,
+				correct_option, blank_answer, reorder_items,
+				image_url, explanation, order_index, created_at
+			)
+			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
 			RETURNING id
-		`,
-			quizID, q.QuestionText, q.OptionA, q.OptionB, q.OptionC, q.OptionD, q.CorrectOption, i,
-		).Scan(&newID)
+		`, args...).Scan(&newID)
 		if err != nil {
 			return fmt.Errorf("insert question %d: %w", i, err)
 		}
@@ -445,11 +557,16 @@ func (r *Quiz) DeleteQuiz(ctx context.Context, userID, quizID string) error {
 type questionAnswerRow struct {
 	ID            string
 	QuestionText  string
+	QuestionType  string
 	OptionA       string
 	OptionB       string
 	OptionC       string
 	OptionD       string
-	CorrectOption string
+	CorrectOption *string
+	BlankAnswer   *string
+	ReorderItems  []string
+	ImageURL      *string
+	Explanation   *string
 	OrderIndex    int
 }
 
@@ -475,7 +592,11 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 	}
 
 	rows, err := tx.Query(ctx, `
-		SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, order_index
+		SELECT id, question_text, question_type,
+		       COALESCE(option_a, ''), COALESCE(option_b, ''),
+		       COALESCE(option_c, ''), COALESCE(option_d, ''),
+		       correct_option, blank_answer, reorder_items,
+		       image_url, explanation, order_index
 		FROM quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -489,13 +610,16 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 	order := make([]string, 0)
 	for rows.Next() {
 		var q questionAnswerRow
+		var reorderJSON *string
 		if err := rows.Scan(
-			&q.ID, &q.QuestionText,
+			&q.ID, &q.QuestionText, &q.QuestionType,
 			&q.OptionA, &q.OptionB, &q.OptionC, &q.OptionD,
-			&q.CorrectOption, &q.OrderIndex,
+			&q.CorrectOption, &q.BlankAnswer, &reorderJSON,
+			&q.ImageURL, &q.Explanation, &q.OrderIndex,
 		); err != nil {
 			return nil, fmt.Errorf("scan question: %w", err)
 		}
+		q.ReorderItems = decodeStringArray(reorderJSON)
 		questions[q.ID] = q
 		order = append(order, q.ID)
 	}
@@ -521,33 +645,85 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		a, hasAnswer := submitted[qid]
 
 		var selected *string
+		var textAnswer *string
+		var orderAnswer []string
 		var isCorrect bool
 		timeSpent := 0
 
 		if hasAnswer {
 			timeSpent = a.TimeSpent
-			if a.SelectedOption != nil {
-				normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
-				if normalized == "a" || normalized == "b" || normalized == "c" || normalized == "d" {
-					selected = &normalized
-					if normalized == q.CorrectOption {
+			switch q.QuestionType {
+			case "fill_blank":
+				if a.TextAnswer != nil {
+					t := strings.TrimSpace(*a.TextAnswer)
+					if t != "" {
+						textAnswer = &t
+						if q.BlankAnswer != nil &&
+							normalizeBlank(t) == normalizeBlank(*q.BlankAnswer) {
+							isCorrect = true
+							score++
+						}
+					}
+				}
+			case "reorder":
+				if len(a.OrderAnswer) > 0 {
+					submittedOrder := make([]string, len(a.OrderAnswer))
+					for i, it := range a.OrderAnswer {
+						submittedOrder[i] = strings.TrimSpace(it)
+					}
+					orderAnswer = submittedOrder
+					if stringSlicesEqual(submittedOrder, q.ReorderItems) {
 						isCorrect = true
 						score++
+					}
+				}
+			case "true_false":
+				if a.SelectedOption != nil {
+					normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
+					if normalized == "t" || normalized == "f" {
+						selected = &normalized
+						if q.CorrectOption != nil && normalized == *q.CorrectOption {
+							isCorrect = true
+							score++
+						}
+					}
+				}
+			default: // mcq
+				if a.SelectedOption != nil {
+					normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
+					if normalized == "a" || normalized == "b" || normalized == "c" || normalized == "d" {
+						selected = &normalized
+						if q.CorrectOption != nil && normalized == *q.CorrectOption {
+							isCorrect = true
+							score++
+						}
 					}
 				}
 			}
 		}
 		totalTime += timeSpent
 
+		correctStr := ""
+		if q.CorrectOption != nil {
+			correctStr = *q.CorrectOption
+		}
+
 		graded = append(graded, model.AttemptAnswerResult{
 			QuestionID:     q.ID,
 			QuestionText:   q.QuestionText,
+			QuestionType:   q.QuestionType,
 			OptionA:        q.OptionA,
 			OptionB:        q.OptionB,
 			OptionC:        q.OptionC,
 			OptionD:        q.OptionD,
 			SelectedOption: selected,
-			CorrectOption:  q.CorrectOption,
+			CorrectOption:  correctStr,
+			TextAnswer:     textAnswer,
+			BlankAnswer:    q.BlankAnswer,
+			OrderAnswer:    orderAnswer,
+			ReorderItems:   q.ReorderItems,
+			ImageURL:       q.ImageURL,
+			Explanation:    q.Explanation,
 			IsCorrect:      isCorrect,
 			TimeSpent:      timeSpent,
 			OrderIndex:     q.OrderIndex,
@@ -582,10 +758,15 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 	for _, g := range graded {
 		qid := g.QuestionID
 		if _, err := tx.Exec(ctx, `
-			INSERT INTO quiz_attempt_answers (attempt_id, question_id, selected_option, is_correct, time_spent)
-			VALUES ($1, $2, $3, $4, $5)
+			INSERT INTO quiz_attempt_answers (
+				attempt_id, question_id, selected_option,
+				text_answer, order_answer, is_correct, time_spent
+			)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
 		`,
-			attemptID, qid, g.SelectedOption, g.IsCorrect, g.TimeSpent,
+			attemptID, qid, g.SelectedOption,
+			g.TextAnswer, encodeStringArray(g.OrderAnswer),
+			g.IsCorrect, g.TimeSpent,
 		); err != nil {
 			return nil, fmt.Errorf("insert answer for %s: %w", qid, err)
 		}
@@ -674,12 +855,19 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 		SELECT
 			aa.question_id,
 			COALESCE(qq.question_text, ''),
+			COALESCE(qq.question_type, 'mcq'),
 			COALESCE(qq.option_a, ''),
 			COALESCE(qq.option_b, ''),
 			COALESCE(qq.option_c, ''),
 			COALESCE(qq.option_d, ''),
 			aa.selected_option,
 			COALESCE(qq.correct_option, ''),
+			aa.text_answer,
+			qq.blank_answer,
+			aa.order_answer,
+			qq.reorder_items,
+			qq.image_url,
+			qq.explanation,
 			aa.is_correct,
 			aa.time_spent,
 			COALESCE(qq.order_index, 0)
@@ -697,12 +885,20 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 	for rows.Next() {
 		var a model.AttemptAnswerResult
 		var questionID *string
+		var orderAnswerJSON, reorderItemsJSON *string
 		if err := rows.Scan(
 			&questionID,
 			&a.QuestionText,
+			&a.QuestionType,
 			&a.OptionA, &a.OptionB, &a.OptionC, &a.OptionD,
 			&a.SelectedOption,
 			&a.CorrectOption,
+			&a.TextAnswer,
+			&a.BlankAnswer,
+			&orderAnswerJSON,
+			&reorderItemsJSON,
+			&a.ImageURL,
+			&a.Explanation,
 			&a.IsCorrect,
 			&a.TimeSpent,
 			&a.OrderIndex,
@@ -712,6 +908,8 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 		if questionID != nil {
 			a.QuestionID = *questionID
 		}
+		a.OrderAnswer = decodeStringArray(orderAnswerJSON)
+		a.ReorderItems = decodeStringArray(reorderItemsJSON)
 		res.Answers = append(res.Answers, a)
 	}
 

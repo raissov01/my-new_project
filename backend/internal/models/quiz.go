@@ -23,18 +23,28 @@ func (Quiz) TableName() string {
 	return "quizzes"
 }
 
-// QuizQuestion is a single multiple-choice question inside a quiz.
+// QuizQuestion is a single question inside a quiz. Supports multiple types via QuestionType:
+//   - mcq        : OptionA..D + CorrectOption ('a'|'b'|'c'|'d')
+//   - true_false : CorrectOption ('t'|'f')
+//   - fill_blank : BlankAnswer
+//   - reorder    : ReorderItems (JSON-encoded canonical order)
 type QuizQuestion struct {
-	ID            string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	QuizID        string    `gorm:"type:uuid;not null;index:idx_quiz_questions_quiz_order,priority:1" json:"quizId"`
-	QuestionText  string    `gorm:"not null" json:"questionText"`
-	OptionA       string    `gorm:"not null" json:"optionA"`
-	OptionB       string    `gorm:"not null" json:"optionB"`
-	OptionC       string    `gorm:"not null" json:"optionC"`
-	OptionD       string    `gorm:"not null" json:"optionD"`
-	CorrectOption string    `gorm:"type:char(1);not null" json:"correctOption"`
-	OrderIndex    int       `gorm:"not null;default:0;index:idx_quiz_questions_quiz_order,priority:2" json:"orderIndex"`
-	CreatedAt     time.Time `gorm:"autoCreateTime" json:"createdAt"`
+	ID            string  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	QuizID        string  `gorm:"type:uuid;not null;index:idx_quiz_questions_quiz_order,priority:1" json:"quizId"`
+	QuestionText  string  `gorm:"not null" json:"questionText"`
+	QuestionType  string  `gorm:"type:varchar(20);not null;default:'mcq'" json:"questionType"`
+	OptionA       string  `json:"optionA"`
+	OptionB       string  `json:"optionB"`
+	OptionC       string  `json:"optionC"`
+	OptionD       string  `json:"optionD"`
+	CorrectOption string  `gorm:"type:varchar(2)" json:"correctOption"`
+	BlankAnswer   *string `gorm:"type:text" json:"blankAnswer,omitempty"`
+	ReorderItems  *string `gorm:"type:jsonb" json:"reorderItems,omitempty"`
+	ImageURL      *string `gorm:"type:text" json:"imageUrl,omitempty"`
+	Explanation   *string `gorm:"type:text" json:"explanation,omitempty"`
+
+	OrderIndex int       `gorm:"not null;default:0;index:idx_quiz_questions_quiz_order,priority:2" json:"orderIndex"`
+	CreatedAt  time.Time `gorm:"autoCreateTime" json:"createdAt"`
 
 	Quiz Quiz `gorm:"foreignKey:QuizID;constraint:OnDelete:CASCADE" json:"-"`
 }
@@ -65,11 +75,16 @@ func (QuizAttempt) TableName() string {
 }
 
 // QuizAttemptAnswer captures a single question answer inside an attempt.
+// SelectedOption is used for mcq / true_false (a-d, t, f).
+// TextAnswer is used for fill_blank.
+// OrderAnswer is a JSON-encoded array of items in the order the user submitted (reorder).
 type QuizAttemptAnswer struct {
 	ID             string  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	AttemptID      string  `gorm:"type:uuid;not null;index" json:"attemptId"`
 	QuestionID     *string `gorm:"type:uuid;index" json:"questionId"`
-	SelectedOption *string `gorm:"type:char(1)" json:"selectedOption"`
+	SelectedOption *string `gorm:"type:varchar(2)" json:"selectedOption"`
+	TextAnswer     *string `gorm:"type:text" json:"textAnswer,omitempty"`
+	OrderAnswer    *string `gorm:"type:jsonb" json:"orderAnswer,omitempty"`
 	IsCorrect      bool    `gorm:"not null;default:false" json:"isCorrect"`
 	TimeSpent      int     `gorm:"not null;default:0" json:"timeSpent"`
 

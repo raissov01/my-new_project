@@ -24,6 +24,17 @@ const (
 	minQuestions       = 1
 	maxQuestions       = 500
 	maxTitleLen        = 200
+	minReorderItems    = 2
+	maxReorderItems    = 10
+	maxBlankAnswerLen  = 300
+)
+
+// Supported question types. MCQ is the default for empty/unknown values.
+const (
+	QTypeMCQ       = "mcq"
+	QTypeTrueFalse = "true_false"
+	QTypeFillBlank = "fill_blank"
+	QTypeReorder   = "reorder"
 )
 
 func (s *Quiz) GetOverview(ctx context.Context, userID string, filters repository.QuizListFilters) ([]model.QuizOverview, error) {
@@ -137,34 +148,84 @@ func (s *Quiz) validateAndNormalize(
 	normalized := make([]model.QuizQuestionInput, 0, len(questions))
 	for i, q := range questions {
 		qt := strings.TrimSpace(q.QuestionText)
+		qType := strings.ToLower(strings.TrimSpace(q.QuestionType))
+		if qType == "" {
+			qType = QTypeMCQ
+		}
 		a := strings.TrimSpace(q.OptionA)
 		b := strings.TrimSpace(q.OptionB)
 		c := strings.TrimSpace(q.OptionC)
 		d := strings.TrimSpace(q.OptionD)
 		correct := strings.ToLower(strings.TrimSpace(q.CorrectOption))
+		blank := strings.TrimSpace(q.BlankAnswer)
+		imageURL := strings.TrimSpace(q.ImageURL)
+		explanation := strings.TrimSpace(q.Explanation)
 
-		if qt == "" && a == "" && b == "" && c == "" && d == "" {
+		// Skip fully empty rows (helps Excel import tolerate trailing blanks).
+		isEmpty := qt == "" && a == "" && b == "" && c == "" && d == "" &&
+			blank == "" && len(q.ReorderItems) == 0
+		if isEmpty {
 			continue
 		}
 		if qt == "" {
 			return nil, fmt.Errorf("question %d: text is required", i+1)
 		}
-		if a == "" || b == "" || c == "" || d == "" {
-			return nil, fmt.Errorf("question %d: all four options are required", i+1)
-		}
-		if correct != "a" && correct != "b" && correct != "c" && correct != "d" {
-			return nil, fmt.Errorf("question %d: correct option must be a, b, c, or d", i+1)
+
+		out := model.QuizQuestionInput{
+			ID:           q.ID,
+			QuestionText: qt,
+			QuestionType: qType,
+			ImageURL:     imageURL,
+			Explanation:  explanation,
 		}
 
-		normalized = append(normalized, model.QuizQuestionInput{
-			ID:            q.ID,
-			QuestionText:  qt,
-			OptionA:       a,
-			OptionB:       b,
-			OptionC:       c,
-			OptionD:       d,
-			CorrectOption: correct,
-		})
+		switch qType {
+		case QTypeMCQ:
+			if a == "" || b == "" || c == "" || d == "" {
+				return nil, fmt.Errorf("question %d: all four options are required", i+1)
+			}
+			if correct != "a" && correct != "b" && correct != "c" && correct != "d" {
+				return nil, fmt.Errorf("question %d: correct option must be a, b, c, or d", i+1)
+			}
+			out.OptionA = a
+			out.OptionB = b
+			out.OptionC = c
+			out.OptionD = d
+			out.CorrectOption = correct
+
+		case QTypeTrueFalse:
+			if correct != "t" && correct != "f" {
+				return nil, fmt.Errorf("question %d: correct option must be t or f for true/false", i+1)
+			}
+			out.CorrectOption = correct
+
+		case QTypeFillBlank:
+			if blank == "" {
+				return nil, fmt.Errorf("question %d: blank answer is required for fill_blank", i+1)
+			}
+			if len(blank) > maxBlankAnswerLen {
+				return nil, fmt.Errorf("question %d: blank answer is too long", i+1)
+			}
+			out.BlankAnswer = blank
+
+		case QTypeReorder:
+			items := make([]string, 0, len(q.ReorderItems))
+			for _, it := range q.ReorderItems {
+				t := strings.TrimSpace(it)
+				if t != "" {
+					items = append(items, t)
+				}
+			}
+			if len(items) < minReorderItems || len(items) > maxReorderItems {
+				return nil, fmt.Errorf("question %d: reorder needs %d-%d items", i+1, minReorderItems, maxReorderItems)
+			}
+			out.ReorderItems = items
+
+		default:
+			return nil, fmt.Errorf("question %d: unsupported question type %q", i+1, qType)
+		}
+
+		normalized = append(normalized, out)
 	}
 
 	if len(normalized) < minQuestions {

@@ -76,6 +76,21 @@ func AutoMigrate(db *gorm.DB) error {
 	db.Exec(`ALTER TABLE ielts_materials DROP CONSTRAINT IF EXISTS chk_ielts_materials_type`)
 	db.Exec(`ALTER TABLE ielts_materials ADD CONSTRAINT chk_ielts_materials_type CHECK (type IN ('lesson','practice','tip','book','mock','mock_test','feedback_prompt'))`)
 
+	// Relax quiz_questions constraints so non-MCQ types (true_false, fill_blank, reorder)
+	// can leave the legacy option columns empty. Also widen correct_option from char(1)
+	// to varchar(2) to accept 't'/'f' for true_false in addition to a/b/c/d.
+	db.Exec(`ALTER TABLE quiz_questions ALTER COLUMN option_a DROP NOT NULL`)
+	db.Exec(`ALTER TABLE quiz_questions ALTER COLUMN option_b DROP NOT NULL`)
+	db.Exec(`ALTER TABLE quiz_questions ALTER COLUMN option_c DROP NOT NULL`)
+	db.Exec(`ALTER TABLE quiz_questions ALTER COLUMN option_d DROP NOT NULL`)
+	db.Exec(`ALTER TABLE quiz_questions ALTER COLUMN correct_option DROP NOT NULL`)
+	db.Exec(`ALTER TABLE quiz_questions ALTER COLUMN correct_option TYPE varchar(2)`)
+	db.Exec(`ALTER TABLE quiz_questions DROP CONSTRAINT IF EXISTS chk_quiz_questions_question_type`)
+	db.Exec(`ALTER TABLE quiz_questions ADD CONSTRAINT chk_quiz_questions_question_type CHECK (question_type IN ('mcq','true_false','fill_blank','reorder'))`)
+
+	// Widen quiz_attempt_answers.selected_option for 't'/'f' on true_false questions.
+	db.Exec(`ALTER TABLE quiz_attempt_answers ALTER COLUMN selected_option TYPE varchar(2)`)
+
 	// Mark all existing users (who registered before email verification was added)
 	// as verified so they are not locked out of their accounts.
 	result := db.Exec(`UPDATE users SET email_verified = true WHERE email_verified = false AND verification_token IS NULL`)
