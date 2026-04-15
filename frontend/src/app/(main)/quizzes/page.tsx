@@ -38,7 +38,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <section className="overflow-hidden rounded-[1.9rem] border border-white/8 bg-[linear-gradient(135deg,rgba(99,91,255,0.16),rgba(15,23,42,0.94)_42%,rgba(79,124,255,0.1))] p-4 shadow-[var(--surface-shadow-strong)] sm:rounded-[2.2rem] sm:p-8">
+      <section className="relative z-0 overflow-hidden rounded-[1.9rem] border border-white/8 bg-[linear-gradient(135deg,rgba(99,91,255,0.16),rgba(15,23,42,0.94)_42%,rgba(79,124,255,0.1))] p-4 shadow-[var(--surface-shadow-strong)] sm:rounded-[2.2rem] sm:p-8">
         <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
@@ -97,7 +97,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
       </section>
 
       <form className="mt-6">
-        <section className="rounded-[1.7rem] border border-white/8 bg-[rgba(255,255,255,0.04)] p-4 shadow-[var(--surface-shadow)] backdrop-blur-sm sm:p-5">
+        <section className="relative z-0 rounded-[1.7rem] border border-white/8 bg-[rgba(255,255,255,0.04)] p-4 shadow-[var(--surface-shadow)] backdrop-blur-sm sm:p-5">
           <div className="grid gap-4 lg:grid-cols-[1.5fr_0.7fr_0.7fr_auto]">
             <label className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] px-4">
               <Search className="h-4 w-4 text-[var(--text-muted)]" />
@@ -180,7 +180,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
           body={t("quiz.guestEmptyBody")}
         />
       ) : quizzes.length > 0 ? (
-        <div className="relative z-10 mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="relative z-[60] mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
           {quizzes.map((quiz) => (
             <QuizCard
               key={quiz.id}

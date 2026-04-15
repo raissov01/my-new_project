@@ -14,7 +14,7 @@ export function QuizCard({ quiz, locale, isOwner }: QuizCardProps) {
   const t = createTranslator(locale);
 
   return (
-    <article className="relative isolate flex h-full flex-col rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-strong)] sm:p-6">
+    <article className="relative isolate z-50 flex h-full flex-col rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-strong)] sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <Link href={`/quizzes/${quiz.id}`} className="group block">
