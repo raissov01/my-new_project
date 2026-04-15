@@ -62,19 +62,20 @@ type OutMsg struct {
 // ──────────────────────────────────────────────────────────────
 
 type LiveQuestion struct {
-	ID            string   `json:"id"`
-	Index         int      `json:"index"`
-	QuestionText  string   `json:"questionText"`
-	QuestionType  string   `json:"questionType"`
-	OptionA       string   `json:"optionA,omitempty"`
-	OptionB       string   `json:"optionB,omitempty"`
-	OptionC       string   `json:"optionC,omitempty"`
-	OptionD       string   `json:"optionD,omitempty"`
-	CorrectOption string   `json:"-"` // never sent to players
-	BlankAnswer   string   `json:"-"`
-	ReorderItems  []string `json:"-"`
-	ImageURL      string   `json:"imageUrl,omitempty"`
-	TimeLimit     int      `json:"timeLimit"` // seconds
+	ID             string   `json:"id"`
+	Index          int      `json:"index"`
+	QuestionText   string   `json:"questionText"`
+	QuestionType   string   `json:"questionType"`
+	OptionA        string   `json:"optionA,omitempty"`
+	OptionB        string   `json:"optionB,omitempty"`
+	OptionC        string   `json:"optionC,omitempty"`
+	OptionD        string   `json:"optionD,omitempty"`
+	CorrectOption  string   `json:"-"` // never sent to players
+	BlankAnswer    string   `json:"-"`
+	ReorderItems   []string `json:"-"`                         // canonical correct order, never sent to players
+	ReorderDisplay []string `json:"reorderItems,omitempty"`    // shuffled display order, sent to clients
+	ImageURL       string   `json:"imageUrl,omitempty"`
+	TimeLimit      int      `json:"timeLimit"` // seconds
 }
 
 type LiveQuiz struct {
@@ -370,6 +371,7 @@ func (r *Room) endQuestion(timedOut bool) {
 		QuestionIndex int                `json:"questionIndex"`
 		CorrectOption string             `json:"correctOption,omitempty"`
 		BlankAnswer   string             `json:"blankAnswer,omitempty"`
+		CorrectOrder  []string           `json:"correctOrder,omitempty"` // for reorder reveal
 		Leaderboard   []ParticipantScore `json:"leaderboard"`
 	}
 	evt := endEvt{
@@ -381,6 +383,8 @@ func (r *Room) endQuestion(timedOut bool) {
 		evt.CorrectOption = q.CorrectOption
 	case "fill_blank":
 		evt.BlankAnswer = q.BlankAnswer
+	case "reorder":
+		evt.CorrectOrder = q.ReorderItems
 	}
 	r.broadcast(OutMsg{Type: EvtQuestionEnded, Data: evt})
 
@@ -484,9 +488,10 @@ func (r *Room) handleMessage(c *Client, msg InMsg) {
 }
 
 type submitAnswerData struct {
-	Option    string `json:"option"`    // for mcq/true_false: a/b/c/d/t/f
-	TextAns   string `json:"textAnswer"` // for fill_blank
-	TimeSpent int    `json:"timeSpent"`
+	Option      string   `json:"option"`      // for mcq/true_false: a/b/c/d/t/f
+	TextAns     string   `json:"textAnswer"`  // for fill_blank
+	OrderAnswer []string `json:"orderAnswer"` // for reorder: items in submitted sequence
+	TimeSpent   int      `json:"timeSpent"`
 }
 
 func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
@@ -514,6 +519,8 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 		isCorrect = strings.EqualFold(req.Option, q.CorrectOption)
 	case "fill_blank":
 		isCorrect = normalizeBlank(req.TextAns) == normalizeBlank(q.BlankAnswer)
+	case "reorder":
+		isCorrect = liveSlicesEqual(req.OrderAnswer, q.ReorderItems)
 	default:
 		isCorrect = false
 	}
@@ -549,6 +556,13 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 	var textAns *string
 	if req.TextAns != "" {
 		textAns = &req.TextAns
+	}
+	// For reorder, store the submitted sequence as JSON in TextAnswer
+	if q.QuestionType == "reorder" && len(req.OrderAnswer) > 0 {
+		if b, err := json.Marshal(req.OrderAnswer); err == nil {
+			s := string(b)
+			textAns = &s
+		}
 	}
 	r.db.Create(&models.QuizLiveAnswer{
 		SessionID:      r.sessionID,
@@ -591,6 +605,19 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 
 func normalizeBlank(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
+}
+
+// liveSlicesEqual returns true if a and b have the same length and identical elements.
+func liveSlicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // ──────────────────────────────────────────────────────────────

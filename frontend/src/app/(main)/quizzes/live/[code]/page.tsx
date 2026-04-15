@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Star, Flame, Trophy } from "lucide-react";
+import { ArrowDown, ArrowUp, Star, Flame, Trophy } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 
@@ -34,6 +34,7 @@ type LiveQuestion = {
   optionB?: string;
   optionC?: string;
   optionD?: string;
+  reorderItems?: string[]; // shuffled display order for reorder questions
   timeLimit: number;
   imageUrl?: string;
 };
@@ -56,6 +57,7 @@ type QuestionEndedEvt = {
   questionIndex: number;
   correctOption?: string;
   blankAnswer?: string;
+  correctOrder?: string[]; // for reorder reveal
   leaderboard: LeaderEntry[];
 };
 
@@ -88,6 +90,8 @@ function LiveGameInner() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [selectedOpt, setSelectedOpt] = useState<string | null>(null);
   const [blankInput, setBlankInput] = useState("");
+  const [reorderDraft, setReorderDraft] = useState<string[]>([]);
+  const [reorderSubmitted, setReorderSubmitted] = useState(false);
   const [wsError, setWsError] = useState("");
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -146,6 +150,8 @@ function LiveGameInner() {
         setQuestionEnded(null);
         setSelectedOpt(null);
         setBlankInput("");
+        setReorderDraft(msg.data.question.reorderItems ?? []);
+        setReorderSubmitted(false);
         setPhase("question");
         startRef.current = Date.now();
         startTimer(msg.data.deadlineMs);
@@ -188,11 +194,16 @@ function LiveGameInner() {
     setTimeLeft(0);
   }
 
-  const submitAnswer = useCallback((option?: string, text?: string) => {
+  const submitAnswer = useCallback((option?: string, text?: string, orderAnswer?: string[]) => {
     const timeSpent = Math.round((Date.now() - startRef.current) / 1000);
     wsRef.current?.send(JSON.stringify({
       type: "submit_answer",
-      data: { option: option ?? "", textAnswer: text ?? "", timeSpent },
+      data: {
+        option: option ?? "",
+        textAnswer: text ?? "",
+        orderAnswer: orderAnswer ?? [],
+        timeSpent,
+      },
     }));
   }, []);
 
@@ -253,12 +264,19 @@ function LiveGameInner() {
           timeLeft={timeLeft}
           selectedOpt={selectedOpt}
           blankInput={blankInput}
+          reorderDraft={reorderDraft}
+          reorderSubmitted={reorderSubmitted}
           onBlankChange={setBlankInput}
+          onReorderChange={setReorderDraft}
           onSelect={(opt) => {
             setSelectedOpt(opt);
             submitAnswer(opt);
           }}
           onBlankSubmit={() => submitAnswer(undefined, blankInput)}
+          onReorderSubmit={() => {
+            setReorderSubmitted(true);
+            submitAnswer(undefined, undefined, reorderDraft);
+          }}
         />
       )}
 
@@ -305,15 +323,20 @@ const OPTION_COLORS = [
 const OPTION_KEYS = ["a", "b", "c", "d"] as const;
 
 function QuestionScreen({
-  evt, timeLeft, selectedOpt, blankInput, onBlankChange, onSelect, onBlankSubmit,
+  evt, timeLeft, selectedOpt, blankInput, reorderDraft, reorderSubmitted,
+  onBlankChange, onReorderChange, onSelect, onBlankSubmit, onReorderSubmit,
 }: {
   evt: QuestionEvt;
   timeLeft: number;
   selectedOpt: string | null;
   blankInput: string;
+  reorderDraft: string[];
+  reorderSubmitted: boolean;
   onBlankChange: (v: string) => void;
+  onReorderChange: (items: string[]) => void;
   onSelect: (opt: string) => void;
   onBlankSubmit: () => void;
+  onReorderSubmit: () => void;
 }) {
   const { t } = useLocale();
   const q = evt.question;
@@ -414,21 +437,94 @@ function QuestionScreen({
           </Button>
         </form>
       )}
+
+      {q.questionType === "reorder" && (
+        <div className="space-y-3">
+          <p className="text-xs text-[var(--text-muted)]">{t("quiz.play.reorderHint") || "Arrange in the correct order"}</p>
+          <div className="space-y-2">
+            {reorderDraft.map((item, idx) => (
+              <div
+                key={`${idx}-${item}`}
+                className="flex items-center gap-2 rounded-[1.2rem] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-3"
+              >
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--bg-soft)] text-xs font-semibold text-[var(--text-secondary)]">
+                  {idx + 1}
+                </span>
+                <span className="flex-1 text-sm font-medium text-[var(--text-primary)]">{item}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (reorderSubmitted || idx === 0) return;
+                    const next = [...reorderDraft];
+                    [next[idx], next[idx - 1]] = [next[idx - 1], next[idx]];
+                    onReorderChange(next);
+                  }}
+                  disabled={reorderSubmitted || idx === 0}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] disabled:opacity-30"
+                  aria-label="Move up"
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (reorderSubmitted || idx === reorderDraft.length - 1) return;
+                    const next = [...reorderDraft];
+                    [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+                    onReorderChange(next);
+                  }}
+                  disabled={reorderSubmitted || idx === reorderDraft.length - 1}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] disabled:opacity-30"
+                  aria-label="Move down"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <Button
+            type="button"
+            onClick={onReorderSubmit}
+            disabled={reorderSubmitted || reorderDraft.length === 0}
+            className="w-full"
+          >
+            {reorderSubmitted ? (t("quiz.live.submitted") || "Submitted") : (t("quiz.play.submitAnswer") || "Submit")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
 function AnsweredScreen({ result, t }: { result: AnswerResult; t: (k: string) => string }) {
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
-      <div className={`flex h-20 w-20 items-center justify-center rounded-full ${result.isCorrect ? "bg-emerald-500/15" : "bg-rose-500/15"}`}>
-        <span className="text-4xl">{result.isCorrect ? "✓" : "✗"}</span>
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center"
+    >
+      <div
+        className={`flex h-20 w-20 items-center justify-center rounded-full border-4 ${
+          result.isCorrect
+            ? "border-emerald-400/60 bg-emerald-500/15"
+            : "border-rose-400/60 bg-rose-500/15"
+        }`}
+      >
+        <span className="text-4xl" aria-hidden="true">
+          {result.isCorrect ? "✓" : "✗"}
+        </span>
       </div>
       <h2 className={`text-2xl font-bold ${result.isCorrect ? "text-emerald-400" : "text-rose-400"}`}>
         {result.isCorrect ? t("quiz.live.correct") : t("quiz.live.wrong")}
       </h2>
       {result.isCorrect ? (
         <p className="text-lg font-semibold text-amber-400">+{result.pointsEarned} {t("quiz.live.points")}</p>
+      ) : null}
+      {result.streak > 1 ? (
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-orange-400">
+          <Flame className="h-4 w-4 fill-orange-400" aria-hidden="true" />
+          {result.streak}x streak
+        </p>
       ) : null}
       <p className="text-sm text-[var(--text-muted)]">Waiting for next question…</p>
     </div>
@@ -455,6 +551,11 @@ function RevealedScreen({ ended, result, t }: { ended: QuestionEndedEvt; result:
                 Answer: {ended.correctOption.toUpperCase()}
               </p>
             ) : null}
+            {ended.blankAnswer ? (
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                Answer: <span className="font-semibold">{ended.blankAnswer}</span>
+              </p>
+            ) : null}
           </div>
           <div className="text-right">
             <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">{result.totalScore}</p>
@@ -466,6 +567,9 @@ function RevealedScreen({ ended, result, t }: { ended: QuestionEndedEvt; result:
           <p className="text-sm text-[var(--text-muted)]">{t("quiz.live.tooSlow")}</p>
           {ended.correctOption ? (
             <p className="mt-1 text-sm text-[var(--text-secondary)]">Answer: {ended.correctOption.toUpperCase()}</p>
+          ) : null}
+          {ended.blankAnswer ? (
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">Answer: <span className="font-semibold">{ended.blankAnswer}</span></p>
           ) : null}
         </div>
       )}
@@ -485,6 +589,24 @@ function RevealedScreen({ ended, result, t }: { ended: QuestionEndedEvt; result:
           ))}
         </ul>
       </div>
+
+      {ended.correctOrder && ended.correctOrder.length > 0 ? (
+        <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            Correct order
+          </p>
+          <ol className="space-y-1.5">
+            {ended.correctOrder.map((item, i) => (
+              <li key={i} className="flex items-center gap-2 text-sm">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-xs font-bold text-emerald-400">
+                  {i + 1}
+                </span>
+                <span className="text-[var(--text-primary)]">{item}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
 
       <p className="text-center text-sm text-[var(--text-muted)]">Waiting for next question…</p>
     </div>

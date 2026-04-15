@@ -113,6 +113,43 @@ interface PlayQuizClientProps {
   returnHref?: string;
 }
 
+// localStorage key for quiz progress persistence (play mode only).
+// Clears on successful submit or explicit exit.
+function quizStorageKey(quizId: string) {
+  return `quiz_progress_${quizId}`;
+}
+
+type SavedProgress = {
+  currentIdx: number;
+  answers: RecordedAnswer[];
+  streak: number;
+  quizStartedAt: number;
+};
+
+function loadProgress(quizId: string): SavedProgress | null {
+  try {
+    const raw = localStorage.getItem(quizStorageKey(quizId));
+    if (!raw) return null;
+    return JSON.parse(raw) as SavedProgress;
+  } catch {
+    return null;
+  }
+}
+
+function saveProgress(quizId: string, data: SavedProgress) {
+  try {
+    localStorage.setItem(quizStorageKey(quizId), JSON.stringify(data));
+  } catch {
+    // storage quota exceeded or private browsing — silently ignore
+  }
+}
+
+function clearProgress(quizId: string) {
+  try {
+    localStorage.removeItem(quizStorageKey(quizId));
+  } catch {}
+}
+
 export function PlayQuizClient({
   quiz,
   locale,
@@ -136,10 +173,14 @@ export function PlayQuizClient({
   const router = useRouter();
 
   const totalQuestions = quiz.questions.length;
-  const [currentIdx, setCurrentIdx] = useState(0);
+
+  // Restore saved progress on mount (play mode only — practice is ephemeral)
+  const savedProgress = !isPractice ? loadProgress(quiz.id) : null;
+
+  const [currentIdx, setCurrentIdx] = useState(savedProgress?.currentIdx ?? 0);
   const [phase, setPhase] = useState<Phase>("asking");
   const [timeLeft, setTimeLeft] = useState(quiz.timePerQuestion);
-  const [streak, setStreak] = useState(0);
+  const [streak, setStreak] = useState(savedProgress?.streak ?? 0);
   const [showExit, setShowExit] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -152,9 +193,9 @@ export function PlayQuizClient({
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
 
-  const answersRef = useRef<RecordedAnswer[]>([]);
+  const answersRef = useRef<RecordedAnswer[]>(savedProgress?.answers ?? []);
   const questionStartRef = useRef<number>(0);
-  const quizStartRef = useRef<number>(0);
+  const quizStartRef = useRef<number>(savedProgress?.quizStartedAt ?? 0);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const question = quiz.questions[currentIdx];
@@ -220,6 +261,7 @@ export function PlayQuizClient({
         setPhase("revealed");
         return;
       }
+      clearProgress(quiz.id);
       router.push(
         `/quizzes/${encodeURIComponent(quiz.id)}/results?attempt=${encodeURIComponent(data.id)}`
       );
@@ -275,6 +317,17 @@ export function PlayQuizClient({
         orderAnswer: record.orderAnswer,
         timeSpent,
       });
+
+      // Persist progress so a page refresh doesn't lose answered questions.
+      // Practice mode is ephemeral — no persistence needed.
+      if (!isPractice) {
+        saveProgress(quiz.id, {
+          currentIdx,
+          answers: answersRef.current,
+          streak: isCorrect ? streak + 1 : 0,
+          quizStartedAt: quizStartRef.current,
+        });
+      }
 
       // Consume per-answer power-up effects (Double Points gain, Streak
       // Saver preservation). Returns the coin gain for this answer and
@@ -426,7 +479,10 @@ export function PlayQuizClient({
   }, []);
 
   useEffect(() => {
-    quizStartRef.current = Date.now();
+    // Only reset start time if there's no saved progress to restore.
+    if (quizStartRef.current === 0) {
+      quizStartRef.current = Date.now();
+    }
     questionStartRef.current = Date.now();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -434,6 +490,48 @@ export function PlayQuizClient({
       document.body.style.overflow = prev;
     };
   }, []);
+
+  // Keyboard shortcuts: 1-4 / A-D for MCQ, T/F or 1/2 for TrueFalse,
+  // Space/Enter to advance after reveal, Enter submits fill_blank via form.
+  const advanceRef = useRef(advance);
+  useEffect(() => { advanceRef.current = advance; });
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't capture when user is typing in an input or textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (phase === "revealed") {
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          clearAdvanceTimer();
+          advanceRef.current();
+        }
+        return;
+      }
+
+      if (phase !== "asking") return;
+
+      if (questionType === "mcq") {
+        const keyToIndex: Record<string, number> = {
+          "1": 0, "2": 1, "3": 2, "4": 3,
+          a: 0, b: 1, c: 2, d: 3,
+        };
+        const idx = keyToIndex[e.key.toLowerCase()];
+        if (idx !== undefined && idx < displayOptions.length) {
+          recordMcq(displayOptions[idx].letter);
+        }
+      }
+
+      if (questionType === "true_false") {
+        if (e.key === "1" || e.key.toLowerCase() === "t") recordTrueFalse("t");
+        if (e.key === "2" || e.key.toLowerCase() === "f") recordTrueFalse("f");
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [phase, questionType, displayOptions, recordMcq, recordTrueFalse]);
 
   const progress = (currentIdx + 1) / totalQuestions;
   const timerProgress = Math.max(0, timeLeft / quiz.timePerQuestion);
@@ -523,6 +621,8 @@ export function PlayQuizClient({
 
         <div
           key={currentIdx}
+          role="main"
+          aria-live="polite"
           className="relative w-full max-w-3xl animate-fade-in-up"
         >
           {quiz.showAnswerAnimations && revealed && lastCorrect !== null ? (
@@ -654,6 +754,7 @@ export function PlayQuizClient({
                 size="sm"
                 onClick={() => {
                   clearAdvanceTimer();
+                  clearProgress(quiz.id);
                   router.push(`/quizzes/${encodeURIComponent(quiz.id)}`);
                 }}
               >

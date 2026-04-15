@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/json"
+	mrand "math/rand"
 	"net/http"
 	"strings"
 
@@ -292,6 +293,17 @@ func buildLiveQuiz(quiz *models.Quiz) *hub.LiveQuiz {
 		}
 		if q.ImageURL != nil {
 			lq.ImageURL = *q.ImageURL
+		}
+		if q.ReorderItems != nil && *q.ReorderItems != "" {
+			var items []string
+			if err := json.Unmarshal([]byte(*q.ReorderItems), &items); err == nil {
+				lq.ReorderItems = items
+				// Build a shuffled copy for display (students must not see the correct order)
+				display := make([]string, len(items))
+				copy(display, items)
+				mrand.Shuffle(len(display), func(i, j int) { display[i], display[j] = display[j], display[i] })
+				lq.ReorderDisplay = display
+			}
 		}
 		questions = append(questions, lq)
 	}
