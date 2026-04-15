@@ -5,4 +5,5 @@
 backend/telegram-auth
 backend/telegram-import
 telegram-media/
+uploads/
 .telegram-session

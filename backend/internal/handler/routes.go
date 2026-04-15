@@ -34,6 +34,7 @@ type Dependencies struct {
 	AI                 *AIHandler
 	Chat               *ChatHandler
 	Files              *FilesHandler
+	QuizImage          *QuizImageHandler
 	EngSim             *EngSimHandler
 	MaterialNotes      *MaterialNotesHandler
 	DebugDatabase      http.HandlerFunc
@@ -67,6 +68,11 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// ── Public file serving (materials PDFs) ────────────────────────────
 	api.GET("/files/*filepath", wrapHTTP(deps.Files.Serve))
+
+	// ── Public quiz-question image serving ──────────────────────────────
+	// Upload is authenticated (see the internal group below); serving is
+	// public so anyone playing a public quiz can see the image.
+	api.GET("/quizzes/images/:name", wrapHTTP(deps.QuizImage.Serve))
 
 	// ── Public IELTS routes (no auth required for reading) ──────────────
 	api.GET("/ielts/materials", deps.IELTSMaterial.List)
@@ -135,6 +141,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.DELETE("/quizzes/:quizID", wrapHTTP(deps.Quiz.DeleteQuiz))
 		internal.POST("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.SubmitAttempt))
 		internal.GET("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.ListAttempts))
+		internal.POST("/quizzes/images", wrapHTTP(deps.QuizImage.Upload))
 
 		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
 		internal.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))

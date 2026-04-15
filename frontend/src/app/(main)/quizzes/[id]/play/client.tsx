@@ -411,6 +411,16 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
               {t("quiz.question")} {currentIdx + 1}
             </p>
+            {question.imageUrl ? (
+              <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-base)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={question.imageUrl}
+                  alt=""
+                  className="mx-auto max-h-[280px] w-auto object-contain"
+                />
+              </div>
+            ) : null}
             <h1 className="mt-3 break-words text-xl font-semibold leading-tight tracking-[-0.02em] text-[var(--text-primary)] sm:text-2xl md:text-3xl lg:text-4xl">
               {question.questionText}
             </h1>

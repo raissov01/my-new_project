@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   Plus,
   Trash2,
@@ -16,6 +16,9 @@ import {
   ToggleLeft,
   Type as TypeIcon,
   ListOrdered,
+  ImagePlus,
+  Loader2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +61,8 @@ const emptyQuestion = (key: number): QuestionEntry => ({
   correctOption: "a",
   blankAnswer: "",
   reorderItems: [],
+  imageUrl: "",
+  explanation: "",
 });
 
 // Resets type-specific fields when switching types so stale data from the
@@ -527,6 +532,8 @@ function QuestionEditor({
         />
       </div>
 
+      <QuestionExtras question={question} onChange={onChange} />
+
       {questionType === "mcq" ? (
         <McqBody question={question} onChange={onChange} />
       ) : questionType === "true_false" ? (
@@ -536,6 +543,111 @@ function QuestionEditor({
       ) : (
         <ReorderBody question={question} onChange={onChange} />
       )}
+    </div>
+  );
+}
+
+function QuestionExtras({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const imageUrl = question.imageUrl ?? "";
+
+  const handleFile = async (file: File) => {
+    if (!file) return;
+    if (!/^image\/(jpe?g|png|webp)$/i.test(file.type)) {
+      toast("error", t("quiz.imageBadType"));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast("error", t("quiz.imageTooLarge"));
+      return;
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/quizzes/images", {
+        method: "POST",
+        body: formData,
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { url?: string; error?: string }
+        | null;
+      if (!res.ok || !data?.url) {
+        toast("error", data?.error ?? t("quiz.imageUploadFailed"));
+        return;
+      }
+      onChange({ imageUrl: data.url });
+    } catch {
+      toast("error", t("quiz.imageUploadFailed"));
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="flex flex-wrap items-start gap-3">
+        {imageUrl ? (
+          <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl}
+              alt=""
+              className="h-20 w-20 rounded-[var(--radius-md)] border border-[var(--border)] object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => onChange({ imageUrl: "" })}
+              className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-secondary)] transition-colors hover:border-[var(--danger)] hover:text-[var(--danger)]"
+              aria-label={t("quiz.imageRemove")}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-3 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-50"
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImagePlus className="h-4 w-4" />
+          )}
+          {imageUrl ? t("quiz.imageReplace") : t("quiz.imageAdd")}
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleFile(file);
+          }}
+        />
+      </div>
+
+      <textarea
+        value={question.explanation ?? ""}
+        onChange={(e) => onChange({ explanation: e.target.value })}
+        placeholder={t("quiz.explanationPlaceholder")}
+        rows={2}
+        className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2 text-xs text-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--primary)]"
+      />
     </div>
   );
 }
