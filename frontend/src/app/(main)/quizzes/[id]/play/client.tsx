@@ -2,21 +2,39 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Flame, LogOut, Timer, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Check,
+  Flame,
+  LogOut,
+  Timer,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { createTranslator, type Locale } from "@/lib/shared/i18n";
-import type { QuizDetail, QuizQuestionDTO } from "@/server/services/quizzes";
+import type {
+  QuizDetail,
+  QuizQuestionDTO,
+  QuizQuestionType,
+} from "@/server/services/quizzes";
 
 type OptionLetter = "a" | "b" | "c" | "d";
+type TrueFalseLetter = "t" | "f";
 
 type DisplayOption = {
   letter: OptionLetter;
   text: string;
 };
 
+// RecordedAnswer is what we send to the backend. Only one of the value
+// fields is populated per row, depending on the question type.
 type RecordedAnswer = {
   questionId: string;
-  selectedOption: OptionLetter | null;
+  selectedOption: OptionLetter | TrueFalseLetter | null;
+  textAnswer: string | null;
+  orderAnswer: string[] | null;
   timeSpent: number;
 };
 
@@ -31,23 +49,21 @@ const ACCENT_BY_POSITION = [
   "from-emerald-500/25 to-emerald-500/5 border-emerald-400/30",
 ] as const;
 
-function getOptionText(question: QuizQuestionDTO, letter: OptionLetter): string {
-  switch (letter) {
-    case "a":
-      return question.optionA;
-    case "b":
-      return question.optionB;
-    case "c":
-      return question.optionC;
-    case "d":
-      return question.optionD;
-  }
+function normalizeBlank(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 function buildBaseOptions(question: QuizQuestionDTO): DisplayOption[] {
   return (["a", "b", "c", "d"] as OptionLetter[]).map((letter) => ({
     letter,
-    text: getOptionText(question, letter),
+    text:
+      letter === "a"
+        ? question.optionA ?? ""
+        : letter === "b"
+          ? question.optionB ?? ""
+          : letter === "c"
+            ? question.optionC ?? ""
+            : question.optionD ?? "",
   }));
 }
 
@@ -64,6 +80,23 @@ function shuffleOptions(base: DisplayOption[]): DisplayOption[] {
   return copy;
 }
 
+function shuffleArray<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 interface PlayQuizClientProps {
   quiz: QuizDetail;
   locale: Locale;
@@ -76,11 +109,19 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
   const totalQuestions = quiz.questions.length;
   const [currentIdx, setCurrentIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>("asking");
-  const [selectedLetter, setSelectedLetter] = useState<OptionLetter | null>(null);
   const [timeLeft, setTimeLeft] = useState(quiz.timePerQuestion);
   const [streak, setStreak] = useState(0);
   const [showExit, setShowExit] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Per-type transient answer state. Only one is meaningful at a time; the
+  // renderer picks which to surface based on question.questionType.
+  const [selectedLetter, setSelectedLetter] = useState<
+    OptionLetter | TrueFalseLetter | null
+  >(null);
+  const [blankInput, setBlankInput] = useState("");
+  const [reorderDraft, setReorderDraft] = useState<string[]>([]);
+  const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
 
   const answersRef = useRef<RecordedAnswer[]>([]);
   const questionStartRef = useRef<number>(0);
@@ -88,18 +129,34 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const question = quiz.questions[currentIdx];
-  // Shuffle is client-only: SSR renders the base order so hydration matches,
-  // then useEffect below replaces it with a randomized order on mount and on
-  // each question transition. Without this, Math.random() in render produces
-  // a hydration mismatch and the server's HTML (unshuffled) ends up sticking,
-  // which made the correct answer appear to always sit in position A.
+  const questionType: QuizQuestionType = question.questionType ?? "mcq";
+
+  // MCQ display order: SSR renders the base order so hydration matches,
+  // then useEffect below replaces it with a randomized order on mount and
+  // on each question transition. Only meaningful for mcq questions.
   const [displayOptions, setDisplayOptions] = useState<DisplayOption[]>(() =>
     buildBaseOptions(question)
   );
 
+  // Client-only shuffle: Math.random() during render produces an SSR/client
+  // hydration mismatch, so we seed the base order on first render and replace
+  // it here on mount and each question transition. The setDisplayOptions call
+  // is the intentional violation of the set-state-in-effect rule — shuffling
+  // during render is precisely the bug this fix exists for.
   useEffect(() => {
-    const base = buildBaseOptions(quiz.questions[currentIdx]);
-    setDisplayOptions(quiz.shuffleOptions ? shuffleOptions(base) : base);
+    const q = quiz.questions[currentIdx];
+    if ((q.questionType ?? "mcq") === "mcq") {
+      const base = buildBaseOptions(q);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDisplayOptions(quiz.shuffleOptions ? shuffleOptions(base) : base);
+    }
+    if ((q.questionType ?? "mcq") === "reorder") {
+      const items = q.reorderItems ?? [];
+      setReorderDraft(quiz.shuffleOptions ? shuffleArray(items) : [...items]);
+    } else {
+      setReorderDraft([]);
+    }
+    setBlankInput("");
   }, [currentIdx, quiz.questions, quiz.shuffleOptions]);
 
   const clearAdvanceTimer = () => {
@@ -150,13 +207,17 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
     }
     setCurrentIdx((i) => i + 1);
     setSelectedLetter(null);
+    setLastCorrect(null);
     setPhase("asking");
     setTimeLeft(quiz.timePerQuestion);
     questionStartRef.current = Date.now();
   }, [currentIdx, quiz.timePerQuestion, submitAttempt, totalQuestions]);
 
+  // recordAnswer is the single chokepoint for every question type. Callers
+  // build the record shape appropriate for their type; this function handles
+  // grading, streak, phase transition, and the auto-advance timer.
   const recordAnswer = useCallback(
-    (letter: OptionLetter | null) => {
+    (record: Omit<RecordedAnswer, "questionId" | "timeSpent">, isCorrect: boolean) => {
       if (phase !== "asking") return;
       const timeSpent = Math.max(
         0,
@@ -164,32 +225,103 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
       );
       answersRef.current.push({
         questionId: question.id,
-        selectedOption: letter,
+        selectedOption: record.selectedOption,
+        textAnswer: record.textAnswer,
+        orderAnswer: record.orderAnswer,
         timeSpent,
       });
 
-      const isCorrect = letter !== null && letter === question.correctOption;
       if (isCorrect) {
         setStreak((s) => s + 1);
       } else {
         setStreak(0);
       }
-
-      setSelectedLetter(letter);
+      setLastCorrect(isCorrect);
       setPhase("revealed");
 
       advanceTimerRef.current = setTimeout(() => {
         advance();
-      }, 1500);
+      }, 1800);
     },
-    [advance, phase, question.correctOption, question.id]
+    [advance, phase, question.id]
   );
 
-  // Countdown timer; auto-skips by calling recordAnswer when it hits 0.
-  // Uses a ref so the timer always sees the latest recordAnswer closure.
-  const recordAnswerRef = useRef(recordAnswer);
+  const recordMcq = useCallback(
+    (letter: OptionLetter | null) => {
+      const isCorrect = letter !== null && letter === question.correctOption;
+      setSelectedLetter(letter);
+      recordAnswer(
+        { selectedOption: letter, textAnswer: null, orderAnswer: null },
+        isCorrect
+      );
+    },
+    [question.correctOption, recordAnswer]
+  );
+
+  const recordTrueFalse = useCallback(
+    (letter: TrueFalseLetter | null) => {
+      const isCorrect = letter !== null && letter === question.correctOption;
+      setSelectedLetter(letter);
+      recordAnswer(
+        { selectedOption: letter, textAnswer: null, orderAnswer: null },
+        isCorrect
+      );
+    },
+    [question.correctOption, recordAnswer]
+  );
+
+  const recordBlank = useCallback(
+    (value: string | null) => {
+      const submitted = value === null ? null : value.trim();
+      const isCorrect =
+        submitted !== null &&
+        submitted !== "" &&
+        question.blankAnswer != null &&
+        normalizeBlank(submitted) === normalizeBlank(question.blankAnswer);
+      recordAnswer(
+        { selectedOption: null, textAnswer: submitted, orderAnswer: null },
+        isCorrect
+      );
+    },
+    [question.blankAnswer, recordAnswer]
+  );
+
+  const recordReorder = useCallback(
+    (items: string[] | null) => {
+      const canonical = question.reorderItems ?? [];
+      const isCorrect =
+        items !== null && items.length > 0 && arraysEqual(items, canonical);
+      recordAnswer(
+        { selectedOption: null, textAnswer: null, orderAnswer: items },
+        isCorrect
+      );
+    },
+    [question.reorderItems, recordAnswer]
+  );
+
+  // Timeout handler: fires a "null" answer of the right shape for the
+  // current question type so the backend still gets a row per question.
+  const handleTimeout = useCallback(() => {
+    switch (questionType) {
+      case "mcq":
+        recordMcq(null);
+        return;
+      case "true_false":
+        recordTrueFalse(null);
+        return;
+      case "fill_blank":
+        recordBlank(null);
+        return;
+      case "reorder":
+        recordReorder(null);
+        return;
+    }
+  }, [questionType, recordMcq, recordTrueFalse, recordBlank, recordReorder]);
+
+  // Countdown timer; auto-skips via handleTimeout when it hits 0.
+  const handleTimeoutRef = useRef(handleTimeout);
   useEffect(() => {
-    recordAnswerRef.current = recordAnswer;
+    handleTimeoutRef.current = handleTimeout;
   });
   useEffect(() => {
     if (phase !== "asking") return;
@@ -197,7 +329,7 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          queueMicrotask(() => recordAnswerRef.current(null));
+          queueMicrotask(() => handleTimeoutRef.current());
           return 0;
         }
         return prev - 1;
@@ -206,12 +338,10 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
     return () => clearInterval(interval);
   }, [phase, currentIdx]);
 
-  // Cleanup advance timer on unmount
   useEffect(() => {
     return () => clearAdvanceTimer();
   }, []);
 
-  // Initialize timestamps and block body scroll while in focus mode
   useEffect(() => {
     quizStartRef.current = Date.now();
     questionStartRef.current = Date.now();
@@ -224,7 +354,7 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
 
   const progress = (currentIdx + 1) / totalQuestions;
   const timerProgress = Math.max(0, timeLeft / quiz.timePerQuestion);
-  const correctLetter = question.correctOption as OptionLetter | null | undefined;
+  const revealed = phase !== "asking";
 
   const questionNumberLabel = t("quiz.play.questionOf")
     .replace("{n}", String(currentIdx + 1))
@@ -286,54 +416,48 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
             </h1>
           </div>
 
-          <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-4">
-            {displayOptions.map((opt, index) => {
-              const positionLabel = POSITION_LABELS[index];
-              const isSelected = selectedLetter === opt.letter;
-              const isCorrectOption = correctLetter === opt.letter;
-              const revealed = phase !== "asking";
-              let stateClasses =
-                "border-[var(--border)] bg-gradient-to-br " + ACCENT_BY_POSITION[index] + " hover:-translate-y-0.5";
-              let badgeClasses =
-                "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]";
-              let icon: React.ReactNode = null;
-              if (revealed) {
-                if (isCorrectOption) {
-                  stateClasses =
-                    "border-emerald-400/60 bg-emerald-500/15 animate-success-glow";
-                  badgeClasses = "border-emerald-400/60 bg-emerald-500 text-white";
-                  icon = <Check className="h-5 w-5 text-emerald-300" />;
-                } else if (isSelected) {
-                  stateClasses =
-                    "border-rose-400/60 bg-rose-500/15 animate-shake";
-                  badgeClasses = "border-rose-400/60 bg-rose-500 text-white";
-                  icon = <X className="h-5 w-5 text-rose-300" />;
-                } else {
-                  stateClasses =
-                    "border-[var(--border)] bg-[var(--bg-surface)] opacity-50";
-                }
-              }
-              return (
-                <button
-                  key={opt.letter}
-                  type="button"
-                  onClick={() => recordAnswer(opt.letter)}
-                  disabled={revealed}
-                  className={`group flex min-h-[68px] items-center gap-3 rounded-[var(--radius-xl)] border-2 px-3 py-3 text-left transition-all duration-200 disabled:cursor-default sm:min-h-[76px] sm:gap-4 sm:px-5 sm:py-4 ${stateClasses}`}
-                >
-                  <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-base font-bold uppercase transition-colors sm:h-11 sm:w-11 ${badgeClasses}`}
-                  >
-                    {positionLabel}
-                  </span>
-                  <span className="min-w-0 flex-1 break-words text-sm font-medium text-[var(--text-primary)] sm:text-base md:text-lg">
-                    {opt.text}
-                  </span>
-                  {icon ? <span className="shrink-0">{icon}</span> : null}
-                </button>
-              );
-            })}
-          </div>
+          {questionType === "mcq" ? (
+            <McqBody
+              displayOptions={displayOptions}
+              selectedLetter={selectedLetter as OptionLetter | null}
+              correctLetter={question.correctOption as OptionLetter | null | undefined}
+              revealed={revealed}
+              onPick={recordMcq}
+            />
+          ) : questionType === "true_false" ? (
+            <TrueFalseBody
+              t={t}
+              selected={selectedLetter as TrueFalseLetter | null}
+              correct={question.correctOption as TrueFalseLetter | null | undefined}
+              revealed={revealed}
+              onPick={recordTrueFalse}
+            />
+          ) : questionType === "fill_blank" ? (
+            <FillBlankBody
+              t={t}
+              value={blankInput}
+              onChange={setBlankInput}
+              correctAnswer={question.blankAnswer ?? null}
+              revealed={revealed}
+              lastCorrect={lastCorrect}
+              onSubmit={() => recordBlank(blankInput)}
+            />
+          ) : (
+            <ReorderBody
+              t={t}
+              items={reorderDraft}
+              onReorder={setReorderDraft}
+              canonical={question.reorderItems ?? []}
+              revealed={revealed}
+              onSubmit={() => recordReorder(reorderDraft)}
+            />
+          )}
+
+          {revealed && question.explanation ? (
+            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm italic text-[var(--text-secondary)]">
+              {question.explanation}
+            </div>
+          ) : null}
 
           {phase === "submitting" ? (
             <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
@@ -389,6 +513,280 @@ export function PlayQuizClient({ quiz, locale }: PlayQuizClientProps) {
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function McqBody({
+  displayOptions,
+  selectedLetter,
+  correctLetter,
+  revealed,
+  onPick,
+}: {
+  displayOptions: DisplayOption[];
+  selectedLetter: OptionLetter | null;
+  correctLetter: OptionLetter | null | undefined;
+  revealed: boolean;
+  onPick: (letter: OptionLetter) => void;
+}) {
+  return (
+    <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-4">
+      {displayOptions.map((opt, index) => {
+        const positionLabel = POSITION_LABELS[index];
+        const isSelected = selectedLetter === opt.letter;
+        const isCorrectOption = correctLetter === opt.letter;
+        let stateClasses =
+          "border-[var(--border)] bg-gradient-to-br " +
+          ACCENT_BY_POSITION[index] +
+          " hover:-translate-y-0.5";
+        let badgeClasses =
+          "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]";
+        let icon: React.ReactNode = null;
+        if (revealed) {
+          if (isCorrectOption) {
+            stateClasses =
+              "border-emerald-400/60 bg-emerald-500/15 animate-success-glow";
+            badgeClasses = "border-emerald-400/60 bg-emerald-500 text-white";
+            icon = <Check className="h-5 w-5 text-emerald-300" />;
+          } else if (isSelected) {
+            stateClasses =
+              "border-rose-400/60 bg-rose-500/15 animate-shake";
+            badgeClasses = "border-rose-400/60 bg-rose-500 text-white";
+            icon = <X className="h-5 w-5 text-rose-300" />;
+          } else {
+            stateClasses =
+              "border-[var(--border)] bg-[var(--bg-surface)] opacity-50";
+          }
+        }
+        return (
+          <button
+            key={opt.letter}
+            type="button"
+            onClick={() => onPick(opt.letter)}
+            disabled={revealed}
+            className={`group flex min-h-[68px] items-center gap-3 rounded-[var(--radius-xl)] border-2 px-3 py-3 text-left transition-all duration-200 disabled:cursor-default sm:min-h-[76px] sm:gap-4 sm:px-5 sm:py-4 ${stateClasses}`}
+          >
+            <span
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-base font-bold uppercase transition-colors sm:h-11 sm:w-11 ${badgeClasses}`}
+            >
+              {positionLabel}
+            </span>
+            <span className="min-w-0 flex-1 break-words text-sm font-medium text-[var(--text-primary)] sm:text-base md:text-lg">
+              {opt.text}
+            </span>
+            {icon ? <span className="shrink-0">{icon}</span> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function TrueFalseBody({
+  t,
+  selected,
+  correct,
+  revealed,
+  onPick,
+}: {
+  t: (key: string) => string;
+  selected: TrueFalseLetter | null;
+  correct: TrueFalseLetter | null | undefined;
+  revealed: boolean;
+  onPick: (letter: TrueFalseLetter) => void;
+}) {
+  const choices: Array<{ key: TrueFalseLetter; labelKey: string }> = [
+    { key: "t", labelKey: "quiz.true" },
+    { key: "f", labelKey: "quiz.false" },
+  ];
+  return (
+    <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-4">
+      {choices.map((c) => {
+        const isSelected = selected === c.key;
+        const isCorrect = correct === c.key;
+        let stateClasses =
+          "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:-translate-y-0.5";
+        let icon: React.ReactNode = null;
+        if (revealed) {
+          if (isCorrect) {
+            stateClasses =
+              "border-emerald-400/60 bg-emerald-500/15 animate-success-glow text-emerald-200";
+            icon = <Check className="h-6 w-6 text-emerald-300" />;
+          } else if (isSelected) {
+            stateClasses =
+              "border-rose-400/60 bg-rose-500/15 animate-shake text-rose-200";
+            icon = <X className="h-6 w-6 text-rose-300" />;
+          } else {
+            stateClasses =
+              "border-[var(--border)] bg-[var(--bg-surface)] opacity-50";
+          }
+        }
+        return (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => onPick(c.key)}
+            disabled={revealed}
+            className={`flex min-h-[88px] items-center justify-center gap-3 rounded-[var(--radius-xl)] border-2 px-4 py-6 text-2xl font-bold uppercase transition-all duration-200 disabled:cursor-default sm:text-3xl ${stateClasses}`}
+          >
+            {t(c.labelKey)}
+            {icon ? <span className="shrink-0">{icon}</span> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FillBlankBody({
+  t,
+  value,
+  onChange,
+  correctAnswer,
+  revealed,
+  lastCorrect,
+  onSubmit,
+}: {
+  t: (key: string) => string;
+  value: string;
+  onChange: (v: string) => void;
+  correctAnswer: string | null;
+  revealed: boolean;
+  lastCorrect: boolean | null;
+  onSubmit: () => void;
+}) {
+  return (
+    <div className="mt-4 space-y-3 sm:mt-6">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!revealed && value.trim()) onSubmit();
+        }}
+      >
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={t("quiz.play.blankPlaceholder")}
+          disabled={revealed}
+          autoFocus
+          className="h-14 text-lg"
+        />
+        <div className="mt-3 flex justify-end">
+          <Button
+            type="submit"
+            disabled={revealed || !value.trim()}
+            isLoading={false}
+          >
+            {t("quiz.play.submitAnswer")}
+          </Button>
+        </div>
+      </form>
+
+      {revealed ? (
+        <div
+          className={`rounded-[var(--radius-md)] border-2 px-4 py-3 text-sm ${
+            lastCorrect
+              ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
+              : "border-rose-400/60 bg-rose-500/10 text-rose-200"
+          }`}
+        >
+          <p className="font-semibold">
+            {lastCorrect ? t("quiz.play.correct") : t("quiz.play.wrong")}
+          </p>
+          {!lastCorrect && correctAnswer ? (
+            <p className="mt-1">
+              {t("quiz.play.correctAnswerLabel")}{" "}
+              <span className="font-semibold">{correctAnswer}</span>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ReorderBody({
+  t,
+  items,
+  onReorder,
+  canonical,
+  revealed,
+  onSubmit,
+}: {
+  t: (key: string) => string;
+  items: string[];
+  onReorder: (next: string[]) => void;
+  canonical: string[];
+  revealed: boolean;
+  onSubmit: () => void;
+}) {
+  const move = (idx: number, direction: -1 | 1) => {
+    if (revealed) return;
+    const target = idx + direction;
+    if (target < 0 || target >= items.length) return;
+    const next = [...items];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onReorder(next);
+  };
+
+  return (
+    <div className="mt-4 space-y-3 sm:mt-6">
+      <p className="text-sm text-[var(--text-muted)]">{t("quiz.play.reorderHint")}</p>
+      <div className="space-y-2">
+        {items.map((item, idx) => {
+          const expected = canonical[idx];
+          const correctSpot = revealed && item === expected;
+          const wrongSpot = revealed && item !== expected;
+          let rowClasses =
+            "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)]";
+          if (correctSpot) {
+            rowClasses = "border-emerald-400/60 bg-emerald-500/10 text-emerald-100";
+          } else if (wrongSpot) {
+            rowClasses = "border-rose-400/60 bg-rose-500/10 text-rose-100";
+          }
+          return (
+            <div
+              key={`${idx}-${item}`}
+              className={`flex items-center gap-2 rounded-[var(--radius-md)] border-2 px-3 py-3 transition-colors ${rowClasses}`}
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--bg-soft)] text-xs font-semibold text-[var(--text-secondary)]">
+                {idx + 1}
+              </span>
+              <span className="min-w-0 flex-1 break-words text-sm font-medium sm:text-base">
+                {item}
+              </span>
+              <button
+                type="button"
+                onClick={() => move(idx, -1)}
+                disabled={revealed || idx === 0}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] disabled:opacity-30"
+                aria-label={t("quiz.moveUp")}
+              >
+                <ArrowUp className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => move(idx, 1)}
+                disabled={revealed || idx === items.length - 1}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] disabled:opacity-30"
+                aria-label={t("quiz.moveDown")}
+              >
+                <ArrowDown className="h-4 w-4" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={onSubmit}
+          disabled={revealed || items.length === 0}
+        >
+          {t("quiz.play.submitAnswer")}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -22,14 +22,21 @@ export type QuizOverview = {
   bestPercentage: number | null;
 };
 
+export type QuizQuestionType = "mcq" | "true_false" | "fill_blank" | "reorder";
+
 export type QuizQuestionDTO = {
   id: string;
   questionText: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
+  questionType: QuizQuestionType;
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
   correctOption?: string | null;
+  blankAnswer?: string | null;
+  reorderItems?: string[] | null;
+  imageUrl?: string | null;
+  explanation?: string | null;
   orderIndex: number;
 };
 

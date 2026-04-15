@@ -206,21 +206,21 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 
 function getOptionText(
   question: {
-    optionA: string;
-    optionB: string;
-    optionC: string;
-    optionD: string;
+    optionA?: string;
+    optionB?: string;
+    optionC?: string;
+    optionD?: string;
   },
   key: (typeof OPTION_KEYS)[number]
-) {
+): string {
   switch (key) {
     case "a":
-      return question.optionA;
+      return question.optionA ?? "";
     case "b":
-      return question.optionB;
+      return question.optionB ?? "";
     case "c":
-      return question.optionC;
+      return question.optionC ?? "";
     case "d":
-      return question.optionD;
+      return question.optionD ?? "";
   }
 }
