@@ -30,9 +30,10 @@ type CreateQuizRequest struct {
 	Description     string              `json:"description"`
 	Subject         string              `json:"subject"`
 	IsPublic        bool                `json:"isPublic"`
-	TimePerQuestion int                 `json:"timePerQuestion"`
-	ShuffleOptions  bool                `json:"shuffleOptions"`
-	Questions       []QuizQuestionInput `json:"questions"`
+	TimePerQuestion      int                 `json:"timePerQuestion"`
+	ShuffleOptions       bool                `json:"shuffleOptions"`
+	ShowAnswerAnimations bool                `json:"showAnswerAnimations"`
+	Questions            []QuizQuestionInput `json:"questions"`
 }
 
 // UpdateQuizRequest is the input for updating a quiz.
@@ -41,28 +42,30 @@ type UpdateQuizRequest struct {
 	Description     string              `json:"description"`
 	Subject         string              `json:"subject"`
 	IsPublic        bool                `json:"isPublic"`
-	TimePerQuestion int                 `json:"timePerQuestion"`
-	ShuffleOptions  bool                `json:"shuffleOptions"`
-	Questions       []QuizQuestionInput `json:"questions"`
+	TimePerQuestion      int                 `json:"timePerQuestion"`
+	ShuffleOptions       bool                `json:"shuffleOptions"`
+	ShowAnswerAnimations bool                `json:"showAnswerAnimations"`
+	Questions            []QuizQuestionInput `json:"questions"`
 }
 
 // QuizOverview is a library-card summary of a quiz (used in list views).
 type QuizOverview struct {
-	ID                string  `json:"id"`
-	UserID            string  `json:"userId"`
-	AuthorName        *string `json:"authorName"`
-	Title             string  `json:"title"`
-	Description       *string `json:"description"`
-	Subject           *string `json:"subject"`
-	IsPublic          bool    `json:"isPublic"`
-	TimePerQuestion   int     `json:"timePerQuestion"`
-	ShuffleOptions    bool    `json:"shuffleOptions"`
-	CreatedAt         string  `json:"createdAt"`
-	UpdatedAt         string  `json:"updatedAt"`
-	QuestionCount     int     `json:"questionCount"`
-	AttemptsCount     int     `json:"attemptsCount"`
-	AveragePercentage int     `json:"averagePercentage"`
-	BestPercentage    *int    `json:"bestPercentage"`
+	ID                   string  `json:"id"`
+	UserID               string  `json:"userId"`
+	AuthorName           *string `json:"authorName"`
+	Title                string  `json:"title"`
+	Description          *string `json:"description"`
+	Subject              *string `json:"subject"`
+	IsPublic             bool    `json:"isPublic"`
+	TimePerQuestion      int     `json:"timePerQuestion"`
+	ShuffleOptions       bool    `json:"shuffleOptions"`
+	ShowAnswerAnimations bool    `json:"showAnswerAnimations"`
+	CreatedAt            string  `json:"createdAt"`
+	UpdatedAt            string  `json:"updatedAt"`
+	QuestionCount        int     `json:"questionCount"`
+	AttemptsCount        int     `json:"attemptsCount"`
+	AveragePercentage    int     `json:"averagePercentage"`
+	BestPercentage       *int    `json:"bestPercentage"`
 }
 
 // QuizQuestionDTO is a question as exposed in the detail response.
@@ -87,22 +90,23 @@ type QuizQuestionDTO struct {
 
 // QuizDetail is the full quiz response with questions.
 type QuizDetail struct {
-	ID                string            `json:"id"`
-	UserID            string            `json:"userId"`
-	AuthorName        *string           `json:"authorName"`
-	Title             string            `json:"title"`
-	Description       *string           `json:"description"`
-	Subject           *string           `json:"subject"`
-	IsPublic          bool              `json:"isPublic"`
-	TimePerQuestion   int               `json:"timePerQuestion"`
-	ShuffleOptions    bool              `json:"shuffleOptions"`
-	CreatedAt         string            `json:"createdAt"`
-	UpdatedAt         string            `json:"updatedAt"`
-	Questions         []QuizQuestionDTO `json:"questions"`
-	QuestionCount     int               `json:"questionCount"`
-	AttemptsCount     int               `json:"attemptsCount"`
-	AveragePercentage int               `json:"averagePercentage"`
-	IsAuthor          bool              `json:"isAuthor"`
+	ID                   string            `json:"id"`
+	UserID               string            `json:"userId"`
+	AuthorName           *string           `json:"authorName"`
+	Title                string            `json:"title"`
+	Description          *string           `json:"description"`
+	Subject              *string           `json:"subject"`
+	IsPublic             bool              `json:"isPublic"`
+	TimePerQuestion      int               `json:"timePerQuestion"`
+	ShuffleOptions       bool              `json:"shuffleOptions"`
+	ShowAnswerAnimations bool              `json:"showAnswerAnimations"`
+	CreatedAt            string            `json:"createdAt"`
+	UpdatedAt            string            `json:"updatedAt"`
+	Questions            []QuizQuestionDTO `json:"questions"`
+	QuestionCount        int               `json:"questionCount"`
+	AttemptsCount        int               `json:"attemptsCount"`
+	AveragePercentage    int               `json:"averagePercentage"`
+	IsAuthor             bool              `json:"isAuthor"`
 }
 
 // AttemptAnswerInput is a single answer submitted by the client.

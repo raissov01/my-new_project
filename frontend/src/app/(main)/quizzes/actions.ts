@@ -31,6 +31,7 @@ export type CreateQuizInput = {
   isPublic: boolean;
   timePerQuestion: number;
   shuffleOptions: boolean;
+  showAnswerAnimations: boolean;
   questions: QuizQuestionInput[];
 };
 
@@ -109,6 +110,7 @@ export async function createQuiz(input: CreateQuizInput): Promise<QuizFormState>
         isPublic: input.isPublic,
         timePerQuestion: input.timePerQuestion,
         shuffleOptions: input.shuffleOptions,
+        showAnswerAnimations: input.showAnswerAnimations,
         questions,
       }),
       headers: { "Content-Type": "application/json" },
@@ -148,6 +150,7 @@ export async function updateQuiz(
         isPublic: input.isPublic,
         timePerQuestion: input.timePerQuestion,
         shuffleOptions: input.shuffleOptions,
+        showAnswerAnimations: input.showAnswerAnimations,
         questions,
       }),
       headers: { "Content-Type": "application/json" },

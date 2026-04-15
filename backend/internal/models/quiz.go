@@ -4,16 +4,17 @@ import "time"
 
 // Quiz is a Quizizz-style multiple-choice quiz owned by a user.
 type Quiz struct {
-	ID                string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	UserID            string    `gorm:"type:uuid;not null;index" json:"userId"`
-	Title             string    `gorm:"not null" json:"title"`
-	Description       *string   `json:"description"`
-	Subject           *string   `gorm:"index" json:"subject"`
-	IsPublic          bool      `gorm:"not null;default:false" json:"isPublic"`
-	TimePerQuestion   int       `gorm:"not null;default:30" json:"timePerQuestion"`
-	ShuffleOptions    bool      `gorm:"not null;default:true" json:"shuffleOptions"`
-	CreatedAt         time.Time `gorm:"autoCreateTime" json:"createdAt"`
-	UpdatedAt         time.Time `gorm:"autoUpdateTime" json:"updatedAt"`
+	ID                   string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	UserID               string    `gorm:"type:uuid;not null;index" json:"userId"`
+	Title                string    `gorm:"not null" json:"title"`
+	Description          *string   `json:"description"`
+	Subject              *string   `gorm:"index" json:"subject"`
+	IsPublic             bool      `gorm:"not null;default:false" json:"isPublic"`
+	TimePerQuestion      int       `gorm:"not null;default:30" json:"timePerQuestion"`
+	ShuffleOptions       bool      `gorm:"not null;default:true" json:"shuffleOptions"`
+	ShowAnswerAnimations bool      `gorm:"not null;default:true" json:"showAnswerAnimations"`
+	CreatedAt            time.Time `gorm:"autoCreateTime" json:"createdAt"`
+	UpdatedAt            time.Time `gorm:"autoUpdateTime" json:"updatedAt"`
 
 	User      User           `gorm:"foreignKey:UserID" json:"-"`
 	Questions []QuizQuestion `gorm:"foreignKey:QuizID;constraint:OnDelete:CASCADE" json:"questions,omitempty"`

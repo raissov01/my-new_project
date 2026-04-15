@@ -17,6 +17,7 @@ interface EditQuizClientProps {
   initialIsPublic: boolean;
   initialTimePerQuestion: number;
   initialShuffleOptions: boolean;
+  initialShowAnswerAnimations: boolean;
   initialQuestions: QuizQuestionInput[];
 }
 
@@ -28,6 +29,7 @@ export function EditQuizClient({
   initialIsPublic,
   initialTimePerQuestion,
   initialShuffleOptions,
+  initialShowAnswerAnimations,
   initialQuestions,
 }: EditQuizClientProps) {
   const { t } = useLocale();
@@ -60,6 +62,7 @@ export function EditQuizClient({
       initialIsPublic={initialIsPublic}
       initialTimePerQuestion={initialTimePerQuestion}
       initialShuffleOptions={initialShuffleOptions}
+      initialShowAnswerAnimations={initialShowAnswerAnimations}
       initialQuestions={initialQuestions}
       submitLabel={t("form.saveChanges")}
       cancelHref={`/quizzes/${quizId}`}

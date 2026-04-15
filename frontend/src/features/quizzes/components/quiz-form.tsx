@@ -41,6 +41,7 @@ interface QuizFormProps {
   initialIsPublic?: boolean;
   initialTimePerQuestion?: number;
   initialShuffleOptions?: boolean;
+  initialShowAnswerAnimations?: boolean;
   initialQuestions?: QuizQuestionInput[];
   submitLabel: string;
   cancelHref: string;
@@ -129,6 +130,7 @@ export function QuizForm({
   initialIsPublic = false,
   initialTimePerQuestion = 30,
   initialShuffleOptions = true,
+  initialShowAnswerAnimations = true,
   initialQuestions,
   submitLabel,
   cancelHref,
@@ -146,6 +148,9 @@ export function QuizForm({
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [timePerQuestion, setTimePerQuestion] = useState(initialTimePerQuestion);
   const [shuffleOptions, setShuffleOptions] = useState(initialShuffleOptions);
+  const [showAnswerAnimations, setShowAnswerAnimations] = useState(
+    initialShowAnswerAnimations
+  );
 
   const [keyCounter, setKeyCounter] = useState(0);
   const [questions, setQuestions] = useState<QuestionEntry[]>(() => {
@@ -242,6 +247,7 @@ export function QuizForm({
           isPublic,
           timePerQuestion,
           shuffleOptions,
+          showAnswerAnimations,
           questions: filled.map(({ _key: _ignored, ...rest }) => {
             void _ignored;
             return rest;
@@ -325,6 +331,15 @@ export function QuizForm({
                 className="h-4 w-4 accent-[var(--primary)]"
               />
               {t("quiz.shuffleOptions")}
+            </label>
+            <label className="inline-flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-2.5 text-sm text-[var(--text-primary)]">
+              <input
+                type="checkbox"
+                checked={showAnswerAnimations}
+                onChange={(e) => setShowAnswerAnimations(e.target.checked)}
+                className="h-4 w-4 accent-[var(--primary)]"
+              />
+              {t("quiz.showAnswerAnimations")}
             </label>
             <label className="inline-flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-2.5 text-sm text-[var(--text-primary)]">
               <input

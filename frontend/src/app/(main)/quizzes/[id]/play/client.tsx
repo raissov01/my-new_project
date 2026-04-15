@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createTranslator, type Locale } from "@/lib/shared/i18n";
 import { useQuizSounds } from "@/features/quizzes/use-sounds";
+import { AnswerAnimation } from "@/features/quizzes/components/answer-animation";
 import type {
   QuizDetail,
   QuizQuestionDTO,
@@ -118,6 +119,9 @@ export function PlayQuizClient({
 }: PlayQuizClientProps) {
   const isPractice = mode === "practice";
   const sounds = useQuizSounds();
+  // Counter ticks up on every answer so the AnswerAnimation overlay gets a
+  // fresh `key` and remounts even if the same phase fires twice in a row.
+  const [animationTick, setAnimationTick] = useState(0);
   const t = useMemo(() => createTranslator(locale), [locale]);
   const router = useRouter();
 
@@ -276,6 +280,7 @@ export function PlayQuizClient({
         setStreak(0);
         sounds.play("wrong");
       }
+      setAnimationTick((n) => n + 1);
       setLastCorrect(isCorrect);
       setPhase("revealed");
 
@@ -476,7 +481,17 @@ export function PlayQuizClient({
           </div>
         ) : null}
 
-        <div key={currentIdx} className="w-full max-w-3xl animate-fade-in-up">
+        <div
+          key={currentIdx}
+          className="relative w-full max-w-3xl animate-fade-in-up"
+        >
+          {quiz.showAnswerAnimations && revealed && lastCorrect !== null ? (
+            <AnswerAnimation
+              key={animationTick}
+              phase={lastCorrect ? "correct" : "wrong"}
+              encourageText={t("quiz.play.encouragement")}
+            />
+          ) : null}
           <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8 md:p-10">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
               {t("quiz.question")} {currentIdx + 1}

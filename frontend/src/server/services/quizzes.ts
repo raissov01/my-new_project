@@ -44,6 +44,7 @@ export type QuizDetail = {
   id: string;
   userId: string;
   authorName: string | null;
+  showAnswerAnimations?: boolean;
   title: string;
   description: string | null;
   subject: string | null;
