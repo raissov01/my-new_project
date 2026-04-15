@@ -1,0 +1,304 @@
+package handler
+
+import (
+	"crypto/rand"
+	"encoding/base32"
+	"encoding/json"
+	"net/http"
+	"strings"
+
+	"github.com/midoriya/flashlearn-backend/internal/hub"
+	"github.com/midoriya/flashlearn-backend/internal/middleware"
+	"github.com/midoriya/flashlearn-backend/internal/models"
+	"gorm.io/gorm"
+)
+
+// QuizLiveHandler manages live quiz session REST endpoints.
+// WebSocket upgrades are delegated to the hub.
+type QuizLiveHandler struct {
+	db  *gorm.DB
+	hub *hub.Hub
+}
+
+func NewQuizLive(db *gorm.DB) *QuizLiveHandler {
+	h := hub.GetHub(db)
+	return &QuizLiveHandler{db: db, hub: h}
+}
+
+// ──────────────────────────────────────────────────────────────
+// POST /api/v1/quizzes/:quizID/live-sessions
+// Creates a new lobby session and returns its metadata.
+// ──────────────────────────────────────────────────────────────
+
+type createSessionRequest struct {
+	Mode           string `json:"mode"` // teacher_paced | self_paced
+	AllowAnonymous bool   `json:"allowAnonymous"`
+}
+
+type createSessionResponse struct {
+	ID        string `json:"id"`
+	JoinCode  string `json:"joinCode"`
+	Mode      string `json:"mode"`
+	QuizTitle string `json:"quizTitle"`
+}
+
+func (h *QuizLiveHandler) CreateSession(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	quizID := r.PathValue("quizID")
+	if quizID == "" {
+		writeError(w, http.StatusBadRequest, "missing quizID", nil)
+		return
+	}
+
+	var req createSessionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		// Defaults if no body
+		req.Mode = "teacher_paced"
+		req.AllowAnonymous = true
+	}
+	if req.Mode == "" {
+		req.Mode = "teacher_paced"
+	}
+
+	// Verify quiz exists and user owns it (or it's public)
+	var quiz models.Quiz
+	if err := h.db.Preload("Questions").First(&quiz, "id = ?", quizID).Error; err != nil {
+		writeError(w, http.StatusNotFound, "quiz not found", nil)
+		return
+	}
+
+	if quiz.UserID != userID && !quiz.IsPublic {
+		writeError(w, http.StatusForbidden, "access denied", nil)
+		return
+	}
+
+	if len(quiz.Questions) == 0 {
+		writeError(w, http.StatusBadRequest, "quiz has no questions", nil)
+		return
+	}
+
+	// Generate a unique 6-char join code
+	code, err := generateJoinCode()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not generate join code", err)
+		return
+	}
+
+	// Retry up to 5 times in case of collision (very unlikely)
+	for i := 0; i < 5; i++ {
+		var existing models.QuizLiveSession
+		if h.db.Where("join_code = ? AND status != 'finished'", code).First(&existing).Error != nil {
+			break // no collision, code is usable
+		}
+		code, _ = generateJoinCode()
+	}
+
+	session := models.QuizLiveSession{
+		QuizID:         quizID,
+		HostUserID:     userID,
+		JoinCode:       code,
+		Mode:           req.Mode,
+		Status:         "lobby",
+		AllowAnonymous: req.AllowAnonymous,
+	}
+	if err := h.db.Create(&session).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to create session", err)
+		return
+	}
+
+	// Load quiz data into the hub room
+	liveQuiz := buildLiveQuiz(&quiz)
+	h.hub.CreateRoom(session.ID, code, req.Mode, liveQuiz)
+
+	writeJSON(w, http.StatusCreated, createSessionResponse{
+		ID:        session.ID,
+		JoinCode:  code,
+		Mode:      session.Mode,
+		QuizTitle: quiz.Title,
+	})
+}
+
+// ──────────────────────────────────────────────────────────────
+// POST /api/v1/live-sessions/join
+// Student joins by code; creates a participant record.
+// ──────────────────────────────────────────────────────────────
+
+type joinSessionRequest struct {
+	Code        string `json:"code"`
+	DisplayName string `json:"displayName"`
+	Anonymous   bool   `json:"anonymous"` // if true, use random Kazakh name
+}
+
+type joinSessionResponse struct {
+	ParticipantID string `json:"participantId"`
+	SessionID     string `json:"sessionId"`
+	DisplayName   string `json:"displayName"`
+	QuizTitle     string `json:"quizTitle"`
+	Mode          string `json:"mode"`
+	TotalQ        int    `json:"totalQuestions"`
+}
+
+func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
+	userID, _ := middleware.UserIDFromContext(r.Context())
+
+	var req joinSessionRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	code := strings.ToUpper(strings.TrimSpace(req.Code))
+	if len(code) < 4 {
+		writeError(w, http.StatusBadRequest, "invalid join code", nil)
+		return
+	}
+
+	// Look up active session
+	var session models.QuizLiveSession
+	if err := h.db.Where("join_code = ? AND status IN ('lobby','active')", code).First(&session).Error; err != nil {
+		writeError(w, http.StatusNotFound, "session not found or already finished", nil)
+		return
+	}
+
+	// Determine display name
+	name := strings.TrimSpace(req.DisplayName)
+	if name == "" || req.Anonymous {
+		name = hub.RandomKazakhName()
+	}
+	if len(name) > 60 {
+		name = name[:60]
+	}
+
+	// Create participant record
+	var uid *string
+	if userID != "" {
+		uid = &userID
+	}
+	participant := models.QuizLiveParticipant{
+		SessionID:   session.ID,
+		UserID:      uid,
+		DisplayName: name,
+	}
+	if err := h.db.Create(&participant).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to join session", err)
+		return
+	}
+
+	// Load quiz data to return question count
+	var quiz models.Quiz
+	h.db.Preload("Questions").First(&quiz, "id = ?", session.QuizID)
+
+	// Ensure the room exists in the hub (may have been lost after server restart)
+	// For now, if the room isn't in the hub, reject the join (session is stale)
+	room := h.hub.GetRoom(code)
+	if room == nil {
+		writeError(w, http.StatusGone, "session is no longer active", nil)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, joinSessionResponse{
+		ParticipantID: participant.ID,
+		SessionID:     session.ID,
+		DisplayName:   name,
+		QuizTitle:     quiz.Title,
+		Mode:          session.Mode,
+		TotalQ:        len(quiz.Questions),
+	})
+}
+
+// ──────────────────────────────────────────────────────────────
+// GET /api/v1/live-sessions/:code
+// Returns current session state (for page hydration).
+// ──────────────────────────────────────────────────────────────
+
+func (h *QuizLiveHandler) GetSession(w http.ResponseWriter, r *http.Request) {
+	code := strings.ToUpper(r.PathValue("code"))
+
+	var session models.QuizLiveSession
+	if err := h.db.Where("join_code = ?", code).First(&session).Error; err != nil {
+		writeError(w, http.StatusNotFound, "session not found", nil)
+		return
+	}
+
+	var quiz models.Quiz
+	h.db.Preload("Questions").First(&quiz, "id = ?", session.QuizID)
+
+	type resp struct {
+		ID             string `json:"id"`
+		JoinCode       string `json:"joinCode"`
+		Status         string `json:"status"`
+		Mode           string `json:"mode"`
+		QuizTitle      string `json:"quizTitle"`
+		TotalQuestions int    `json:"totalQuestions"`
+		CurrentQ       int    `json:"currentQuestion"`
+	}
+	writeJSON(w, http.StatusOK, resp{
+		ID:             session.ID,
+		JoinCode:       session.JoinCode,
+		Status:         session.Status,
+		Mode:           session.Mode,
+		QuizTitle:      quiz.Title,
+		TotalQuestions: len(quiz.Questions),
+		CurrentQ:       session.CurrentQuestion,
+	})
+}
+
+// ──────────────────────────────────────────────────────────────
+// GET /api/v1/live/:code/ws  (WebSocket upgrade)
+// ──────────────────────────────────────────────────────────────
+
+func (h *QuizLiveHandler) WebSocket(w http.ResponseWriter, r *http.Request) {
+	h.hub.ServeWS(w, r)
+}
+
+// ──────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────
+
+// generateJoinCode produces a random uppercase alphanumeric 6-character code.
+func generateJoinCode() (string, error) {
+	b := make([]byte, 4)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	// base32 gives [A-Z2-7]; we only need 6 chars
+	s := base32.StdEncoding.EncodeToString(b)[:6]
+	return s, nil
+}
+
+// buildLiveQuiz converts GORM quiz + questions to the hub's LiveQuiz type.
+func buildLiveQuiz(quiz *models.Quiz) *hub.LiveQuiz {
+	questions := make([]hub.LiveQuestion, 0, len(quiz.Questions))
+	for i, q := range quiz.Questions {
+		lq := hub.LiveQuestion{
+			ID:            q.ID,
+			Index:         i,
+			QuestionText:  q.QuestionText,
+			QuestionType:  q.QuestionType,
+			OptionA:       q.OptionA,
+			OptionB:       q.OptionB,
+			OptionC:       q.OptionC,
+			OptionD:       q.OptionD,
+			CorrectOption: q.CorrectOption,
+			TimeLimit:     quiz.TimePerQuestion,
+		}
+		if q.BlankAnswer != nil {
+			lq.BlankAnswer = *q.BlankAnswer
+		}
+		if q.ImageURL != nil {
+			lq.ImageURL = *q.ImageURL
+		}
+		questions = append(questions, lq)
+	}
+	return &hub.LiveQuiz{
+		ID:          quiz.ID,
+		Title:       quiz.Title,
+		Questions:   questions,
+		ShuffleOpts: quiz.ShuffleOptions,
+	}
+}

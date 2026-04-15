@@ -35,6 +35,7 @@ type Dependencies struct {
 	Chat               *ChatHandler
 	Files              *FilesHandler
 	QuizImage          *QuizImageHandler
+	QuizLive           *QuizLiveHandler
 	EngSim             *EngSimHandler
 	MaterialNotes      *MaterialNotesHandler
 	DebugDatabase      http.HandlerFunc
@@ -73,6 +74,9 @@ func RegisterRoutes(router *gin.Engine) {
 	// Upload is authenticated (see the internal group below); serving is
 	// public so anyone playing a public quiz can see the image.
 	api.GET("/quizzes/images/:name", wrapHTTP(deps.QuizImage.Serve))
+
+	// ── Live quiz WebSocket (public upgrade — auth handled inside hub) ───
+	api.GET("/live/:code/ws", wrapHTTP(deps.QuizLive.WebSocket))
 
 	// ── Public IELTS routes (no auth required for reading) ──────────────
 	api.GET("/ielts/materials", deps.IELTSMaterial.List)
@@ -143,6 +147,11 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.ListAttempts))
 		internal.POST("/quizzes/:quizID/clone", wrapHTTP(deps.Quiz.CloneQuiz))
 		internal.POST("/quizzes/images", wrapHTTP(deps.QuizImage.Upload))
+
+			// Live quiz session management
+			internal.POST("/quizzes/:quizID/live-sessions", wrapHTTP(deps.QuizLive.CreateSession))
+			internal.POST("/live-sessions/join", wrapHTTP(deps.QuizLive.JoinSession))
+			internal.GET("/live-sessions/:code", wrapHTTP(deps.QuizLive.GetSession))
 
 		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
 		internal.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))

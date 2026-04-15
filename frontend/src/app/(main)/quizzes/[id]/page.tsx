@@ -7,6 +7,7 @@ import {
   ListChecks,
   Lock,
   Play,
+  Radio,
   Target,
   UserRound,
 } from "lucide-react";
@@ -115,11 +116,19 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                 </Button>
               </Link>
               {quiz.isAuthor ? (
-                <Link href={`/quizzes/${quiz.id}/edit`}>
-                  <Button variant="outline" size="lg">
-                    {t("quiz.edit")}
-                  </Button>
-                </Link>
+                <>
+                  <Link href={`/quizzes/${quiz.id}/edit`}>
+                    <Button variant="outline" size="lg">
+                      {t("quiz.edit")}
+                    </Button>
+                  </Link>
+                  <Link href={`/quizzes/${quiz.id}/host`}>
+                    <Button variant="outline" size="lg">
+                      <Radio className="h-4 w-4" />
+                      {t("quiz.hostLive")}
+                    </Button>
+                  </Link>
+                </>
               ) : null}
               <ShareQuizButton quizId={quiz.id} quizTitle={quiz.title} />
             </div>

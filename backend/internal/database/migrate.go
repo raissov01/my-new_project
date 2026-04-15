@@ -13,6 +13,9 @@ func AutoMigrate(db *gorm.DB) error {
 
 	err := db.AutoMigrate(
 		&models.User{},
+		&models.QuizLiveSession{},
+		&models.QuizLiveParticipant{},
+		&models.QuizLiveAnswer{},
 		&models.FlashcardSet{},
 		&models.Flashcard{},
 		&models.StudyProgress{},
