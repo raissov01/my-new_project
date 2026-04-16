@@ -22,6 +22,7 @@ import { AnswerAnimation } from "@/features/quizzes/components/answer-animation"
 import { usePowerUps, type PowerUpKey } from "@/features/quizzes/use-power-ups";
 import { PowerUpBar } from "@/features/quizzes/components/power-up-bar";
 import type {
+  MatchPair,
   QuizDetail,
   QuizQuestionDTO,
   QuizQuestionType,
@@ -206,6 +207,8 @@ export function PlayQuizClient({
   );
   const [blankInput, setBlankInput] = useState("");
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
+  // matchDraft: for matching questions, maps left item → selected right item ("" = unselected).
+  const [matchDraft, setMatchDraft] = useState<Record<string, string>>({});
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
   const [hintVisible, setHintVisible] = useState(false);
 
@@ -249,6 +252,14 @@ export function PlayQuizClient({
       setReorderDraft(quiz.shuffleOptions ? shuffleArray(items) : [...items]);
     } else {
       setReorderDraft([]);
+    }
+    if (qt === "matching") {
+      const pairs = q.matchPairs ?? [];
+      const draft: Record<string, string> = {};
+      for (const p of pairs) draft[p.left] = "";
+      setMatchDraft(draft);
+    } else {
+      setMatchDraft({});
     }
     setBlankInput("");
     setMcqMultiSelected(new Set());
@@ -309,6 +320,7 @@ export function PlayQuizClient({
     setCurrentIdx((i) => i + 1);
     setSelectedLetter(null);
     setMcqMultiSelected(new Set());
+    setMatchDraft({});
     setLastCorrect(null);
     setHintVisible(false);
     setPhase("asking");
@@ -468,6 +480,27 @@ export function PlayQuizClient({
     [question.reorderItems, recordAnswer]
   );
 
+  const recordMatching = useCallback(
+    (draft: Record<string, string> | null) => {
+      const pairs = question.matchPairs ?? [];
+      let isCorrect = false;
+      let textAnswer: string | null = null;
+      if (draft !== null && pairs.length > 0) {
+        // All pairs must be matched (no empty selections)
+        const allSelected = pairs.every((p) => draft[p.left] && draft[p.left] !== "");
+        if (allSelected) {
+          isCorrect = pairs.every((p) => draft[p.left] === p.right);
+          textAnswer = JSON.stringify(draft);
+        }
+      }
+      recordAnswer(
+        { selectedOption: null, textAnswer, orderAnswer: null },
+        isCorrect
+      );
+    },
+    [question.matchPairs, recordAnswer]
+  );
+
   // Timeout handler: fires a "null" answer of the right shape for the
   // current question type so the backend still gets a row per question.
   const handleTimeout = useCallback(() => {
@@ -487,8 +520,11 @@ export function PlayQuizClient({
       case "reorder":
         recordReorder(null);
         return;
+      case "matching":
+        recordMatching(null);
+        return;
     }
-  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder]);
+  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
   // Practice mode disables the timer entirely so students can dwell on
@@ -754,6 +790,16 @@ export function PlayQuizClient({
               revealed={revealed}
               lastCorrect={lastCorrect}
               onSubmit={() => recordBlank(blankInput)}
+            />
+          ) : questionType === "matching" ? (
+            <MatchingBody
+              t={t}
+              pairs={question.matchPairs ?? []}
+              draft={matchDraft}
+              onDraftChange={setMatchDraft}
+              revealed={revealed}
+              lastCorrect={lastCorrect}
+              onSubmit={() => recordMatching(matchDraft)}
             />
           ) : (
             <ReorderBody
@@ -1257,6 +1303,114 @@ function ReorderBody({
           {t("quiz.play.submitAnswer")}
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ── Matching body ─────────────────────────────────────────────────────────────
+
+function MatchingBody({
+  t,
+  pairs,
+  draft,
+  onDraftChange,
+  revealed,
+  lastCorrect,
+  onSubmit,
+}: {
+  t: ReturnType<typeof createTranslator>;
+  pairs: MatchPair[];
+  draft: Record<string, string>;
+  onDraftChange: (next: Record<string, string>) => void;
+  revealed: boolean;
+  lastCorrect: boolean | null;
+  onSubmit: () => void;
+}) {
+  // Right-side options for each dropdown (all right items from pairs).
+  const rightOptions = pairs.map((p) => p.right);
+  const allSelected = pairs.length > 0 && pairs.every((p) => draft[p.left] && draft[p.left] !== "");
+
+  return (
+    <div className="mt-4 space-y-2.5 sm:mt-6">
+      {pairs.map((pair) => {
+        const selected = draft[pair.left] ?? "";
+        const isCorrectPair = revealed && selected === pair.right;
+        const isWrongPair = revealed && selected !== "" && selected !== pair.right;
+        return (
+          <div
+            key={pair.left}
+            className={`flex flex-col gap-2 rounded-[var(--radius-md)] border p-3 transition-colors sm:flex-row sm:items-center ${
+              revealed
+                ? isCorrectPair
+                  ? "border-emerald-500/40 bg-emerald-500/8"
+                  : isWrongPair
+                    ? "border-red-500/40 bg-red-500/8"
+                    : "border-[var(--border)] bg-[var(--bg-surface)] opacity-60"
+                : "border-[var(--border)] bg-[var(--bg-surface)]"
+            }`}
+          >
+            <span className="flex-1 text-sm font-medium text-[var(--text-primary)]">
+              {pair.left}
+            </span>
+            <div className="flex items-center gap-2 sm:w-52">
+              <select
+                value={selected}
+                onChange={(e) => {
+                  if (revealed) return;
+                  onDraftChange({ ...draft, [pair.left]: e.target.value });
+                }}
+                disabled={revealed}
+                className={`w-full rounded-[var(--radius-sm)] border px-2 py-1.5 text-sm outline-none transition-colors ${
+                  revealed
+                    ? isCorrectPair
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                      : isWrongPair
+                        ? "border-red-500 bg-red-500/10 text-red-300"
+                        : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-muted)]"
+                    : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)] focus:border-[var(--primary)]"
+                }`}
+              >
+                <option value="">{t("quiz.matching.selectMatch")}</option>
+                {rightOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+              {revealed ? (
+                isCorrectPair ? (
+                  <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                ) : isWrongPair ? (
+                  <X className="h-4 w-4 shrink-0 text-red-400" />
+                ) : null
+              ) : null}
+            </div>
+            {revealed && isWrongPair ? (
+              <span className="text-xs text-emerald-400 sm:hidden">
+                ✓ {pair.right}
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
+      {revealed && (
+        <div className="mt-1 space-y-1">
+          {pairs.filter((p) => draft[p.left] !== "" && draft[p.left] !== p.right).map((p) => (
+            <p key={p.left} className="hidden text-xs text-emerald-400 sm:block">
+              {p.left} → <strong>{p.right}</strong>
+            </p>
+          ))}
+        </div>
+      )}
+      {!revealed && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={!allSelected}
+          >
+            {t("quiz.matching.submitAll")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

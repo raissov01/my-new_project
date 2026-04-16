@@ -311,6 +311,28 @@ func buildLiveQuiz(quiz *models.Quiz) *hub.LiveQuiz {
 				lq.ReorderDisplay = display
 			}
 		}
+		if q.MatchPairs != nil && *q.MatchPairs != "" {
+			type pair struct {
+				Left  string `json:"left"`
+				Right string `json:"right"`
+			}
+			var pairs []pair
+			if err := json.Unmarshal([]byte(*q.MatchPairs), &pairs); err == nil && len(pairs) > 0 {
+				left := make([]string, len(pairs))
+				right := make([]string, len(pairs))
+				correct := make(map[string]string, len(pairs))
+				for k, p := range pairs {
+					left[k] = p.Left
+					right[k] = p.Right
+					correct[p.Left] = p.Right
+				}
+				// Shuffle right column so players can't trivially match by position.
+				mrand.Shuffle(len(right), func(i, j int) { right[i], right[j] = right[j], right[i] })
+				lq.MatchLeft = left
+				lq.MatchRight = right
+				lq.MatchCorrect = correct
+			}
+		}
 		questions = append(questions, lq)
 	}
 	return &hub.LiveQuiz{

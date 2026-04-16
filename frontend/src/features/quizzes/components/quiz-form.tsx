@@ -17,6 +17,7 @@ import {
   ToggleLeft,
   Type as TypeIcon,
   ListOrdered,
+  Shuffle,
   ImagePlus,
   Loader2,
   X,
@@ -27,6 +28,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useToast } from "@/components/ui/toast";
 import type {
   CreateQuizInput,
+  MatchPair,
   QuizFormState,
   QuizQuestionInput,
   QuizQuestionType,
@@ -65,6 +67,7 @@ const emptyQuestion = (key: number): QuestionEntry => ({
   correctOption: "a",
   blankAnswer: "",
   reorderItems: [],
+  matchPairs: [],
   imageUrl: "",
   explanation: "",
   hint: "",
@@ -135,6 +138,19 @@ function applyTypeChange(
         correctOption: "",
         blankAnswer: "",
         reorderItems: q.reorderItems && q.reorderItems.length > 0 ? q.reorderItems : ["", ""],
+        matchPairs: [],
+      };
+    case "matching":
+      return {
+        ...base,
+        optionA: "",
+        optionB: "",
+        optionC: "",
+        optionD: "",
+        correctOption: "",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: q.matchPairs && q.matchPairs.length > 0 ? q.matchPairs : [{ left: "", right: "" }, { left: "", right: "" }],
       };
   }
 }
@@ -563,6 +579,7 @@ const TYPE_OPTIONS: TypeOption[] = [
   { key: "true_false", labelKey: "quiz.typeTrueFalse", icon: ToggleLeft },
   { key: "fill_blank", labelKey: "quiz.typeFillBlank", icon: TypeIcon },
   { key: "reorder", labelKey: "quiz.typeReorder", icon: ListOrdered },
+  { key: "matching", labelKey: "quiz.typeMatching", icon: Shuffle },
 ];
 
 function QuestionEditor({
@@ -666,6 +683,8 @@ function QuestionEditor({
         <TrueFalseBody question={question} onChange={onChange} />
       ) : questionType === "fill_blank" ? (
         <FillBlankBody question={question} onChange={onChange} />
+      ) : questionType === "matching" ? (
+        <MatchingBody question={question} onChange={onChange} />
       ) : (
         <ReorderBody question={question} onChange={onChange} />
       )}
@@ -1070,6 +1089,81 @@ function ReorderBody({
       >
         <Plus className="h-3.5 w-3.5" />
         {t("quiz.reorderAddItem")}
+      </button>
+    </div>
+  );
+}
+
+function MatchingBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const pairs: MatchPair[] = question.matchPairs && question.matchPairs.length > 0
+    ? question.matchPairs
+    : [{ left: "", right: "" }, { left: "", right: "" }];
+
+  const setPair = (idx: number, field: "left" | "right", value: string) => {
+    const next = [...pairs];
+    next[idx] = { ...next[idx], [field]: value };
+    onChange({ matchPairs: next });
+  };
+  const addPair = () => {
+    if (pairs.length >= 8) return;
+    onChange({ matchPairs: [...pairs, { left: "", right: "" }] });
+  };
+  const removePair = (idx: number) => {
+    if (pairs.length <= 2) return;
+    onChange({ matchPairs: pairs.filter((_, i) => i !== idx) });
+  };
+
+  return (
+    <div className="mt-3">
+      <p className="mb-2 text-[11px] text-[var(--text-muted)]">
+        {t("quiz.matching.pairHint")}
+      </p>
+      <div className="space-y-2">
+        {pairs.map((pair, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--bg-soft)] text-xs font-semibold text-[var(--text-secondary)]">
+              {idx + 1}
+            </span>
+            <input
+              value={pair.left}
+              onChange={(e) => setPair(idx, "left", e.target.value)}
+              placeholder={t("quiz.matching.leftPlaceholder")}
+              className="min-w-0 flex-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+            />
+            <span className="shrink-0 text-xs font-semibold text-[var(--text-muted)]">→</span>
+            <input
+              value={pair.right}
+              onChange={(e) => setPair(idx, "right", e.target.value)}
+              placeholder={t("quiz.matching.rightPlaceholder")}
+              className="min-w-0 flex-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+            />
+            <button
+              type="button"
+              onClick={() => removePair(idx)}
+              disabled={pairs.length <= 2}
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--danger)]/10 hover:text-[var(--danger)] disabled:opacity-30"
+              aria-label={t("quiz.removeQuestion")}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={addPair}
+        disabled={pairs.length >= 8}
+        className="mt-2 inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-dashed border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-40"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        {t("quiz.matching.addPair")}
       </button>
     </div>
   );

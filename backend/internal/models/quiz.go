@@ -42,6 +42,7 @@ type QuizQuestion struct {
 	CorrectOption string  `gorm:"type:text" json:"correctOption"`
 	BlankAnswer   *string `gorm:"type:text" json:"blankAnswer,omitempty"`
 	ReorderItems  *string `gorm:"type:jsonb" json:"reorderItems,omitempty"`
+	MatchPairs    *string `gorm:"type:jsonb" json:"matchPairs,omitempty"`
 	ImageURL      *string `gorm:"type:text" json:"imageUrl,omitempty"`
 	Explanation   *string `gorm:"type:text" json:"explanation,omitempty"`
 	Hint          *string `gorm:"type:text" json:"hint,omitempty"`

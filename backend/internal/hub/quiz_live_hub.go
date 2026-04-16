@@ -62,21 +62,33 @@ type OutMsg struct {
 // Quiz data snapshot (loaded once at session creation)
 // ──────────────────────────────────────────────────────────────
 
+// MatchPair is one left→right pair inside a matching question.
+// Duplicated here (instead of importing model) to keep the hub package
+// self-contained and avoid circular deps.
+type MatchPair struct {
+	Left  string `json:"left"`
+	Right string `json:"right"`
+}
+
 type LiveQuestion struct {
-	ID             string   `json:"id"`
-	Index          int      `json:"index"`
-	QuestionText   string   `json:"questionText"`
-	QuestionType   string   `json:"questionType"`
-	OptionA        string   `json:"optionA,omitempty"`
-	OptionB        string   `json:"optionB,omitempty"`
-	OptionC        string   `json:"optionC,omitempty"`
-	OptionD        string   `json:"optionD,omitempty"`
-	CorrectOption  string   `json:"-"` // never sent to players
-	BlankAnswer    string   `json:"-"`
-	ReorderItems   []string `json:"-"`                         // canonical correct order, never sent to players
-	ReorderDisplay []string `json:"reorderItems,omitempty"`    // shuffled display order, sent to clients
-	ImageURL       string   `json:"imageUrl,omitempty"`
-	TimeLimit      int      `json:"timeLimit"` // seconds
+	ID             string      `json:"id"`
+	Index          int         `json:"index"`
+	QuestionText   string      `json:"questionText"`
+	QuestionType   string      `json:"questionType"`
+	OptionA        string      `json:"optionA,omitempty"`
+	OptionB        string      `json:"optionB,omitempty"`
+	OptionC        string      `json:"optionC,omitempty"`
+	OptionD        string      `json:"optionD,omitempty"`
+	CorrectOption  string      `json:"-"` // never sent to players
+	BlankAnswer    string      `json:"-"`
+	ReorderItems   []string    `json:"-"`                      // canonical correct order, never sent to players
+	ReorderDisplay []string    `json:"reorderItems,omitempty"` // shuffled display order, sent to clients
+	// Matching: MatchLeft / MatchRight sent to players; MatchCorrect held server-side.
+	MatchLeft      []string             `json:"matchLeft,omitempty"`   // left column items
+	MatchRight     []string             `json:"matchRight,omitempty"`  // shuffled right column items
+	MatchCorrect   map[string]string    `json:"-"`                     // left→right, never sent
+	ImageURL       string               `json:"imageUrl,omitempty"`
+	TimeLimit      int                  `json:"timeLimit"` // seconds
 }
 
 type LiveQuiz struct {
@@ -372,7 +384,8 @@ func (r *Room) endQuestion(timedOut bool) {
 		QuestionIndex int                `json:"questionIndex"`
 		CorrectOption string             `json:"correctOption,omitempty"`
 		BlankAnswer   string             `json:"blankAnswer,omitempty"`
-		CorrectOrder  []string           `json:"correctOrder,omitempty"` // for reorder reveal
+		CorrectOrder  []string           `json:"correctOrder,omitempty"`  // for reorder reveal
+		MatchPairs    []MatchPair        `json:"matchPairs,omitempty"`    // for matching reveal
 		Leaderboard   []ParticipantScore `json:"leaderboard"`
 	}
 	evt := endEvt{
@@ -386,6 +399,12 @@ func (r *Room) endQuestion(timedOut bool) {
 		evt.BlankAnswer = q.BlankAnswer
 	case "reorder":
 		evt.CorrectOrder = q.ReorderItems
+	case "matching":
+		pairs := make([]MatchPair, 0, len(q.MatchCorrect))
+		for left, right := range q.MatchCorrect {
+			pairs = append(pairs, MatchPair{Left: left, Right: right})
+		}
+		evt.MatchPairs = pairs
 	}
 	r.broadcast(OutMsg{Type: EvtQuestionEnded, Data: evt})
 
@@ -489,10 +508,11 @@ func (r *Room) handleMessage(c *Client, msg InMsg) {
 }
 
 type submitAnswerData struct {
-	Option      string   `json:"option"`      // for mcq/true_false: a/b/c/d/t/f
-	TextAns     string   `json:"textAnswer"`  // for fill_blank
-	OrderAnswer []string `json:"orderAnswer"` // for reorder: items in submitted sequence
-	TimeSpent   int      `json:"timeSpent"`
+	Option      string            `json:"option"`       // for mcq/true_false: a/b/c/d/t/f
+	TextAns     string            `json:"textAnswer"`   // for fill_blank
+	OrderAnswer []string          `json:"orderAnswer"`  // for reorder: items in submitted sequence
+	MatchAnswer map[string]string `json:"matchAnswer"`  // for matching: {left→right}
+	TimeSpent   int               `json:"timeSpent"`
 }
 
 func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
@@ -524,6 +544,8 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 		isCorrect = normalizeBlank(req.TextAns) == normalizeBlank(q.BlankAnswer)
 	case "reorder":
 		isCorrect = liveSlicesEqual(req.OrderAnswer, q.ReorderItems)
+	case "matching":
+		isCorrect = liveMatchingCorrect(req.MatchAnswer, q.MatchCorrect)
 	default:
 		isCorrect = false
 	}
@@ -560,9 +582,16 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 	if req.TextAns != "" {
 		textAns = &req.TextAns
 	}
-	// For reorder, store the submitted sequence as JSON in TextAnswer
+	// For reorder, store the submitted sequence as JSON in TextAnswer.
 	if q.QuestionType == "reorder" && len(req.OrderAnswer) > 0 {
 		if b, err := json.Marshal(req.OrderAnswer); err == nil {
+			s := string(b)
+			textAns = &s
+		}
+	}
+	// For matching, store the submitted map as JSON in TextAnswer.
+	if q.QuestionType == "matching" && len(req.MatchAnswer) > 0 {
+		if b, err := json.Marshal(req.MatchAnswer); err == nil {
 			s := string(b)
 			textAns = &s
 		}
@@ -617,6 +646,20 @@ func liveSlicesEqual(a, b []string) bool {
 	}
 	for i := range a {
 		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// liveMatchingCorrect returns true when every entry in submitted matches the
+// canonical correct map exactly (all pairs must be present and correct).
+func liveMatchingCorrect(submitted map[string]string, correct map[string]string) bool {
+	if len(submitted) != len(correct) {
+		return false
+	}
+	for left, right := range correct {
+		if got, ok := submitted[left]; !ok || got != right {
 			return false
 		}
 	}

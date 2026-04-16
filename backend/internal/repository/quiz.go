@@ -13,6 +13,53 @@ import (
 	"github.com/midoriya/flashlearn-backend/internal/model"
 )
 
+// encodeMatchPairs serializes a MatchPair slice to a JSONB string pointer.
+// Returns nil for empty input so the column stores SQL NULL.
+func encodeMatchPairs(pairs []model.MatchPair) *string {
+	if len(pairs) == 0 {
+		return nil
+	}
+	buf, err := json.Marshal(pairs)
+	if err != nil {
+		return nil
+	}
+	s := string(buf)
+	return &s
+}
+
+// decodeMatchPairs parses a JSONB-stored string back into a MatchPair slice.
+func decodeMatchPairs(src *string) []model.MatchPair {
+	if src == nil || *src == "" {
+		return nil
+	}
+	var out []model.MatchPair
+	if err := json.Unmarshal([]byte(*src), &out); err != nil {
+		return nil
+	}
+	return out
+}
+
+// matchPairsCorrect returns true when the user's submitted map (JSON-encoded
+// string) exactly matches the canonical pairs. All pairs must be correct.
+func matchPairsCorrect(submittedJSON string, canonical []model.MatchPair) bool {
+	if submittedJSON == "" || len(canonical) == 0 {
+		return false
+	}
+	var submitted map[string]string
+	if err := json.Unmarshal([]byte(submittedJSON), &submitted); err != nil {
+		return false
+	}
+	if len(submitted) != len(canonical) {
+		return false
+	}
+	for _, p := range canonical {
+		if got, ok := submitted[p.Left]; !ok || got != p.Right {
+			return false
+		}
+	}
+	return true
+}
+
 // encodeStringArray serializes a slice of strings to a JSON string pointer
 // for storage in a JSONB column. Returns nil for empty input so the column
 // stores SQL NULL rather than an empty array.
@@ -294,7 +341,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
-		       image_url, explanation, hint, order_index
+		       match_pairs, image_url, explanation, hint, order_index
 		FROM public.quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -307,7 +354,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 	d.Questions = make([]model.QuizQuestionDTO, 0)
 	for qRows.Next() {
 		var q model.QuizQuestionDTO
-		var correct, blank, reorderJSON, imageURL, explanation, hint *string
+		var correct, blank, reorderJSON, matchPairsJSON, imageURL, explanation, hint *string
 		if err := qRows.Scan(
 			&q.ID,
 			&q.QuestionText,
@@ -319,6 +366,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 			&correct,
 			&blank,
 			&reorderJSON,
+			&matchPairsJSON,
 			&imageURL,
 			&explanation,
 			&hint,
@@ -329,6 +377,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		q.CorrectOption = correct
 		q.BlankAnswer = blank
 		q.ReorderItems = decodeStringArray(reorderJSON)
+		q.MatchPairs = decodeMatchPairs(matchPairsJSON)
 		q.ImageURL = imageURL
 		q.Explanation = explanation
 		q.Hint = hint
@@ -409,6 +458,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 			nullableString(q.CorrectOption),
 			nullableString(q.BlankAnswer),
 			encodeStringArray(q.ReorderItems),
+			encodeMatchPairs(q.MatchPairs),
 			nullableString(q.ImageURL),
 			nullableString(q.Explanation),
 			nullableString(q.Hint),
@@ -432,6 +482,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 				"correct_option",
 				"blank_answer",
 				"reorder_items",
+				"match_pairs",
 				"image_url",
 				"explanation",
 				"hint",
@@ -543,21 +594,22 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 			qType = "mcq"
 		}
 		args := []any{
-			id,                              // $1
-			quizID,                          // $2
-			q.QuestionText,                  // $3
-			qType,                           // $4
-			nullableString(q.OptionA),       // $5
-			nullableString(q.OptionB),       // $6
-			nullableString(q.OptionC),       // $7
-			nullableString(q.OptionD),       // $8
-			nullableString(q.CorrectOption), // $9
-			nullableString(q.BlankAnswer),   // $10
+			id,                                // $1
+			quizID,                            // $2
+			q.QuestionText,                    // $3
+			qType,                             // $4
+			nullableString(q.OptionA),         // $5
+			nullableString(q.OptionB),         // $6
+			nullableString(q.OptionC),         // $7
+			nullableString(q.OptionD),         // $8
+			nullableString(q.CorrectOption),   // $9
+			nullableString(q.BlankAnswer),     // $10
 			encodeStringArray(q.ReorderItems), // $11
-			nullableString(q.ImageURL),      // $12
-			nullableString(q.Explanation),   // $13
-			i,                               // $14 (order_index)
-			nullableString(q.Hint),          // $15
+			nullableString(q.ImageURL),        // $12
+			nullableString(q.Explanation),     // $13
+			i,                                 // $14 (order_index)
+			nullableString(q.Hint),            // $15
+			encodeMatchPairs(q.MatchPairs),    // $16
 		}
 		if _, ok := existingIDs[id]; ok {
 			if _, err := tx.Exec(ctx, `
@@ -574,7 +626,8 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				    image_url      = $12,
 				    explanation    = $13,
 				    order_index    = $14,
-				    hint           = $15
+				    hint           = $15,
+				    match_pairs    = $16
 				WHERE id = $1 AND quiz_id = $2
 			`, args...); err != nil {
 				return fmt.Errorf("update question %d: %w", i, err)
@@ -589,9 +642,9 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				quiz_id, question_text, question_type,
 				option_a, option_b, option_c, option_d,
 				correct_option, blank_answer, reorder_items,
-				image_url, explanation, order_index, hint, created_at
+				image_url, explanation, order_index, hint, match_pairs, created_at
 			)
-			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
 			RETURNING id
 		`, args...).Scan(&newID)
 		if err != nil {
@@ -695,12 +748,12 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 			quiz_id, question_text, question_type,
 			option_a, option_b, option_c, option_d,
 			correct_option, blank_answer, reorder_items,
-			image_url, explanation, order_index, created_at
+			match_pairs, image_url, explanation, order_index, hint, created_at
 		)
 		SELECT $1, question_text, question_type,
 		       option_a, option_b, option_c, option_d,
 		       correct_option, blank_answer, reorder_items,
-		       image_url, explanation, order_index, NOW()
+		       match_pairs, image_url, explanation, order_index, hint, NOW()
 		FROM quiz_questions
 		WHERE quiz_id = $2
 		ORDER BY order_index, created_at
@@ -733,6 +786,7 @@ type questionAnswerRow struct {
 	CorrectOption *string
 	BlankAnswer   *string
 	ReorderItems  []string
+	MatchPairs    []model.MatchPair
 	ImageURL      *string
 	Explanation   *string
 	OrderIndex    int
@@ -764,7 +818,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
-		       image_url, explanation, order_index
+		       match_pairs, image_url, explanation, order_index
 		FROM quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -778,16 +832,17 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 	order := make([]string, 0)
 	for rows.Next() {
 		var q questionAnswerRow
-		var reorderJSON *string
+		var reorderJSON, matchPairsJSON *string
 		if err := rows.Scan(
 			&q.ID, &q.QuestionText, &q.QuestionType,
 			&q.OptionA, &q.OptionB, &q.OptionC, &q.OptionD,
 			&q.CorrectOption, &q.BlankAnswer, &reorderJSON,
-			&q.ImageURL, &q.Explanation, &q.OrderIndex,
+			&matchPairsJSON, &q.ImageURL, &q.Explanation, &q.OrderIndex,
 		); err != nil {
 			return nil, fmt.Errorf("scan question: %w", err)
 		}
 		q.ReorderItems = decodeStringArray(reorderJSON)
+		q.MatchPairs = decodeMatchPairs(matchPairsJSON)
 		questions[q.ID] = q
 		order = append(order, q.ID)
 	}
@@ -841,6 +896,17 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 					}
 					orderAnswer = submittedOrder
 					if stringSlicesEqual(submittedOrder, q.ReorderItems) {
+						isCorrect = true
+						score++
+					}
+				}
+			case "matching":
+				// The client encodes the answer as a JSON map {left→right}
+				// stored in TextAnswer.
+				if a.TextAnswer != nil && *a.TextAnswer != "" {
+					t := strings.TrimSpace(*a.TextAnswer)
+					textAnswer = &t
+					if matchPairsCorrect(t, q.MatchPairs) {
 						isCorrect = true
 						score++
 					}
@@ -901,6 +967,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 			BlankAnswer:    q.BlankAnswer,
 			OrderAnswer:    orderAnswer,
 			ReorderItems:   q.ReorderItems,
+			MatchPairs:     q.MatchPairs,
 			ImageURL:       q.ImageURL,
 			Explanation:    q.Explanation,
 			IsCorrect:      isCorrect,

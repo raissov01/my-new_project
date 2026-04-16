@@ -1,5 +1,11 @@
 package model
 
+// MatchPair is one left→right pair inside a matching question.
+type MatchPair struct {
+	Left  string `json:"left"`
+	Right string `json:"right"`
+}
+
 // QuizQuestionInput is a question to create or update inside a quiz.
 // On update, pass ID to keep an existing question (preserves attempt history);
 // omit ID to insert a new one.
@@ -9,20 +15,22 @@ package model
 //   - true_false : CorrectOption (t|f)
 //   - fill_blank : BlankAnswer
 //   - reorder    : ReorderItems (array of strings, 2..10)
+//   - matching   : MatchPairs (array of {left,right} pairs, 2..8)
 type QuizQuestionInput struct {
-	ID            *string  `json:"id,omitempty"`
-	QuestionText  string   `json:"questionText"`
-	QuestionType  string   `json:"questionType,omitempty"`
-	OptionA       string   `json:"optionA,omitempty"`
-	OptionB       string   `json:"optionB,omitempty"`
-	OptionC       string   `json:"optionC,omitempty"`
-	OptionD       string   `json:"optionD,omitempty"`
-	CorrectOption string   `json:"correctOption,omitempty"`
-	BlankAnswer   string   `json:"blankAnswer,omitempty"`
-	ReorderItems  []string `json:"reorderItems,omitempty"`
-	ImageURL      string   `json:"imageUrl,omitempty"`
-	Explanation   string   `json:"explanation,omitempty"`
-	Hint          string   `json:"hint,omitempty"`
+	ID            *string     `json:"id,omitempty"`
+	QuestionText  string      `json:"questionText"`
+	QuestionType  string      `json:"questionType,omitempty"`
+	OptionA       string      `json:"optionA,omitempty"`
+	OptionB       string      `json:"optionB,omitempty"`
+	OptionC       string      `json:"optionC,omitempty"`
+	OptionD       string      `json:"optionD,omitempty"`
+	CorrectOption string      `json:"correctOption,omitempty"`
+	BlankAnswer   string      `json:"blankAnswer,omitempty"`
+	ReorderItems  []string    `json:"reorderItems,omitempty"`
+	MatchPairs    []MatchPair `json:"matchPairs,omitempty"`
+	ImageURL      string      `json:"imageUrl,omitempty"`
+	Explanation   string      `json:"explanation,omitempty"`
+	Hint          string      `json:"hint,omitempty"`
 }
 
 // CreateQuizRequest is the input for creating a quiz.
@@ -76,24 +84,25 @@ type QuizOverview struct {
 }
 
 // QuizQuestionDTO is a question as exposed in the detail response.
-// The canonical answer fields (CorrectOption, BlankAnswer, ReorderItems) are
-// included so the client can render inline reveal after each answer; scoring
+// The canonical answer fields (CorrectOption, BlankAnswer, ReorderItems,
+// MatchPairs) are included so the client can render inline reveal; scoring
 // is still recomputed server-side in SubmitAttempt.
 type QuizQuestionDTO struct {
-	ID            string   `json:"id"`
-	QuestionText  string   `json:"questionText"`
-	QuestionType  string   `json:"questionType"`
-	OptionA       string   `json:"optionA,omitempty"`
-	OptionB       string   `json:"optionB,omitempty"`
-	OptionC       string   `json:"optionC,omitempty"`
-	OptionD       string   `json:"optionD,omitempty"`
-	CorrectOption *string  `json:"correctOption,omitempty"`
-	BlankAnswer   *string  `json:"blankAnswer,omitempty"`
-	ReorderItems  []string `json:"reorderItems,omitempty"`
-	ImageURL      *string  `json:"imageUrl,omitempty"`
-	Explanation   *string  `json:"explanation,omitempty"`
-	Hint          *string  `json:"hint,omitempty"`
-	OrderIndex    int      `json:"orderIndex"`
+	ID            string      `json:"id"`
+	QuestionText  string      `json:"questionText"`
+	QuestionType  string      `json:"questionType"`
+	OptionA       string      `json:"optionA,omitempty"`
+	OptionB       string      `json:"optionB,omitempty"`
+	OptionC       string      `json:"optionC,omitempty"`
+	OptionD       string      `json:"optionD,omitempty"`
+	CorrectOption *string     `json:"correctOption,omitempty"`
+	BlankAnswer   *string     `json:"blankAnswer,omitempty"`
+	ReorderItems  []string    `json:"reorderItems,omitempty"`
+	MatchPairs    []MatchPair `json:"matchPairs,omitempty"`
+	ImageURL      *string     `json:"imageUrl,omitempty"`
+	Explanation   *string     `json:"explanation,omitempty"`
+	Hint          *string     `json:"hint,omitempty"`
+	OrderIndex    int         `json:"orderIndex"`
 }
 
 // QuizDetail is the full quiz response with questions.
@@ -124,6 +133,7 @@ type QuizDetail struct {
 //   - mcq / true_false : SelectedOption
 //   - fill_blank       : TextAnswer
 //   - reorder          : OrderAnswer (items in the order the user submitted)
+//   - matching         : TextAnswer (JSON-encoded map[left]→right)
 //
 // All fields are nil/empty for skipped/timed-out questions.
 type AttemptAnswerInput struct {
@@ -143,24 +153,25 @@ type SubmitAttemptRequest struct {
 
 // AttemptAnswerResult is a graded answer returned after submission.
 type AttemptAnswerResult struct {
-	QuestionID     string   `json:"questionId"`
-	QuestionText   string   `json:"questionText"`
-	QuestionType   string   `json:"questionType"`
-	OptionA        string   `json:"optionA,omitempty"`
-	OptionB        string   `json:"optionB,omitempty"`
-	OptionC        string   `json:"optionC,omitempty"`
-	OptionD        string   `json:"optionD,omitempty"`
-	SelectedOption *string  `json:"selectedOption,omitempty"`
-	CorrectOption  string   `json:"correctOption,omitempty"`
-	TextAnswer     *string  `json:"textAnswer,omitempty"`
-	BlankAnswer    *string  `json:"blankAnswer,omitempty"`
-	OrderAnswer    []string `json:"orderAnswer,omitempty"`
-	ReorderItems   []string `json:"reorderItems,omitempty"`
-	ImageURL       *string  `json:"imageUrl,omitempty"`
-	Explanation    *string  `json:"explanation,omitempty"`
-	IsCorrect      bool     `json:"isCorrect"`
-	TimeSpent      int      `json:"timeSpent"`
-	OrderIndex     int      `json:"orderIndex"`
+	QuestionID     string      `json:"questionId"`
+	QuestionText   string      `json:"questionText"`
+	QuestionType   string      `json:"questionType"`
+	OptionA        string      `json:"optionA,omitempty"`
+	OptionB        string      `json:"optionB,omitempty"`
+	OptionC        string      `json:"optionC,omitempty"`
+	OptionD        string      `json:"optionD,omitempty"`
+	SelectedOption *string     `json:"selectedOption,omitempty"`
+	CorrectOption  string      `json:"correctOption,omitempty"`
+	TextAnswer     *string     `json:"textAnswer,omitempty"`
+	BlankAnswer    *string     `json:"blankAnswer,omitempty"`
+	OrderAnswer    []string    `json:"orderAnswer,omitempty"`
+	ReorderItems   []string    `json:"reorderItems,omitempty"`
+	MatchPairs     []MatchPair `json:"matchPairs,omitempty"`
+	ImageURL       *string     `json:"imageUrl,omitempty"`
+	Explanation    *string     `json:"explanation,omitempty"`
+	IsCorrect      bool        `json:"isCorrect"`
+	TimeSpent      int         `json:"timeSpent"`
+	OrderIndex     int         `json:"orderIndex"`
 }
 
 // AttemptResult is the full graded response returned to the client.

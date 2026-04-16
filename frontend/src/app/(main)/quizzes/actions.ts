@@ -7,7 +7,9 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching";
+
+export type MatchPair = { left: string; right: string };
 
 export type QuizQuestionInput = {
   id?: string;
@@ -20,6 +22,7 @@ export type QuizQuestionInput = {
   correctOption?: string;
   blankAnswer?: string;
   reorderItems?: string[];
+  matchPairs?: MatchPair[];
   imageUrl?: string;
   explanation?: string;
   hint?: string;
@@ -49,6 +52,9 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
       const reorderItems = (q.reorderItems ?? [])
         .map((item) => (item ?? "").trim())
         .filter((item) => item.length > 0);
+      const matchPairs = (q.matchPairs ?? [])
+        .map((p) => ({ left: (p.left ?? "").trim(), right: (p.right ?? "").trim() }))
+        .filter((p) => p.left.length > 0 && p.right.length > 0);
       return {
         id: q.id,
         questionText: (q.questionText ?? "").trim(),
@@ -60,8 +66,10 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
         correctOption: (q.correctOption ?? "").trim().toLowerCase(),
         blankAnswer: (q.blankAnswer ?? "").trim(),
         reorderItems,
+        matchPairs,
         imageUrl: (q.imageUrl ?? "").trim(),
         explanation: (q.explanation ?? "").trim(),
+        hint: (q.hint ?? "").trim(),
       };
     })
     .filter(
@@ -72,7 +80,8 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
         q.optionC ||
         q.optionD ||
         q.blankAnswer ||
-        (q.reorderItems && q.reorderItems.length > 0)
+        (q.reorderItems && q.reorderItems.length > 0) ||
+        (q.matchPairs && q.matchPairs.length > 0)
     );
 }
 

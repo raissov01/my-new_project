@@ -23,7 +23,9 @@ export type QuizOverview = {
   tags?: string[];
 };
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching";
+
+export type MatchPair = { left: string; right: string };
 
 export type QuizQuestionDTO = {
   id: string;
@@ -36,6 +38,7 @@ export type QuizQuestionDTO = {
   correctOption?: string | null;
   blankAnswer?: string | null;
   reorderItems?: string[] | null;
+  matchPairs?: MatchPair[] | null;
   imageUrl?: string | null;
   explanation?: string | null;
   hint?: string | null;
@@ -153,6 +156,7 @@ export type AttemptAnswerResult = {
   blankAnswer?: string | null;
   orderAnswer?: string[] | null;
   reorderItems?: string[] | null;
+  matchPairs?: MatchPair[] | null;
   imageUrl?: string | null;
   explanation?: string | null;
   isCorrect: boolean;

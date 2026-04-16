@@ -26,6 +26,8 @@ type SessionState = {
   currentQuestion: number;
 };
 
+type MatchPair = { left: string; right: string };
+
 type LiveQuestion = {
   id: string;
   questionText: string;
@@ -35,6 +37,8 @@ type LiveQuestion = {
   optionC?: string;
   optionD?: string;
   reorderItems?: string[]; // shuffled display order for reorder questions
+  matchLeft?: string[];    // left column items for matching questions
+  matchRight?: string[];   // shuffled right column items for matching questions
   timeLimit: number;
   imageUrl?: string;
 };
@@ -58,6 +62,7 @@ type QuestionEndedEvt = {
   correctOption?: string;
   blankAnswer?: string;
   correctOrder?: string[]; // for reorder reveal
+  matchPairs?: MatchPair[]; // for matching reveal
   leaderboard: LeaderEntry[];
 };
 
@@ -92,6 +97,7 @@ function LiveGameInner() {
   const [blankInput, setBlankInput] = useState("");
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   const [reorderSubmitted, setReorderSubmitted] = useState(false);
+  const [matchDraft, setMatchDraft] = useState<Record<string, string>>({});
   const [wsError, setWsError] = useState("");
   // "connected" | "reconnecting" | "disconnected"
   const [wsStatus, setWsStatus] = useState<"connected" | "reconnecting" | "disconnected">("connected");
@@ -217,18 +223,28 @@ function LiveGameInner() {
         setPhase("waiting");
         break;
 
-      case "question":
+      case "question": {
+        const q = msg.data.question;
         setCurrentQEvt(msg.data);
         setAnswerResult(null);
         setQuestionEnded(null);
         setSelectedOpt(null);
         setBlankInput("");
-        setReorderDraft(msg.data.question.reorderItems ?? []);
+        setReorderDraft(q.reorderItems ?? []);
         setReorderSubmitted(false);
+        // Init matching draft: one key per left item, value = "" (unselected).
+        if (q.questionType === "matching" && q.matchLeft) {
+          const draft: Record<string, string> = {};
+          for (const left of q.matchLeft) draft[left] = "";
+          setMatchDraft(draft);
+        } else {
+          setMatchDraft({});
+        }
         setPhase("question");
         startRef.current = Date.now();
         startTimer(msg.data.deadlineMs);
         break;
+      }
 
       case "answer_accepted":
         setAnswerResult(msg.data);
@@ -261,7 +277,12 @@ function LiveGameInner() {
   // Keep the ref up to date so connectWs always calls the latest version.
   useEffect(() => { handleServerMsgRef.current = handleServerMsg; }, [handleServerMsg]);
 
-  const submitAnswer = useCallback((option?: string, text?: string, orderAnswer?: string[]) => {
+  const submitAnswer = useCallback((
+    option?: string,
+    text?: string,
+    orderAnswer?: string[],
+    matchAnswer?: Record<string, string>,
+  ) => {
     const timeSpent = Math.round((Date.now() - startRef.current) / 1000);
     wsRef.current?.send(JSON.stringify({
       type: "submit_answer",
@@ -269,6 +290,7 @@ function LiveGameInner() {
         option: option ?? "",
         textAnswer: text ?? "",
         orderAnswer: orderAnswer ?? [],
+        matchAnswer: matchAnswer ?? {},
         timeSpent,
       },
     }));
@@ -374,8 +396,10 @@ function LiveGameInner() {
           blankInput={blankInput}
           reorderDraft={reorderDraft}
           reorderSubmitted={reorderSubmitted}
+          matchDraft={matchDraft}
           onBlankChange={setBlankInput}
           onReorderChange={setReorderDraft}
+          onMatchChange={setMatchDraft}
           onSelect={(opt) => {
             setSelectedOpt(opt);
             submitAnswer(opt);
@@ -384,6 +408,10 @@ function LiveGameInner() {
           onReorderSubmit={() => {
             setReorderSubmitted(true);
             submitAnswer(undefined, undefined, reorderDraft);
+          }}
+          onMatchSubmit={() => {
+            submitAnswer(undefined, undefined, undefined, matchDraft);
+            setSelectedOpt("submitted");
           }}
         />
       )}
@@ -439,7 +467,7 @@ const OPTION_KEYS = ["a", "b", "c", "d"] as const;
 
 function QuestionScreen({
   evt, timeLeft, selectedOpt, blankInput, reorderDraft, reorderSubmitted,
-  onBlankChange, onReorderChange, onSelect, onBlankSubmit, onReorderSubmit,
+  matchDraft, onBlankChange, onReorderChange, onMatchChange, onSelect, onBlankSubmit, onReorderSubmit, onMatchSubmit,
 }: {
   evt: QuestionEvt;
   timeLeft: number;
@@ -447,11 +475,14 @@ function QuestionScreen({
   blankInput: string;
   reorderDraft: string[];
   reorderSubmitted: boolean;
+  matchDraft: Record<string, string>;
   onBlankChange: (v: string) => void;
   onReorderChange: (items: string[]) => void;
+  onMatchChange: (draft: Record<string, string>) => void;
   onSelect: (opt: string) => void;
   onBlankSubmit: () => void;
   onReorderSubmit: () => void;
+  onMatchSubmit: () => void;
 }) {
   const { t } = useLocale();
   const q = evt.question;
@@ -671,6 +702,76 @@ function QuestionScreen({
           </Button>
         </div>
       )}
+
+      {q.questionType === "matching" && q.matchLeft && q.matchRight && (
+        <LiveMatchingInput
+          t={t}
+          leftItems={q.matchLeft}
+          rightItems={q.matchRight}
+          draft={matchDraft}
+          submitted={!!selectedOpt}
+          onDraftChange={onMatchChange}
+          onSubmit={onMatchSubmit}
+        />
+      )}
+    </div>
+  );
+}
+
+function LiveMatchingInput({
+  t,
+  leftItems,
+  rightItems,
+  draft,
+  submitted,
+  onDraftChange,
+  onSubmit,
+}: {
+  t: (k: string) => string;
+  leftItems: string[];
+  rightItems: string[];
+  draft: Record<string, string>;
+  submitted: boolean;
+  onDraftChange: (draft: Record<string, string>) => void;
+  onSubmit: () => void;
+}) {
+  const allSelected = leftItems.every((l) => draft[l] && draft[l] !== "");
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-[var(--text-muted)]">
+        {t("quiz.matching.pairHint") || "Match each item on the left with one on the right"}
+      </p>
+      <div className="space-y-2">
+        {leftItems.map((left) => (
+          <div key={left} className="flex items-center gap-2">
+            <span className="flex-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 text-sm text-[var(--text-primary)]">
+              {left}
+            </span>
+            <span className="shrink-0 text-[var(--text-muted)]">→</span>
+            <select
+              value={draft[left] ?? ""}
+              disabled={submitted}
+              onChange={(e) => onDraftChange({ ...draft, [left]: e.target.value })}
+              className="flex-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none disabled:opacity-60"
+            >
+              <option value="">{t("quiz.matching.selectMatch") || "Select…"}</option>
+              {rightItems.map((right) => (
+                <option key={right} value={right}>{right}</option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        onClick={onSubmit}
+        disabled={submitted || !allSelected}
+        className="w-full"
+      >
+        {submitted
+          ? (t("quiz.live.submitted") || "Submitted")
+          : (t("quiz.matching.submitAll") || "Submit all")}
+      </Button>
     </div>
   );
 }
@@ -837,6 +938,27 @@ function RevealedScreen({
               </li>
             ))}
           </ol>
+        </div>
+      ) : null}
+
+      {ended.matchPairs && ended.matchPairs.length > 0 ? (
+        <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            {t("quiz.matching.correctPairs") || "Correct pairs"}
+          </p>
+          <ul className="space-y-1.5">
+            {ended.matchPairs.map((pair) => (
+              <li key={pair.left} className="flex items-center gap-2 text-sm">
+                <span className="flex-1 rounded-[var(--radius-sm)] bg-[var(--bg-surface)] px-2 py-1 text-[var(--text-primary)]">
+                  {pair.left}
+                </span>
+                <span className="shrink-0 text-[var(--text-muted)]">→</span>
+                <span className="flex-1 rounded-[var(--radius-sm)] bg-emerald-500/10 px-2 py-1 text-emerald-400">
+                  {pair.right}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
 
