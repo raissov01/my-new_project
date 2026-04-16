@@ -661,27 +661,51 @@ function QuestionScreen({
   );
 }
 
+const CORRECT_REACTIONS: Array<{ emoji: string; line: string }> = [
+  { emoji: "🎉", line: "Nailed it!" },
+  { emoji: "🔥", line: "On fire!" },
+  { emoji: "💯", line: "Perfect!" },
+  { emoji: "⚡", line: "Lightning fast!" },
+  { emoji: "🎯", line: "Bullseye!" },
+  { emoji: "🏆", line: "Champion move!" },
+  { emoji: "✨", line: "Brilliant!" },
+  { emoji: "🚀", line: "To the moon!" },
+];
+const WRONG_REACTIONS: Array<{ emoji: string; line: string }> = [
+  { emoji: "😬", line: "Yikes…" },
+  { emoji: "💀", line: "Rip." },
+  { emoji: "🫠", line: "Melting…" },
+  { emoji: "😭", line: "So close!" },
+  { emoji: "😤", line: "Next time!" },
+  { emoji: "🙈", line: "Didn't see that." },
+  { emoji: "💔", line: "Oof." },
+  { emoji: "🤦", line: "Bruh." },
+];
+
 function AnsweredScreen({ result, t }: { result: AnswerResult; t: (k: string) => string }) {
+  const [reaction] = useState(() => {
+    const pool = result.isCorrect ? CORRECT_REACTIONS : WRONG_REACTIONS;
+    return pool[Math.floor(Math.random() * pool.length)];
+  });
+
   return (
     <div
       role="status"
       aria-live="polite"
       className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center"
     >
-      <div
-        className={`flex h-20 w-20 items-center justify-center rounded-full border-4 ${
-          result.isCorrect
-            ? "border-emerald-400/60 bg-emerald-500/15"
-            : "border-rose-400/60 bg-rose-500/15"
-        }`}
+      <span
+        className="animate-reaction-pop select-none text-[5.5rem] leading-none"
+        aria-hidden="true"
       >
-        <span className="text-4xl" aria-hidden="true">
-          {result.isCorrect ? "✓" : "✗"}
-        </span>
+        {reaction.emoji}
+      </span>
+      <div>
+        <h2 className={`text-2xl font-bold ${result.isCorrect ? "text-emerald-400" : "text-rose-400"}`}>
+          {result.isCorrect ? t("quiz.live.correct") : t("quiz.live.wrong")}
+        </h2>
+        <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">{reaction.line}</p>
       </div>
-      <h2 className={`text-2xl font-bold ${result.isCorrect ? "text-emerald-400" : "text-rose-400"}`}>
-        {result.isCorrect ? t("quiz.live.correct") : t("quiz.live.wrong")}
-      </h2>
       {result.isCorrect ? (
         <p className="text-lg font-semibold text-amber-400">+{result.pointsEarned} {t("quiz.live.points")}</p>
       ) : null}

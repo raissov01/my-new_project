@@ -690,6 +690,16 @@ a, button, input, textarea, select {
   animation: rank-badge-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes reaction-pop {
+  0%   { transform: scale(0) rotate(-12deg); opacity: 0; }
+  55%  { transform: scale(1.22) rotate(6deg); opacity: 1; }
+  75%  { transform: scale(0.92) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.animate-reaction-pop {
+  animation: reaction-pop 0.52s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .safe-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
