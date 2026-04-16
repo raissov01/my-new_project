@@ -26,10 +26,9 @@ func (h *QuizAIGenerateHandler) Generate(w http.ResponseWriter, r *http.Request)
 	}
 
 	var req struct {
-		Text     string `json:"text"`
-		Count    int    `json:"count"`
-		Language string `json:"language"`
-		Subject  string `json:"subject"`
+		Text    string `json:"text"`
+		Count   int    `json:"count"`
+		Subject string `json:"subject"`
 	}
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body", err)
@@ -41,14 +40,11 @@ func (h *QuizAIGenerateHandler) Generate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if req.Language == "" {
-		req.Language = "kk"
-	}
 	if req.Count <= 0 {
 		req.Count = 10
 	}
 
-	result, err := h.svc.Generate(userID, req.Text, req.Language, req.Subject, req.Count)
+	result, err := h.svc.Generate(userID, req.Text, req.Subject, req.Count)
 	if err != nil {
 		if errors.Is(err, service.ErrDailyLimitReached) {
 			writeError(w, http.StatusTooManyRequests, "daily generation limit reached (10 per day)", nil)

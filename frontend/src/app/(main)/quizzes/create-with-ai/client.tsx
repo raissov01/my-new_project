@@ -30,7 +30,6 @@ function GenerateForm({
   const { t } = useLocale();
   const [text, setText] = useState("");
   const [count, setCount] = useState(10);
-  const [language, setLanguage] = useState("auto");
   const [subject, setSubject] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +49,7 @@ function GenerateForm({
       const res = await fetch("/api/quizzes/ai-generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: trimmed, count, language, subject: subject.trim() }),
+        body: JSON.stringify({ text: trimmed, count, subject: subject.trim() }),
       });
 
       const data = (await res.json().catch(() => null)) as {
@@ -103,8 +102,8 @@ function GenerateForm({
         <p className="mt-1.5 text-xs text-[var(--text-muted)]">{t("quiz.ai.inputHint")}</p>
       </div>
 
-      {/* Row: count + language + subject */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* Row: count + subject */}
+      <div className="grid gap-4 sm:grid-cols-2">
         {/* Question count */}
         <div>
           <label
@@ -125,28 +124,6 @@ function GenerateForm({
                 {n}
               </option>
             ))}
-          </select>
-        </div>
-
-        {/* Language */}
-        <div>
-          <label
-            htmlFor="ai-lang"
-            className="mb-2 block text-sm font-medium text-[var(--text-primary)]"
-          >
-            {t("quiz.ai.language")}
-          </label>
-          <select
-            id="ai-lang"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            disabled={loading}
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
-          >
-            <option value="auto">{t("quiz.ai.languageAuto")}</option>
-            <option value="kk">{t("lang.kk")}</option>
-            <option value="ru">{t("lang.ru")}</option>
-            <option value="en">{t("lang.en")}</option>
           </select>
         </div>
 

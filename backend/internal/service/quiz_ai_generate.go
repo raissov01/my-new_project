@@ -68,7 +68,7 @@ func (s *QuizAIGenerateService) DailyUsage(userID string) (int, error) {
 
 // Generate calls the OpenAI API and returns generated MCQ questions.
 // Returns an error if the daily limit is reached or the API call fails.
-func (s *QuizAIGenerateService) Generate(userID, text, language, subject string, count int) (*AIQuizGenResult, error) {
+func (s *QuizAIGenerateService) Generate(userID, text, subject string, count int) (*AIQuizGenResult, error) {
 	if strings.TrimSpace(s.openAIKey) == "" {
 		return nil, fmt.Errorf("AI generation is not configured")
 	}
@@ -93,7 +93,7 @@ func (s *QuizAIGenerateService) Generate(userID, text, language, subject string,
 	// Trim text to max allowed runes.
 	text = limitRunes(text, maxQuizGenTextRunes)
 
-	prompt := buildQuizPrompt(text, language, subject, count)
+	prompt := buildQuizPrompt(text, subject, count)
 	questions, err := s.callOpenAI(prompt)
 	if err != nil {
 		return nil, err
@@ -123,18 +123,8 @@ var ErrDailyLimitReached = fmt.Errorf("daily generation limit reached")
 
 // ── Prompt builder ────────────────────────────────────────────────────────────
 
-func buildQuizPrompt(text, language, subject string, count int) string {
-	var langRule string
-	switch language {
-	case "kk":
-		langRule = "- Write ALL questions and answers in Kazakh (Қазақша)"
-	case "ru":
-		langRule = "- Write ALL questions and answers in Russian (Русский)"
-	case "en":
-		langRule = "- Write ALL questions and answers in English"
-	default: // "auto" or empty
-		langRule = "- CRITICAL: Detect the language of the text below. Write ALL questions, options, and explanations in EXACTLY the SAME language as the source text. If the text is in English — write in English. If Kazakh — write in Kazakh. If Russian — write in Russian."
-	}
+func buildQuizPrompt(text, subject string, count int) string {
+	langRule := "- CRITICAL: Detect the language of the source text below and write ALL questions, answer options, and explanations in EXACTLY the SAME language as the source text. Match the source language precisely — if the text is in English, write in English. If Kazakh, write in Kazakh. If Russian, write in Russian. Do not translate."
 
 	subjectLine := ""
 	if strings.TrimSpace(subject) != "" {
