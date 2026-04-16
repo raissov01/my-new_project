@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Copy, Play, SkipForward, Square, Users, Wifi, WifiOff, Trophy, BarChart3, CheckCircle } from "lucide-react";
+import { ArrowLeft, Copy, Eye, EyeOff, Play, SkipForward, Square, Users, Wifi, WifiOff, Trophy, BarChart3, CheckCircle } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
@@ -84,6 +84,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
   // ── Setup state ──
   const [mode, setMode] = useState<"teacher_paced" | "self_paced">("teacher_paced");
   const [allowAnon, setAllowAnon] = useState(true);
+  const [showLeaderboard, setShowLeaderboard] = useState(true);
 
   // ── Session state ──
   const [phase, setPhase] = useState<Phase>("setup");
@@ -304,6 +305,20 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
           </div>
         </label>
 
+        {/* Hide leaderboard toggle */}
+        <label className="flex cursor-pointer items-start gap-3 rounded-[1.2rem] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+          <input
+            type="checkbox"
+            checked={!showLeaderboard}
+            onChange={(e) => setShowLeaderboard(!e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-[var(--primary)]"
+          />
+          <div>
+            <p className="text-sm font-medium text-[var(--text-primary)]">{t("quiz.live.hideLeaderboard")}</p>
+            <p className="text-xs text-[var(--text-muted)]">{t("quiz.live.hideLeaderboardDesc")}</p>
+          </div>
+        </label>
+
         {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
         <Button size="lg" onClick={handleCreateSession} disabled={creating} className="w-full sm:w-auto">
@@ -468,9 +483,27 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">{t("quiz.live.leaderboard")}</h2>
-          <ConnectionBadge status={wsStatus} />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowLeaderboard((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+            >
+              {showLeaderboard
+                ? <><EyeOff className="h-3.5 w-3.5" />{t("quiz.live.hideLeaderboardBtn")}</>
+                : <><Eye className="h-3.5 w-3.5" />{t("quiz.live.showLeaderboardBtn")}</>}
+            </button>
+            <ConnectionBadge status={wsStatus} />
+          </div>
         </div>
-        <LeaderboardTable entries={leaderboard} prevRanks={prevRanksRef.current} />
+        {showLeaderboard ? (
+          <LeaderboardTable entries={leaderboard} prevRanks={prevRanksRef.current} />
+        ) : (
+          <div className="flex min-h-[160px] items-center justify-center rounded-[1.5rem] border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)]">
+            <EyeOff className="mr-2 h-4 w-4" />
+            {t("quiz.live.hideLeaderboard")}
+          </div>
+        )}
         {mode === "teacher_paced" ? (
           <div className="flex flex-wrap gap-3">
             {currentQ + 1 < totalQ ? (
@@ -493,11 +526,29 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
   if (phase === "finished") {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-3 text-amber-400">
-          <Trophy className="h-7 w-7" />
-          <h1 className="text-2xl font-semibold tracking-[-0.04em]">{t("quiz.live.finalResults")}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 text-amber-400">
+            <Trophy className="h-7 w-7" />
+            <h1 className="text-2xl font-semibold tracking-[-0.04em]">{t("quiz.live.finalResults")}</h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowLeaderboard((v) => !v)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+          >
+            {showLeaderboard
+              ? <><EyeOff className="h-3.5 w-3.5" />{t("quiz.live.hideLeaderboardBtn")}</>
+              : <><Eye className="h-3.5 w-3.5" />{t("quiz.live.showLeaderboardBtn")}</>}
+          </button>
         </div>
-        <LeaderboardTable entries={finalLeaderboard} medal prevRanks={prevRanksRef.current} />
+        {showLeaderboard ? (
+          <LeaderboardTable entries={finalLeaderboard} medal prevRanks={prevRanksRef.current} />
+        ) : (
+          <div className="flex min-h-[160px] items-center justify-center rounded-[1.5rem] border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)]">
+            <EyeOff className="mr-2 h-4 w-4" />
+            {t("quiz.live.hideLeaderboard")}
+          </div>
+        )}
         <Link href={`/quizzes/${quizId}`}>
           <Button variant="outline" size="lg">
             <ArrowLeft className="h-4 w-4" />
