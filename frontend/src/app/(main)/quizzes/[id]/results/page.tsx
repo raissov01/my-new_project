@@ -14,6 +14,7 @@ import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 import { Button } from "@/components/ui/button";
 import { getAttemptById, type AttemptAnswerResult } from "@/server/services/quizzes";
+import { DownloadCsvButton } from "./download-csv-button";
 
 interface ResultsPageProps {
   params: Promise<{ id: string }>;
@@ -190,6 +191,7 @@ export default async function QuizResultsPage({
                   {t("quiz.results.backToLibrary")}
                 </Button>
               </Link>
+              <DownloadCsvButton attempt={attempt} label={t("quiz.results.downloadCsv")} />
             </div>
           </div>
         </div>
