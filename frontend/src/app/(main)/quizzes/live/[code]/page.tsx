@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, Star, Flame, Trophy } from "lucide-react";
+import { ArrowDown, ArrowUp, Loader2, Star, Flame, Trophy, WifiOff } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 
@@ -93,6 +93,8 @@ function LiveGameInner() {
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   const [reorderSubmitted, setReorderSubmitted] = useState(false);
   const [wsError, setWsError] = useState("");
+  // "connected" | "reconnecting" | "disconnected"
+  const [wsStatus, setWsStatus] = useState<"connected" | "reconnecting" | "disconnected">("connected");
 
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -109,8 +111,14 @@ function LiveGameInner() {
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   // ── Connect ──
-  const connectWs = useCallback(() => {
+  const connectWs = useCallback((isManualRetry = false) => {
     if (!pid || !code) return;
+
+    if (isManualRetry) {
+      retryCountRef.current = 0;
+      setWsError("");
+      setWsStatus("reconnecting");
+    }
 
     const backendWsUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1")
       .replace("/api/v1", "")
@@ -121,6 +129,12 @@ function LiveGameInner() {
     const ws = new WebSocket(url);
     wsRef.current = ws;
 
+    ws.onopen = () => {
+      retryCountRef.current = 0;
+      setWsStatus("connected");
+      setWsError("");
+    };
+
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data) as WsMsg;
@@ -128,15 +142,21 @@ function LiveGameInner() {
       } catch {}
     };
 
-    ws.onerror = () => setWsError("Connection error");
+    ws.onerror = () => {
+      // onerror always precedes onclose — just mark it; onclose handles retry.
+      setWsError("error");
+    };
+
     ws.onclose = () => {
       if (phaseRef.current === "finished") return; // game over — no reconnect
       const attempt = retryCountRef.current;
       if (attempt >= 3) {
-        setWsError("Disconnected from session");
+        setWsStatus("disconnected");
+        setWsError("disconnected");
         return;
       }
       retryCountRef.current += 1;
+      setWsStatus("reconnecting");
       const delay = Math.pow(2, attempt) * 1000; // 1s → 2s → 4s
       retryTimerRef.current = setTimeout(() => connectWs(), delay);
     };
@@ -244,17 +264,52 @@ function LiveGameInner() {
     );
   }
 
-  if (wsError && phase !== "finished") {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
-        <p className="text-red-400">{wsError}</p>
-        <Link href="/quizzes/join"><Button variant="outline">{t("quiz.backToLibrary")}</Button></Link>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
+      {/* Disconnected full-screen overlay */}
+      {wsStatus === "disconnected" && phase !== "finished" ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-base)]/90 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-8 text-center shadow-[var(--surface-shadow-strong)]">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-rose-500/30 bg-rose-500/10">
+              <WifiOff className="h-8 w-8 text-rose-400" />
+            </div>
+            <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">
+              {t("quiz.live.disconnected")}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+              {t("quiz.live.disconnectedBody")}
+            </p>
+            <div className="mt-6 flex flex-col gap-3">
+              <Button
+                type="button"
+                onClick={() => connectWs(true)}
+                className="w-full"
+              >
+                {t("quiz.live.retry")}
+              </Button>
+              <Link href="/quizzes/join" className="w-full">
+                <Button type="button" variant="outline" className="w-full">
+                  {t("quiz.live.leaveGame")}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Reconnecting banner */}
+      {wsStatus === "reconnecting" && phase !== "finished" ? (
+        <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-lg)] border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          <span>
+            {t("quiz.live.reconnecting")}{" "}
+            <span className="font-medium">
+              {t("quiz.live.reconnectAttempt").replace("{n}", String(retryCountRef.current))}
+            </span>
+          </span>
+        </div>
+      ) : null}
+
       {/* Header */}
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
@@ -363,6 +418,7 @@ function QuestionScreen({
   const { t } = useLocale();
   const q = evt.question;
   const pct = q.timeLimit > 0 ? (timeLeft / q.timeLimit) * 100 : 0;
+  const [multiSelected, setMultiSelected] = useState<Set<string>>(() => new Set());
 
   const optValues: Record<string, string | undefined> = {
     a: q.optionA, b: q.optionB, c: q.optionC, d: q.optionD,
@@ -420,6 +476,61 @@ function QuestionScreen({
               </button>
             );
           })}
+        </div>
+      )}
+
+      {q.questionType === "mcq_multi" && (
+        <div className="space-y-3">
+          <p className="text-xs text-[var(--text-muted)]">
+            {t("quiz.play.selectMultiple")}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {OPTION_KEYS.map((opt, i) => {
+              const val = optValues[opt];
+              if (!val) return null;
+              const chosen = multiSelected.has(opt);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  disabled={!!selectedOpt}
+                  onClick={() => {
+                    if (selectedOpt) return;
+                    setMultiSelected((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(opt)) {
+                        next.delete(opt);
+                      } else {
+                        next.add(opt);
+                      }
+                      return next;
+                    });
+                  }}
+                  className={`flex items-center gap-2 rounded-[1.2rem] border-2 p-4 text-left text-sm font-medium transition-all ${
+                    chosen
+                      ? "border-[var(--primary)] bg-[var(--primary)]/15 text-[var(--primary)]"
+                      : OPTION_COLORS[i]
+                  } disabled:cursor-not-allowed disabled:opacity-60`}
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-current text-xs font-bold">
+                    {opt.toUpperCase()}
+                  </span>
+                  {val}
+                </button>
+              );
+            })}
+          </div>
+          <Button
+            type="button"
+            disabled={!!selectedOpt || multiSelected.size === 0}
+            onClick={() => {
+              const sorted = ["a", "b", "c", "d"].filter((k) => multiSelected.has(k));
+              onSelect(sorted.join(","));
+            }}
+            className="w-full"
+          >
+            {selectedOpt ? (t("quiz.live.submitted") || "Submitted") : (t("quiz.play.submitSelection") || "Confirm")}
+          </Button>
         </div>
       )}
 
