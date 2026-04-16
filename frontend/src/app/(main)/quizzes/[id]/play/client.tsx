@@ -213,6 +213,13 @@ export function PlayQuizClient({
   const questionStartRef = useRef<number>(0);
   const quizStartRef = useRef<number>(savedProgress?.quizStartedAt ?? 0);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Refs for values read inside recordAnswer's stable closure. Using refs
+  // avoids adding fast-changing state to the useCallback dep array (which
+  // would recreate the callback on every answer and break timing).
+  const streakRef = useRef(streak);
+  useEffect(() => { streakRef.current = streak; }, [streak]);
+  const currentIdxRef = useRef(currentIdx);
+  useEffect(() => { currentIdxRef.current = currentIdx; }, [currentIdx]);
 
   const question = quiz.questions[currentIdx];
   const questionType: QuizQuestionType = question.questionType ?? "mcq";
@@ -342,9 +349,9 @@ export function PlayQuizClient({
       // Practice mode is ephemeral — no persistence needed.
       if (!isPractice) {
         saveProgress(quiz.id, {
-          currentIdx,
+          currentIdx: currentIdxRef.current,
           answers: answersRef.current,
-          streak: isCorrect ? streak + 1 : 0,
+          streak: isCorrect ? streakRef.current + 1 : 0,
           quizStartedAt: quizStartRef.current,
         });
       }
@@ -389,7 +396,7 @@ export function PlayQuizClient({
         advance();
       }, 1800);
     },
-    [advance, phase, question.id, sounds, powerUps]
+    [advance, phase, question.id, sounds, powerUps, isPractice, quiz.id]
   );
 
   const recordMcq = useCallback(

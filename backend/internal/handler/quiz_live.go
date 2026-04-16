@@ -145,7 +145,13 @@ type joinSessionResponse struct {
 }
 
 func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
+	// This is a public endpoint — anonymous players are allowed.
+	// For logged-in users the Next.js bridge sets X-User-ID; read it as a fallback
+	// since no auth middleware injects the value into context here.
 	userID, _ := middleware.UserIDFromContext(r.Context())
+	if userID == "" {
+		userID = strings.TrimSpace(r.Header.Get("X-User-ID"))
+	}
 
 	var req joinSessionRequest
 	if err := decodeJSON(r, &req); err != nil {

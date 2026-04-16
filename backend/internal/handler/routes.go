@@ -79,6 +79,12 @@ func RegisterRoutes(router *gin.Engine) {
 	// ── Live quiz WebSocket (public upgrade — auth handled inside hub) ───
 	api.GET("/live/:code/ws", wrapHTTP(deps.QuizLive.WebSocket))
 
+	// ── Live quiz session join (public — anonymous players allowed) ─────
+	// CreateSession stays authenticated (host must own the quiz).
+	// JoinSession and GetSession are public: only code + name required.
+	api.POST("/live-sessions/join", wrapHTTP(deps.QuizLive.JoinSession))
+	api.GET("/live-sessions/:code", wrapHTTP(deps.QuizLive.GetSession))
+
 	// ── Public IELTS routes (no auth required for reading) ──────────────
 	api.GET("/ielts/materials", deps.IELTSMaterial.List)
 	api.GET("/ielts/materials/:id", deps.IELTSMaterial.Get)
@@ -148,13 +154,12 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.DELETE("/quizzes/:quizID", wrapHTTP(deps.Quiz.DeleteQuiz))
 		internal.POST("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.SubmitAttempt))
 		internal.GET("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.ListAttempts))
+		internal.GET("/quizzes/:quizID/stats", wrapHTTP(deps.Quiz.GetQuestionStats))
 		internal.POST("/quizzes/:quizID/clone", wrapHTTP(deps.Quiz.CloneQuiz))
 		internal.POST("/quizzes/images", wrapHTTP(deps.QuizImage.Upload))
 
-			// Live quiz session management
+			// Live quiz session management (host only — authentication required)
 			internal.POST("/quizzes/:quizID/live-sessions", wrapHTTP(deps.QuizLive.CreateSession))
-			internal.POST("/live-sessions/join", wrapHTTP(deps.QuizLive.JoinSession))
-			internal.GET("/live-sessions/:code", wrapHTTP(deps.QuizLive.GetSession))
 
 		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
 		internal.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))

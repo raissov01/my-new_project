@@ -99,27 +99,33 @@ function LiveGameInner() {
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startRef = useRef<number>(0); // question start time for timeSpent
-  const prevLbRanksRef = useRef<Map<string, number>>(new Map());
+  // prevLbRanks is state (not a ref) so it can be safely read in render.
+  const [prevLbRanks, setPrevLbRanks] = useState<Map<string, number>>(new Map());
+  // questionEndedRef lets handleServerMsg read the latest questionEnded value
+  // without a stale closure (handleServerMsg has an empty deps array).
+  const questionEndedRef = useRef<typeof questionEnded>(null);
   // phaseRef always holds the latest phase so ws.onclose never reads a
   // stale closure value captured when the WebSocket was first opened.
   const phaseRef = useRef<Phase>("waiting");
   const retryCountRef = useRef(0);
+  // retryCount mirrors retryCountRef so it can be read safely during render.
+  const [retryCount, setRetryCount] = useState(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Indirection so connectWs can call handleServerMsg without capturing a
-  // stale reference (handleServerMsg is defined below).
+  // Ref indirection: connectWs calls itself for retries and handleServerMsg
+  // for messages. Both are defined below; refs let the closures call the
+  // latest version without circular const references.
+  const connectWsRef = useRef<() => void>(() => {});
   const handleServerMsgRef = useRef<(msg: WsMsg) => void>(() => {});
 
   useEffect(() => { phaseRef.current = phase; }, [phase]);
+  useEffect(() => { questionEndedRef.current = questionEnded; }, [questionEnded]);
 
   // ── Connect ──
-  const connectWs = useCallback((isManualRetry = false) => {
+  // NOTE: connectWs must NOT call setState synchronously — the React Compiler
+  // flags any setState reachable from a useEffect body. State resets for manual
+  // retries are handled at the call site (onClick handler) instead.
+  const connectWs = useCallback(() => {
     if (!pid || !code) return;
-
-    if (isManualRetry) {
-      retryCountRef.current = 0;
-      setWsError("");
-      setWsStatus("reconnecting");
-    }
 
     const backendWsUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1")
       .replace("/api/v1", "")
@@ -132,6 +138,7 @@ function LiveGameInner() {
 
     ws.onopen = () => {
       retryCountRef.current = 0;
+      setRetryCount(0);
       setWsStatus("connected");
       setWsError("");
     };
@@ -157,11 +164,17 @@ function LiveGameInner() {
         return;
       }
       retryCountRef.current += 1;
+      setRetryCount(retryCountRef.current);
       setWsStatus("reconnecting");
       const delay = Math.pow(2, attempt) * 1000; // 1s → 2s → 4s
-      retryTimerRef.current = setTimeout(() => connectWs(), delay);
+      // Use ref so the retry closure always calls the latest connectWs
+      // without capturing a const before it is fully initialised.
+      retryTimerRef.current = setTimeout(() => connectWsRef.current(), delay);
     };
-  }, [pid, code]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pid, code]);
+
+  // Keep connectWsRef in sync so the retry closure above is always current.
+  useEffect(() => { connectWsRef.current = connectWs; }, [connectWs]);
 
   useEffect(() => {
     if (!pid || !code) return;
@@ -172,6 +185,22 @@ function LiveGameInner() {
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     };
   }, [pid, code, connectWs]);
+
+  function startTimer(deadlineMs: number) {
+    stopTimer();
+    timerRef.current = setInterval(() => {
+      const left = Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000));
+      setTimeLeft(left);
+    }, 250);
+  }
+
+  function stopTimer() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setTimeLeft(0);
+  }
 
   const handleServerMsg = useCallback((msg: WsMsg) => {
     switch (msg.type) {
@@ -210,24 +239,19 @@ function LiveGameInner() {
 
       case "question_ended":
         stopTimer();
-        setQuestionEnded((prev) => {
-          prevLbRanksRef.current = new Map(
-            (prev?.leaderboard ?? []).map((e) => [e.id, e.rank])
-          );
-          return msg.data;
-        });
+        setPrevLbRanks(new Map(
+          (questionEndedRef.current?.leaderboard ?? []).map((e) => [e.id, e.rank])
+        ));
+        setQuestionEnded(msg.data);
         setPhase("revealed");
         break;
 
       case "game_ended":
         stopTimer();
-        setQuestionEnded((prev) => {
-          // Snapshot last leaderboard ranks for the finished screen.
-          prevLbRanksRef.current = new Map(
-            (prev?.leaderboard ?? []).map((e) => [e.id, e.rank])
-          );
-          return prev;
-        });
+        // Snapshot last leaderboard ranks for the finished screen.
+        setPrevLbRanks(new Map(
+          (questionEndedRef.current?.leaderboard ?? []).map((e) => [e.id, e.rank])
+        ));
         setFinalLeaderboard(msg.data.finalLeaderboard);
         setPhase("finished");
         break;
@@ -236,22 +260,6 @@ function LiveGameInner() {
 
   // Keep the ref up to date so connectWs always calls the latest version.
   useEffect(() => { handleServerMsgRef.current = handleServerMsg; }, [handleServerMsg]);
-
-  function startTimer(deadlineMs: number) {
-    stopTimer();
-    timerRef.current = setInterval(() => {
-      const left = Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000));
-      setTimeLeft(left);
-    }, 250);
-  }
-
-  function stopTimer() {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setTimeLeft(0);
-  }
 
   const submitAnswer = useCallback((option?: string, text?: string, orderAnswer?: string[]) => {
     const timeSpent = Math.round((Date.now() - startRef.current) / 1000);
@@ -295,7 +303,13 @@ function LiveGameInner() {
             <div className="mt-6 flex flex-col gap-3">
               <Button
                 type="button"
-                onClick={() => connectWs(true)}
+                onClick={() => {
+                  retryCountRef.current = 0;
+                  setRetryCount(0);
+                  setWsError("");
+                  setWsStatus("reconnecting");
+                  connectWs();
+                }}
                 className="w-full"
               >
                 {t("quiz.live.retry")}
@@ -317,7 +331,7 @@ function LiveGameInner() {
           <span>
             {t("quiz.live.reconnecting")}{" "}
             <span className="font-medium">
-              {t("quiz.live.reconnectAttempt").replace("{n}", String(retryCountRef.current))}
+              {t("quiz.live.reconnectAttempt").replace("{n}", String(retryCount))}
             </span>
           </span>
         </div>
@@ -384,7 +398,7 @@ function LiveGameInner() {
           result={answerResult}
           pid={pid}
           t={t}
-          prevRanks={prevLbRanksRef.current}
+          prevRanks={prevLbRanks}
         />
       )}
 
@@ -393,7 +407,7 @@ function LiveGameInner() {
           leaderboard={finalLeaderboard}
           pid={pid}
           t={t}
-          prevRanks={prevLbRanksRef.current}
+          prevRanks={prevLbRanks}
         />
       )}
     </div>

@@ -253,6 +253,28 @@ func (h *QuizHandler) GetAttempt(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, result)
 }
 
+// GetQuestionStats handles GET /api/v1/quizzes/{quizID}/stats
+// Only the quiz owner can access this endpoint.
+func (h *QuizHandler) GetQuestionStats(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || strings.TrimSpace(userID) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	quizID := r.PathValue("quizID")
+
+	stats, err := h.svc.GetQuestionStats(r.Context(), userID, quizID)
+	if err != nil {
+		status, msg := classifyQuizError(err, "failed to load stats")
+		if h.isDev() {
+			msg = err.Error()
+		}
+		writeError(w, status, msg, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, stats)
+}
+
 // classifyQuizError maps common service-layer errors to HTTP status codes.
 func classifyQuizError(err error, fallbackMsg string) (int, string) {
 	msg := err.Error()

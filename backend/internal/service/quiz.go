@@ -306,6 +306,25 @@ func (s *Quiz) validateAndNormalize(
 	}, nil
 }
 
+// GetQuestionStats returns per-question accuracy for a quiz, only for the owner.
+func (s *Quiz) GetQuestionStats(ctx context.Context, userID, quizID string) (*model.QuizStatsResponse, error) {
+	if strings.TrimSpace(userID) == "" {
+		return nil, fmt.Errorf("authentication required")
+	}
+	if strings.TrimSpace(quizID) == "" {
+		return nil, fmt.Errorf("quiz id is required")
+	}
+	// Verify ownership — GetByID already returns isAuthor; check that.
+	detail, err := s.repo.GetByID(ctx, quizID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("quiz not found")
+	}
+	if !detail.IsAuthor {
+		return nil, fmt.Errorf("access denied")
+	}
+	return s.repo.GetQuestionStats(ctx, quizID)
+}
+
 // GetRecentAttempts returns the user's last N completed attempts across all quizzes.
 func (s *Quiz) GetRecentAttempts(ctx context.Context, userID string, limit int) ([]model.RecentAttemptItem, error) {
 	if limit <= 0 || limit > 20 {
