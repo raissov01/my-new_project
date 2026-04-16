@@ -30,7 +30,7 @@ function GenerateForm({
   const { t } = useLocale();
   const [text, setText] = useState("");
   const [count, setCount] = useState(10);
-  const [language, setLanguage] = useState("kk");
+  const [language, setLanguage] = useState("auto");
   const [subject, setSubject] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -143,6 +143,7 @@ function GenerateForm({
             disabled={loading}
             className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
           >
+            <option value="auto">{t("quiz.ai.languageAuto")}</option>
             <option value="kk">{t("lang.kk")}</option>
             <option value="ru">{t("lang.ru")}</option>
             <option value="en">{t("lang.en")}</option>

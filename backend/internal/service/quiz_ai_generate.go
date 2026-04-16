@@ -124,14 +124,16 @@ var ErrDailyLimitReached = fmt.Errorf("daily generation limit reached")
 // ── Prompt builder ────────────────────────────────────────────────────────────
 
 func buildQuizPrompt(text, language, subject string, count int) string {
-	langInstruction := map[string]string{
-		"kk": "Kazakh (Қазақша)",
-		"ru": "Russian (Русский)",
-		"en": "English",
-	}
-	langText, ok := langInstruction[language]
-	if !ok {
-		langText = "English"
+	var langRule string
+	switch language {
+	case "kk":
+		langRule = "- Write ALL questions and answers in Kazakh (Қазақша)"
+	case "ru":
+		langRule = "- Write ALL questions and answers in Russian (Русский)"
+	case "en":
+		langRule = "- Write ALL questions and answers in English"
+	default: // "auto" or empty
+		langRule = "- CRITICAL: Detect the language of the text below. Write ALL questions, options, and explanations in EXACTLY the SAME language as the source text. If the text is in English — write in English. If Kazakh — write in Kazakh. If Russian — write in Russian."
 	}
 
 	subjectLine := ""
@@ -145,7 +147,7 @@ func buildQuizPrompt(text, language, subject string, count int) string {
 - Each question must have exactly 4 answer options
 - Exactly one option must be correct (correctIndex: 0, 1, 2, or 3)
 - Questions must test genuine understanding, not trivial recall
-- Write ALL questions and answers in %s
+%s
 - Include a brief explanation (1-2 sentences) for why the correct answer is right
 - Base questions ONLY on facts stated in the text below
 
@@ -154,7 +156,7 @@ Return ONLY valid JSON with NO extra text, NO markdown, NO code fences:
 
 <text>
 %s
-</text>`, count, subjectLine, langText, text)
+</text>`, count, subjectLine, langRule, text)
 }
 
 // ── OpenAI API call ───────────────────────────────────────────────────────────
