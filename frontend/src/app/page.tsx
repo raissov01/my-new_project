@@ -42,34 +42,48 @@ export default async function LandingPage() {
     { value: "Role-based", label: t("landing.heroStat3"), icon: Users },
   ];
 
-  const ecosystemCards: Array<{ title: string; body: string; icon: LucideIcon; color: string }> = [
-    { title: t("ielts.simulatorTitle"), body: t("ielts.simulatorBody"), icon: ClipboardCheck, color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
-    { title: t("ielts.writingTitle"), body: t("ielts.writingBody"), icon: PenLine, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
-    { title: t("ielts.speakingTitle"), body: t("ielts.speakingBody"), icon: Mic, color: "text-violet-500 bg-violet-500/10 border-violet-500/20" },
-    { title: t("ielts.materialsTitle"), body: t("ielts.materialsBody"), icon: BookOpenText, color: "text-cyan-500 bg-cyan-500/10 border-cyan-500/20" },
-    { title: t("ielts.tipsTitle"), body: t("ielts.tipsBody"), icon: Target, color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
-    { title: t("landing.ecoFlashcards"), body: t("landing.ecoFlashcardsBody"), icon: LibraryBig, color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
-    { title: t("landing.ecoAI"), body: t("landing.ecoAIBody"), icon: Bot, color: "text-fuchsia-500 bg-fuchsia-500/10 border-fuchsia-500/20" },
-    { title: t("landing.ecoProgress"), body: t("landing.ecoProgressBody"), icon: BarChart3, color: "text-sky-500 bg-sky-500/10 border-sky-500/20" },
-    { title: t("landing.ecoClasses"), body: t("landing.ecoClassesBody"), icon: Users, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
-    { title: t("landing.ecoChallenges"), body: t("landing.ecoChallengesBody"), icon: Trophy, color: "text-orange-500 bg-orange-500/10 border-orange-500/20" },
+  const ecosystemCards: Array<{
+    title: string;
+    body: string;
+    icon: LucideIcon;
+    iconCls: string;
+  }> = [
+    { title: t("ielts.simulatorTitle"), body: t("ielts.simulatorBody"), icon: ClipboardCheck, iconCls: "bg-blue-500/10 text-blue-600 border border-blue-500/20" },
+    { title: t("ielts.writingTitle"), body: t("ielts.writingBody"), icon: PenLine, iconCls: "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" },
+    { title: t("ielts.speakingTitle"), body: t("ielts.speakingBody"), icon: Mic, iconCls: "bg-violet-500/10 text-violet-600 border border-violet-500/20" },
+    { title: t("ielts.materialsTitle"), body: t("ielts.materialsBody"), icon: BookOpenText, iconCls: "bg-cyan-500/10 text-cyan-600 border border-cyan-500/20" },
+    { title: t("ielts.tipsTitle"), body: t("ielts.tipsBody"), icon: Target, iconCls: "bg-amber-500/10 text-amber-700 border border-amber-500/20" },
+    { title: t("landing.ecoFlashcards"), body: t("landing.ecoFlashcardsBody"), icon: LibraryBig, iconCls: "bg-blue-500/10 text-blue-600 border border-blue-500/20" },
+    { title: t("landing.ecoAI"), body: t("landing.ecoAIBody"), icon: Bot, iconCls: "bg-fuchsia-500/10 text-fuchsia-600 border border-fuchsia-500/20" },
+    { title: t("landing.ecoProgress"), body: t("landing.ecoProgressBody"), icon: BarChart3, iconCls: "bg-sky-500/10 text-sky-600 border border-sky-500/20" },
+    { title: t("landing.ecoClasses"), body: t("landing.ecoClassesBody"), icon: Users, iconCls: "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" },
+    { title: t("landing.ecoChallenges"), body: t("landing.ecoChallengesBody"), icon: Trophy, iconCls: "bg-orange-500/10 text-orange-600 border border-orange-500/20" },
   ];
 
   const previewColumns = [
     {
-      eyebrow: t("landing.prevLib"), title: t("landing.prevLibTitle"), body: t("landing.prevLibBody"),
+      eyebrow: t("landing.prevLib"),
+      title: t("landing.prevLibTitle"),
+      body: t("landing.prevLibBody"),
       points: [t("landing.prevLibP1"), t("landing.prevLibP2"), t("landing.prevLibP3")],
-      accent: "border-l-[var(--primary)]",
+      borderCls: "border-l-[var(--primary)]",
+      eyebrowCls: "text-[var(--primary)]",
     },
     {
-      eyebrow: t("landing.prevClass"), title: t("landing.prevClassTitle"), body: t("landing.prevClassBody"),
+      eyebrow: t("landing.prevClass"),
+      title: t("landing.prevClassTitle"),
+      body: t("landing.prevClassBody"),
       points: [t("landing.prevClassP1"), t("landing.prevClassP2"), t("landing.prevClassP3")],
-      accent: "border-l-[var(--accent)]",
+      borderCls: "border-l-[var(--accent)]",
+      eyebrowCls: "text-[var(--accent)]",
     },
     {
-      eyebrow: t("landing.prevAI"), title: t("landing.prevAITitle"), body: t("landing.prevAIBody"),
+      eyebrow: t("landing.prevAI"),
+      title: t("landing.prevAITitle"),
+      body: t("landing.prevAIBody"),
       points: [t("landing.prevAIP1"), t("landing.prevAIP2"), t("landing.prevAIP3")],
-      accent: "border-l-[var(--success)]",
+      borderCls: "border-l-[var(--success)]",
+      eyebrowCls: "text-[var(--success)]",
     },
   ];
 
@@ -103,45 +117,55 @@ export default async function LandingPage() {
 
   return (
     <div className="relative min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
-      {/* Hero gradient orbs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="hero-gradient-orb absolute -top-32 left-1/4 h-[500px] w-[500px] bg-[var(--primary)]" />
-        <div className="hero-gradient-orb absolute -top-20 right-1/4 h-[400px] w-[400px] bg-[var(--accent)]" style={{ opacity: 0.04 }} />
-        <div className="hero-gradient-orb absolute bottom-0 left-1/2 h-[300px] w-[300px] -translate-x-1/2 bg-[#0ea5e9]" style={{ opacity: 0.03 }} />
+      {/* Ambient warm gradient orbs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        <div className="hero-gradient-orb absolute -top-40 left-1/4 h-[640px] w-[640px] bg-[var(--primary)]" />
+        <div className="hero-gradient-orb absolute -top-24 right-1/4 h-[480px] w-[480px] bg-[var(--accent)]" style={{ opacity: 0.12 }} />
+        <div className="hero-gradient-orb absolute bottom-1/4 left-1/3 h-[360px] w-[360px] bg-[#f59e0b]" style={{ opacity: 0.07 }} />
       </div>
 
-      {/* Dot grid background */}
-      <div className="dot-grid" />
+      {/* Dot grid */}
+      <div className="dot-grid" aria-hidden="true" />
 
-      {/* Sticky Navigation */}
+      {/* ── Sticky Navigation ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50">
         <div className="mx-auto max-w-7xl px-4 pt-3 sm:px-6 sm:pt-4">
-          <div className="home-floating-nav flex items-center justify-between rounded-[var(--radius-xl)] px-4 py-2.5 sm:px-5 sm:py-3">
-            <Link href="/" className="shrink-0">
+          <nav
+            className="home-floating-nav flex items-center justify-between rounded-[var(--radius-xl)] px-4 py-2.5 sm:px-5 sm:py-3"
+            aria-label="Main navigation"
+          >
+            <Link href="/" className="shrink-0" aria-label="StudyWithRaissov — home">
               <BrandLogo compact />
             </Link>
 
-            <nav className="hidden items-center gap-1 lg:flex">
+            <ul className="hidden items-center gap-0.5 lg:flex" role="list">
               {sectionLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-                >
-                  {item.label}
-                </Link>
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="flex min-h-[44px] items-center rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
               ))}
-            </nav>
+            </ul>
 
+            {/* Mobile CTAs */}
             <div className="flex items-center gap-2 sm:hidden">
               <Link href="/login">
-                <Button variant="ghost" size="sm">{t("landing.logIn")}</Button>
+                <Button variant="ghost" size="sm" className="min-h-[44px]">
+                  {t("landing.logIn")}
+                </Button>
               </Link>
               <Link href="/signup">
-                <Button size="sm">{t("landing.signUp")}</Button>
+                <Button size="sm" className="min-h-[44px] btn-breathe">
+                  {t("landing.signUp")}
+                </Button>
               </Link>
             </div>
 
+            {/* Desktop CTAs */}
             <div className="hidden items-center gap-2 sm:flex">
               <Link href="/sets">
                 <Button variant="ghost" size="sm">{t("landing.exploreLibrary")}</Button>
@@ -150,19 +174,22 @@ export default async function LandingPage() {
                 <Button variant="outline" size="sm">{t("landing.logIn")}</Button>
               </Link>
               <Link href="/signup">
-                <Button size="sm">
+                <Button size="sm" className="btn-breathe">
                   {t("landing.signUp")}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </Link>
             </div>
-          </div>
+          </nav>
         </div>
       </header>
 
-      {/* Side Rail */}
-      <aside className="fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 xl:flex">
-        <div className="flex flex-col gap-1.5 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-2 shadow-[var(--shadow-lg)]">
+      {/* ── Side Rail ─────────────────────────────────────────────────────── */}
+      <aside
+        className="fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 xl:flex"
+        aria-label="Page section navigation"
+      >
+        <div className="flex flex-col gap-1.5 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-2 shadow-[var(--shadow-lg)]">
           {sectionLinks.map((item) => {
             const Icon = item.icon;
             return (
@@ -170,7 +197,7 @@ export default async function LandingPage() {
                 key={item.href}
                 href={item.href}
                 aria-label={item.label}
-                className="group relative flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] transition-all hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+                className="group relative flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] transition-all hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
               >
                 <Icon className="h-4 w-4" />
                 <span className="pointer-events-none absolute left-[calc(100%+0.75rem)] hidden whitespace-nowrap rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-medium text-[var(--text-primary)] shadow-[var(--shadow-md)] group-hover:block">
@@ -183,26 +210,37 @@ export default async function LandingPage() {
       </aside>
 
       <main className="relative z-10">
-        {/* Hero */}
-        <section id="hero" className="mx-auto max-w-7xl px-4 pb-20 pt-12 sm:px-6 sm:pt-16 lg:pt-20 xl:pl-24">
+        {/* ── Hero ────────────────────────────────────────────────────────── */}
+        <section
+          id="hero"
+          className="mx-auto max-w-7xl px-4 pb-20 pt-12 sm:px-6 sm:pt-16 lg:pt-20 xl:pl-24"
+        >
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-12">
+
+            {/* Hero Left */}
             <div className="max-w-2xl">
               <div className="badge-primary">
                 <GraduationCap className="h-3.5 w-3.5" />
                 {t("landing.heroEyebrow")}
               </div>
 
-              <h1 className="mt-6 text-4xl font-extrabold tracking-[-0.04em] text-[var(--text-primary)] sm:text-5xl lg:text-6xl">
+              <h1
+                className="mt-6 font-extrabold tracking-[-0.04em] text-[var(--text-primary)]"
+                style={{ fontSize: "var(--text-hero)", lineHeight: "var(--text-hero-lh)" }}
+              >
                 {t("landing.heroTitle")}
               </h1>
 
-              <p className="mt-5 max-w-xl text-base leading-7 text-[var(--text-secondary)] lg:text-lg lg:leading-8">
+              <p
+                className="mt-5 max-w-xl leading-7 text-[var(--text-secondary)]"
+                style={{ fontSize: "var(--text-body-lg)" }}
+              >
                 {t("landing.heroBody")}
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/ielts">
-                  <Button size="lg" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto btn-breathe">
                     {t("landing.startWorkspace")}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -214,16 +252,22 @@ export default async function LandingPage() {
                 </Link>
               </div>
 
+              {/* Hero Stat Cards — Bento mini-grid */}
               <div className="mt-8 grid gap-3 sm:grid-cols-3">
                 {heroStats.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <div key={item.label} className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)]">
+                    <div
+                      key={item.label}
+                      className="bento-card flex items-start gap-3 p-4"
+                    >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
                         <Icon className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="text-lg font-bold tracking-[-0.03em] text-[var(--text-primary)]">{item.value}</p>
+                        <p className="text-lg font-bold tracking-[-0.03em] text-[var(--text-primary)]">
+                          {item.value}
+                        </p>
                         <p className="mt-0.5 text-sm text-[var(--text-secondary)]">{item.label}</p>
                       </div>
                     </div>
@@ -232,22 +276,48 @@ export default async function LandingPage() {
               </div>
             </div>
 
+            {/* Hero Right — Liquid Glass Bento Panel */}
             <div className="space-y-4">
-              <div className="overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-lg)]">
-                <div className="border-b border-[var(--border)] bg-[var(--bg-soft)] px-5 py-4 sm:px-6">
+              <div className="bento-card-glass overflow-hidden">
+                <div className="border-b border-[var(--border)] px-5 py-4 sm:px-6">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--primary)]">{t("landing.platformMap")}</p>
-                      <h2 className="mt-1.5 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)] sm:text-2xl">{t("landing.platformMapTitle")}</h2>
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--primary)]">
+                        {t("landing.platformMap")}
+                      </p>
+                      <h2
+                        className="mt-1.5 font-bold tracking-[-0.03em] text-[var(--text-primary)]"
+                        style={{ fontSize: "clamp(1.125rem, 2vw, 1.375rem)" }}
+                      >
+                        {t("landing.platformMapTitle")}
+                      </h2>
                     </div>
-                    <span className="badge-primary text-[11px]">{t("landing.ecosystemMode")}</span>
+                    <span className="badge-primary shrink-0 text-[11px]">
+                      {t("landing.ecosystemMode")}
+                    </span>
                   </div>
                 </div>
                 <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5">
-                  <SnapshotCard eyebrow={t("landing.studyEngine")} title={t("landing.studyEngineTitle")} points={[t("landing.studyEngineP1"), t("landing.studyEngineP2"), t("landing.studyEngineP3")]} />
-                  <SnapshotCard eyebrow={t("landing.teachingLayer")} title={t("landing.teachingLayerTitle")} points={[t("landing.teachingLayerP1"), t("landing.teachingLayerP2"), t("landing.teachingLayerP3")]} />
-                  <SnapshotCard eyebrow={t("landing.contentLayer")} title={t("landing.contentLayerTitle")} points={[t("landing.contentLayerP1"), t("landing.contentLayerP2"), t("landing.contentLayerP3")]} />
-                  <SnapshotCard eyebrow={t("landing.aiLayer")} title={t("landing.aiLayerTitle")} points={[t("landing.aiLayerP1"), t("landing.aiLayerP2"), t("landing.aiLayerP3")]} />
+                  <SnapshotCard
+                    eyebrow={t("landing.studyEngine")}
+                    title={t("landing.studyEngineTitle")}
+                    points={[t("landing.studyEngineP1"), t("landing.studyEngineP2"), t("landing.studyEngineP3")]}
+                  />
+                  <SnapshotCard
+                    eyebrow={t("landing.teachingLayer")}
+                    title={t("landing.teachingLayerTitle")}
+                    points={[t("landing.teachingLayerP1"), t("landing.teachingLayerP2"), t("landing.teachingLayerP3")]}
+                  />
+                  <SnapshotCard
+                    eyebrow={t("landing.contentLayer")}
+                    title={t("landing.contentLayerTitle")}
+                    points={[t("landing.contentLayerP1"), t("landing.contentLayerP2"), t("landing.contentLayerP3")]}
+                  />
+                  <SnapshotCard
+                    eyebrow={t("landing.aiLayer")}
+                    title={t("landing.aiLayerTitle")}
+                    points={[t("landing.aiLayerP1"), t("landing.aiLayerP2"), t("landing.aiLayerP3")]}
+                  />
                 </div>
               </div>
 
@@ -260,19 +330,25 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Ecosystem */}
+        {/* ── Ecosystem ───────────────────────────────────────────────────── */}
         <section id="ecosystem" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 xl:pl-24">
           <div className="section-divider mb-16" />
-          <SectionHeading eyebrow={t("landing.ecosystemEyebrow")} title={t("landing.ecosystemTitle")} body={t("landing.ecosystemBody")} />
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <SectionHeading
+            eyebrow={t("landing.ecosystemEyebrow")}
+            title={t("landing.ecosystemTitle")}
+            body={t("landing.ecosystemBody")}
+          />
+          <div className="stagger-children mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {ecosystemCards.map((item) => {
               const Icon = item.icon;
               return (
-                <article key={item.title} className="group rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
-                  <div className={`flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] border ${item.color}`}>
+                <article key={item.title} className="bento-card p-5">
+                  <div className={`icon-accent ${item.iconCls}`}>
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-4 text-base font-semibold tracking-[-0.02em] text-[var(--text-primary)]">{item.title}</h3>
+                  <h3 className="mt-4 text-base font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+                    {item.title}
+                  </h3>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.body}</p>
                 </article>
               );
@@ -280,19 +356,36 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Library Preview */}
+        {/* ── Library Preview ─────────────────────────────────────────────── */}
         <section id="library" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 xl:pl-24">
           <div className="section-divider mb-16" />
-          <SectionHeading eyebrow={t("landing.previewEyebrow")} title={t("landing.previewTitle")} body={t("landing.previewBody")} />
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          <SectionHeading
+            eyebrow={t("landing.previewEyebrow")}
+            title={t("landing.previewTitle")}
+            body={t("landing.previewBody")}
+          />
+          <div className="stagger-children mt-10 grid gap-5 lg:grid-cols-3">
             {previewColumns.map((item) => (
-              <div key={item.title} className={`rounded-[var(--radius-xl)] border border-[var(--border)] border-l-[3px] ${item.accent} bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6`}>
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--primary)]">{item.eyebrow}</p>
-                <h3 className="mt-3 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">{item.title}</h3>
+              <div
+                key={item.title}
+                className={`bento-card border-l-[3px] ${item.borderCls} p-5 sm:p-6`}
+              >
+                <p className={`text-xs font-semibold uppercase tracking-[0.1em] ${item.eyebrowCls}`}>
+                  {item.eyebrow}
+                </p>
+                <h3
+                  className="mt-3 font-bold tracking-[-0.03em] text-[var(--text-primary)]"
+                  style={{ fontSize: "clamp(1.125rem, 2vw, 1.25rem)" }}
+                >
+                  {item.title}
+                </h3>
                 <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{item.body}</p>
                 <ul className="mt-5 space-y-2.5">
                   {item.points.map((point) => (
-                    <li key={point} className="flex items-start gap-2.5 text-sm leading-6 text-[var(--text-secondary)]">
+                    <li
+                      key={point}
+                      className="flex items-start gap-2.5 text-sm leading-6 text-[var(--text-secondary)]"
+                    >
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
                       <span>{point}</span>
                     </li>
@@ -303,15 +396,19 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Proof / Metrics */}
+        {/* ── Proof / Metrics ─────────────────────────────────────────────── */}
         <section id="proof" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 xl:pl-24">
           <div className="section-divider mb-16" />
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-            <SectionHeading eyebrow={t("landing.proofEyebrow")} title={t("landing.proofTitle")} body={t("landing.proofBody")} />
-            <div className="grid gap-4 sm:grid-cols-2">
+            <SectionHeading
+              eyebrow={t("landing.proofEyebrow")}
+              title={t("landing.proofTitle")}
+              body={t("landing.proofBody")}
+            />
+            <div className="stagger-children grid gap-4 sm:grid-cols-2">
               {platformMetrics.map((item) => (
-                <div key={item.label} className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]">
-                  <p className="text-gradient text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl">{item.value}</p>
+                <div key={item.label} className="bento-card p-5 sm:p-6">
+                  <p className="metric-number text-gradient">{item.value}</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.label}</p>
                 </div>
               ))}
@@ -319,63 +416,115 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Testimonials */}
-        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 xl:pl-24">
+        {/* ── Testimonials ────────────────────────────────────────────────── */}
+        <section
+          aria-labelledby="testimonials-heading"
+          className="mx-auto max-w-7xl px-4 py-20 sm:px-6 xl:pl-24"
+        >
           <div className="section-divider mb-16" />
           <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">{t("landing.feedbackEyebrow")}</p>
-              <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">{t("landing.feedbackTitle")}</h2>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">{t("landing.feedbackBody")}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">
+                {t("landing.feedbackEyebrow")}
+              </p>
+              <h2
+                id="testimonials-heading"
+                className="mt-3 font-bold tracking-[-0.03em] text-[var(--text-primary)]"
+                style={{ fontSize: "var(--text-h2)" }}
+              >
+                {t("landing.feedbackTitle")}
+              </h2>
+              <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">
+                {t("landing.feedbackBody")}
+              </p>
             </div>
-            <div className="grid gap-4">
+            <div className="stagger-children grid gap-4">
               {feedback.map((item) => (
-                <blockquote key={item.person} className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]">
+                <blockquote key={item.person} className="bento-card p-5">
                   <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] bg-[var(--accent-soft)]">
                     <Star className="h-4 w-4 text-[var(--accent)]" />
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-[var(--text-primary)] sm:text-[15px]">&ldquo;{item.quote}&rdquo;</p>
-                  <footer className="mt-4 text-sm font-semibold text-[var(--text-secondary)]">{item.person}</footer>
+                  <p className="mt-4 text-sm leading-7 text-[var(--text-primary)] sm:text-[15px]">
+                    &ldquo;{item.quote}&rdquo;
+                  </p>
+                  <footer className="mt-4 text-sm font-semibold text-[var(--text-secondary)]">
+                    {item.person}
+                  </footer>
                 </blockquote>
               ))}
             </div>
           </div>
         </section>
 
-        {/* FAQ */}
+        {/* ── FAQ ─────────────────────────────────────────────────────────── */}
         <section id="faq" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 xl:pl-24">
           <div className="section-divider mb-16" />
-          <SectionHeading eyebrow={t("landing.faqEyebrow")} title={t("landing.faqTitle")} body={t("landing.faqBody")} />
-          <div className="mt-10 grid gap-4 lg:grid-cols-2">
+          <SectionHeading
+            eyebrow={t("landing.faqEyebrow")}
+            title={t("landing.faqTitle")}
+            body={t("landing.faqBody")}
+          />
+          <div className="stagger-children mt-10 grid gap-4 lg:grid-cols-2">
             {faqItems.map((item) => (
-              <div key={item.question} className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]">
-                <h3 className="text-base font-semibold text-[var(--text-primary)]">{item.question}</h3>
+              <div key={item.question} className="bento-card p-5">
+                <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                  {item.question}
+                </h3>
                 <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{item.answer}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 xl:pl-24">
-          <div className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-lg)] sm:p-8">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--primary)] opacity-[0.06] blur-[80px]" />
-            <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[60px]" />
+        {/* ── Final CTA ───────────────────────────────────────────────────── */}
+        <section
+          aria-label="Get started with StudyWithRaissov"
+          className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 xl:pl-24"
+        >
+          <div className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-10">
+            {/* Ambient blobs */}
+            <div
+              className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-[var(--primary)] blur-[88px]"
+              style={{ opacity: 0.08 }}
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[var(--accent)] blur-[72px]"
+              style={{ opacity: 0.07 }}
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute bottom-8 right-1/3 h-48 w-48 rounded-full bg-[#10b981] blur-[56px]"
+              style={{ opacity: 0.05 }}
+              aria-hidden="true"
+            />
+
             <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--primary)]">{t("landing.ctaEyebrow")}</p>
-                <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">{t("landing.ctaTitle")}</h2>
-                <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)] sm:text-base">{t("landing.ctaBody")}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--primary)]">
+                  {t("landing.ctaEyebrow")}
+                </p>
+                <h2
+                  className="mt-3 font-bold tracking-[-0.03em] text-[var(--text-primary)]"
+                  style={{ fontSize: "var(--text-h2)" }}
+                >
+                  {t("landing.ctaTitle")}
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)] sm:text-base">
+                  {t("landing.ctaBody")}
+                </p>
               </div>
               <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
                 <Link href="/signup">
-                  <Button size="lg" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto btn-breathe">
                     {t("landing.createAccount")}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
                 <Link href="/sets">
-                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">{t("landing.openLibrary")}</Button>
+                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                    {t("landing.openLibrary")}
+                  </Button>
                 </Link>
               </div>
             </div>
@@ -383,58 +532,104 @@ export default async function LandingPage() {
         </section>
       </main>
 
-      {/* Footer */}
+      {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <footer className="border-t border-[var(--border)] bg-[var(--bg-surface)]">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 xl:pl-24">
           <div className="grid gap-10 lg:grid-cols-[1.3fr_0.7fr_0.7fr_0.7fr]">
             <div>
               <BrandLogo compact />
-              <p className="mt-4 max-w-sm text-sm leading-7 text-[var(--text-secondary)]">{t("landing.footerBody")}</p>
+              <p className="mt-4 max-w-sm text-sm leading-7 text-[var(--text-secondary)]">
+                {t("landing.footerBody")}
+              </p>
             </div>
-            <FooterColumn title={t("landing.footerPlatform")} links={[
-              { href: "/sets", label: t("landing.footerFlashcardLibrary") },
-              { href: "/guide", label: t("landing.footerGuide") },
-              { href: "/leaderboard", label: t("landing.footerRankings") },
-            ]} />
-            <FooterColumn title={t("landing.footerWorkspaces")} links={[
-              { href: "/signup", label: t("landing.footerStudentDashboard") },
-              { href: "/signup", label: t("landing.footerTeacherTools") },
-              { href: "/signup", label: t("landing.footerAIImport") },
-            ]} />
-            <FooterColumn title={t("landing.footerAccess")} links={[
-              { href: "/login", label: t("landing.logIn") },
-              { href: "/signup", label: t("landing.signUp") },
-              { href: "/sets", label: t("landing.footerGuestPreview") },
-            ]} />
+            <FooterColumn
+              title={t("landing.footerPlatform")}
+              links={[
+                { href: "/sets", label: t("landing.footerFlashcardLibrary") },
+                { href: "/guide", label: t("landing.footerGuide") },
+                { href: "/leaderboard", label: t("landing.footerRankings") },
+              ]}
+            />
+            <FooterColumn
+              title={t("landing.footerWorkspaces")}
+              links={[
+                { href: "/signup", label: t("landing.footerStudentDashboard") },
+                { href: "/signup", label: t("landing.footerTeacherTools") },
+                { href: "/signup", label: t("landing.footerAIImport") },
+              ]}
+            />
+            <FooterColumn
+              title={t("landing.footerAccess")}
+              links={[
+                { href: "/login", label: t("landing.logIn") },
+                { href: "/signup", label: t("landing.signUp") },
+                { href: "/sets", label: t("landing.footerGuestPreview") },
+              ]}
+            />
           </div>
           <div className="section-divider mt-10" />
-          <div className="mt-6 text-sm text-[var(--text-muted)]">
+          <p className="mt-6 text-sm text-[var(--text-muted)]">
             {t("landing.footerCopyright").replace("{year}", String(new Date().getFullYear()))}
-          </div>
+          </p>
         </div>
       </footer>
     </div>
   );
 }
 
-function SectionHeading({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
+/* ── Sub-components ───────────────────────────────────────────────────────── */
+
+function SectionHeading({
+  eyebrow,
+  title,
+  body,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+}) {
   return (
     <div className="max-w-2xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--primary)]">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">{title}</h2>
-      <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)] sm:text-base sm:leading-8">{body}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--primary)]">
+        {eyebrow}
+      </p>
+      <h2
+        className="mt-3 font-bold tracking-[-0.03em] text-[var(--text-primary)]"
+        style={{ fontSize: "var(--text-h2)" }}
+      >
+        {title}
+      </h2>
+      <p
+        className="mt-4 leading-7 text-[var(--text-secondary)] sm:leading-8"
+        style={{ fontSize: "var(--text-body-lg)" }}
+      >
+        {body}
+      </p>
     </div>
   );
 }
 
-function SnapshotCard({ eyebrow, title, points }: { eyebrow: string; title: string; points: string[] }) {
+function SnapshotCard({
+  eyebrow,
+  title,
+  points,
+}: {
+  eyebrow: string;
+  title: string;
+  points: string[];
+}) {
   return (
     <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">{eyebrow}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+        {eyebrow}
+      </p>
       <h3 className="mt-2 text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
       <ul className="mt-3 space-y-2">
         {points.map((point) => (
-          <li key={point} className="flex items-start gap-2 text-[13px] leading-5 text-[var(--text-secondary)]">
+          <li
+            key={point}
+            className="flex items-start gap-2 text-[13px] leading-5 text-[var(--text-secondary)]"
+          >
             <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--success)]" />
             <span>{point}</span>
           </li>
@@ -447,20 +642,31 @@ function SnapshotCard({ eyebrow, title, points }: { eyebrow: string; title: stri
 function CompactSignal({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3.5 shadow-[var(--shadow-xs)]">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+        {label}
+      </p>
       <p className="mt-1.5 text-sm font-semibold text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }
 
-function FooterColumn({ title, links }: { title: string; links: Array<{ href: string; label: string }> }) {
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: Array<{ href: string; label: string }>;
+}) {
   return (
     <div>
       <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
       <ul className="mt-4 space-y-2.5">
         {links.map((item) => (
           <li key={item.label}>
-            <Link href={item.href} className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--primary)]">
+            <Link
+              href={item.href}
+              className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--primary)]"
+            >
               {item.label}
             </Link>
           </li>

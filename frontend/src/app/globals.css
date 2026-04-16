@@ -19,13 +19,14 @@
   --danger: #ef4444;
   --danger-soft: rgba(239, 68, 68, 0.06);
 
-  /* Surfaces — clean zinc */
-  --bg-base: #fafafa;
-  --bg-surface: #ffffff;
-  --bg-elevated: #ffffff;
-  --bg-soft: #f4f4f5;
-  --bg-muted: #e4e4e7;
-  --bg-inset: #f0f0f1;
+  /* Surfaces — visual tofu (warm off-white, 2026) */
+  --bg-base: #F7F3ED;
+  --bg-surface: #FDFAF6;
+  --bg-elevated: #FFFFFF;
+  --bg-soft: #EDE9E1;
+  --bg-muted: #E0D9CF;
+  --bg-inset: #EAE5DC;
+  --bg-tofu-card: #FAF7F2;
 
   /* Text — high contrast, readable */
   --text-primary: #18181b;
@@ -34,14 +35,15 @@
   --text-inverted: #ffffff;
 
   /* Borders */
-  --border: #e4e4e7;
-  --border-strong: #d4d4d8;
+  --border: #E2DBD0;
+  --border-strong: #D1C9BC;
   --border-focus: var(--primary);
 
-  /* Glass — nearly opaque, simple */
-  --glass-bg: rgba(255, 255, 255, 0.95);
-  --glass-border: var(--border);
-  --glass-blur: 12px;
+  /* Glass — liquid glass with warm tint */
+  --glass-bg: rgba(253, 250, 246, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.60);
+  --glass-blur: 22px;
+  --glass-saturate: 190%;
 
   /* Shadows — subtle, single-layer */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -137,18 +139,35 @@ a, button, input, textarea, select {
   background: var(--bg-base);
 }
 
+.dot-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.055) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.dark .dot-grid {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
 /* ── Glass (simplified) ──────────────────────────────────────────────────── */
 
 .glass {
   background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md), 0 0 0 0.5px rgba(255, 255, 255, 0.65) inset;
 }
 
 .glass-card {
   background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md), 0 0 0 0.5px rgba(255, 255, 255, 0.65) inset;
 }
 
 /* ── Panels ──────────────────────────────────────────────────────────────── */
@@ -725,9 +744,17 @@ a, button, input, textarea, select {
 
 .home-shell-grid { position: relative; }
 .home-floating-nav {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-md);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.07), 0 0 0 0.5px rgba(255, 255, 255, 0.75) inset;
+}
+
+.dark .home-floating-nav {
+  background: rgba(17, 17, 19, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255, 255, 255, 0.05) inset;
 }
 .home-float-panel {
   background: var(--bg-surface);
@@ -744,8 +771,106 @@ a, button, input, textarea, select {
 .hero-gradient-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(72px);
   pointer-events: none;
-  opacity: 0.25;
+  opacity: 0.22;
 }
-.dark .hero-gradient-orb { opacity: 0.15; }
+.dark .hero-gradient-orb { opacity: 0.14; }
+
+/* ── 2026 Design System: Bento + Liquid Glass ──────────────────────────── */
+
+/* Fluid typography custom properties */
+:root {
+  --text-hero: clamp(2.125rem, 4.5vw + 0.5rem, 4.375rem);
+  --text-hero-lh: 1.08;
+  --text-h2: clamp(1.625rem, 2.5vw + 0.5rem, 2.75rem);
+  --text-body-lg: clamp(0.9375rem, 0.5vw + 0.8rem, 1.0625rem);
+}
+
+/* Bento card — base */
+.bento-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.09), 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* Bento card — glass morphism variant */
+.bento-card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-2xl);
+  box-shadow:
+    0 4px 28px rgba(0, 0, 0, 0.07),
+    0 1px 4px rgba(0, 0, 0, 0.04),
+    0 0 0 0.5px rgba(255, 255, 255, 0.72) inset;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.bento-card-glass:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.10),
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    0 0 0 0.5px rgba(255, 255, 255, 0.82) inset;
+}
+
+.dark .bento-card-glass {
+  background: rgba(24, 24, 27, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 28px rgba(0, 0, 0, 0.55), 0 0 0 0.5px rgba(255, 255, 255, 0.05) inset;
+}
+
+/* Breathing glow — primary CTA button */
+@keyframes breathe-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.28), 0 4px 14px rgba(37, 99, 235, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.07), 0 8px 28px rgba(37, 99, 235, 0.30);
+  }
+}
+
+.btn-breathe {
+  animation: breathe-glow 3.6s ease-in-out infinite;
+}
+
+.btn-breathe:hover,
+.btn-breathe:focus-visible {
+  animation: none;
+  transform: scale(1.026) translateY(-1px);
+  box-shadow: 0 8px 28px rgba(37, 99, 235, 0.36);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s ease;
+}
+
+/* Icon accent container */
+.icon-accent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+
+/* Metric number — fluid size */
+.metric-number {
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
