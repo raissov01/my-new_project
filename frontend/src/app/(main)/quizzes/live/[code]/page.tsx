@@ -97,9 +97,19 @@ function LiveGameInner() {
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startRef = useRef<number>(0); // question start time for timeSpent
+  // phaseRef always holds the latest phase so ws.onclose never reads a
+  // stale closure value captured when the WebSocket was first opened.
+  const phaseRef = useRef<Phase>("waiting");
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Indirection so connectWs can call handleServerMsg without capturing a
+  // stale reference (handleServerMsg is defined below).
+  const handleServerMsgRef = useRef<(msg: WsMsg) => void>(() => {});
+
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   // ── Connect ──
-  useEffect(() => {
+  const connectWs = useCallback(() => {
     if (!pid || !code) return;
 
     const backendWsUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1")
@@ -114,20 +124,33 @@ function LiveGameInner() {
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data) as WsMsg;
-        handleServerMsg(msg);
+        handleServerMsgRef.current(msg);
       } catch {}
     };
 
     ws.onerror = () => setWsError("Connection error");
     ws.onclose = () => {
-      if (phase !== "finished") setWsError("Disconnected from session");
-    };
-
-    return () => {
-      ws.close();
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (phaseRef.current === "finished") return; // game over — no reconnect
+      const attempt = retryCountRef.current;
+      if (attempt >= 3) {
+        setWsError("Disconnected from session");
+        return;
+      }
+      retryCountRef.current += 1;
+      const delay = Math.pow(2, attempt) * 1000; // 1s → 2s → 4s
+      retryTimerRef.current = setTimeout(() => connectWs(), delay);
     };
   }, [pid, code]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!pid || !code) return;
+    connectWs();
+    return () => {
+      wsRef.current?.close();
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, [pid, code, connectWs]);
 
   const handleServerMsg = useCallback((msg: WsMsg) => {
     switch (msg.type) {
@@ -177,6 +200,9 @@ function LiveGameInner() {
         break;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the ref up to date so connectWs always calls the latest version.
+  useEffect(() => { handleServerMsgRef.current = handleServerMsg; }, [handleServerMsg]);
 
   function startTimer(deadlineMs: number) {
     stopTimer();
@@ -284,12 +310,8 @@ function LiveGameInner() {
         <AnsweredScreen result={answerResult} t={t} />
       )}
 
-      {phase === "revealed" && questionEnded && answerResult && (
-        <RevealedScreen ended={questionEnded} result={answerResult} t={t} />
-      )}
-
-      {phase === "revealed" && questionEnded && !answerResult && (
-        <RevealedScreen ended={questionEnded} result={null} t={t} />
+      {phase === "revealed" && questionEnded && (
+        <RevealedScreen ended={questionEnded} result={answerResult} pid={pid} t={t} />
       )}
 
       {phase === "finished" && (
@@ -357,8 +379,16 @@ function QuestionScreen({
       </div>
 
       {/* Question */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       {q.imageUrl ? (
-        <img src={q.imageUrl} alt="" className="w-full rounded-[1.2rem] object-cover" style={{ maxHeight: 200 }} />
+        <img
+          src={q.imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="w-full rounded-[1.2rem] object-cover"
+          style={{ maxHeight: 200 }}
+        />
       ) : null}
       <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
         <p className="text-lg font-semibold leading-snug text-[var(--text-primary)]">{q.questionText}</p>
@@ -531,8 +561,8 @@ function AnsweredScreen({ result, t }: { result: AnswerResult; t: (k: string) =>
   );
 }
 
-function RevealedScreen({ ended, result, t }: { ended: QuestionEndedEvt; result: AnswerResult | null; t: (k: string) => string }) {
-  const myEntry = ended.leaderboard.find((e) => result?.totalScore === e.score);
+function RevealedScreen({ ended, result, pid, t }: { ended: QuestionEndedEvt; result: AnswerResult | null; pid: string; t: (k: string) => string }) {
+  const myEntry = ended.leaderboard.find((e) => e.id === pid);
 
   return (
     <div className="space-y-5">

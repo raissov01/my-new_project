@@ -184,6 +184,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Files:              handler.NewFiles("telegram-media"),
 		QuizImage:          handler.NewQuizImage("uploads/quiz-images", 5*1024*1024),
 		QuizLive:           handler.NewQuizLive(gormDB),
+		QuizAIGenerate:     handler.NewQuizAIGenerate(service.NewQuizAIGenerate(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout)),
 		MaterialNotes:      handler.NewMaterialNotes(gormDB),
 		EngSim:             handler.NewEngSim(gormDB, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.AIRequestTimeout),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),

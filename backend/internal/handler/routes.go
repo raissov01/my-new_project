@@ -36,6 +36,7 @@ type Dependencies struct {
 	Files              *FilesHandler
 	QuizImage          *QuizImageHandler
 	QuizLive           *QuizLiveHandler
+	QuizAIGenerate     *QuizAIGenerateHandler
 	EngSim             *EngSimHandler
 	MaterialNotes      *MaterialNotesHandler
 	DebugDatabase      http.HandlerFunc
@@ -167,6 +168,10 @@ func RegisterRoutes(router *gin.Engine) {
 		aiLimiter := middleware.NewRateLimiter(5, 1*time.Minute).LimitByUser()
 		internal.POST("/ai/generate", aiLimiter, wrapHTTP(deps.AI.Generate))
 
+		// AI quiz generation (separate limiter: 3 req/min, daily limit enforced in service)
+		quizAILimiter := middleware.NewRateLimiter(3, 1*time.Minute).LimitByUser()
+		internal.POST("/quizzes/ai-generate", quizAILimiter, wrapHTTP(deps.QuizAIGenerate.Generate))
+
 		// IELTS AI examiner (requires internal auth)
 		internal.POST("/ielts/writing/evaluate", aiLimiter, wrapHTTP(deps.IELTSExaminer.EvaluateWriting))
 		internal.GET("/ielts/writing/history", wrapHTTP(deps.IELTSExaminer.GetWritingHistory))
@@ -241,6 +246,7 @@ func RegisterRoutes(router *gin.Engine) {
 
 	if deps.Environment == "development" && deps.DebugDatabase != nil {
 		router.GET("/debug/db", wrapHTTP(deps.DebugDatabase))
+		router.POST("/dev/verify-email", deps.Auth.DevVerifyEmail)
 	}
 }
 

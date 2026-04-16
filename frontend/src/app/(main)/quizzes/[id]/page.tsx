@@ -23,6 +23,23 @@ interface QuizDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateMetadata({ params }: QuizDetailPageProps) {
+  const { id } = await params;
+  const quiz = await getQuizById(id);
+  if (!quiz) return {};
+  const description =
+    quiz.description ??
+    `${quiz.questionCount} questions · ${quiz.subject ?? "Quiz"}`;
+  return {
+    title: `${quiz.title} — StudyWithRaissov`,
+    description,
+    openGraph: {
+      title: quiz.title,
+      description,
+    },
+  };
+}
+
 const OPTION_KEYS = ["a", "b", "c", "d"] as const;
 
 export default async function QuizDetailPage({ params }: QuizDetailPageProps) {

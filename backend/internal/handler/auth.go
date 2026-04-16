@@ -701,3 +701,32 @@ func nullableString(value string) *string {
 	}
 	return &value
 }
+
+// DevVerifyEmail instantly marks an email as verified.
+// Only active when ENVIRONMENT=development. Never register in production.
+func (h *AuthHandler) DevVerifyEmail(c *gin.Context) {
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "email required"})
+		return
+	}
+	addr := strings.ToLower(strings.TrimSpace(req.Email))
+	result := h.db.Model(&models.User{}).
+		Where("email = ?", addr).
+		Updates(map[string]any{
+			"email_verified":            true,
+			"verification_token":        nil,
+			"verification_token_expiry": nil,
+		})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "email": addr})
+}

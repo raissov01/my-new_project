@@ -8,6 +8,12 @@ import { QuizCard } from "@/features/quizzes/components";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 import { getQuizzesOverview, type QuizListFilters } from "@/server/services/quizzes";
 
+export const metadata = {
+  title: "Quiz Library — StudyWithRaissov",
+  description:
+    "Browse and play public quizzes. Practice IELTS, flashcards and more.",
+};
+
 interface QuizzesPageProps {
   searchParams: Promise<{
     q?: string;
@@ -56,12 +62,20 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               {user ? (
-                <Link href="/quizzes/create">
-                  <Button size="lg" className="w-full sm:w-auto">
-                    <Plus className="h-4 w-4" />
-                    {t("quiz.createNew")}
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/quizzes/create">
+                    <Button size="lg" className="w-full sm:w-auto">
+                      <Plus className="h-4 w-4" />
+                      {t("quiz.createNew")}
+                    </Button>
+                  </Link>
+                  <Link href="/quizzes/create-with-ai">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                      <Sparkles className="h-4 w-4" />
+                      {t("quiz.ai.navLabel")}
+                    </Button>
+                  </Link>
+                </>
               ) : (
                 <AuthRequiredPrompt
                   triggerLabel={t("quiz.createNew")}

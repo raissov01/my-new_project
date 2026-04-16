@@ -8,7 +8,6 @@ import {
   Plus,
   Menu,
   X,
-  GraduationCap,
   Ghost,
   HelpCircle,
   UserCircle2,
@@ -109,12 +108,6 @@ export function Navbar() {
                 </>
               ) : user ? (
                 <>
-                  <Link href="/ielts">
-                    <Button size="sm">
-                      <GraduationCap className="h-4 w-4" />
-                      {t("nav.ieltsPrep")}
-                    </Button>
-                  </Link>
                   <Link href="/sets/new">
                     <Button variant="outline" size="sm">
                       <Plus className="h-4 w-4" />

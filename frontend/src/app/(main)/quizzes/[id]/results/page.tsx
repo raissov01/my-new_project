@@ -261,16 +261,96 @@ function AnswerRow({
   correctText: string;
   wrongText: string;
 }) {
-  const letterToText: Record<string, string> = {
-    a: answer.optionA ?? "",
-    b: answer.optionB ?? "",
-    c: answer.optionC ?? "",
-    d: answer.optionD ?? "",
-  };
-  const selectedText = answer.selectedOption
-    ? letterToText[answer.selectedOption] ?? ""
-    : "";
-  const correctAnswerText = letterToText[answer.correctOption] ?? "";
+  const qType = answer.questionType ?? "mcq";
+
+  // Build display nodes based on question type so every type shows
+  // meaningful "your answer" and "correct answer" instead of blank/skipped.
+  let yourAnswerNode: React.ReactNode;
+  let correctAnswerNode: React.ReactNode;
+
+  if (qType === "fill_blank") {
+    const typed = answer.textAnswer?.trim();
+    yourAnswerNode = typed ? (
+      <span className="font-medium">{typed}</span>
+    ) : (
+      <span className="italic text-[var(--text-muted)]">{skippedLabel}</span>
+    );
+    correctAnswerNode = (
+      <span className="font-medium">{answer.blankAnswer ?? "—"}</span>
+    );
+  } else if (qType === "reorder") {
+    const userOrder = answer.orderAnswer;
+    const correctOrder = answer.reorderItems;
+    yourAnswerNode =
+      userOrder && userOrder.length > 0 ? (
+        <ol className="list-none space-y-1">
+          {userOrder.map((item, i) => (
+            <li key={i} className="flex items-center gap-1.5 text-sm">
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--bg-soft)] text-[10px] font-bold text-[var(--text-secondary)]">
+                {i + 1}
+              </span>
+              {item}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <span className="italic text-[var(--text-muted)]">{skippedLabel}</span>
+      );
+    correctAnswerNode =
+      correctOrder && correctOrder.length > 0 ? (
+        <ol className="list-none space-y-1">
+          {correctOrder.map((item, i) => (
+            <li key={i} className="flex items-center gap-1.5 text-sm">
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] font-bold text-emerald-400">
+                {i + 1}
+              </span>
+              {item}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <span>—</span>
+      );
+  } else if (qType === "true_false") {
+    const tfLabel = (opt: string | null | undefined) =>
+      opt === "t" ? "True" : opt === "f" ? "False" : null;
+    const yourTf = tfLabel(answer.selectedOption);
+    const correctTf = tfLabel(answer.correctOption);
+    yourAnswerNode = yourTf ? (
+      <span className="font-semibold">{yourTf}</span>
+    ) : (
+      <span className="italic text-[var(--text-muted)]">{skippedLabel}</span>
+    );
+    correctAnswerNode = (
+      <span className="font-semibold">{correctTf ?? "—"}</span>
+    );
+  } else {
+    // mcq (default)
+    const letterToText: Record<string, string> = {
+      a: answer.optionA ?? "",
+      b: answer.optionB ?? "",
+      c: answer.optionC ?? "",
+      d: answer.optionD ?? "",
+    };
+    const selectedText = answer.selectedOption
+      ? (letterToText[answer.selectedOption] ?? "")
+      : "";
+    const correctAnswerText = letterToText[answer.correctOption] ?? "";
+    yourAnswerNode = answer.selectedOption ? (
+      <>
+        <span className="font-semibold uppercase">{answer.selectedOption}</span>{" "}
+        · {selectedText || "—"}
+      </>
+    ) : (
+      <span className="italic text-[var(--text-muted)]">{skippedLabel}</span>
+    );
+    correctAnswerNode = (
+      <>
+        <span className="font-semibold uppercase">{answer.correctOption}</span>{" "}
+        · {correctAnswerText || "—"}
+      </>
+    );
+  }
 
   return (
     <article
@@ -306,35 +386,17 @@ function AnswerRow({
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)]">
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
             {yourLabel}
           </p>
-          <p className="mt-1.5 text-sm text-[var(--text-primary)]">
-            {answer.selectedOption ? (
-              <>
-                <span className="font-semibold uppercase">
-                  {answer.selectedOption}
-                </span>{" "}
-                · {selectedText || "—"}
-              </>
-            ) : (
-              <span className="italic text-[var(--text-muted)]">
-                {skippedLabel}
-              </span>
-            )}
-          </p>
+          <div className="mt-1.5">{yourAnswerNode}</div>
         </div>
-        <div className="rounded-[var(--radius-md)] border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
+        <div className="rounded-[var(--radius-md)] border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-emerald-300">
             {correctLabel}
           </p>
-          <p className="mt-1.5 text-sm text-[var(--text-primary)]">
-            <span className="font-semibold uppercase">
-              {answer.correctOption}
-            </span>{" "}
-            · {correctAnswerText || "—"}
-          </p>
+          <div className="mt-1.5">{correctAnswerNode}</div>
         </div>
       </div>
     </article>

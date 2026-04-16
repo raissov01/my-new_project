@@ -638,10 +638,13 @@ export function PlayQuizClient({
             </p>
             {question.imageUrl ? (
               <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-base)]">
+                {/* Images are relative paths served via nginx/backend — next/image not usable here */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={question.imageUrl}
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   className="mx-auto max-h-[280px] w-auto object-contain"
                 />
               </div>
