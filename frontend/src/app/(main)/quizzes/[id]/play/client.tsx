@@ -571,6 +571,12 @@ export function PlayQuizClient({
 
   const progress = (currentIdx + 1) / totalQuestions;
   const timerProgress = Math.max(0, timeLeft / quiz.timePerQuestion);
+  const timerBarColor =
+    timerProgress > 0.5
+      ? "bg-emerald-500"
+      : timerProgress > 0.25
+        ? "bg-amber-400"
+        : "bg-red-500";
   const revealed = phase !== "asking";
 
   const questionNumberLabel = t("quiz.play.questionOf")
@@ -638,9 +644,9 @@ export function PlayQuizClient({
           </button>
         </div>
         {isPractice ? null : (
-          <div className="h-1 bg-[var(--bg-soft)]">
+          <div className="h-1.5 bg-[var(--bg-soft)]">
             <div
-              className="h-full bg-[var(--accent)] transition-[width] duration-1000 ease-linear"
+              className={`h-full transition-[width,background-color] duration-1000 ease-linear ${timerBarColor}${timerProgress < 0.2 ? " animate-pulse" : ""}`}
               style={{ width: `${timerProgress * 100}%` }}
             />
           </div>
