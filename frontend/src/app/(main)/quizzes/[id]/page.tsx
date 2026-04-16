@@ -112,6 +112,11 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
               <span>
                 {t("quiz.created")} {formatDate(quiz.createdAt, locale)}
               </span>
+              {quiz.version != null && quiz.version > 1 ? (
+                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 font-mono text-xs text-[var(--text-muted)]">
+                  v{quiz.version}
+                </span>
+              ) : null}
             </div>
 
             {quiz.tags && quiz.tags.length > 0 ? (

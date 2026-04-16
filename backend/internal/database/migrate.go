@@ -98,6 +98,21 @@ func AutoMigrate(db *gorm.DB) error {
 	// Widen quiz_attempt_answers.selected_option for 't'/'f' on true_false questions.
 	db.Exec(`ALTER TABLE quiz_attempt_answers ALTER COLUMN selected_option TYPE varchar(2)`)
 
+	// Quiz versioning: increment version on every edit; snapshot question content
+	// at attempt-submission time so historical results survive quiz edits.
+	db.Exec(`ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 1`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS question_text_snapshot TEXT`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS question_type_snapshot VARCHAR(20)`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS option_a_snapshot TEXT`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS option_b_snapshot TEXT`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS option_c_snapshot TEXT`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS option_d_snapshot TEXT`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS correct_option_snapshot TEXT`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS blank_answer_snapshot TEXT`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS reorder_items_snapshot JSONB`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS match_pairs_snapshot JSONB`)
+	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS order_index_snapshot INT NOT NULL DEFAULT 0`)
+
 	// Mark all existing users (who registered before email verification was added)
 	// as verified so they are not locked out of their accounts.
 	result := db.Exec(`UPDATE users SET email_verified = true WHERE email_verified = false AND verification_token IS NULL`)

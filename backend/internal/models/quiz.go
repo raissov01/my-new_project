@@ -14,8 +14,10 @@ type Quiz struct {
 	ShuffleOptions       bool      `gorm:"not null;default:true" json:"shuffleOptions"`
 	ShowAnswerAnimations bool      `gorm:"not null;default:true" json:"showAnswerAnimations"`
 	PowerUpsEnabled      bool      `gorm:"not null;default:true" json:"powerUpsEnabled"`
-	CreatedAt            time.Time `gorm:"autoCreateTime" json:"createdAt"`
-	UpdatedAt            time.Time `gorm:"autoUpdateTime" json:"updatedAt"`
+	// Version is incremented on every UpdateQuiz so UIs can detect stale state.
+	Version   int       `gorm:"not null;default:1" json:"version"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updatedAt"`
 
 	User      User           `gorm:"foreignKey:UserID" json:"-"`
 	Questions []QuizQuestion `gorm:"foreignKey:QuizID;constraint:OnDelete:CASCADE" json:"questions,omitempty"`
@@ -96,8 +98,12 @@ func (QuizAttempt) TableName() string {
 
 // QuizAttemptAnswer captures a single question answer inside an attempt.
 // SelectedOption is used for mcq / true_false (a-d, t, f).
-// TextAnswer is used for fill_blank.
+// TextAnswer is used for fill_blank and matching (JSON map).
 // OrderAnswer is a JSON-encoded array of items in the order the user submitted (reorder).
+//
+// Snapshot columns (*_snapshot) store the question content at submission time.
+// This ensures historical attempt results remain accurate even after a quiz is edited.
+// All snapshot columns are nullable; GetAttempt uses COALESCE(snapshot, live_join).
 type QuizAttemptAnswer struct {
 	ID             string  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	AttemptID      string  `gorm:"type:uuid;not null;index" json:"attemptId"`
@@ -107,6 +113,19 @@ type QuizAttemptAnswer struct {
 	OrderAnswer    *string `gorm:"type:jsonb" json:"orderAnswer,omitempty"`
 	IsCorrect      bool    `gorm:"not null;default:false" json:"isCorrect"`
 	TimeSpent      int     `gorm:"not null;default:0" json:"timeSpent"`
+
+	// Snapshots — written by SubmitAttempt, read by GetAttempt via COALESCE.
+	QuestionTextSnapshot  *string `gorm:"type:text" json:"-"`
+	QuestionTypeSnapshot  *string `gorm:"type:varchar(20)" json:"-"`
+	OptionASnapshot       *string `gorm:"type:text" json:"-"`
+	OptionBSnapshot       *string `gorm:"type:text" json:"-"`
+	OptionCSnapshot       *string `gorm:"type:text" json:"-"`
+	OptionDSnapshot       *string `gorm:"type:text" json:"-"`
+	CorrectOptionSnapshot *string `gorm:"type:text" json:"-"`
+	BlankAnswerSnapshot   *string `gorm:"type:text" json:"-"`
+	ReorderItemsSnapshot  *string `gorm:"type:jsonb" json:"-"`
+	MatchPairsSnapshot    *string `gorm:"type:jsonb" json:"-"`
+	OrderIndexSnapshot    int     `gorm:"not null;default:0" json:"-"`
 
 	Attempt  QuizAttempt   `gorm:"foreignKey:AttemptID;constraint:OnDelete:CASCADE" json:"-"`
 	Question *QuizQuestion `gorm:"foreignKey:QuestionID;constraint:OnDelete:SET NULL" json:"-"`

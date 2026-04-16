@@ -14,6 +14,7 @@ export type QuizOverview = {
   isPublic: boolean;
   timePerQuestion: number;
   shuffleOptions: boolean;
+  version?: number;
   createdAt: string;
   updatedAt: string;
   questionCount: number;
@@ -58,6 +59,7 @@ export type QuizDetail = {
   isPublic: boolean;
   timePerQuestion: number;
   shuffleOptions: boolean;
+  version?: number;
   createdAt: string;
   updatedAt: string;
   questions: QuizQuestionDTO[];

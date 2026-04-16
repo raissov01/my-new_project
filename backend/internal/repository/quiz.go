@@ -187,6 +187,7 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 				q.shuffle_options,
 				q.show_answer_animations,
 				q.power_ups_enabled,
+				COALESCE(q.version, 1) AS version,
 				COALESCE(q.created_at, NOW()) AS created_at,
 				COALESCE(q.updated_at, COALESCE(q.created_at, NOW())) AS updated_at
 			FROM public.quizzes q
@@ -227,6 +228,7 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 			v.shuffle_options,
 			v.show_answer_animations,
 			v.power_ups_enabled,
+			v.version,
 			v.created_at,
 			v.updated_at,
 			COALESCE(qc.question_count, 0) AS question_count,
@@ -265,6 +267,7 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 			&item.ShuffleOptions,
 			&item.ShowAnswerAnimations,
 			&item.PowerUpsEnabled,
+			&item.Version,
 			&createdAt,
 			&updatedAt,
 			&item.QuestionCount,
@@ -307,6 +310,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 			q.shuffle_options,
 			q.show_answer_animations,
 			q.power_ups_enabled,
+			COALESCE(q.version, 1),
 			COALESCE(q.created_at, NOW()),
 			COALESCE(q.updated_at, COALESCE(q.created_at, NOW()))
 		FROM public.quizzes q
@@ -325,6 +329,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		&d.ShuffleOptions,
 		&d.ShowAnswerAnimations,
 		&d.PowerUpsEnabled,
+		&d.Version,
 		&createdAt,
 		&updatedAt,
 	)
@@ -555,6 +560,7 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 		    shuffle_options = $7,
 		    show_answer_animations = $8,
 		    power_ups_enabled = $9,
+		    version = COALESCE(version, 1) + 1,
 		    updated_at = NOW()
 		WHERE id = $1
 	`,
@@ -1006,13 +1012,25 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO quiz_attempt_answers (
 				attempt_id, question_id, selected_option,
-				text_answer, order_answer, is_correct, time_spent
+				text_answer, order_answer, is_correct, time_spent,
+				question_text_snapshot, question_type_snapshot,
+				option_a_snapshot, option_b_snapshot,
+				option_c_snapshot, option_d_snapshot,
+				correct_option_snapshot, blank_answer_snapshot,
+				reorder_items_snapshot, match_pairs_snapshot, order_index_snapshot
 			)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		`,
 			attemptID, qid, g.SelectedOption,
 			g.TextAnswer, encodeStringArray(g.OrderAnswer),
 			g.IsCorrect, g.TimeSpent,
+			// snapshots
+			g.QuestionText, g.QuestionType,
+			nullableString(g.OptionA), nullableString(g.OptionB),
+			nullableString(g.OptionC), nullableString(g.OptionD),
+			nullableString(g.CorrectOption), g.BlankAnswer,
+			encodeStringArray(g.ReorderItems), encodeMatchPairs(g.MatchPairs),
+			g.OrderIndex,
 		); err != nil {
 			return nil, fmt.Errorf("insert answer for %s: %w", qid, err)
 		}
@@ -1100,27 +1118,28 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 	rows, err := r.pool.Query(ctx, `
 		SELECT
 			aa.question_id,
-			COALESCE(qq.question_text, ''),
-			COALESCE(qq.question_type, 'mcq'),
-			COALESCE(qq.option_a, ''),
-			COALESCE(qq.option_b, ''),
-			COALESCE(qq.option_c, ''),
-			COALESCE(qq.option_d, ''),
+			COALESCE(aa.question_text_snapshot, COALESCE(qq.question_text, '')),
+			COALESCE(aa.question_type_snapshot, COALESCE(qq.question_type, 'mcq')),
+			COALESCE(aa.option_a_snapshot, COALESCE(qq.option_a, '')),
+			COALESCE(aa.option_b_snapshot, COALESCE(qq.option_b, '')),
+			COALESCE(aa.option_c_snapshot, COALESCE(qq.option_c, '')),
+			COALESCE(aa.option_d_snapshot, COALESCE(qq.option_d, '')),
 			aa.selected_option,
-			COALESCE(qq.correct_option, ''),
+			COALESCE(aa.correct_option_snapshot, COALESCE(qq.correct_option, '')),
 			aa.text_answer,
-			qq.blank_answer,
+			COALESCE(aa.blank_answer_snapshot, qq.blank_answer),
 			aa.order_answer,
-			qq.reorder_items,
+			COALESCE(aa.reorder_items_snapshot, qq.reorder_items),
+			COALESCE(aa.match_pairs_snapshot, qq.match_pairs),
 			qq.image_url,
 			qq.explanation,
 			aa.is_correct,
 			aa.time_spent,
-			COALESCE(qq.order_index, 0)
+			COALESCE(aa.order_index_snapshot, COALESCE(qq.order_index, 0))
 		FROM quiz_attempt_answers aa
 		LEFT JOIN quiz_questions qq ON qq.id = aa.question_id
 		WHERE aa.attempt_id = $1
-		ORDER BY COALESCE(qq.order_index, 0)
+		ORDER BY COALESCE(aa.order_index_snapshot, COALESCE(qq.order_index, 0))
 	`, attemptID)
 	if err != nil {
 		return nil, fmt.Errorf("load attempt answers: %w", err)
@@ -1131,7 +1150,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 	for rows.Next() {
 		var a model.AttemptAnswerResult
 		var questionID *string
-		var orderAnswerJSON, reorderItemsJSON *string
+		var orderAnswerJSON, reorderItemsJSON, matchPairsJSON *string
 		if err := rows.Scan(
 			&questionID,
 			&a.QuestionText,
@@ -1143,6 +1162,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			&a.BlankAnswer,
 			&orderAnswerJSON,
 			&reorderItemsJSON,
+			&matchPairsJSON,
 			&a.ImageURL,
 			&a.Explanation,
 			&a.IsCorrect,
@@ -1156,6 +1176,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 		}
 		a.OrderAnswer = decodeStringArray(orderAnswerJSON)
 		a.ReorderItems = decodeStringArray(reorderItemsJSON)
+		a.MatchPairs = decodeMatchPairs(matchPairsJSON)
 		res.Answers = append(res.Answers, a)
 	}
 

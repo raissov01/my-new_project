@@ -74,6 +74,7 @@ type QuizOverview struct {
 	ShuffleOptions       bool    `json:"shuffleOptions"`
 	ShowAnswerAnimations bool     `json:"showAnswerAnimations"`
 	PowerUpsEnabled      bool     `json:"powerUpsEnabled"`
+	Version              int      `json:"version"`
 	CreatedAt            string   `json:"createdAt"`
 	UpdatedAt            string   `json:"updatedAt"`
 	QuestionCount        int      `json:"questionCount"`
@@ -118,6 +119,7 @@ type QuizDetail struct {
 	ShuffleOptions       bool              `json:"shuffleOptions"`
 	ShowAnswerAnimations bool              `json:"showAnswerAnimations"`
 	PowerUpsEnabled      bool              `json:"powerUpsEnabled"`
+	Version              int               `json:"version"`
 	CreatedAt            string            `json:"createdAt"`
 	UpdatedAt            string            `json:"updatedAt"`
 	Questions            []QuizQuestionDTO `json:"questions"`
