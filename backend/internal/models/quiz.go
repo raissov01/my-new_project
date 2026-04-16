@@ -44,6 +44,7 @@ type QuizQuestion struct {
 	ReorderItems  *string `gorm:"type:jsonb" json:"reorderItems,omitempty"`
 	ImageURL      *string `gorm:"type:text" json:"imageUrl,omitempty"`
 	Explanation   *string `gorm:"type:text" json:"explanation,omitempty"`
+	Hint          *string `gorm:"type:text" json:"hint,omitempty"`
 
 	OrderIndex int       `gorm:"not null;default:0;index:idx_quiz_questions_quiz_order,priority:2" json:"orderIndex"`
 	CreatedAt  time.Time `gorm:"autoCreateTime" json:"createdAt"`

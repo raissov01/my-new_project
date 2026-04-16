@@ -22,6 +22,7 @@ type QuizQuestionInput struct {
 	ReorderItems  []string `json:"reorderItems,omitempty"`
 	ImageURL      string   `json:"imageUrl,omitempty"`
 	Explanation   string   `json:"explanation,omitempty"`
+	Hint          string   `json:"hint,omitempty"`
 }
 
 // CreateQuizRequest is the input for creating a quiz.
@@ -91,6 +92,7 @@ type QuizQuestionDTO struct {
 	ReorderItems  []string `json:"reorderItems,omitempty"`
 	ImageURL      *string  `json:"imageUrl,omitempty"`
 	Explanation   *string  `json:"explanation,omitempty"`
+	Hint          *string  `json:"hint,omitempty"`
 	OrderIndex    int      `json:"orderIndex"`
 }
 
@@ -195,6 +197,23 @@ type RecentAttemptItem struct {
 	TotalQuestions int    `json:"totalQuestions"`
 	Percentage     int    `json:"percentage"`
 	CompletedAt    string `json:"completedAt"`
+}
+
+// QuestionStat holds per-question accuracy data for the quiz author dashboard.
+type QuestionStat struct {
+	QuestionID   string `json:"questionId"`
+	QuestionText string `json:"questionText"`
+	QuestionType string `json:"questionType"`
+	OrderIndex   int    `json:"orderIndex"`
+	TotalCount   int    `json:"totalCount"`
+	CorrectCount int    `json:"correctCount"`
+	Accuracy     int    `json:"accuracy"` // 0-100
+}
+
+// QuizStatsResponse is the payload returned by GET /quizzes/:id/stats.
+type QuizStatsResponse struct {
+	TotalAttempts int            `json:"totalAttempts"`
+	Questions     []QuestionStat `json:"questions"`
 }
 
 // RecommendedQuizItem is used for the "recommended practice" dashboard widget.

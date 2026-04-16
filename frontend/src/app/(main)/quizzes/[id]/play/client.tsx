@@ -7,6 +7,7 @@ import {
   ArrowUp,
   Check,
   Flame,
+  Lightbulb,
   LogOut,
   Timer,
   Volume2,
@@ -206,6 +207,7 @@ export function PlayQuizClient({
   const [blankInput, setBlankInput] = useState("");
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
+  const [hintVisible, setHintVisible] = useState(false);
 
   const answersRef = useRef<RecordedAnswer[]>(savedProgress?.answers ?? []);
   const questionStartRef = useRef<number>(0);
@@ -301,6 +303,7 @@ export function PlayQuizClient({
     setSelectedLetter(null);
     setMcqMultiSelected(new Set());
     setLastCorrect(null);
+    setHintVisible(false);
     setPhase("asking");
     setTimeLeft(quiz.timePerQuestion);
     powerUps.resetPerQuestion();
@@ -755,6 +758,24 @@ export function PlayQuizClient({
               onSubmit={() => recordReorder(reorderDraft)}
             />
           )}
+
+          {!revealed && question.hint ? (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => setHintVisible((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/8 px-3.5 py-1.5 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-500/15"
+              >
+                <Lightbulb className="h-3.5 w-3.5" />
+                {hintVisible ? t("quiz.play.hideHint") : t("quiz.play.showHint")}
+              </button>
+              {hintVisible ? (
+                <div className="mt-2 rounded-[var(--radius-md)] border border-amber-500/20 bg-amber-500/8 px-4 py-3 text-sm text-amber-200">
+                  {question.hint}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           {revealed && question.explanation ? (
             <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm italic text-[var(--text-secondary)]">

@@ -294,7 +294,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
-		       image_url, explanation, order_index
+		       image_url, explanation, hint, order_index
 		FROM public.quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -307,7 +307,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 	d.Questions = make([]model.QuizQuestionDTO, 0)
 	for qRows.Next() {
 		var q model.QuizQuestionDTO
-		var correct, blank, reorderJSON, imageURL, explanation *string
+		var correct, blank, reorderJSON, imageURL, explanation, hint *string
 		if err := qRows.Scan(
 			&q.ID,
 			&q.QuestionText,
@@ -321,6 +321,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 			&reorderJSON,
 			&imageURL,
 			&explanation,
+			&hint,
 			&q.OrderIndex,
 		); err != nil {
 			return nil, fmt.Errorf("scan question: %w", err)
@@ -330,6 +331,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		q.ReorderItems = decodeStringArray(reorderJSON)
 		q.ImageURL = imageURL
 		q.Explanation = explanation
+		q.Hint = hint
 
 		d.Questions = append(d.Questions, q)
 	}
@@ -409,6 +411,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 			encodeStringArray(q.ReorderItems),
 			nullableString(q.ImageURL),
 			nullableString(q.Explanation),
+			nullableString(q.Hint),
 			i,
 			time.Now().UTC(),
 		})
@@ -431,6 +434,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 				"reorder_items",
 				"image_url",
 				"explanation",
+				"hint",
 				"order_index",
 				"created_at",
 			},
@@ -552,7 +556,8 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 			encodeStringArray(q.ReorderItems), // $11
 			nullableString(q.ImageURL),      // $12
 			nullableString(q.Explanation),   // $13
-			i,                               // $14
+			i,                               // $14 (order_index)
+			nullableString(q.Hint),          // $15
 		}
 		if _, ok := existingIDs[id]; ok {
 			if _, err := tx.Exec(ctx, `
@@ -568,7 +573,8 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				    reorder_items  = $11,
 				    image_url      = $12,
 				    explanation    = $13,
-				    order_index    = $14
+				    order_index    = $14,
+				    hint           = $15
 				WHERE id = $1 AND quiz_id = $2
 			`, args...); err != nil {
 				return fmt.Errorf("update question %d: %w", i, err)
@@ -583,9 +589,9 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				quiz_id, question_text, question_type,
 				option_a, option_b, option_c, option_d,
 				correct_option, blank_answer, reorder_items,
-				image_url, explanation, order_index, created_at
+				image_url, explanation, order_index, hint, created_at
 			)
-			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
+			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
 			RETURNING id
 		`, args...).Scan(&newID)
 		if err != nil {
@@ -1174,6 +1180,70 @@ func (r *Quiz) GetRecommendedPractice(ctx context.Context, userID string, thresh
 		items = append(items, it)
 	}
 	return items, rows.Err()
+}
+
+// GetQuestionStats returns per-question accuracy for a quiz. Only the quiz
+// owner should call this endpoint; the caller is responsible for the auth check.
+func (r *Quiz) GetQuestionStats(ctx context.Context, quizID string) (*model.QuizStatsResponse, error) {
+	// Total completed attempts for this quiz.
+	var totalAttempts int
+	if err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM quiz_attempts WHERE quiz_id = $1 AND completed_at IS NOT NULL`,
+		quizID,
+	).Scan(&totalAttempts); err != nil {
+		return nil, fmt.Errorf("count attempts: %w", err)
+	}
+
+	rows, err := r.pool.Query(ctx, `
+		SELECT
+			qq.id              AS question_id,
+			qq.question_text,
+			qq.question_type,
+			qq.order_index,
+			COUNT(qaa.id)      AS total_count,
+			COALESCE(SUM(CASE WHEN qaa.is_correct THEN 1 ELSE 0 END), 0) AS correct_count
+		FROM quiz_questions qq
+		LEFT JOIN quiz_attempt_answers qaa
+			ON qaa.question_id = qq.id
+			AND qaa.attempt_id IN (
+				SELECT id FROM quiz_attempts
+				WHERE quiz_id = $1 AND completed_at IS NOT NULL
+			)
+		WHERE qq.quiz_id = $1
+		GROUP BY qq.id, qq.question_text, qq.question_type, qq.order_index
+		ORDER BY qq.order_index ASC
+	`, quizID)
+	if err != nil {
+		return nil, fmt.Errorf("question stats query: %w", err)
+	}
+	defer rows.Close()
+
+	questions := make([]model.QuestionStat, 0)
+	for rows.Next() {
+		var qs model.QuestionStat
+		if err := rows.Scan(
+			&qs.QuestionID,
+			&qs.QuestionText,
+			&qs.QuestionType,
+			&qs.OrderIndex,
+			&qs.TotalCount,
+			&qs.CorrectCount,
+		); err != nil {
+			return nil, fmt.Errorf("scan question stat: %w", err)
+		}
+		if qs.TotalCount > 0 {
+			qs.Accuracy = int(float64(qs.CorrectCount) / float64(qs.TotalCount) * 100)
+		}
+		questions = append(questions, qs)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &model.QuizStatsResponse{
+		TotalAttempts: totalAttempts,
+		Questions:     questions,
+	}, nil
 }
 
 // mcqMultiMatch compares two comma-separated option strings as sorted sets.

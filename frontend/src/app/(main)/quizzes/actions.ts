@@ -22,6 +22,7 @@ export type QuizQuestionInput = {
   reorderItems?: string[];
   imageUrl?: string;
   explanation?: string;
+  hint?: string;
 };
 
 export type CreateQuizInput = {

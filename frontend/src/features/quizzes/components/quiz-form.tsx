@@ -67,6 +67,7 @@ const emptyQuestion = (key: number): QuestionEntry => ({
   reorderItems: [],
   imageUrl: "",
   explanation: "",
+  hint: "",
 });
 
 // Resets type-specific fields when switching types so stale data from the
@@ -770,6 +771,14 @@ function QuestionExtras({
         value={question.explanation ?? ""}
         onChange={(e) => onChange({ explanation: e.target.value })}
         placeholder={t("quiz.explanationPlaceholder")}
+        rows={2}
+        className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2 text-xs text-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--primary)]"
+      />
+
+      <textarea
+        value={question.hint ?? ""}
+        onChange={(e) => onChange({ hint: e.target.value })}
+        placeholder={t("quiz.hintPlaceholder")}
         rows={2}
         className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2 text-xs text-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--primary)]"
       />

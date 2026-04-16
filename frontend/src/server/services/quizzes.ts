@@ -38,6 +38,7 @@ export type QuizQuestionDTO = {
   reorderItems?: string[] | null;
   imageUrl?: string | null;
   explanation?: string | null;
+  hint?: string | null;
   orderIndex: number;
 };
 
@@ -215,6 +216,34 @@ export async function getRecentQuizAttempts(): Promise<RecentAttemptItem[]> {
     return data.items ?? [];
   } catch {
     return [];
+  }
+}
+
+export type QuestionStat = {
+  questionId: string;
+  questionText: string;
+  questionType: string;
+  orderIndex: number;
+  totalCount: number;
+  correctCount: number;
+  accuracy: number;
+};
+
+export type QuizStats = {
+  totalAttempts: number;
+  questions: QuestionStat[];
+};
+
+export async function getQuizStats(quizId: string): Promise<QuizStats | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  try {
+    return await fetchBackendJson<QuizStats>({
+      path: `/api/v1/quizzes/${encodeURIComponent(quizId)}/stats`,
+      userId: user.id,
+    });
+  } catch {
+    return null;
   }
 }
 
