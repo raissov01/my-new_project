@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Trash2, Bot, User, Loader2 } from "lucide-react";
+import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 
 type ChatMessage = {
@@ -12,6 +13,7 @@ type ChatMessage = {
 };
 
 export function ChatClient() {
+  const { t } = useLocale();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -151,14 +153,14 @@ export function ChatClient() {
               AI IELTS Tutor
             </h2>
             <p className="text-xs text-[var(--text-secondary)]">
-              Powered by StudyWithRaissov materials
+              {t("chat.powered")}
             </p>
           </div>
         </div>
         {messages.length > 0 && (
           <Button variant="ghost" size="sm" onClick={handleClear}>
             <Trash2 className="h-4 w-4" />
-            Clear
+            {t("chat.clear")}
           </Button>
         )}
       </div>
@@ -174,15 +176,14 @@ export function ChatClient() {
               AI IELTS Tutor
             </h3>
             <p className="max-w-sm text-sm text-[var(--text-secondary)]">
-              Ask me anything about IELTS preparation, English grammar, vocabulary,
-              writing practice, or study strategies. I have access to all platform materials!
+              {t("chat.description")}
             </p>
             <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {[
-                "How to improve my IELTS Writing score?",
-                "Explain the difference between 'affect' and 'effect'",
-                "Give me speaking Part 2 tips",
-                "Help me plan my IELTS preparation",
+                t("chat.suggestion1"),
+                t("chat.suggestion2"),
+                t("chat.suggestion3"),
+                t("chat.suggestion4"),
               ].map((suggestion) => (
                 <button
                   key={suggestion}
@@ -263,7 +264,7 @@ export function ChatClient() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about IELTS, grammar, vocabulary..."
+            placeholder={t("chat.placeholder")}
             rows={1}
             className="flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none sm:px-4 sm:text-sm"
             style={{
@@ -292,7 +293,7 @@ export function ChatClient() {
           </Button>
         </div>
         <p className="mt-1.5 text-center text-[10px] text-[var(--text-secondary)]">
-          AI can make mistakes. Verify important information.
+          {t("chat.disclaimer")}
         </p>
       </div>
     </div>

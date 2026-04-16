@@ -107,7 +107,10 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
   // Tracks the last-known rank for each player so we can show rank deltas.
   const prevRanksRef = useRef<Map<string, number>>(new Map());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const joinUrl = typeof window !== "undefined" ? `${window.location.origin}/quizzes/join?code=${joinCode}` : "";
+  const [joinUrl, setJoinUrl] = useState("");
+  useEffect(() => {
+    if (joinCode) setJoinUrl(`${window.location.origin}/quizzes/join?code=${joinCode}`);
+  }, [joinCode]);
 
   // ── WebSocket connection ──
   const connectWS = useCallback((code: string, sId: string) => {

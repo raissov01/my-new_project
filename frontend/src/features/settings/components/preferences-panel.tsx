@@ -213,9 +213,6 @@ export function PreferencesPanel({
               {preset.label}
             </Button>
           ))}
-          <span className="inline-flex h-9 items-center rounded-xl border border-[var(--border)] px-3 text-sm text-[var(--text-secondary)]">
-            {selectedPreset === "custom" ? t("pomodoro.custom") : selectedPreset}
-          </span>
         </div>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">

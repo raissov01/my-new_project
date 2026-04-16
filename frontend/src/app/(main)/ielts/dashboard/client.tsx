@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ComponentType } from "react";
 import Link from "next/link";
 import { BookOpen, CalendarDays, ChartColumn, Loader2, PenLine, Sparkles, Target, Mic } from "lucide-react";
+import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { getIELTSDashboard, getIELTSWeakness, getRoadmapProgress } from "../simulator/attempt-actions";
 
@@ -58,6 +59,7 @@ type RoadmapProgress = {
 };
 
 export function IELTSDashboardClient() {
+  const { t } = useLocale();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [weakness, setWeakness] = useState<WeaknessData | null>(null);
   const [roadmap, setRoadmap] = useState<RoadmapProgress | null>(null);
@@ -115,20 +117,29 @@ export function IELTSDashboardClient() {
     return null;
   }
 
+  const criteriaLabels: Record<string, string> = {
+    coherence: t("ielts.criterion.coherence"),
+    grammar: t("ielts.criterion.grammar"),
+    lexicalResource: t("ielts.criterion.lexicalResource"),
+    taskAchievement: t("ielts.criterion.taskAchievement"),
+    fluencyCoherence: t("ielts.criterion.fluencyCoherence"),
+    pronunciation: t("ielts.criterion.pronunciation"),
+  };
+
   return (
     <div className="space-y-6">
       <section className="grid gap-4 lg:grid-cols-4">
-        <StatCard icon={Target} label="Total attempts" value={dashboard.totalAttempts} />
-        <StatCard icon={ChartColumn} label="Completed" value={dashboard.completedAttempts} />
-        <StatCard icon={PenLine} label="Writing submissions" value={dashboard.writingCount} />
-        <StatCard icon={Mic} label="Speaking sessions" value={dashboard.speakingCount} />
+        <StatCard icon={Target} label={t("ielts.dashboard.totalAttempts")} value={dashboard.totalAttempts} />
+        <StatCard icon={ChartColumn} label={t("ielts.dashboard.completed")} value={dashboard.completedAttempts} />
+        <StatCard icon={PenLine} label={t("ielts.dashboard.writingSubmissions")} value={dashboard.writingCount} />
+        <StatCard icon={Mic} label={t("ielts.dashboard.speakingSessions")} value={dashboard.speakingCount} />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.3fr_0.9fr]">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
           <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
             <BookOpen className="h-4 w-4" />
-            Recent attempts
+            {t("ielts.dashboard.recentAttempts")}
           </div>
           <div className="mt-4 space-y-3">
             {dashboard.recentAttempts.map((attempt) => (
@@ -156,7 +167,7 @@ export function IELTSDashboardClient() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
                 <Sparkles className="h-4 w-4" />
-                Your Roadmap
+                {t("ielts.dashboard.yourRoadmap")}
               </div>
               {roadmap && (
                 <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
@@ -175,7 +186,7 @@ export function IELTSDashboardClient() {
                 {/* Progress bar */}
                 <div>
                   <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-                    <span>Completion</span>
+                    <span>{t("ielts.dashboard.completion")}</span>
                     <span className="font-semibold text-[var(--text-primary)]">{roadmap.completionPercent}%</span>
                   </div>
                   <div className="mt-1.5 h-2.5 rounded-full bg-[var(--bg-soft)]">
@@ -190,15 +201,15 @@ export function IELTSDashboardClient() {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-center">
                     <p className="text-lg font-bold text-[var(--text-primary)]">{roadmap.completedTasks}</p>
-                    <p className="text-[10px] text-[var(--text-muted)]">Done</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">{t("ielts.dashboard.done")}</p>
                   </div>
                   <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-center">
                     <p className="text-lg font-bold text-[var(--text-primary)]">W{roadmap.currentWeek}</p>
-                    <p className="text-[10px] text-[var(--text-muted)]">Week</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">{t("ielts.dashboard.week")}</p>
                   </div>
                   <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-center">
                     <p className="text-lg font-bold text-[var(--text-primary)]">{roadmap.daysLeft >= 0 ? roadmap.daysLeft : "—"}</p>
-                    <p className="text-[10px] text-[var(--text-muted)]">Days left</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">{t("ielts.dashboard.daysLeft")}</p>
                   </div>
                 </div>
 
@@ -209,23 +220,23 @@ export function IELTSDashboardClient() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Link href="/ielts/study-plan" className="flex-1"><Button size="sm" className="w-full">Open roadmap</Button></Link>
-                  <Link href="/ielts/simulator"><Button size="sm" variant="secondary">Start mock</Button></Link>
+                  <Link href="/ielts/study-plan" className="flex-1"><Button size="sm" className="w-full">{t("ielts.dashboard.openRoadmap")}</Button></Link>
+                  <Link href="/ielts/simulator"><Button size="sm" variant="secondary">{t("ielts.dashboard.startMock")}</Button></Link>
                 </div>
               </div>
             ) : (
               <div className="mt-3">
-                <p className="text-sm text-[var(--text-secondary)]">No active study plan yet.</p>
+                <p className="text-sm text-[var(--text-secondary)]">{t("ielts.dashboard.noActivePlan")}</p>
                 <div className="mt-4 flex gap-2">
-                  <Link href="/ielts/study-plan"><Button size="sm">Create roadmap</Button></Link>
-                  <Link href="/ielts/simulator"><Button size="sm" variant="secondary">Start mock</Button></Link>
+                  <Link href="/ielts/study-plan"><Button size="sm">{t("ielts.dashboard.createRoadmap")}</Button></Link>
+                  <Link href="/ielts/simulator"><Button size="sm" variant="secondary">{t("ielts.dashboard.startMock")}</Button></Link>
                 </div>
               </div>
             )}
           </section>
 
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-            <div className="text-sm font-medium text-[var(--text-secondary)]">Band trend</div>
+            <div className="text-sm font-medium text-[var(--text-secondary)]">{t("ielts.dashboard.bandTrend")}</div>
             <div className="mt-4 space-y-4">
               {bandItems.map((item) => (
                 <div key={item.label}>
@@ -245,7 +256,7 @@ export function IELTSDashboardClient() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-          <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]"><PenLine className="h-4 w-4" /> Recent writing</div>
+          <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]"><PenLine className="h-4 w-4" /> {t("ielts.dashboard.recentWriting")}</div>
           <div className="mt-4 space-y-3">
             {dashboard.recentWriting.map((item) => (
               <div key={item.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm">
@@ -260,7 +271,7 @@ export function IELTSDashboardClient() {
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-          <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]"><Mic className="h-4 w-4" /> Recent speaking</div>
+          <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]"><Mic className="h-4 w-4" /> {t("ielts.dashboard.recentSpeaking")}</div>
           <div className="mt-4 space-y-3">
             {dashboard.recentSpeaking.map((item) => (
               <div key={item.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm">
@@ -277,11 +288,11 @@ export function IELTSDashboardClient() {
 
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
         <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
-          <CalendarDays className="h-4 w-4" /> Weakness analysis
+          <CalendarDays className="h-4 w-4" /> {t("ielts.dashboard.weaknessAnalysis")}
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <WeaknessCard title="Writing" weakest={weakness.writingWeakest} band={weakness.writingWeakestBand} criteria={weakness.writingCriteria} />
-          <WeaknessCard title="Speaking" weakest={weakness.speakingWeakest} band={weakness.speakingWeakestBand} criteria={weakness.speakingCriteria} />
+          <WeaknessCard title="Writing" weakest={weakness.writingWeakest} band={weakness.writingWeakestBand} criteria={weakness.writingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} />
+          <WeaknessCard title="Speaking" weakest={weakness.speakingWeakest} band={weakness.speakingWeakestBand} criteria={weakness.speakingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} />
         </div>
         <div className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
           {weakness.recommendations.map((item) => <p key={item}>• {item}</p>)}
@@ -303,15 +314,15 @@ function StatCard({ icon: Icon, label, value }: { icon: ComponentType<{ classNam
   );
 }
 
-function WeaknessCard({ title, weakest, band, criteria }: { title: string; weakest: string; band: number; criteria: Record<string, number> }) {
+function WeaknessCard({ title, weakest, band, criteria, criteriaLabels, weakestLabel }: { title: string; weakest: string; band: number; criteria: Record<string, number>; criteriaLabels: Record<string, string>; weakestLabel: string }) {
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
       <h3 className="font-semibold text-[var(--text-primary)]">{title}</h3>
-      <p className="mt-2 text-sm text-[var(--text-secondary)]">Weakest: {weakest || "n/a"} · Band {band.toFixed(1)}</p>
+      <p className="mt-2 text-sm text-[var(--text-secondary)]">{weakestLabel}: {weakest || "n/a"} · Band {band.toFixed(1)}</p>
       <div className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
         {Object.entries(criteria).map(([key, value]) => (
           <div key={key} className="flex items-center justify-between gap-3">
-            <span>{key}</span>
+            <span>{criteriaLabels[key] ?? key}</span>
             <span className="font-medium text-[var(--text-primary)]">{value.toFixed(1)}</span>
           </div>
         ))}

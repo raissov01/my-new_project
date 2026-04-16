@@ -179,6 +179,8 @@ export default async function StudentDashboardPage() {
                 icon={BookOpen}
                 title={t("student.noAssignmentsTitle")}
                 body={t("student.noAssignmentsBody")}
+                ctaHref="/student/classes"
+                ctaLabel={t("student.joinClass")}
               />
             )}
           </div>
@@ -270,6 +272,8 @@ export default async function StudentDashboardPage() {
                   icon={ListChecks}
                   title={t("classroom.noQuizAssignmentsStudentTitle")}
                   body={t("classroom.noQuizAssignmentsStudentBody")}
+                  ctaHref="/student/classes"
+                  ctaLabel={t("student.browseClasses")}
                 />
               )}
             </div>
@@ -331,6 +335,8 @@ export default async function StudentDashboardPage() {
                   icon={Star}
                   title={t("quiz.dashboard.recentEmpty")}
                   body={t("quiz.browseHint")}
+                  ctaHref="/quizzes"
+                  ctaLabel={t("student.playQuiz")}
                 />
               )}
             </div>
@@ -456,7 +462,7 @@ function ProgressCard({ icon: Icon, label, value, color }: { icon: typeof Users;
   );
 }
 
-function EmptyCard({ icon: Icon, title, body }: { icon: typeof Users; title: string; body: string }) {
+function EmptyCard({ icon: Icon, title, body, ctaHref, ctaLabel }: { icon: typeof Users; title: string; body: string; ctaHref?: string; ctaLabel?: string }) {
   return (
     <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] bg-[var(--bg-soft)] px-5 py-8">
       <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
@@ -464,6 +470,14 @@ function EmptyCard({ icon: Icon, title, body }: { icon: typeof Users; title: str
       </div>
       <p className="mt-3 text-base font-bold text-[var(--text-primary)]">{title}</p>
       <p className="mt-1.5 text-sm leading-7 text-[var(--text-secondary)]">{body}</p>
+      {ctaHref && ctaLabel ? (
+        <Link href={ctaHref} className="mt-4 inline-block">
+          <Button size="sm" variant="secondary">
+            <ArrowRight className="h-3.5 w-3.5" />
+            {ctaLabel}
+          </Button>
+        </Link>
+      ) : null}
     </div>
   );
 }

@@ -145,6 +145,12 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
           </div>
           <h2 className="mt-4 text-xl font-bold text-[var(--text-primary)]">{t("sets.emptyTitle")}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">{t("sets.emptyBody")}</p>
+          <Link href="/sets/new" className="mt-6 inline-block">
+            <Button>
+              <Plus className="h-4 w-4" />
+              {t("sets.createFirst")}
+            </Button>
+          </Link>
         </div>
       )}
     </div>

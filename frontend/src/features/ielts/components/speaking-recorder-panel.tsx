@@ -1,6 +1,7 @@
 "use client";
 
 import { Mic, PauseCircle, PlayCircle, RotateCcw, Volume2, WandSparkles } from "lucide-react";
+import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { useSpeakingRecorder } from "@/features/ielts/use-speaking-recorder";
 
@@ -13,6 +14,7 @@ export function SpeakingRecorderPanel({
   onUseTranscript,
   compact = false,
 }: SpeakingRecorderPanelProps) {
+  const { t } = useLocale();
   const {
     audioUrl,
     clearRecording,
@@ -40,28 +42,28 @@ export function SpeakingRecorderPanel({
         <div>
           <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
             <Mic className="h-4 w-4 text-violet-400" />
-            Record your answer
+            {t("ielts.rec.recordYourAnswer")}
           </h3>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Record your speaking response, replay it, and use live transcript when the browser supports it.
+            {t("ielts.rec.recordDesc")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {isRecording ? (
             <Button size="sm" onClick={stopRecording}>
               <PauseCircle className="h-4 w-4" />
-              Stop recording
+              {t("ielts.rec.stopRecording")}
             </Button>
           ) : (
             <Button size="sm" onClick={startRecording} disabled={isStarting}>
               <Mic className="h-4 w-4" />
-              {isStarting ? "Starting..." : "Start recording"}
+              {isStarting ? t("ielts.rec.starting") : t("ielts.rec.startRecording")}
             </Button>
           )}
           {audioUrl ? (
             <Button size="sm" variant="secondary" onClick={clearRecording}>
               <RotateCcw className="h-4 w-4" />
-              Clear
+              {t("ielts.rec.clear")}
             </Button>
           ) : null}
         </div>
@@ -69,7 +71,7 @@ export function SpeakingRecorderPanel({
 
       {isRecording ? (
         <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-300">
-          Recording is live. Speak naturally like the real IELTS interview.
+          {t("ielts.rec.recording")}
         </div>
       ) : null}
 
@@ -119,7 +121,7 @@ export function SpeakingRecorderPanel({
           <div className="flex items-center gap-2">
             <Volume2 className="h-4 w-4 text-[var(--text-muted)]" />
             {supportsSpeechRecognition
-              ? "Audio recording and browser transcript are both available."
+              ? t("ielts.rec.recordDesc")
               : "Audio recording is available. After recording, replay the answer and paste or type the transcript for AI scoring."}
           </div>
         </div>

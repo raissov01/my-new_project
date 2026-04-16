@@ -505,19 +505,26 @@ export function SpeakingPracticeClient() {
 
         {(prepTime === 0 || activeQuestion.questionType !== "part2") && (
           <>
-            <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
-              <span
-                className={`flex items-center gap-1.5 text-sm font-medium ${
-                  timeLeft < 30 ? "text-red-400" : "text-[var(--text-secondary)]"
-                }`}
-              >
-                <Clock3 className="h-4 w-4" />
-                {formatTime(timeLeft)}
-              </span>
-              <Button onClick={handleSubmit} size="sm" disabled={!transcript.trim()}>
-                <Sparkles className="h-4 w-4" />
-                {t("ielts.sp.getEvaluation")}
-              </Button>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
+                <span
+                  className={`flex items-center gap-1.5 text-sm font-medium ${
+                    timeLeft < 30 ? "text-red-400" : "text-[var(--text-secondary)]"
+                  }`}
+                >
+                  <Clock3 className="h-4 w-4" />
+                  {formatTime(timeLeft)}
+                </span>
+                <Button onClick={handleSubmit} size="sm" disabled={!transcript.trim()}>
+                  <Sparkles className="h-4 w-4" />
+                  {t("ielts.sp.getEvaluation")}
+                </Button>
+              </div>
+              {!transcript.trim() && (
+                <p className="text-center text-xs text-[var(--text-muted)]">
+                  {t("ielts.sp.submitHint")}
+                </p>
+              )}
             </div>
 
             <SpeakingRecorderPanel onUseTranscript={setTranscript} />

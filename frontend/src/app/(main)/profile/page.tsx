@@ -169,21 +169,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
               {t("profile.recentActivity")}
             </h2>
-            <div className="mt-4 space-y-3 sm:mt-5">
-              {stats.recentActivity.map((activity) => (
-                <div
-                  key={activity.date}
-                  className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3"
-                >
-                  <span className="text-sm text-[var(--text-secondary)]">
-                    {formatDate(activity.date, locale)}
-                  </span>
-                  <span className="text-sm font-semibold text-[var(--text-primary)]">
-                    {activity.count}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <ActivityCalendar activity={stats.recentActivity} />
           </div>
 
           <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-2xl)] sm:p-6">
@@ -210,13 +196,62 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 </div>
               ))
             ) : (
-              <p className="rounded-2xl bg-[var(--bg-surface)] p-4 text-sm text-[var(--text-secondary)]">
-                {t("profile.noAchievements")}
-              </p>
+              <div className="rounded-2xl bg-[var(--bg-surface)] p-4 text-sm text-[var(--text-secondary)]">
+                <p>{t("profile.noAchievements")}</p>
+                <p className="mt-2 leading-6">{t("profile.achievementsHint")}</p>
+              </div>
             )}
           </div>
         </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ActivityCalendar({ activity }: { activity: Array<{ date: string; count: number }> }) {
+  const today = new Date();
+  const days: Array<{ date: string; count: number }> = [];
+
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const found = activity.find((a) => a.date.slice(0, 10) === key);
+    days.push({ date: key, count: found?.count ?? 0 });
+  }
+
+  function cellColor(count: number) {
+    if (count === 0) return "#e5e7eb";
+    if (count <= 2) return "#c4b5fd";
+    return "#7c3aed";
+  }
+
+  return (
+    <div className="mt-4">
+      <div className="grid grid-cols-7 gap-1.5">
+        {days.map(({ date, count }) => (
+          <div
+            key={date}
+            title={`${date}: ${count}`}
+            className="aspect-square rounded-sm"
+            style={{ backgroundColor: cellColor(count) }}
+          />
+        ))}
+      </div>
+      <div className="mt-3 flex items-center gap-3 text-xs text-[var(--text-muted)]">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#e5e7eb" }} />
+          0
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#c4b5fd" }} />
+          1–2
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#7c3aed" }} />
+          3+
+        </span>
       </div>
     </div>
   );

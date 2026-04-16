@@ -94,7 +94,7 @@ export function FlashcardViewer({
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className={`relative h-56 w-full transform-3d transition-transform duration-200 ease-out sm:h-72 md:h-80 ${
+          className={`relative h-56 w-full transform-3d transition-transform duration-[400ms] ease-in-out sm:h-72 md:h-80 ${
             isFlipped ? "rotate-y-180" : ""
           }`}
         >

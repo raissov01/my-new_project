@@ -593,7 +593,7 @@ export function SimulatorClient() {
             {t("ielts.sim.chooseMockType")}
           </h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Build a realistic IELTS run by choosing the test source, section, and target band before you begin.
+            {t("ielts.sim.buildDesc")}
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {mockTypes.map((item) => (

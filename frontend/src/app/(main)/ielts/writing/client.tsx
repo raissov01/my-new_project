@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   AlertCircle,
+  ArrowLeft,
   CheckCircle2,
   Clock3,
   Loader2,
@@ -373,6 +374,15 @@ export function WritingPracticeClient() {
   if (phase === "write") {
     return (
       <div className="space-y-4">
+        <button
+          type="button"
+          onClick={handleReset}
+          className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t("ielts.wr.backToTasks")}
+        </button>
+
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)] p-4">
           <p className="text-xs font-medium uppercase tracking-wider text-[var(--primary)]">
             {taskType === "task1" ? t("ielts.writingTask1") : t("ielts.writingTask2")}
@@ -403,6 +413,12 @@ export function WritingPracticeClient() {
             {t("ielts.wr.submitForEval")}
           </Button>
         </div>
+
+        {taskType === "task2" && (
+          <p className="text-xs leading-5 text-[var(--text-muted)]">
+            {t("ielts.wr.wordCountHint")}
+          </p>
+        )}
 
         <textarea
           value={essay}
