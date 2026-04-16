@@ -7,7 +7,7 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
-export type QuizQuestionType = "mcq" | "true_false" | "fill_blank" | "reorder";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder";
 
 export type QuizQuestionInput = {
   id?: string;

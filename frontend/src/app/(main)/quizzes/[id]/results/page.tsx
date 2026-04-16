@@ -311,6 +311,37 @@ function AnswerRow({
       ) : (
         <span>—</span>
       );
+  } else if (qType === "mcq_multi") {
+    const letterToText: Record<string, string> = {
+      a: answer.optionA ?? "",
+      b: answer.optionB ?? "",
+      c: answer.optionC ?? "",
+      d: answer.optionD ?? "",
+    };
+    const parseLetters = (raw: string | null | undefined) =>
+      (raw ?? "")
+        .split(",")
+        .map((v) => v.trim().toLowerCase())
+        .filter(Boolean);
+
+    const selectedLetters = parseLetters(answer.selectedOption);
+    const correctLetters = parseLetters(answer.correctOption);
+
+    yourAnswerNode =
+      selectedLetters.length > 0 ? (
+        <span className="font-semibold uppercase">
+          {selectedLetters.join(", ")} ·{" "}
+          {selectedLetters.map((l) => letterToText[l]).filter(Boolean).join("; ") || "—"}
+        </span>
+      ) : (
+        <span className="italic text-[var(--text-muted)]">{skippedLabel}</span>
+      );
+    correctAnswerNode = (
+      <span className="font-semibold uppercase">
+        {correctLetters.join(", ")} ·{" "}
+        {correctLetters.map((l) => letterToText[l]).filter(Boolean).join("; ") || "—"}
+      </span>
+    );
   } else if (qType === "true_false") {
     const tfLabel = (opt: string | null | undefined) =>
       opt === "t" ? "True" : opt === "f" ? "False" : null;

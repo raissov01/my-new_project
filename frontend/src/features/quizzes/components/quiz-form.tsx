@@ -13,6 +13,7 @@ import {
   ArrowUp,
   ArrowDown,
   ListChecks,
+  CheckSquare,
   ToggleLeft,
   Type as TypeIcon,
   ListOrdered,
@@ -86,6 +87,18 @@ function applyTypeChange(
         correctOption: q.correctOption === "a" || q.correctOption === "b" || q.correctOption === "c" || q.correctOption === "d"
           ? q.correctOption
           : "a",
+        blankAnswer: "",
+        reorderItems: [],
+      };
+    case "mcq_multi":
+      return {
+        ...base,
+        optionA: q.optionA ?? "",
+        optionB: q.optionB ?? "",
+        optionC: q.optionC ?? "",
+        optionD: q.optionD ?? "",
+        // Carry over if already a comma-list, else default to first two
+        correctOption: (q.correctOption ?? "").includes(",") ? q.correctOption : "a,b",
         blankAnswer: "",
         reorderItems: [],
       };
@@ -545,6 +558,7 @@ type TypeOption = {
 
 const TYPE_OPTIONS: TypeOption[] = [
   { key: "mcq", labelKey: "quiz.typeMcq", icon: ListChecks },
+  { key: "mcq_multi", labelKey: "quiz.typeMcqMulti", icon: CheckSquare },
   { key: "true_false", labelKey: "quiz.typeTrueFalse", icon: ToggleLeft },
   { key: "fill_blank", labelKey: "quiz.typeFillBlank", icon: TypeIcon },
   { key: "reorder", labelKey: "quiz.typeReorder", icon: ListOrdered },
@@ -645,6 +659,8 @@ function QuestionEditor({
 
       {questionType === "mcq" ? (
         <McqBody question={question} onChange={onChange} />
+      ) : questionType === "mcq_multi" ? (
+        <McqMultiBody question={question} onChange={onChange} />
       ) : questionType === "true_false" ? (
         <TrueFalseBody question={question} onChange={onChange} />
       ) : questionType === "fill_blank" ? (
@@ -809,6 +825,83 @@ function McqBody({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function McqMultiBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const options: Array<{ key: "a" | "b" | "c" | "d"; field: keyof QuizQuestionInput }> = [
+    { key: "a", field: "optionA" },
+    { key: "b", field: "optionB" },
+    { key: "c", field: "optionC" },
+    { key: "d", field: "optionD" },
+  ];
+
+  // Parse comma-separated correctOption into a Set for easy toggling
+  const correctSet = new Set(
+    (question.correctOption ?? "")
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean)
+  );
+
+  const toggleCorrect = (key: string) => {
+    const next = new Set(correctSet);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    const sorted = ["a", "b", "c", "d"].filter((k) => next.has(k));
+    onChange({ correctOption: sorted.join(",") });
+  };
+
+  return (
+    <div className="mt-3 space-y-2">
+      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        {t("quiz.markCorrectMulti")}
+      </p>
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        {options.map((opt) => {
+          const selected = correctSet.has(opt.key);
+          return (
+            <div
+              key={opt.key}
+              className={`flex items-center gap-2.5 rounded-[var(--radius-md)] border px-3 py-2 transition-colors ${
+                selected
+                  ? "border-[var(--success)] bg-[var(--success)]/10"
+                  : "border-[var(--border)] bg-[var(--bg-surface)]"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => toggleCorrect(opt.key)}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border text-xs font-semibold uppercase transition-colors ${
+                  selected
+                    ? "border-[var(--success)] bg-[var(--success)] text-white"
+                    : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                }`}
+                aria-label={t("quiz.markCorrect")}
+              >
+                {opt.key}
+              </button>
+              <input
+                value={(question[opt.field] as string | undefined) ?? ""}
+                onChange={(e) => onChange({ [opt.field]: e.target.value })}
+                placeholder={t("quiz.optionPlaceholder")}
+                className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -379,7 +380,7 @@ func (r *Room) endQuestion(timedOut bool) {
 		Leaderboard:   lb,
 	}
 	switch q.QuestionType {
-	case "mcq", "true_false":
+	case "mcq", "true_false", "mcq_multi":
 		evt.CorrectOption = q.CorrectOption
 	case "fill_blank":
 		evt.BlankAnswer = q.BlankAnswer
@@ -517,6 +518,8 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 	switch q.QuestionType {
 	case "mcq", "true_false":
 		isCorrect = strings.EqualFold(req.Option, q.CorrectOption)
+	case "mcq_multi":
+		isCorrect = liveMultiMatch(req.Option, q.CorrectOption)
 	case "fill_blank":
 		isCorrect = normalizeBlank(req.TextAns) == normalizeBlank(q.BlankAnswer)
 	case "reorder":
@@ -614,6 +617,34 @@ func liveSlicesEqual(a, b []string) bool {
 	}
 	for i := range a {
 		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// liveMultiMatch returns true when submitted comma-separated options exactly
+// match the correct set (order-independent, whitespace-tolerant).
+func liveMultiMatch(submitted, correct string) bool {
+	parse := func(s string) []string {
+		parts := strings.Split(s, ",")
+		out := make([]string, 0, len(parts))
+		for _, p := range parts {
+			p = strings.TrimSpace(strings.ToLower(p))
+			if p != "" {
+				out = append(out, p)
+			}
+		}
+		sort.Strings(out)
+		return out
+	}
+	s := parse(submitted)
+	c := parse(correct)
+	if len(s) != len(c) {
+		return false
+	}
+	for i := range s {
+		if s[i] != c[i] {
 			return false
 		}
 	}

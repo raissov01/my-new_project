@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/midoriya/flashlearn-backend/internal/model"
@@ -34,6 +35,7 @@ const (
 // Supported question types. MCQ is the default for empty/unknown values.
 const (
 	QTypeMCQ       = "mcq"
+	QTypeMCQMulti  = "mcq_multi"
 	QTypeTrueFalse = "true_false"
 	QTypeFillBlank = "fill_blank"
 	QTypeReorder   = "reorder"
@@ -238,6 +240,21 @@ func (s *Quiz) validateAndNormalize(
 			out.OptionD = d
 			out.CorrectOption = correct
 
+		case QTypeMCQMulti:
+			if a == "" || b == "" || c == "" || d == "" {
+				return nil, fmt.Errorf("question %d: all four options are required for mcq_multi", i+1)
+			}
+			// correct is comma-separated, e.g. "a,c" — validate and sort
+			normalizedCorrect, err := normalizeMCQMultiCorrect(correct)
+			if err != nil {
+				return nil, fmt.Errorf("question %d: %w", i+1, err)
+			}
+			out.OptionA = a
+			out.OptionB = b
+			out.OptionC = c
+			out.OptionD = d
+			out.CorrectOption = normalizedCorrect
+
 		case QTypeTrueFalse:
 			if correct != "t" && correct != "f" {
 				return nil, fmt.Errorf("question %d: correct option must be t or f for true/false", i+1)
@@ -303,4 +320,31 @@ func (s *Quiz) GetRecommendedPractice(ctx context.Context, userID string, limit 
 		limit = 5
 	}
 	return s.repo.GetRecommendedPractice(ctx, userID, 70, limit)
+}
+
+// normalizeMCQMultiCorrect validates and sorts a comma-separated correct-option
+// string for mcq_multi questions (e.g. "c,a" → "a,c").
+func normalizeMCQMultiCorrect(raw string) (string, error) {
+	parts := strings.Split(raw, ",")
+	seen := map[string]bool{}
+	valid := []string{}
+	for _, p := range parts {
+		p = strings.TrimSpace(strings.ToLower(p))
+		if p == "" {
+			continue
+		}
+		if p != "a" && p != "b" && p != "c" && p != "d" {
+			return "", fmt.Errorf("correct options must be a, b, c, or d (got %q)", p)
+		}
+		if seen[p] {
+			return "", fmt.Errorf("duplicate correct option: %q", p)
+		}
+		seen[p] = true
+		valid = append(valid, p)
+	}
+	if len(valid) < 2 {
+		return "", fmt.Errorf("mcq_multi requires at least 2 correct options")
+	}
+	sort.Strings(valid)
+	return strings.Join(valid, ","), nil
 }

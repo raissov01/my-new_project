@@ -36,9 +36,10 @@ type DisplayOption = {
 
 // RecordedAnswer is what we send to the backend. Only one of the value
 // fields is populated per row, depending on the question type.
+// selectedOption is a string to accommodate mcq_multi (comma-separated, e.g. "a,c").
 type RecordedAnswer = {
   questionId: string;
-  selectedOption: OptionLetter | TrueFalseLetter | null;
+  selectedOption: string | null;
   textAnswer: string | null;
   orderAnswer: string[] | null;
   timeSpent: number;
@@ -101,6 +102,16 @@ function arraysEqual(a: string[], b: string[]): boolean {
     if (a[i] !== b[i]) return false;
   }
   return true;
+}
+
+// mcqMultiMatch: order-independent comparison of comma-separated option sets.
+function mcqMultiMatch(submitted: string, correct: string): boolean {
+  const parse = (s: string) =>
+    s.split(",").map((v) => v.trim().toLowerCase()).filter(Boolean).sort();
+  const s = parse(submitted);
+  const c = parse(correct);
+  if (s.length !== c.length) return false;
+  return s.every((v, i) => v === c[i]);
 }
 
 interface PlayQuizClientProps {
@@ -189,6 +200,9 @@ export function PlayQuizClient({
   const [selectedLetter, setSelectedLetter] = useState<
     OptionLetter | TrueFalseLetter | null
   >(null);
+  const [mcqMultiSelected, setMcqMultiSelected] = useState<Set<OptionLetter>>(
+    () => new Set()
+  );
   const [blankInput, setBlankInput] = useState("");
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
@@ -215,18 +229,20 @@ export function PlayQuizClient({
   // during render is precisely the bug this fix exists for.
   useEffect(() => {
     const q = quiz.questions[currentIdx];
-    if ((q.questionType ?? "mcq") === "mcq") {
+    const qt = q.questionType ?? "mcq";
+    if (qt === "mcq" || qt === "mcq_multi") {
       const base = buildBaseOptions(q);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplayOptions(quiz.shuffleOptions ? shuffleOptions(base) : base);
     }
-    if ((q.questionType ?? "mcq") === "reorder") {
+    if (qt === "reorder") {
       const items = q.reorderItems ?? [];
       setReorderDraft(quiz.shuffleOptions ? shuffleArray(items) : [...items]);
     } else {
       setReorderDraft([]);
     }
     setBlankInput("");
+    setMcqMultiSelected(new Set());
   }, [currentIdx, quiz.questions, quiz.shuffleOptions]);
 
   const clearAdvanceTimer = () => {
@@ -283,6 +299,7 @@ export function PlayQuizClient({
     }
     setCurrentIdx((i) => i + 1);
     setSelectedLetter(null);
+    setMcqMultiSelected(new Set());
     setLastCorrect(null);
     setPhase("asking");
     setTimeLeft(quiz.timePerQuestion);
@@ -396,6 +413,22 @@ export function PlayQuizClient({
     [question.correctOption, recordAnswer]
   );
 
+  const recordMcqMulti = useCallback(
+    (selected: Set<OptionLetter>) => {
+      const sorted = (["a", "b", "c", "d"] as OptionLetter[]).filter((k) =>
+        selected.has(k)
+      );
+      const submitted = sorted.join(",");
+      const correct = question.correctOption ?? "";
+      const isCorrect = submitted !== "" && mcqMultiMatch(submitted, correct);
+      recordAnswer(
+        { selectedOption: submitted || null, textAnswer: null, orderAnswer: null },
+        isCorrect
+      );
+    },
+    [question.correctOption, recordAnswer]
+  );
+
   const recordBlank = useCallback(
     (value: string | null) => {
       const submitted = value === null ? null : value.trim();
@@ -432,6 +465,9 @@ export function PlayQuizClient({
       case "mcq":
         recordMcq(null);
         return;
+      case "mcq_multi":
+        recordMcqMulti(new Set());
+        return;
       case "true_false":
         recordTrueFalse(null);
         return;
@@ -442,7 +478,7 @@ export function PlayQuizClient({
         recordReorder(null);
         return;
     }
-  }, [questionType, recordMcq, recordTrueFalse, recordBlank, recordReorder]);
+  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
   // Practice mode disables the timer entirely so students can dwell on
@@ -663,6 +699,28 @@ export function PlayQuizClient({
               revealed={revealed}
               onPick={recordMcq}
             />
+          ) : questionType === "mcq_multi" ? (
+            <McqMultiBody
+              t={t}
+              displayOptions={displayOptions}
+              selected={mcqMultiSelected}
+              correctOption={question.correctOption ?? ""}
+              revealed={revealed}
+              lastCorrect={lastCorrect}
+              onToggle={(letter) => {
+                if (revealed) return;
+                setMcqMultiSelected((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(letter)) {
+                    next.delete(letter);
+                  } else {
+                    next.add(letter);
+                  }
+                  return next;
+                });
+              }}
+              onSubmit={() => recordMcqMulti(mcqMultiSelected)}
+            />
           ) : questionType === "true_false" ? (
             <TrueFalseBody
               t={t}
@@ -842,6 +900,121 @@ function McqBody({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function McqMultiBody({
+  t,
+  displayOptions,
+  selected,
+  correctOption,
+  revealed,
+  lastCorrect,
+  onToggle,
+  onSubmit,
+}: {
+  t: (key: string) => string;
+  displayOptions: DisplayOption[];
+  selected: Set<OptionLetter>;
+  correctOption: string;
+  revealed: boolean;
+  lastCorrect: boolean | null;
+  onToggle: (letter: OptionLetter) => void;
+  onSubmit: () => void;
+}) {
+  const correctSet = new Set(
+    correctOption
+      .split(",")
+      .map((v) => v.trim().toLowerCase())
+      .filter(Boolean)
+  );
+
+  return (
+    <div className="mt-4 space-y-3 sm:mt-6">
+      <p className="text-sm text-[var(--text-muted)]">
+        {t("quiz.play.selectMultiple")}
+      </p>
+      <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4">
+        {displayOptions.map((opt, index) => {
+          const positionLabel = POSITION_LABELS[index];
+          const isSelected = selected.has(opt.letter);
+          const isCorrectOption = correctSet.has(opt.letter);
+
+          let stateClasses =
+            "border-[var(--border)] bg-gradient-to-br " +
+            ACCENT_BY_POSITION[index];
+          let badgeClasses =
+            "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]";
+          let icon: React.ReactNode = null;
+
+          if (!revealed && isSelected) {
+            stateClasses =
+              "border-[var(--primary)] bg-[var(--primary)]/10";
+            badgeClasses =
+              "border-[var(--primary)] bg-[var(--primary)] text-white";
+          }
+          if (revealed) {
+            if (isCorrectOption) {
+              stateClasses =
+                "border-emerald-400/60 bg-emerald-500/15 animate-success-glow";
+              badgeClasses = "border-emerald-400/60 bg-emerald-500 text-white";
+              icon = <Check className="h-5 w-5 text-emerald-300" />;
+            } else if (isSelected) {
+              stateClasses = "border-rose-400/60 bg-rose-500/15 animate-shake";
+              badgeClasses = "border-rose-400/60 bg-rose-500 text-white";
+              icon = <X className="h-5 w-5 text-rose-300" />;
+            } else {
+              stateClasses =
+                "border-[var(--border)] bg-[var(--bg-surface)] opacity-50";
+            }
+          }
+
+          return (
+            <button
+              key={opt.letter}
+              type="button"
+              onClick={() => onToggle(opt.letter)}
+              disabled={revealed}
+              className={`group flex min-h-[68px] items-center gap-3 rounded-[var(--radius-xl)] border-2 px-3 py-3 text-left transition-all duration-200 disabled:cursor-default sm:min-h-[76px] sm:gap-4 sm:px-5 sm:py-4 ${stateClasses}`}
+            >
+              <span
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border-2 text-base font-bold uppercase transition-colors sm:h-11 sm:w-11 ${badgeClasses}`}
+              >
+                {positionLabel}
+              </span>
+              <span className="min-w-0 flex-1 break-words text-sm font-medium text-[var(--text-primary)] sm:text-base md:text-lg">
+                {opt.text}
+              </span>
+              {icon ? <span className="shrink-0">{icon}</span> : null}
+            </button>
+          );
+        })}
+      </div>
+      {!revealed ? (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={selected.size === 0}
+          >
+            {t("quiz.play.submitSelection")}
+          </Button>
+        </div>
+      ) : null}
+      {revealed && lastCorrect !== null ? (
+        <div
+          className={`rounded-[var(--radius-md)] border-2 px-4 py-3 text-sm ${
+            lastCorrect
+              ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
+              : "border-rose-400/60 bg-rose-500/10 text-rose-200"
+          }`}
+        >
+          <p className="font-semibold">
+            {lastCorrect ? t("quiz.play.correct") : t("quiz.play.wrong")}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -39,7 +39,7 @@ type QuizQuestion struct {
 	OptionB       string  `json:"optionB"`
 	OptionC       string  `json:"optionC"`
 	OptionD       string  `json:"optionD"`
-	CorrectOption string  `gorm:"type:varchar(2)" json:"correctOption"`
+	CorrectOption string  `gorm:"type:text" json:"correctOption"`
 	BlankAnswer   *string `gorm:"type:text" json:"blankAnswer,omitempty"`
 	ReorderItems  *string `gorm:"type:jsonb" json:"reorderItems,omitempty"`
 	ImageURL      *string `gorm:"type:text" json:"imageUrl,omitempty"`

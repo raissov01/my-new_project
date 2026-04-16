@@ -23,7 +23,7 @@ export type QuizOverview = {
   tags?: string[];
 };
 
-export type QuizQuestionType = "mcq" | "true_false" | "fill_blank" | "reorder";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder";
 
 export type QuizQuestionDTO = {
   id: string;

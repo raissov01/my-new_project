@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -849,6 +850,17 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 						}
 					}
 				}
+			case "mcq_multi":
+				if a.SelectedOption != nil {
+					submitted := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
+					if submitted != "" {
+						selected = &submitted
+						if q.CorrectOption != nil && mcqMultiMatch(submitted, *q.CorrectOption) {
+							isCorrect = true
+							score++
+						}
+					}
+				}
 			default: // mcq
 				if a.SelectedOption != nil {
 					normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
@@ -1162,4 +1174,32 @@ func (r *Quiz) GetRecommendedPractice(ctx context.Context, userID string, thresh
 		items = append(items, it)
 	}
 	return items, rows.Err()
+}
+
+// mcqMultiMatch compares two comma-separated option strings as sorted sets.
+// e.g. mcqMultiMatch("c,a", "a,c") → true
+func mcqMultiMatch(submitted, correct string) bool {
+	parse := func(s string) []string {
+		parts := strings.Split(s, ",")
+		out := make([]string, 0, len(parts))
+		for _, p := range parts {
+			p = strings.TrimSpace(strings.ToLower(p))
+			if p != "" {
+				out = append(out, p)
+			}
+		}
+		sort.Strings(out)
+		return out
+	}
+	s := parse(submitted)
+	c := parse(correct)
+	if len(s) != len(c) {
+		return false
+	}
+	for i := range s {
+		if s[i] != c[i] {
+			return false
+		}
+	}
+	return true
 }
