@@ -58,10 +58,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toastItem) => (
           <div
             key={toastItem.id}
-            className={`pointer-events-auto flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium shadow-lg animate-in slide-in-from-right duration-200 ${
+            className={`pointer-events-auto flex items-center gap-3 rounded-[var(--radius-lg)] border px-4 py-3 text-sm font-medium shadow-[var(--shadow-md)] animate-in slide-in-from-right duration-200 ${
               toastItem.type === "success"
-                ? "bg-green-600 text-white"
-                : "bg-red-600 text-white"
+                ? "border-emerald-500/20 bg-[var(--bg-elevated)] text-emerald-700 dark:text-emerald-300"
+                : "border-red-500/20 bg-[var(--bg-elevated)] text-red-700 dark:text-red-400"
             }`}
           >
             {toastItem.type === "success" ? (
@@ -72,7 +72,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <span>{toastItem.message}</span>
             <button
               onClick={() => dismiss(toastItem.id)}
-              className="ml-2 shrink-0 rounded p-0.5 hover:bg-white/20"
+              className="ml-2 shrink-0 rounded p-0.5 opacity-60 hover:opacity-100 hover:bg-[var(--bg-muted)]"
               aria-label={t("toast.dismiss")}
             >
               <X className="h-3.5 w-3.5" />

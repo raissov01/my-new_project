@@ -24,9 +24,10 @@ export type QuizOverview = {
   tags?: string[];
 };
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot";
 
 export type MatchPair = { left: string; right: string };
+export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string };
 
 export type QuizQuestionDTO = {
   id: string;
@@ -40,6 +41,7 @@ export type QuizQuestionDTO = {
   blankAnswer?: string | null;
   reorderItems?: string[] | null;
   matchPairs?: MatchPair[] | null;
+  hotspotZones?: HotspotZone[] | null;
   imageUrl?: string | null;
   explanation?: string | null;
   hint?: string | null;
@@ -159,6 +161,7 @@ export type AttemptAnswerResult = {
   orderAnswer?: string[] | null;
   reorderItems?: string[] | null;
   matchPairs?: MatchPair[] | null;
+  hotspotZones?: HotspotZone[] | null;
   imageUrl?: string | null;
   explanation?: string | null;
   isCorrect: boolean;

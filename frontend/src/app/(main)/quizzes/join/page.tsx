@@ -61,7 +61,7 @@ function JoinForm() {
         {t("quiz.backToLibrary")}
       </Link>
 
-      <div className="mt-8 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="mt-8 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
           {t("quiz.liveMode")}
         </p>

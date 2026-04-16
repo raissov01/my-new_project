@@ -621,14 +621,14 @@ export function SimulatorClient() {
                   onClick={() => setSection(item.key)}
                   className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition-all ${
                     section === item.key
-                      ? "border-indigo-500/30 bg-indigo-500/5"
-                      : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-indigo-500/20"
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
+                      : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-strong)]"
                   }`}
                 >
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                       section === item.key
-                        ? "bg-indigo-500/15 text-indigo-400"
+                        ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                         : "bg-[var(--bg-soft)] text-[var(--text-muted)]"
                     }`}
                   >
@@ -669,7 +669,7 @@ export function SimulatorClient() {
               </p>
             </div>
           ) : (
-            <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)] p-5">
               <label className="block text-sm font-medium text-[var(--text-primary)]">
                 Predictions exam set
               </label>
@@ -719,7 +719,7 @@ export function SimulatorClient() {
                 aria-checked={strictMode}
                 onClick={() => setStrictMode((prev) => !prev)}
                 className={`relative h-6 w-11 rounded-full transition-colors ${
-                  strictMode ? "bg-indigo-500" : "bg-[var(--border)]"
+                  strictMode ? "bg-[var(--primary)]" : "bg-[var(--border)]"
                 }`}
               >
                 <span
@@ -743,7 +743,7 @@ export function SimulatorClient() {
   if (stage === "loading") {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-lg shadow-indigo-500/25">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--bg-surface)] shadow-[var(--shadow-lg)]">
           <Loader2 className="h-8 w-8 animate-spin text-white" />
         </div>
         <h2 className="mt-6 text-xl font-semibold text-[var(--text-primary)]">
@@ -761,7 +761,7 @@ export function SimulatorClient() {
       <div className="space-y-6">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-400">
+            <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)]">
               {mock.mockType === "cambridge_style" ? "Cambridge mock" : "Predictions mock"}
             </span>
             {mock.examSet ? (
@@ -868,7 +868,7 @@ export function SimulatorClient() {
       <div className="mx-auto max-w-7xl space-y-6">
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-400">
+          <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)]">
             {mock.mockType === "cambridge_style" ? "Cambridge mock" : "Predictions mock"}
           </span>
           {mock.examSet ? (
@@ -905,8 +905,8 @@ export function SimulatorClient() {
               onClick={() => handleSectionTab(index)}
               className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                 activeSectionIndex === index
-                  ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-400"
-                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-indigo-500/20"
+                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
               }`}
             >
               {item.title}
@@ -1393,14 +1393,14 @@ function SelectionCard({
       onClick={onClick}
       className={`rounded-2xl border p-5 text-left transition-all ${
         active
-          ? "border-indigo-500/30 bg-indigo-500/5 shadow-[var(--surface-shadow)]"
-          : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-indigo-500/20"
+          ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-[var(--shadow-sm)]"
+          : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-strong)]"
       }`}
     >
       <div className="flex items-start gap-3">
         <div
           className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-            active ? "border-indigo-500 bg-indigo-500" : "border-[var(--border)]"
+            active ? "border-[var(--primary)] bg-[var(--primary)]" : "border-[var(--border)]"
           }`}
         >
           {active ? <CheckCircle2 className="h-3 w-3 text-white" /> : null}
@@ -1485,8 +1485,8 @@ function ObjectiveQuestionCard({
               onClick={() => onChange(question.id, option)}
               className={`rounded-xl border px-4 py-3 text-left text-sm transition-all ${
                 value === option
-                  ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-400"
-                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-indigo-500/20"
+                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
               }`}
             >
               {option}

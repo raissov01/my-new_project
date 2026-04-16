@@ -24,7 +24,7 @@ export default async function CollectionsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
@@ -73,7 +73,7 @@ export default async function CollectionsPage() {
         />
       </div>
 
-      <div className="mt-8 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+      <div className="mt-8 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-[var(--text-primary)]">
@@ -132,8 +132,8 @@ function CollectionStatCard({
   value: string;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--bg-soft)] text-indigo-400">
+    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)]">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--bg-soft)] text-[var(--primary)]">
         <Icon className="h-5 w-5" />
       </div>
       <p className="mt-4 text-sm text-[var(--text-secondary)]">{label}</p>

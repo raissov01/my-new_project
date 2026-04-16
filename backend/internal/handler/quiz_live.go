@@ -333,6 +333,23 @@ func buildLiveQuiz(quiz *models.Quiz) *hub.LiveQuiz {
 				lq.MatchCorrect = correct
 			}
 		}
+		if q.HotspotZones != nil && *q.HotspotZones != "" {
+			type zone struct {
+				ID    int     `json:"id"`
+				X     float64 `json:"x"`
+				Y     float64 `json:"y"`
+				R     float64 `json:"r"`
+				Label string  `json:"label,omitempty"`
+			}
+			var zones []zone
+			if err := json.Unmarshal([]byte(*q.HotspotZones), &zones); err == nil {
+				liveZones := make([]hub.LiveHotspotZone, len(zones))
+				for k, z := range zones {
+					liveZones[k] = hub.LiveHotspotZone{ID: z.ID, X: z.X, Y: z.Y, R: z.R, Label: z.Label}
+				}
+				lq.HotspotZones = liveZones
+			}
+		}
 		questions = append(questions, lq)
 	}
 	return &hub.LiveQuiz{

@@ -70,7 +70,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
         {t("quiz.backToLibrary")}
       </Link>
 
-      <section className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <section className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-3xl">
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
@@ -190,7 +190,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
           {quiz.questions.map((question, index) => (
             <article
               key={question.id}
-              className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]"
+              className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -218,7 +218,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                     return (
                       <div
                         key={key}
-                        className={`rounded-[1.2rem] border px-4 py-3 text-sm ${
+                        className={`rounded-[var(--radius-lg)] border px-4 py-3 text-sm ${
                           isCorrect
                             ? "border-emerald-500/25 bg-emerald-500/10 text-[var(--text-primary)]"
                             : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-secondary)]"
@@ -282,7 +282,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)]">
+    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)]">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
         {label}
       </p>
@@ -313,7 +313,7 @@ function AccuracyRow({
         : "bg-red-500";
 
   return (
-    <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 shadow-[var(--shadow-sm)]">
+    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 shadow-[var(--shadow-sm)]">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm font-medium text-[var(--text-primary)]">
           <span className="mr-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">

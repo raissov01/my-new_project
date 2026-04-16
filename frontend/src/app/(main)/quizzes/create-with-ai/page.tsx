@@ -23,7 +23,7 @@ export default async function CreateQuizWithAIPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
           {t("quiz.ai.eyebrow")}
         </p>

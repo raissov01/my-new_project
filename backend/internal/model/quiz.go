@@ -6,6 +6,18 @@ type MatchPair struct {
 	Right string `json:"right"`
 }
 
+// HotspotZone is one clickable circle on a hotspot question image.
+// X, Y are the centre coordinates as a percentage of the image (0–100).
+// R is the radius as a percentage of the image width (0–100, default 8).
+// The correct zone is identified by QuizQuestion.CorrectOption (the zone ID as a string).
+type HotspotZone struct {
+	ID    int     `json:"id"`
+	X     float64 `json:"x"`
+	Y     float64 `json:"y"`
+	R     float64 `json:"r"`
+	Label string  `json:"label,omitempty"`
+}
+
 // QuizQuestionInput is a question to create or update inside a quiz.
 // On update, pass ID to keep an existing question (preserves attempt history);
 // omit ID to insert a new one.
@@ -26,11 +38,12 @@ type QuizQuestionInput struct {
 	OptionD       string      `json:"optionD,omitempty"`
 	CorrectOption string      `json:"correctOption,omitempty"`
 	BlankAnswer   string      `json:"blankAnswer,omitempty"`
-	ReorderItems  []string    `json:"reorderItems,omitempty"`
-	MatchPairs    []MatchPair `json:"matchPairs,omitempty"`
-	ImageURL      string      `json:"imageUrl,omitempty"`
-	Explanation   string      `json:"explanation,omitempty"`
-	Hint          string      `json:"hint,omitempty"`
+	ReorderItems  []string      `json:"reorderItems,omitempty"`
+	MatchPairs    []MatchPair   `json:"matchPairs,omitempty"`
+	HotspotZones  []HotspotZone `json:"hotspotZones,omitempty"`
+	ImageURL      string        `json:"imageUrl,omitempty"`
+	Explanation   string        `json:"explanation,omitempty"`
+	Hint          string        `json:"hint,omitempty"`
 }
 
 // CreateQuizRequest is the input for creating a quiz.
@@ -98,12 +111,13 @@ type QuizQuestionDTO struct {
 	OptionD       string      `json:"optionD,omitempty"`
 	CorrectOption *string     `json:"correctOption,omitempty"`
 	BlankAnswer   *string     `json:"blankAnswer,omitempty"`
-	ReorderItems  []string    `json:"reorderItems,omitempty"`
-	MatchPairs    []MatchPair `json:"matchPairs,omitempty"`
-	ImageURL      *string     `json:"imageUrl,omitempty"`
-	Explanation   *string     `json:"explanation,omitempty"`
-	Hint          *string     `json:"hint,omitempty"`
-	OrderIndex    int         `json:"orderIndex"`
+	ReorderItems  []string      `json:"reorderItems,omitempty"`
+	MatchPairs    []MatchPair   `json:"matchPairs,omitempty"`
+	HotspotZones  []HotspotZone `json:"hotspotZones,omitempty"`
+	ImageURL      *string       `json:"imageUrl,omitempty"`
+	Explanation   *string       `json:"explanation,omitempty"`
+	Hint          *string       `json:"hint,omitempty"`
+	OrderIndex    int           `json:"orderIndex"`
 }
 
 // QuizDetail is the full quiz response with questions.
@@ -168,12 +182,13 @@ type AttemptAnswerResult struct {
 	BlankAnswer    *string     `json:"blankAnswer,omitempty"`
 	OrderAnswer    []string    `json:"orderAnswer,omitempty"`
 	ReorderItems   []string    `json:"reorderItems,omitempty"`
-	MatchPairs     []MatchPair `json:"matchPairs,omitempty"`
-	ImageURL       *string     `json:"imageUrl,omitempty"`
-	Explanation    *string     `json:"explanation,omitempty"`
-	IsCorrect      bool        `json:"isCorrect"`
-	TimeSpent      int         `json:"timeSpent"`
-	OrderIndex     int         `json:"orderIndex"`
+	MatchPairs     []MatchPair   `json:"matchPairs,omitempty"`
+	HotspotZones   []HotspotZone `json:"hotspotZones,omitempty"`
+	ImageURL       *string       `json:"imageUrl,omitempty"`
+	Explanation    *string       `json:"explanation,omitempty"`
+	IsCorrect      bool          `json:"isCorrect"`
+	TimeSpent      int           `json:"timeSpent"`
+	OrderIndex     int           `json:"orderIndex"`
 }
 
 // AttemptResult is the full graded response returned to the client.

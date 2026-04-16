@@ -84,11 +84,23 @@ type LiveQuestion struct {
 	ReorderItems   []string    `json:"-"`                      // canonical correct order, never sent to players
 	ReorderDisplay []string    `json:"reorderItems,omitempty"` // shuffled display order, sent to clients
 	// Matching: MatchLeft / MatchRight sent to players; MatchCorrect held server-side.
-	MatchLeft      []string             `json:"matchLeft,omitempty"`   // left column items
-	MatchRight     []string             `json:"matchRight,omitempty"`  // shuffled right column items
-	MatchCorrect   map[string]string    `json:"-"`                     // left→right, never sent
-	ImageURL       string               `json:"imageUrl,omitempty"`
-	TimeLimit      int                  `json:"timeLimit"` // seconds
+	MatchLeft      []string          `json:"matchLeft,omitempty"`   // left column items
+	MatchRight     []string          `json:"matchRight,omitempty"`  // shuffled right column items
+	MatchCorrect   map[string]string `json:"-"`                     // left→right, never sent
+	// Hotspot: zone positions sent to players (no correct field); correct zone ID in CorrectOption.
+	HotspotZones []LiveHotspotZone `json:"hotspotZones,omitempty"`
+	ImageURL     string            `json:"imageUrl,omitempty"`
+	TimeLimit    int               `json:"timeLimit"` // seconds
+}
+
+// LiveHotspotZone is a clickable circle zone sent to quiz players.
+// The correct zone is identified by LiveQuestion.CorrectOption (zone ID as string).
+type LiveHotspotZone struct {
+	ID    int     `json:"id"`
+	X     float64 `json:"x"`
+	Y     float64 `json:"y"`
+	R     float64 `json:"r"`
+	Label string  `json:"label,omitempty"`
 }
 
 type LiveQuiz struct {
@@ -393,7 +405,7 @@ func (r *Room) endQuestion(timedOut bool) {
 		Leaderboard:   lb,
 	}
 	switch q.QuestionType {
-	case "mcq", "true_false", "mcq_multi":
+	case "mcq", "true_false", "mcq_multi", "hotspot":
 		evt.CorrectOption = q.CorrectOption
 	case "fill_blank":
 		evt.BlankAnswer = q.BlankAnswer
@@ -536,7 +548,7 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 	// Grade the answer
 	var isCorrect bool
 	switch q.QuestionType {
-	case "mcq", "true_false":
+	case "mcq", "true_false", "hotspot":
 		isCorrect = strings.EqualFold(req.Option, q.CorrectOption)
 	case "mcq_multi":
 		isCorrect = liveMultiMatch(req.Option, q.CorrectOption)

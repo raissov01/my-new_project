@@ -28,6 +28,8 @@ type SessionState = {
 
 type MatchPair = { left: string; right: string };
 
+type HotspotZone = { id: number; x: number; y: number; r: number; label?: string };
+
 type LiveQuestion = {
   id: string;
   questionText: string;
@@ -39,6 +41,7 @@ type LiveQuestion = {
   reorderItems?: string[]; // shuffled display order for reorder questions
   matchLeft?: string[];    // left column items for matching questions
   matchRight?: string[];   // shuffled right column items for matching questions
+  hotspotZones?: HotspotZone[];
   timeLimit: number;
   imageUrl?: string;
 };
@@ -427,6 +430,7 @@ function LiveGameInner() {
           pid={pid}
           t={t}
           prevRanks={prevLbRanks}
+          currentQuestion={currentQEvt?.question ?? null}
         />
       )}
 
@@ -505,7 +509,7 @@ function QuestionScreen({
 
       {/* Question */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {q.imageUrl ? (
+      {q.imageUrl && q.questionType !== "hotspot" ? (
         <img
           src={q.imageUrl}
           alt=""
@@ -714,6 +718,16 @@ function QuestionScreen({
           onSubmit={onMatchSubmit}
         />
       )}
+
+      {q.questionType === "hotspot" && q.imageUrl && q.hotspotZones && (
+        <LiveHotspotInput
+          t={t}
+          imageUrl={q.imageUrl}
+          zones={q.hotspotZones}
+          selected={selectedOpt}
+          onSelect={onSelect}
+        />
+      )}
     </div>
   );
 }
@@ -772,6 +786,80 @@ function LiveMatchingInput({
           ? (t("quiz.live.submitted") || "Submitted")
           : (t("quiz.matching.submitAll") || "Submit all")}
       </Button>
+    </div>
+  );
+}
+
+function LiveHotspotInput({
+  t,
+  imageUrl,
+  zones,
+  selected,
+  onSelect,
+}: {
+  t: (k: string) => string;
+  imageUrl: string;
+  zones: HotspotZone[];
+  selected: string | null;
+  onSelect: (opt: string) => void;
+}) {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (selected) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    let hitZone: HotspotZone | null = null;
+    let minDist = Infinity;
+    for (const z of zones) {
+      const dx = x - z.x;
+      const dy = y - z.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist <= z.r && dist < minDist) {
+        minDist = dist;
+        hitZone = z;
+      }
+    }
+    if (hitZone) {
+      onSelect(String(hitZone.id));
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-[var(--text-muted)]">
+        {t("quiz.hotspot.clickToAnswer") || "Click a zone to answer"}
+      </p>
+      <div
+        className={`relative select-none overflow-hidden rounded-[1.2rem] border border-[var(--border)] ${
+          selected ? "cursor-default" : "cursor-crosshair"
+        }`}
+        onClick={handleClick}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imageUrl} alt="" loading="lazy" decoding="async" className="pointer-events-none w-full" />
+        {zones.map((zone) => {
+          const zoneIdStr = String(zone.id);
+          const isChosen = selected === zoneIdStr;
+          return (
+            <div
+              key={zone.id}
+              style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
+              className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-transform ${
+                isChosen
+                  ? "border-[var(--primary)] bg-[var(--primary)] text-white scale-110"
+                  : "border-white/70 bg-[var(--primary)]/70 text-white"
+              }`}
+            >
+              {zone.label || zoneIdStr}
+            </div>
+          );
+        })}
+      </div>
+      {selected ? (
+        <p className="text-center text-xs text-[var(--text-muted)]">
+          {t("quiz.live.submitted") || "Submitted"} — {t("quiz.live.waitingReveal") || "Waiting for reveal…"}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -841,13 +929,23 @@ function RevealedScreen({
   pid,
   t,
   prevRanks,
+  currentQuestion,
 }: {
   ended: QuestionEndedEvt;
   result: AnswerResult | null;
   pid: string;
   t: (k: string) => string;
   prevRanks: Map<string, number>;
+  currentQuestion: LiveQuestion | null;
 }) {
+  const isHotspot = currentQuestion?.questionType === "hotspot";
+  // For hotspot, find zone label from current question
+  const hotspotCorrectLabel = isHotspot && ended.correctOption
+    ? (currentQuestion?.hotspotZones?.find(
+        (z) => String(z.id) === ended.correctOption
+      )?.label ?? ended.correctOption)
+    : null;
+
   return (
     <div className="space-y-5">
       {result ? (
@@ -860,7 +958,11 @@ function RevealedScreen({
             <p className={`font-semibold ${result.isCorrect ? "text-emerald-400" : "text-rose-400"}`}>
               {result.isCorrect ? t("quiz.live.correct") : t("quiz.live.wrong")}
             </p>
-            {ended.correctOption ? (
+            {isHotspot && hotspotCorrectLabel ? (
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                Answer: <span className="font-semibold">{hotspotCorrectLabel}</span>
+              </p>
+            ) : ended.correctOption ? (
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                 Answer: {ended.correctOption.toUpperCase()}
               </p>
@@ -879,7 +981,9 @@ function RevealedScreen({
       ) : (
         <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
           <p className="text-sm text-[var(--text-muted)]">{t("quiz.live.tooSlow")}</p>
-          {ended.correctOption ? (
+          {isHotspot && hotspotCorrectLabel ? (
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">Answer: <span className="font-semibold">{hotspotCorrectLabel}</span></p>
+          ) : ended.correctOption ? (
             <p className="mt-1 text-sm text-[var(--text-secondary)]">Answer: {ended.correctOption.toUpperCase()}</p>
           ) : null}
           {ended.blankAnswer ? (

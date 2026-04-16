@@ -203,7 +203,7 @@ export function AdminPanelClient({
             return (
               <div
                 key={material.id}
-                className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]"
+                className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)]"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex min-w-0 items-start gap-3">
@@ -218,7 +218,7 @@ export function AdminPanelClient({
                         <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
                           {t(`admin.cat${material.category[0].toUpperCase()}${material.category.slice(1)}`)}
                         </span>
-                        <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-400">
+                        <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-2.5 py-1 text-xs font-medium text-[var(--primary)]">
                           {t(typeLabels[material.type])}
                         </span>
                         {material.sortOrder > 0 && (
@@ -252,7 +252,7 @@ export function AdminPanelClient({
           })}
         </div>
       ) : (
-        <div className="mt-8 rounded-[1.5rem] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-14 text-center">
+        <div className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-14 text-center">
           <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("admin.emptyTitle")}</h3>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">{t("admin.emptyBody")}</p>
         </div>

@@ -98,7 +98,7 @@ export function StudyClient({
         value: smartSummary.dueCount,
         label: t("study.smartDue"),
         className:
-          "rounded-full bg-indigo-500/10 px-2.5 py-1 text-indigo-700 dark:text-indigo-300",
+          "rounded-full bg-[var(--primary-soft)] px-2.5 py-1 text-[var(--primary)]",
       },
       {
         key: "weak",
@@ -162,7 +162,7 @@ export function StudyClient({
                       onClick={() => handleModeChange(key)}
                       className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors duration-150 sm:flex-none sm:gap-2 sm:px-3 ${
                         mode === key
-                          ? "bg-indigo-600 text-white shadow-sm"
+                          ? "bg-[var(--primary)] text-white shadow-sm"
                           : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
@@ -191,7 +191,7 @@ export function StudyClient({
                       disabled={smartFlashcards.length === 0}
                       className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors sm:flex-none ${
                         smartEnabled
-                          ? "bg-indigo-600 text-white shadow-sm"
+                          ? "bg-[var(--primary)] text-white shadow-sm"
                           : "text-[var(--text-muted)]"
                       }`}
                     >

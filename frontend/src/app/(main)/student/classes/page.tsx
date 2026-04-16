@@ -79,7 +79,7 @@ export default async function StudentClassesPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.2fr]">
-        <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)]">
+        <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)]">
           <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
             {t("student.classesEyebrow")}
           </p>
@@ -108,11 +108,11 @@ export default async function StudentClassesPage() {
           </form>
         </section>
 
-        <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+        <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-indigo-400" />
+                <Users className="h-5 w-5 text-[var(--primary)]" />
                 <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                 {t("student.myClasses")}
                 </h2>
@@ -131,7 +131,7 @@ export default async function StudentClassesPage() {
               summary.classes.map((group) => (
                 <div
                   key={group.id}
-                  className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
+                  className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
@@ -168,7 +168,7 @@ export default async function StudentClassesPage() {
                 </div>
               ))
             ) : (
-              <div className="rounded-[1.5rem] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10">
+              <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10">
                 <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
                   {t("student.noClassesTitle")}
@@ -182,9 +182,9 @@ export default async function StudentClassesPage() {
         </section>
       </div>
 
-      <section className="mt-8 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+      <section className="mt-8 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
         <div className="flex items-center gap-2">
-          <ListChecks className="h-5 w-5 text-indigo-400" />
+          <ListChecks className="h-5 w-5 text-[var(--primary)]" />
           <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
             {t("classroom.assignedQuizzes")}
           </h2>
@@ -198,7 +198,7 @@ export default async function StudentClassesPage() {
             quizAssignments.map((assignment) => (
               <article
                 key={assignment.id}
-                className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
+                className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -257,7 +257,7 @@ export default async function StudentClassesPage() {
               </article>
             ))
           ) : (
-            <div className="rounded-[1.5rem] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10 text-center">
+            <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10 text-center">
               <Sparkles className="mx-auto h-5 w-5 text-[var(--text-muted)]" />
               <p className="mt-3 text-lg font-semibold text-[var(--text-primary)]">
                 {t("classroom.noQuizAssignmentsStudentTitle")}

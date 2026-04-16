@@ -37,7 +37,7 @@ export function DashboardStats({ stats, locale }: DashboardStatsProps) {
   return (
     <div className="space-y-4 stagger-children sm:space-y-5">
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className={`glass-card relative overflow-hidden rounded-2xl bg-gradient-to-br ${streakTone} p-4 sm:p-6`}>
+        <div className={`rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] relative overflow-hidden p-4 sm:p-6`}>
           <div className="absolute right-4 top-4 h-16 w-16 rounded-full bg-orange-400/10 blur-2xl" />
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -105,7 +105,7 @@ export function DashboardStats({ stats, locale }: DashboardStatsProps) {
           )}
         </div>
 
-        <div className="glass-card rounded-2xl p-4 sm:p-6">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-6">
           <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
             <Star className="h-4 w-4 text-amber-500" />
             {t("stats.xpProgress")}
@@ -166,7 +166,7 @@ export function DashboardStats({ stats, locale }: DashboardStatsProps) {
 
       {/* Continue learning banner */}
       {(stats.smart.dueToday > 0 || stats.smart.weakCards > 0) && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 p-4 text-white shadow-lg shadow-indigo-500/20 sm:p-6">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 p-4 text-white shadow-[var(--shadow-lg)] sm:p-6">
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
           <div className="absolute -bottom-4 -left-4 h-24 w-24 rounded-full bg-white/5" />
           <h3 className="relative flex items-center gap-2 text-lg font-bold">
@@ -203,33 +203,29 @@ export function DashboardStats({ stats, locale }: DashboardStatsProps) {
           label={t("stats.cardsStudied")}
           value={stats.totalStudied.toLocaleString()}
           gradient="from-indigo-500 to-purple-500"
-          shadow="shadow-indigo-500/15"
         />
         <StatCard
           icon={Target}
           label={t("stats.accuracy")}
           value={`${stats.accuracy}%`}
           gradient="from-emerald-500 to-teal-500"
-          shadow="shadow-emerald-500/15"
         />
         <StatCard
           icon={CheckCircle2}
           label={t("stats.correct")}
           value={stats.totalCorrect.toLocaleString()}
           gradient="from-green-500 to-emerald-500"
-          shadow="shadow-green-500/15"
         />
         <StatCard
           icon={XCircle}
           label={t("stats.incorrect")}
           value={stats.totalIncorrect.toLocaleString()}
           gradient="from-red-500 to-rose-500"
-          shadow="shadow-red-500/15"
         />
       </div>
 
       {stats.achievements.length > 0 && (
-        <div className="glass-card rounded-2xl p-4 sm:p-6">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-6">
           <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
             <Award className="h-4 w-4 text-amber-500" />
             {t("stats.achievements")}
@@ -292,18 +288,16 @@ function StatCard({
   label,
   value,
   gradient,
-  shadow,
 }: {
   icon: typeof BookOpen;
   label: string;
   value: string;
   gradient: string;
-  shadow: string;
 }) {
   return (
-    <div className="glass-card hover-lift rounded-2xl p-5">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 transition-transform hover:-translate-y-0.5">
       <div className="flex items-center gap-3">
-        <div className={`rounded-xl bg-gradient-to-br ${gradient} p-2.5 shadow-md ${shadow}`}>
+        <div className={`rounded-xl bg-gradient-to-br ${gradient} p-2.5 shadow-[var(--shadow-sm)]`}>
           <Icon className="h-4 w-4 text-white" />
         </div>
         <div>

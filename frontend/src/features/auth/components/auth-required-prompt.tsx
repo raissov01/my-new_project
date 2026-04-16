@@ -47,7 +47,7 @@ export function AuthRequiredPrompt({
         <div className="space-y-4">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-indigo-500/12 p-2 text-indigo-400">
+              <div className="rounded-2xl bg-[var(--primary-soft)] p-2 text-[var(--primary)]">
                 <Sparkles className="h-5 w-5" />
               </div>
               <p className="text-sm leading-6 text-[var(--text-secondary)]">{description}</p>

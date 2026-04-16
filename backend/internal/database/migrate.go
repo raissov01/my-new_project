@@ -91,9 +91,10 @@ func AutoMigrate(db *gorm.DB) error {
 	db.Exec(`ALTER TABLE quiz_questions ALTER COLUMN correct_option DROP NOT NULL`)
 	db.Exec(`ALTER TABLE quiz_questions ALTER COLUMN correct_option TYPE varchar(2)`)
 	db.Exec(`ALTER TABLE quiz_questions DROP CONSTRAINT IF EXISTS chk_quiz_questions_question_type`)
-	db.Exec(`ALTER TABLE quiz_questions ADD CONSTRAINT chk_quiz_questions_question_type CHECK (question_type IN ('mcq','mcq_multi','true_false','fill_blank','reorder','matching'))`)
+	db.Exec(`ALTER TABLE quiz_questions ADD CONSTRAINT chk_quiz_questions_question_type CHECK (question_type IN ('mcq','mcq_multi','true_false','fill_blank','reorder','matching','hotspot'))`)
 	db.Exec(`ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS hint TEXT`)
 	db.Exec(`ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS match_pairs JSONB`)
+	db.Exec(`ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS hotspot_zones JSONB`)
 
 	// Widen quiz_attempt_answers.selected_option for 't'/'f' on true_false questions.
 	db.Exec(`ALTER TABLE quiz_attempt_answers ALTER COLUMN selected_option TYPE varchar(2)`)

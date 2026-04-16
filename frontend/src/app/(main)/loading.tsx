@@ -1,7 +1,7 @@
 export default function MainLoading() {
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <section className="rounded-[1.9rem] border border-[var(--border)] bg-[rgba(255,255,255,0.04)] p-4 shadow-[var(--surface-shadow-strong)] sm:rounded-[2.2rem] sm:p-8">
+      <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-soft)] p-4 shadow-[var(--shadow-xl)] sm:rounded-[var(--radius-2xl)] sm:p-8">
         <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
           <div>
             <div className="h-8 w-36 animate-pulse rounded-full bg-[var(--border)]" />
@@ -17,7 +17,7 @@ export default function MainLoading() {
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={index}
-                className="h-28 animate-pulse rounded-[1.45rem] border border-[var(--border)] bg-[rgba(255,255,255,0.04)]"
+                className="h-28 animate-pulse rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-soft)]"
               />
             ))}
           </div>
@@ -28,7 +28,7 @@ export default function MainLoading() {
         {Array.from({ length: 6 }).map((_, index) => (
           <div
             key={index}
-            className="h-56 animate-pulse rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--surface-shadow)]"
+            className="h-56 animate-pulse rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-sm)]"
           />
         ))}
       </section>

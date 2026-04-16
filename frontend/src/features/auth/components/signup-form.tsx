@@ -92,9 +92,9 @@ export function SignupForm() {
   // Success message screen
   if (message) {
     return (
-      <div className="animate-confetti-pop rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+      <div className="animate-confetti-pop rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-md shadow-emerald-500/20 sm:h-14 sm:w-14">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 sm:h-14 sm:w-14">
             <CheckCircle2 className="h-7 w-7 text-white" />
           </div>
           <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mt-5 sm:text-2xl">{t("auth.checkEmail")}</h2>
@@ -116,7 +116,7 @@ export function SignupForm() {
 
         <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)]">
           {t("verify.alreadyVerified")}{" "}
-          <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
+          <Link href="/login" className="font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]">
             {t("auth.logIn")}
           </Link>
         </p>
@@ -125,10 +125,10 @@ export function SignupForm() {
   }
 
   return (
-    <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+    <div className="animate-scale-in rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-xl)] sm:p-8">
       <div className="mb-6 text-center sm:mb-8">
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] sm:h-12 sm:w-12">
-          <ShieldCheck className="h-5 w-5 text-indigo-400" />
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] sm:h-12 sm:w-12">
+          <ShieldCheck className="h-5 w-5 text-[var(--primary)]" />
         </div>
         <h1 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:mt-5 sm:text-3xl">{t("auth.createAccount")}</h1>
         <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{t("auth.startStudying")}</p>
@@ -140,9 +140,9 @@ export function SignupForm() {
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-all sm:p-4 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-lg)] border p-3.5 transition-all sm:p-4 ${
               selectedRole === "student"
-                ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--surface-shadow)]"
+                ? "border-[var(--primary)] bg-[var(--primary-soft)]"
                 : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
             }`}
           >
@@ -154,7 +154,7 @@ export function SignupForm() {
               disabled={isDisabled}
               className="sr-only"
             />
-            <div className={`mt-0.5 rounded-xl p-2 sm:p-2.5 ${selectedRole === "student" ? "bg-indigo-500/15 text-indigo-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
+            <div className={`mt-0.5 rounded-[var(--radius-md)] p-2 sm:p-2.5 ${selectedRole === "student" ? "bg-[var(--primary)]/10 text-[var(--primary)]" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
               <GraduationCap className="h-5 w-5" />
             </div>
             <div>
@@ -165,9 +165,9 @@ export function SignupForm() {
             </div>
           </label>
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-all sm:p-4 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-lg)] border p-3.5 transition-all sm:p-4 ${
               selectedRole === "teacher"
-                ? "border-emerald-500/30 bg-emerald-500/6 shadow-[var(--surface-shadow)]"
+                ? "border-emerald-500/30 bg-emerald-500/8"
                 : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
             }`}
           >
@@ -179,7 +179,7 @@ export function SignupForm() {
               disabled={isDisabled}
               className="sr-only"
             />
-            <div className={`mt-0.5 rounded-xl p-2 sm:p-2.5 ${selectedRole === "teacher" ? "bg-emerald-500/15 text-emerald-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
+            <div className={`mt-0.5 rounded-[var(--radius-md)] p-2 sm:p-2.5 ${selectedRole === "teacher" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-[var(--bg-elevated)] text-[var(--text-muted)]"}`}>
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
@@ -197,7 +197,7 @@ export function SignupForm() {
           type="button"
           onClick={() => handleSocial("google")}
           disabled={isDisabled}
-          className="flex min-h-11 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12"
+          className="flex min-h-11 w-full items-center justify-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--shadow-xs)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12"
         >
           <GoogleIcon className="h-5 w-5" />
           {socialPending === "google" ? "..." : t("auth.continueWithGoogle")}
@@ -240,7 +240,7 @@ export function SignupForm() {
         <input type="hidden" name="role" value={selectedRole} />
 
         {error && (
-          <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+          <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-600 dark:text-red-400">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -253,7 +253,7 @@ export function SignupForm() {
 
       <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("auth.haveAccount")}{" "}
-        <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
+        <Link href="/login" className="font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]">
           {t("auth.logIn")}
         </Link>
       </p>
@@ -322,14 +322,14 @@ function ResendVerificationForm() {
       />
 
       {error && (
-        <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+        <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-600 dark:text-red-400">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="flex items-start gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-300">
+        <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{success}</span>
         </div>

@@ -52,7 +52,7 @@ export default async function StudyPage({
         </p>
         <Link
           href={`/sets/${id}/edit`}
-          className="mt-4 inline-block text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+          className="mt-4 inline-block text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]"
         >
           {t("set.editSetLink")}
         </Link>
@@ -118,7 +118,7 @@ export default async function StudyPage({
           {set.title}
         </h1>
         {mode && (
-          <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-700">
+          <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 text-xs font-medium text-[var(--primary)]">
             {studyLabel}
           </span>
         )}

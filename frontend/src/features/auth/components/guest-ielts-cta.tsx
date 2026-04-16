@@ -12,7 +12,7 @@ export function GuestIELTSCta() {
 
   if (loading) {
     return (
-      <section className="mt-8 rounded-[1.75rem] border border-[var(--border)] bg-[rgba(255,255,255,0.04)] p-6 shadow-[var(--surface-shadow)] sm:p-8">
+      <section className="mt-8 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-soft)] p-6 shadow-[var(--shadow-sm)] sm:p-8">
         <div className="mx-auto h-8 w-8 animate-pulse rounded-full bg-[var(--border)]" />
         <div className="mx-auto mt-4 h-8 w-56 animate-pulse rounded-xl bg-[var(--border)]" />
         <div className="mx-auto mt-3 h-4 w-full max-w-lg animate-pulse rounded-lg bg-[var(--border)]" />
@@ -30,8 +30,8 @@ export function GuestIELTSCta() {
   }
 
   return (
-    <section className="mt-8 rounded-[1.75rem] border border-indigo-500/15 bg-indigo-500/5 p-6 text-center sm:p-8">
-      <Sparkles className="mx-auto h-8 w-8 text-indigo-400" />
+    <section className="mt-8 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-soft)] p-6 text-center sm:p-8">
+      <Sparkles className="mx-auto h-8 w-8 text-[var(--primary)]" />
       <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)] sm:text-2xl">
         {t("ielts.ctaTitle")}
       </h2>

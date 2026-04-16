@@ -22,7 +22,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={id}
           className={cn(
-            "block h-11 w-full rounded-[var(--radius-md)] border bg-[var(--bg-surface)] px-3.5 text-sm text-[var(--text-primary)] shadow-[var(--shadow-xs)] transition-all duration-200 placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:px-4",
+            "block h-10 w-full rounded-[var(--radius-md)] border bg-[var(--bg-surface)] px-3 text-sm text-[var(--text-primary)] transition-all duration-150 placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:px-3.5",
             error
               ? "border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger-soft)]"
               : "border-[var(--border)]",

@@ -22,7 +22,7 @@ export default async function StudentChallengesPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
           {t("student.challengesEyebrow")}
         </p>
@@ -39,7 +39,7 @@ export default async function StudentChallengesPage() {
           challenges.map((challenge) => (
             <div
               key={challenge.id}
-              className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]"
+              className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)]"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -69,7 +69,7 @@ export default async function StudentChallengesPage() {
             </div>
           ))
         ) : (
-          <div className="rounded-[1.5rem] border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-10 shadow-[var(--surface-shadow)]">
+          <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-10 shadow-[var(--shadow-sm)]">
             <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
             <p className="text-lg font-semibold text-[var(--text-primary)]">
               {t("student.noChallengesTitle")}

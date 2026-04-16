@@ -44,7 +44,7 @@ export function PersonalizedRecommendations({
                 : t("recommend.basedOnMistakes")}
             </p>
           </div>
-          <div className="rounded-2xl bg-indigo-500/10 p-3 text-indigo-600 dark:text-indigo-300">
+          <div className="rounded-2xl bg-[var(--primary-soft)] p-3 text-[var(--primary)]">
             <Sparkles className="h-5 w-5" />
           </div>
         </div>
@@ -65,7 +65,7 @@ export function PersonalizedRecommendations({
               </div>
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--text-secondary)]">
                 <span className="inline-flex items-center gap-1.5">
-                  <TimerReset className="h-4 w-4 text-indigo-500" />
+                  <TimerReset className="h-4 w-4 text-[var(--primary)]" />
                   {t("recommend.estimatedTime", {
                     minutes: data.todayFocus.estimatedMinutes,
                   })}
@@ -114,7 +114,7 @@ export function PersonalizedRecommendations({
         )}
       </section>
 
-      <section className="glass-card ui-section">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 sm:p-6">
         <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
           <Sparkles className="h-4 w-4 text-amber-500" />
           {t("recommend.recommendedForYou")}
@@ -137,7 +137,7 @@ export function PersonalizedRecommendations({
                       {formatDate(set.createdAt, locale)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-indigo-500/10 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                  <span className="rounded-full bg-[var(--primary-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--primary)]">
                     {set.cardCount} {set.cardCount === 1 ? t("set.card") : t("set.cards")}
                   </span>
                 </div>
@@ -148,7 +148,7 @@ export function PersonalizedRecommendations({
                 )}
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
                   {set.reviewCount > 0 && (
-                    <span className="rounded-full bg-indigo-500/10 px-2.5 py-1 text-indigo-700 dark:text-indigo-300">
+                    <span className="rounded-full bg-[var(--primary-soft)] px-2.5 py-1 text-[var(--primary)]">
                       {set.reviewCount} {t("recommend.reviewCards")}
                     </span>
                   )}
@@ -194,9 +194,9 @@ export function PersonalizedRecommendations({
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <section className="glass-card ui-section">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 sm:p-6">
           <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
-            <Zap className="h-4 w-4 text-indigo-500" />
+            <Zap className="h-4 w-4 text-[var(--primary)]" />
             {t("recommend.continueLearning")}
           </div>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -231,7 +231,7 @@ export function PersonalizedRecommendations({
           )}
         </section>
 
-        <section className="glass-card ui-section">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 sm:p-6">
           <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
             <Brain className="h-4 w-4 text-amber-500" />
             {t("recommend.weakTopics")}
@@ -260,7 +260,7 @@ export function PersonalizedRecommendations({
                       <Flag className="mr-1 inline h-3 w-3" />
                       {topic.weakCount} {t("recommend.weakTopics")}
                     </span>
-                    <span className="rounded-full bg-indigo-500/10 px-2.5 py-1 text-indigo-700 dark:text-indigo-300">
+                    <span className="rounded-full bg-[var(--primary-soft)] px-2.5 py-1 text-[var(--primary)]">
                       {topic.reviewCount} {t("recommend.reviewCards")}
                     </span>
                   </div>
@@ -307,7 +307,7 @@ function StatusChip({
 }) {
   const toneClass =
     tone === "indigo"
-      ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
+      ? "bg-[var(--primary-soft)] text-[var(--primary)]"
       : tone === "amber"
         ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
         : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
@@ -329,7 +329,7 @@ function SummaryCard({
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
       <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-        <Icon className="h-4 w-4 text-indigo-500" />
+        <Icon className="h-4 w-4 text-[var(--primary)]" />
         {label}
       </div>
       <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">

@@ -44,11 +44,11 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <section className="relative z-0 overflow-hidden rounded-[1.9rem] border border-white/8 bg-[linear-gradient(135deg,rgba(99,91,255,0.16),rgba(15,23,42,0.94)_42%,rgba(79,124,255,0.1))] p-4 shadow-[var(--surface-shadow-strong)] sm:rounded-[2.2rem] sm:p-8">
+      <section className="relative z-0 overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)] sm:p-8">
         <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
-              <ListChecks className="h-3.5 w-3.5 text-indigo-300" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+              <ListChecks className="h-3.5 w-3.5 text-[var(--text-muted)]" />
               {t("quiz.navLabel")}
             </div>
             <h1 className="mt-4 max-w-[12ch] text-3xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
@@ -111,9 +111,9 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
       </section>
 
       <form className="mt-6">
-        <section className="relative z-0 rounded-[1.7rem] border border-white/8 bg-[rgba(255,255,255,0.04)] p-4 shadow-[var(--surface-shadow)] backdrop-blur-sm sm:p-5">
+        <section className="relative z-0 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
           <div className="grid gap-4 lg:grid-cols-[1.5fr_0.7fr_0.7fr_auto]">
-            <label className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] px-4">
+            <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4">
               <Search className="h-4 w-4 text-[var(--text-muted)]" />
               <input
                 type="search"
@@ -124,7 +124,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
               />
             </label>
 
-            <label className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] px-4">
+            <label className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4">
               <span className="mb-1 block pt-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
                 {t("quiz.filterSubject")}
               </span>
@@ -137,7 +137,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
               />
             </label>
 
-            <label className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] px-4">
+            <label className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4">
               <span className="mb-1 block pt-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
                 {t("quiz.sort")}
               </span>
@@ -182,8 +182,8 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
             </div>
           ) : null}
         </div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[rgba(255,255,255,0.04)] px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
-          <Sparkles className="h-3.5 w-3.5 text-indigo-300" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+          <Sparkles className="h-3.5 w-3.5 text-[var(--text-muted)]" />
           {user ? t("quiz.liveMode") : t("quiz.previewMode")}
         </div>
       </section>
@@ -224,7 +224,7 @@ function LibrarySignal({
   body: string;
 }) {
   return (
-    <div className="rounded-[1.45rem] border border-white/8 bg-[rgba(255,255,255,0.05)] p-4 shadow-[var(--surface-shadow)]">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--text-muted)]">
         {label}
       </p>
@@ -238,8 +238,8 @@ function LibrarySignal({
 
 function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <div className="mt-8 rounded-[1.8rem] border border-dashed border-white/10 bg-[rgba(255,255,255,0.03)] px-6 py-16 text-center shadow-[var(--surface-shadow)]">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.04)] text-indigo-300">
+    <div className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-soft)] px-6 py-16 text-center">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-muted)]">
         <Target className="h-5 w-5" />
       </div>
       <h2 className="mt-5 text-xl font-semibold text-[var(--text-primary)]">{title}</h2>

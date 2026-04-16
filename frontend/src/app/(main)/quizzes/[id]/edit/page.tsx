@@ -50,7 +50,7 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
         {t("quiz.backToQuiz")}
       </Link>
 
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
           {t("quiz.editEyebrow")}
         </p>

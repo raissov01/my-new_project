@@ -37,7 +37,7 @@ export function ProfileAvatar({
 
   return (
     <div
-      className={`${sizeClasses[size]} ${className} flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 font-semibold text-white shadow-lg shadow-indigo-500/20`}
+      className={`${sizeClasses[size]} ${className} flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 font-semibold text-white shadow-[var(--shadow-lg)]`}
       aria-label={username}
     >
       {initials}

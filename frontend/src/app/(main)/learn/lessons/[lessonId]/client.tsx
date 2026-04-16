@@ -207,7 +207,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
   return (
     <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4 sm:py-6">
       {/* ── Top bar (sticky on mobile) ── */}
-      <div className="sticky top-14 z-20 -mx-3 mb-3 flex items-center gap-3 border-b border-[var(--border)] bg-[var(--bg-base)]/95 px-3 py-2.5 backdrop-blur-md sm:-mx-4 sm:static sm:mb-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+      <div className="sticky top-14 z-20 -mx-3 mb-3 flex items-center gap-3 border-b border-[var(--border)] bg-[var(--bg-base)] px-3 py-2.5 sm:-mx-4 sm:static sm:mb-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
         <button onClick={() => router.push("/learn/map")} className="flex h-10 w-10 items-center justify-center rounded-xl text-[var(--text-secondary)] active:scale-95">
           <X className="h-5 w-5" />
         </button>

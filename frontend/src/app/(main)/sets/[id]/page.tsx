@@ -93,7 +93,7 @@ export default async function SetDetailPage({
       </Link>
 
       {/* Header */}
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <div>
           <h1 className="text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
             {set.title}
@@ -109,7 +109,7 @@ export default async function SetDetailPage({
               {cards.length} {cards.length === 1 ? t("set.card") : t("set.cards")}
             </span>
             {dueCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(99,91,255,0.18)] bg-indigo-500/10 px-3 py-1.5 text-indigo-400">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-[var(--primary)]">
                 <Zap className="h-4 w-4" />
                 {dueCount} {t("set.dueToday")}
               </span>
@@ -266,9 +266,9 @@ export default async function SetDetailPage({
 
         <div className="grid gap-8 xl:grid-cols-[0.78fr_1.22fr]">
         <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+          <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-indigo-400" />
+              <BarChart3 className="h-5 w-5 text-[var(--primary)]" />
               <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
                 {t("sets.stats")}
               </h2>
@@ -282,8 +282,8 @@ export default async function SetDetailPage({
           </div>
 
           {reviewCount > 0 && (
-            <div className="rounded-[1.75rem] border border-[rgba(99,91,255,0.18)] bg-indigo-500/6 p-6 shadow-[var(--surface-shadow)]">
-              <div className="flex items-center gap-2 text-sm font-semibold text-indigo-400">
+            <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-soft)] p-6 shadow-[var(--shadow-sm)]">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[var(--primary)]">
                 <Zap className="h-4 w-4" />
                 {t("set.reviewToday")}
               </div>
@@ -295,7 +295,7 @@ export default async function SetDetailPage({
                   <Link
                     href={`/sets/${id}/study?mode=review`}
                     prefetch
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-400 hover:text-indigo-300"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)]"
                   >
                     {t("set.reviewSession")}
                   </Link>
@@ -309,7 +309,7 @@ export default async function SetDetailPage({
                     cancelLabel={t("set.cancel")}
                     variant="ghost"
                     icon={<Zap className="h-4 w-4" />}
-                    className="px-0 text-indigo-400 hover:bg-transparent hover:text-indigo-300"
+                    className="px-0 text-[var(--primary)] hover:bg-transparent hover:text-[var(--primary-hover)]"
                   />
                 )}
               </div>
@@ -317,7 +317,7 @@ export default async function SetDetailPage({
           )}
         </div>
 
-        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+        <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
           <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
             {t("set.flashcardsPreview")}
           </h2>

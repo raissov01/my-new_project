@@ -120,8 +120,8 @@ function ResetPasswordContent() {
 
   if (successMessage) {
     return (
-      <div className="animate-confetti-pop rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 text-center shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-md shadow-emerald-500/20 sm:h-14 sm:w-14">
+      <div className="animate-confetti-pop rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 text-center shadow-[var(--shadow-xl)] sm:rounded-[var(--radius-2xl)] sm:p-8">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-[var(--shadow-md)] sm:h-14 sm:w-14">
           <CheckCircle2 className="h-7 w-7 text-white" />
         </div>
         <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mt-5 sm:text-2xl">
@@ -130,7 +130,7 @@ function ResetPasswordContent() {
         <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{successMessage}</p>
         <Link
           href="/login"
-          className="mt-6 inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 px-8 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition-all hover:shadow-lg hover:shadow-indigo-500/30 sm:min-h-12"
+          className="mt-6 inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 px-8 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] sm:min-h-12"
         >
           {t("verify.goToLogin")}
         </Link>
@@ -139,9 +139,9 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+    <div className="animate-scale-in rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:rounded-[var(--radius-2xl)] sm:p-8">
       <div className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 sm:h-14 sm:w-14">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[var(--shadow-md)] sm:h-14 sm:w-14">
           <LockKeyhole className="h-7 w-7 text-white" />
         </div>
         <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mt-5 sm:text-2xl">
@@ -269,7 +269,7 @@ function ResetPasswordContent() {
 
       <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("forgot.rememberPassword")}{" "}
-        <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
+        <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--primary)]">
           {t("auth.logIn")}
         </Link>
       </p>

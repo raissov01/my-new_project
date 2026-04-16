@@ -7,9 +7,10 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot";
 
 export type MatchPair = { left: string; right: string };
+export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string };
 
 export type QuizQuestionInput = {
   id?: string;
@@ -23,6 +24,7 @@ export type QuizQuestionInput = {
   blankAnswer?: string;
   reorderItems?: string[];
   matchPairs?: MatchPair[];
+  hotspotZones?: HotspotZone[];
   imageUrl?: string;
   explanation?: string;
   hint?: string;
@@ -55,6 +57,12 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
       const matchPairs = (q.matchPairs ?? [])
         .map((p) => ({ left: (p.left ?? "").trim(), right: (p.right ?? "").trim() }))
         .filter((p) => p.left.length > 0 && p.right.length > 0);
+      const hotspotZones = (q.hotspotZones ?? [])
+        .filter((z) => typeof z.x === "number" && typeof z.y === "number");
+      // For hotspot, preserve the zone ID as-is; correctOption is already a zone ID string
+      const correctOption = type === "hotspot"
+        ? (q.correctOption ?? "").trim()
+        : (q.correctOption ?? "").trim().toLowerCase();
       return {
         id: q.id,
         questionText: (q.questionText ?? "").trim(),
@@ -63,10 +71,11 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
         optionB: (q.optionB ?? "").trim(),
         optionC: (q.optionC ?? "").trim(),
         optionD: (q.optionD ?? "").trim(),
-        correctOption: (q.correctOption ?? "").trim().toLowerCase(),
+        correctOption,
         blankAnswer: (q.blankAnswer ?? "").trim(),
         reorderItems,
         matchPairs,
+        hotspotZones,
         imageUrl: (q.imageUrl ?? "").trim(),
         explanation: (q.explanation ?? "").trim(),
         hint: (q.hint ?? "").trim(),
@@ -81,7 +90,8 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
         q.optionD ||
         q.blankAnswer ||
         (q.reorderItems && q.reorderItems.length > 0) ||
-        (q.matchPairs && q.matchPairs.length > 0)
+        (q.matchPairs && q.matchPairs.length > 0) ||
+        (q.hotspotZones && q.hotspotZones.length > 0)
     );
 }
 

@@ -12,23 +12,23 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    "border border-transparent bg-[var(--primary)] text-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-8px_rgba(37,99,235,0.4)] hover:bg-[var(--primary-hover)] hover:shadow-[0_1px_2px_rgba(0,0,0,0.05),0_12px_32px_-8px_rgba(37,99,235,0.5)]",
+    "border border-transparent bg-[var(--primary)] text-white shadow-[var(--shadow-sm)] hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-md)]",
   accent:
-    "border border-transparent bg-[var(--accent)] text-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-8px_rgba(249,115,22,0.4)] hover:bg-[var(--accent-hover)] hover:shadow-[0_1px_2px_rgba(0,0,0,0.05),0_12px_32px_-8px_rgba(249,115,22,0.5)]",
+    "border border-transparent bg-[var(--accent)] text-white shadow-[var(--shadow-sm)] hover:bg-[var(--accent-hover)] hover:shadow-[var(--shadow-md)]",
   secondary:
-    "border border-[var(--border)] bg-[var(--bg-soft)] text-[var(--text-primary)] shadow-[var(--shadow-xs)] hover:bg-[var(--bg-muted)] hover:border-[var(--border-strong)]",
+    "border border-[var(--border)] bg-[var(--bg-soft)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)] hover:border-[var(--border-strong)]",
   outline:
     "border border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)]",
   ghost:
     "border border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]",
   danger:
-    "border border-transparent bg-[var(--danger)] text-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-8px_rgba(239,68,68,0.4)] hover:bg-red-500",
+    "border border-transparent bg-[var(--danger)] text-white shadow-[var(--shadow-sm)] hover:bg-red-500 hover:shadow-[var(--shadow-md)]",
 };
 
 const sizeStyles: Record<Size, string> = {
-  sm: "h-9 rounded-lg px-3 text-[13px] gap-1.5",
-  md: "h-10 rounded-[var(--radius-md)] px-4 text-sm sm:h-11",
-  lg: "h-11 rounded-[var(--radius-lg)] px-5 text-sm sm:h-12 sm:px-6 sm:text-[15px]",
+  sm: "h-8 rounded-[var(--radius-md)] px-3 text-[13px] gap-1.5",
+  md: "h-9 rounded-[var(--radius-md)] px-4 text-sm sm:h-10",
+  lg: "h-10 rounded-[var(--radius-lg)] px-5 text-sm sm:h-11 sm:px-6",
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -49,7 +49,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={cn(
-          "click-scale inline-flex items-center justify-center gap-2 whitespace-nowrap text-center font-semibold tracking-[-0.01em] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)] disabled:pointer-events-none disabled:opacity-50",
+          "click-scale inline-flex items-center justify-center gap-2 whitespace-nowrap text-center font-medium tracking-[-0.01em] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)] disabled:pointer-events-none disabled:opacity-40",
           variantStyles[variant],
           sizeStyles[size],
           className

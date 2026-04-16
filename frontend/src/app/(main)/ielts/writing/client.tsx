@@ -220,7 +220,7 @@ export function WritingPracticeClient() {
   if (phase === "select") {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] lg:grid-cols-5">
+        <div className="grid gap-4 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] lg:grid-cols-5">
           <FilterSelect
             label="Task type"
             value={taskType}
@@ -276,7 +276,7 @@ export function WritingPracticeClient() {
           />
         </div>
 
-        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]">
+        <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-semibold text-[var(--text-primary)]">
@@ -286,7 +286,7 @@ export function WritingPracticeClient() {
                 Choose a real IELTS-style task from the question bank or paste your own prompt.
               </p>
             </div>
-            <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-400">
+            <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)]">
               {filteredPrompts.length} tasks
             </span>
           </div>
@@ -318,7 +318,7 @@ export function WritingPracticeClient() {
                       {question.difficulty}
                     </span>
                     {question.bandTarget ? (
-                      <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-[11px] font-medium text-indigo-400">
+                      <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-2.5 py-1 text-[11px] font-medium text-[var(--primary)]">
                         Band {question.bandTarget}
                       </span>
                     ) : null}
@@ -373,8 +373,8 @@ export function WritingPracticeClient() {
   if (phase === "write") {
     return (
       <div className="space-y-4">
-        <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-indigo-400">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)] p-4">
+          <p className="text-xs font-medium uppercase tracking-wider text-[var(--primary)]">
             {taskType === "task1" ? t("ielts.writingTask1") : t("ielts.writingTask2")}
           </p>
           <p className="mt-2 text-sm leading-6 text-[var(--text-primary)]">{prompt}</p>
@@ -429,8 +429,8 @@ export function WritingPracticeClient() {
   if (phase === "evaluating") {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
-          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--bg-surface)] shadow-[var(--shadow-lg)]">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--primary)]" />
         </div>
         <h2 className="mt-6 text-xl font-semibold text-[var(--text-primary)]">
           {t("ielts.wr.evaluating")}
@@ -453,8 +453,8 @@ export function WritingPracticeClient() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col items-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 text-center sm:p-8">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-indigo-500 bg-indigo-500/10">
-            <span className="text-3xl font-bold text-indigo-400">{result.overallBand}</span>
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-[var(--primary)] bg-[var(--primary-soft)]">
+            <span className="text-3xl font-bold text-[var(--primary)]">{result.overallBand}</span>
           </div>
           <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">
             {t("ielts.wr.overallBand")}
@@ -490,7 +490,7 @@ export function WritingPracticeClient() {
 
         <FeedbackSection icon={CheckCircle2} title={t("ielts.wr.strengths")} items={result.feedback.strengths} color="text-emerald-400" />
         <FeedbackSection icon={AlertCircle} title={t("ielts.wr.weaknesses")} items={result.feedback.weaknesses} color="text-red-400" />
-        <FeedbackSection icon={Sparkles} title={t("ielts.wr.suggestions")} items={result.feedback.suggestions} color="text-indigo-400" />
+        <FeedbackSection icon={Sparkles} title={t("ielts.wr.suggestions")} items={result.feedback.suggestions} color="text-[var(--primary)]" />
         <FeedbackSection icon={Target} title="Improvement plan" items={result.feedback.improvementPlan ?? []} color="text-amber-400" />
 
         {result.feedback.bandExplanation ? (
@@ -514,7 +514,7 @@ export function WritingPracticeClient() {
         <IssueSection
           title="Vocabulary upgrades"
           items={result.feedback.vocabularyHighlights ?? []}
-          tone="text-sky-400"
+          tone="text-[var(--text-secondary)]"
         />
 
         <div className="flex flex-wrap gap-3">

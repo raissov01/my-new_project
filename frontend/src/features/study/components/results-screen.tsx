@@ -228,7 +228,7 @@ export function ResultsScreen({
 
         {improvementMessage && (
           <div className="relative mt-5 inline-flex max-w-2xl items-center gap-2 rounded-2xl bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)] shadow-sm">
-            <TrendingUp className="h-4 w-4 text-indigo-500" />
+            <TrendingUp className="h-4 w-4 text-[var(--primary)]" />
             {improvementMessage}
           </div>
         )}
@@ -252,7 +252,7 @@ export function ResultsScreen({
           <div className="relative mt-5">
             <Link
               href={challengeResult.rankingHref}
-              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+              className="inline-flex items-center justify-center rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-hover)]"
             >
               {t("challenge.viewRanking")}
             </Link>
@@ -261,7 +261,7 @@ export function ResultsScreen({
       </div>
 
       {reward && (
-        <div className="glass-card ui-section">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 sm:p-6">
           {leveledUp && (
             <div className="level-up-burst relative mb-4 overflow-hidden rounded-2xl border border-amber-300/50 bg-gradient-to-r from-amber-400/20 via-white to-orange-400/20 px-5 py-4 shadow-sm dark:border-amber-500/20 dark:from-amber-500/10 dark:via-transparent dark:to-orange-500/10">
               <div className="relative flex items-center gap-3">
@@ -312,20 +312,20 @@ export function ResultsScreen({
                       })}
                     </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/70 dark:bg-white/10">
+                  <div className="h-2 overflow-hidden rounded-full bg-[var(--border)]">
                     <div
                       className="progress-shimmer h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 transition-all duration-1000"
                       style={{ width: `${levelInfo.progressPercent}%` }}
                     />
                   </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:bg-white/10 dark:text-amber-300">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-surface)] px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
                     <Zap className="h-3 w-3" />
                     +{reward.pointsEarned} XP
                   </div>
                 </div>
               )}
               <div className="mt-4 grid gap-2">
-                <div className="rounded-2xl bg-white/60 px-4 py-3 dark:bg-white/5">
+                <div className="rounded-2xl bg-[var(--bg-surface)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                     {t("study.levelMeaning")}
                   </p>
@@ -333,7 +333,7 @@ export function ResultsScreen({
                     {reward.currentLevelName} • {reward.currentLevelReward}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-white/60 px-4 py-3 dark:bg-white/5">
+                <div className="rounded-2xl bg-[var(--bg-surface)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                     {t("study.nextUnlock")}
                   </p>
@@ -418,7 +418,7 @@ export function ResultsScreen({
 
       {/* Cards to review */}
       {incorrectCards.length > 0 && (
-        <div className="glass-card animate-scale-in overflow-hidden rounded-2xl">
+        <div className="animate-scale-in overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
           <div className="flex items-center gap-2 border-b border-[var(--border)] px-6 py-4">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">
@@ -477,7 +477,7 @@ function SessionHighlightCard({
   } as const;
 
   return (
-    <div className={`animate-scale-in rounded-3xl border border-white/50 bg-gradient-to-br ${tones[tone]} px-5 py-4 text-left shadow-sm dark:border-white/5`}>
+    <div className={`animate-scale-in rounded-[var(--radius-2xl)] border border-[var(--border)] bg-gradient-to-br ${tones[tone]} px-5 py-4 text-left shadow-[var(--shadow-xs)]`}>
       <div className="flex items-center gap-2 text-sm font-semibold">
         <Icon className="h-4 w-4" />
         {label}

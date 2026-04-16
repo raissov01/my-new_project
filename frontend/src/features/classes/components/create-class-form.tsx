@@ -56,7 +56,7 @@ export function CreateClassForm() {
           rows={6}
           placeholder={t("teacher.inviteStudentsPlaceholder")}
           disabled={isPending}
-          className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] outline-none focus:border-[rgba(99,91,255,0.48)] focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] outline-none focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-60"
         />
       </label>
 

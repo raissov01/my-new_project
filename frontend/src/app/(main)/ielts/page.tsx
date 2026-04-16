@@ -61,9 +61,9 @@ export default async function IELTSHubPage() {
       icon: BarChart3,
       title: "Dashboard",
       body: "Track recent attempts, weak skills, and your AI feedback history.",
-      color: "text-indigo-500 bg-indigo-500/10",
+      color: "text-[var(--primary)] bg-[var(--primary-soft)]",
       badge: null,
-      accent: "group-hover:border-l-indigo-500",
+      accent: "group-hover:border-l-[var(--primary)]",
     },
     {
       href: "/ielts/study-plan",

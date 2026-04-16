@@ -45,7 +45,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             type={visible ? "text" : "password"}
             disabled={disabled}
             className={cn(
-              "block min-h-11 w-full rounded-xl border bg-[var(--bg-surface)] px-3.5 pr-12 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all duration-200 placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:rounded-2xl sm:px-4 sm:pr-14",
+              "block min-h-11 w-full rounded-xl border bg-[var(--bg-surface)] px-3.5 pr-12 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition-all duration-200 placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:rounded-2xl sm:px-4 sm:pr-14",
               error
                 ? "border-red-400/70 focus:border-red-400 focus:ring-red-500/10"
                 : "border-[var(--border)]",

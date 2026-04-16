@@ -10,7 +10,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#7C3AED",
+  themeColor: "#2563eb",
 };
 
 export const metadata: Metadata = {
@@ -60,7 +60,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col noise-overlay">
+      <body className="min-h-full flex flex-col">
         <LocaleProvider initialLocale={initialLocale}>
           <ToastProvider>{children}</ToastProvider>
         </LocaleProvider>

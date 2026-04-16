@@ -54,7 +54,7 @@ export default async function ClassQuizLeaderboardPage({
         {board.groupName}
       </Link>
 
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
           <Trophy className="h-3.5 w-3.5 text-amber-400" />
           {t("classroom.leaderboardTitle")}
@@ -72,7 +72,7 @@ export default async function ClassQuizLeaderboardPage({
         ) : null}
       </div>
 
-      <section className="mt-8 rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-6">
+      <section className="mt-8 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-6">
         {rankedRows.length === 0 ? (
           <p className="py-10 text-center text-sm text-[var(--text-secondary)]">
             {t("classroom.noStudentsInClass")}

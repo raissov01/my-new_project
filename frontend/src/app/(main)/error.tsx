@@ -20,7 +20,7 @@ export default function MainErrorBoundary({
 
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 text-center shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="w-full max-w-md rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 text-center shadow-[var(--shadow-xl)] sm:p-8">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 sm:h-14 sm:w-14">
           <AlertCircle className="h-7 w-7 text-red-500" />
         </div>

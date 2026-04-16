@@ -71,7 +71,7 @@ export function MapClient({
   return (
     <div className="mx-auto max-w-lg px-3 pb-24 pt-4 sm:px-4 sm:pt-6">
       {/* ── Sticky top stats bar (Duolingo-style) ── */}
-      <div className="sticky top-14 z-30 -mx-3 mb-4 border-b border-[var(--border)] bg-[var(--bg-base)]/95 px-3 py-2.5 backdrop-blur-md sm:-mx-4 sm:top-16 sm:px-4">
+      <div className="sticky top-14 z-30 -mx-3 mb-4 border-b border-[var(--border)] bg-[var(--bg-base)] px-3 py-2.5 sm:-mx-4 sm:top-16 sm:px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             {Array.from({ length: 5 }).map((_, i) => (

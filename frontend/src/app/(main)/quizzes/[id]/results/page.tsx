@@ -94,7 +94,7 @@ export default async function QuizResultsPage({
         {t("quiz.backToLibrary")}
       </Link>
 
-      <section className="mt-6 overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow-strong)] sm:p-8 lg:p-10">
+      <section className="mt-6 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-xl)] sm:p-8 lg:p-10">
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-[auto_1fr] lg:items-center">
           <div className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56">
             <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">

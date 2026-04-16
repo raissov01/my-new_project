@@ -73,15 +73,16 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--glass-bg)] backdrop-blur-xl">
+      <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg-surface)]">
         <div className="page-shell">
-          <div className="flex h-14 items-center justify-between gap-3 sm:h-16 sm:gap-4">
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <div className="flex h-14 items-center justify-between gap-4">
+            {/* Left: logo + nav */}
+            <div className="flex min-w-0 items-center gap-6">
               <Link href={homeHref} className="shrink-0">
                 <BrandLogo compact />
               </Link>
 
-              <div className="hidden items-center gap-0.5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-1 xl:flex">
+              <div className="hidden items-center gap-0.5 xl:flex">
                 {userNavItems.map((item) => (
                   <DesktopNavLink
                     key={item.href}
@@ -100,53 +101,51 @@ export function Navbar() {
               )}
             </div>
 
-            <div className="hidden items-center gap-2.5 lg:flex">
+            {/* Right: auth */}
+            <div className="hidden items-center gap-2 lg:flex">
               {loading ? (
                 <>
-                  <div className="h-10 w-28 animate-pulse rounded-[var(--radius-md)] bg-[var(--bg-muted)]" />
-                  <div className="h-10 w-10 animate-pulse rounded-full bg-[var(--bg-muted)]" />
+                  <div className="h-8 w-24 animate-pulse rounded-[var(--radius-md)] bg-[var(--bg-soft)]" />
+                  <div className="h-8 w-8 animate-pulse rounded-full bg-[var(--bg-soft)]" />
                 </>
               ) : user ? (
                 <>
                   <Link href="/sets/new">
                     <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-3.5 w-3.5" />
                       {t("nav.newSet")}
                     </Button>
                   </Link>
                   <AvatarMenu />
                 </>
-              ) : (
+              ) : !DEV_MODE ? (
                 <>
-                  {!DEV_MODE ? (
-                    <>
-                      {!isGhost && (
-                        <button
-                          onClick={enableGhostMode}
-                          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-                        >
-                          <Ghost className="h-4 w-4" />
-                          {t("ghost.browseAsGuest")}
-                        </button>
-                      )}
-                      <Link
-                        href="/login"
-                        className="rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-                      >
-                        {t("nav.logIn")}
-                      </Link>
-                      <Link href="/signup">
-                        <Button size="sm">{t("nav.signUp")}</Button>
-                      </Link>
-                    </>
-                  ) : null}
+                  {!isGhost && (
+                    <button
+                      onClick={enableGhostMode}
+                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                    >
+                      <Ghost className="h-4 w-4" />
+                      {t("ghost.browseAsGuest")}
+                    </button>
+                  )}
+                  <Link
+                    href="/login"
+                    className="rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                  >
+                    {t("nav.logIn")}
+                  </Link>
+                  <Link href="/signup">
+                    <Button size="sm">{t("nav.signUp")}</Button>
+                  </Link>
                 </>
-              )}
+              ) : null}
             </div>
 
+            {/* Mobile hamburger */}
             <div className="flex items-center lg:hidden">
               <button
-                className="tap-target flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] shadow-[var(--shadow-xs)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
+                className="tap-target flex items-center justify-center rounded-[var(--radius-md)] p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] active:scale-95"
                 onClick={() => setDrawerOpen(true)}
                 aria-label={t("nav.toggleMenu")}
               >
@@ -157,19 +156,21 @@ export function Navbar() {
         </div>
       </nav>
 
+      {/* Mobile drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-black/30 animate-fade-in"
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-[min(20rem,90vw)] animate-slide-in-drawer">
-            <div className="flex h-full w-full flex-col border-l border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)]">
-              <div className="flex h-14 items-center justify-between border-b border-[var(--border)] px-4 sm:h-16 sm:px-5">
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-[min(18rem,85vw)] animate-slide-in-drawer">
+            <div className="flex h-full w-full flex-col border-l border-[var(--border)] bg-[var(--bg-surface)]">
+              {/* Drawer header */}
+              <div className="flex h-14 items-center justify-between border-b border-[var(--border)] px-4">
                 <BrandLogo compact />
                 <button
-                  className="tap-target flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
+                  className="tap-target flex items-center justify-center rounded-[var(--radius-md)] p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] active:scale-95"
                   onClick={() => setDrawerOpen(false)}
                   aria-label={t("aria.closeMenu")}
                 >
@@ -177,8 +178,9 @@ export function Navbar() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
-                <div className="space-y-1">
+              {/* Drawer nav */}
+              <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+                <div className="space-y-0.5">
                   {userNavItems.map((item) => (
                     <DrawerLink
                       key={item.href}
@@ -198,9 +200,7 @@ export function Navbar() {
                         active={pathname === "/sets/new"}
                         onClick={() => setDrawerOpen(false)}
                       />
-
-                      <div className="my-3 h-px bg-[var(--border)]" />
-
+                      <div className="my-2 h-px bg-[var(--border)]" />
                       <DrawerLink
                         href="/profile"
                         icon={UserCircle2}
@@ -220,7 +220,7 @@ export function Navbar() {
                 </div>
 
                 {!user && !DEV_MODE && (
-                  <div className="mt-5 space-y-2.5">
+                  <div className="mt-4 space-y-2">
                     {!isGhost && (
                       <Button
                         variant="ghost"
@@ -242,7 +242,7 @@ export function Navbar() {
               </div>
 
               {user && (
-                <div className="safe-bottom border-t border-[var(--border)] px-4 py-4 sm:px-5">
+                <div className="safe-bottom border-t border-[var(--border)] px-4 py-3">
                   <AvatarMenu />
                 </div>
               )}
@@ -275,13 +275,13 @@ function DesktopNavLink({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-all ${
+      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-colors ${
         active
-          ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
-          : "text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+          ? "bg-[var(--bg-soft)] text-[var(--text-primary)]"
+          : "text-[var(--text-secondary)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
       }`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className={`h-4 w-4 ${active ? "text-[var(--primary)]" : ""}`} />
       {label}
     </Link>
   );
@@ -305,13 +305,13 @@ function DrawerLink({
       href={href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`flex min-h-11 items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3 text-sm font-medium transition-all active:bg-[var(--bg-soft)] ${
+      className={`flex min-h-[42px] items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-sm font-medium transition-colors ${
         active
-          ? "bg-[var(--primary-soft)] text-[var(--primary)] border border-[rgba(37,99,235,0.15)]"
-          : "border border-transparent text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
+          ? "bg-[var(--primary-soft)] text-[var(--primary)]"
+          : "text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
       }`}
     >
-      <Icon className={`h-5 w-5 ${active ? "text-[var(--primary)]" : "text-[var(--text-secondary)]"}`} />
+      <Icon className={`h-4 w-4 shrink-0 ${active ? "text-[var(--primary)]" : "text-[var(--text-secondary)]"}`} />
       {label}
     </Link>
   );

@@ -30,7 +30,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   return (
     <Fragment>
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 z-40 bg-black/50 animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />

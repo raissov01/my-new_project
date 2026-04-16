@@ -52,9 +52,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="animate-scale-in rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+    <div className="animate-scale-in rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:rounded-[var(--radius-2xl)] sm:p-8">
       <div className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 sm:h-14 sm:w-14">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[var(--shadow-md)] sm:h-14 sm:w-14">
           <KeyRound className="h-7 w-7 text-white" />
         </div>
         <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mt-5 sm:text-2xl">
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
 
       <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("forgot.rememberPassword")}{" "}
-        <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-indigo-400">
+        <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--primary)]">
           {t("auth.logIn")}
         </Link>
       </p>

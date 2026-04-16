@@ -46,9 +46,9 @@ export default async function ClassQuizStatsPage({ params }: StatsPageProps) {
         {stats.groupName}
       </Link>
 
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
-          <BarChart3 className="h-3.5 w-3.5 text-indigo-400" />
+          <BarChart3 className="h-3.5 w-3.5 text-[var(--primary)]" />
           {t("classroom.teacherStatsTitle")}
         </div>
         <h1 className="mt-4 break-words text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
@@ -103,14 +103,14 @@ export default async function ClassQuizStatsPage({ params }: StatsPageProps) {
 
         <div className="mt-5 space-y-3">
           {stats.questions.length === 0 ? (
-            <p className="rounded-[1.4rem] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-10 text-center text-sm text-[var(--text-secondary)]">
+            <p className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-10 text-center text-sm text-[var(--text-secondary)]">
               {t("classroom.teacherStatsNoData")}
             </p>
           ) : (
             stats.questions.map((q, idx) => (
               <article
                 key={q.questionId}
-                className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]"
+                className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">

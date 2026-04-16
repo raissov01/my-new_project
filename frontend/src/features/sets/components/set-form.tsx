@@ -500,10 +500,10 @@ export function SetForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
       {importVariant === "cta" ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] sm:rounded-[1.75rem] sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(99,91,255,0.18)] bg-[rgba(99,91,255,0.08)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-200">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--primary)]">
                 <Sparkles className="h-3.5 w-3.5" />
                 {t("form.aiGeneratorEyebrow")}
               </div>
@@ -523,7 +523,7 @@ export function SetForm({
           </div>
         </div>
       ) : null}
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] sm:rounded-[1.75rem] sm:p-6">
         <h2 className="mb-3 text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mb-4 sm:text-xl">
           {t("form.setDetails")}
         </h2>
@@ -548,7 +548,7 @@ export function SetForm({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isPending}
-              className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition-all placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:bg-[var(--bg-elevated)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -566,12 +566,12 @@ export function SetForm({
                 onClick={() => setIsPublic(true)}
                 className={`rounded-2xl border px-4 py-4 text-left transition-all ${
                   isPublic
-                    ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--surface-shadow)]"
+                    ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--shadow-sm)]"
                     : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-strong)]"
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-                  <Globe2 className="h-4 w-4 text-indigo-400" />
+                  <Globe2 className="h-4 w-4 text-[var(--primary)]" />
                   {t("form.publicRanking")}
                 </div>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -584,12 +584,12 @@ export function SetForm({
                 onClick={() => setIsPublic(false)}
                 className={`rounded-2xl border px-4 py-4 text-left transition-all ${
                   !isPublic
-                    ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--surface-shadow)]"
+                    ? "border-[rgba(99,91,255,0.28)] bg-[rgba(99,91,255,0.08)] shadow-[var(--shadow-sm)]"
                     : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-strong)]"
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-                  <Lock className="h-4 w-4 text-indigo-400" />
+                  <Lock className="h-4 w-4 text-[var(--primary)]" />
                   {t("form.privateRanking")}
                 </div>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -610,7 +610,7 @@ export function SetForm({
                   onChange={(event) => setInvitedUsers(event.target.value)}
                   placeholder={t("form.invitedUsersPlaceholder")}
                   disabled={isPending}
-                  className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] transition-all placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition-all placeholder:text-[var(--text-muted)] focus:border-[rgba(99,91,255,0.48)] focus:outline-none focus:ring-4 focus:ring-[rgba(99,91,255,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <p className="mt-2 text-xs text-[var(--text-muted)]">
                   {t("form.invitedUsersHelper")}
@@ -621,7 +621,7 @@ export function SetForm({
         </div>
       </div>
       {importVariant === "full" ? (
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] sm:rounded-[1.75rem] sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
@@ -642,7 +642,7 @@ export function SetForm({
         <div className="mt-5 grid gap-4 lg:grid-cols-[1.4fr_0.9fr]">
           <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-              <Brain className="h-4 w-4 text-indigo-400" />
+              <Brain className="h-4 w-4 text-[var(--primary)]" />
               {t("form.aiImportTitle")}
             </div>
             <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -684,7 +684,7 @@ export function SetForm({
                         disabled={isGeneratingImport || isImportingCsv || isPending}
                         className={`flex-1 rounded-2xl border px-3 py-2.5 text-sm font-medium transition-all ${
                           aiLanguage === language.value
-                            ? "border-indigo-500 bg-indigo-500/10 text-indigo-200"
+                            ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
                             : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]"
                         } disabled:cursor-not-allowed disabled:opacity-50`}
                       >
@@ -743,7 +743,7 @@ export function SetForm({
                 {importStage === "success" ? (
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                 ) : (
-                  <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-indigo-300" />
+                  <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-[var(--primary)]" />
                 )}
                 <div className="space-y-1">
                   <p className="font-medium text-[var(--text-primary)]">
@@ -836,7 +836,7 @@ export function SetForm({
         {cards.map((card, index) => (
           <div
             key={card._key}
-            className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--surface-shadow)] sm:rounded-[1.5rem]"
+            className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-sm)] sm:rounded-[1.5rem]"
           >
             <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-2.5 sm:px-6 sm:py-3">
               <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-muted)]">
@@ -878,7 +878,7 @@ export function SetForm({
           type="button"
           onClick={addCard}
           disabled={isPending}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--border)] py-4 text-sm font-medium text-[var(--text-muted)] transition-all hover:border-indigo-400 hover:bg-[rgba(99,91,255,0.05)] hover:text-indigo-300 tap-target sm:rounded-[1.5rem]"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--border)] py-4 text-sm font-medium text-[var(--text-muted)] transition-all hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] tap-target sm:rounded-[1.5rem]"
         >
           <Plus className="h-4 w-4" />
           {t("form.addCard")}

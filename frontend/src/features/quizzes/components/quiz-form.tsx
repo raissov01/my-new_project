@@ -18,6 +18,7 @@ import {
   Type as TypeIcon,
   ListOrdered,
   Shuffle,
+  MapPin,
   ImagePlus,
   Loader2,
   X,
@@ -28,6 +29,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useToast } from "@/components/ui/toast";
 import type {
   CreateQuizInput,
+  HotspotZone,
   MatchPair,
   QuizFormState,
   QuizQuestionInput,
@@ -68,6 +70,7 @@ const emptyQuestion = (key: number): QuestionEntry => ({
   blankAnswer: "",
   reorderItems: [],
   matchPairs: [],
+  hotspotZones: [],
   imageUrl: "",
   explanation: "",
   hint: "",
@@ -151,6 +154,19 @@ function applyTypeChange(
         blankAnswer: "",
         reorderItems: [],
         matchPairs: q.matchPairs && q.matchPairs.length > 0 ? q.matchPairs : [{ left: "", right: "" }, { left: "", right: "" }],
+      };
+    case "hotspot":
+      return {
+        ...base,
+        optionA: "",
+        optionB: "",
+        optionC: "",
+        optionD: "",
+        correctOption: "",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
+        hotspotZones: q.hotspotZones && q.hotspotZones.length > 0 ? q.hotspotZones : [],
       };
   }
 }
@@ -262,7 +278,8 @@ export function QuizForm({
         (q.optionC ?? "").trim() ||
         (q.optionD ?? "").trim() ||
         (q.blankAnswer ?? "").trim() ||
-        (q.reorderItems?.length ?? 0) > 0
+        (q.reorderItems?.length ?? 0) > 0 ||
+        (q.hotspotZones?.length ?? 0) > 0
     );
 
     if (!title.trim()) {
@@ -580,6 +597,7 @@ const TYPE_OPTIONS: TypeOption[] = [
   { key: "fill_blank", labelKey: "quiz.typeFillBlank", icon: TypeIcon },
   { key: "reorder", labelKey: "quiz.typeReorder", icon: ListOrdered },
   { key: "matching", labelKey: "quiz.typeMatching", icon: Shuffle },
+  { key: "hotspot", labelKey: "quiz.typeHotspot", icon: MapPin },
 ];
 
 function QuestionEditor({
@@ -683,6 +701,8 @@ function QuestionEditor({
         <TrueFalseBody question={question} onChange={onChange} />
       ) : questionType === "fill_blank" ? (
         <FillBlankBody question={question} onChange={onChange} />
+      ) : questionType === "hotspot" ? (
+        <HotspotBody question={question} onChange={onChange} />
       ) : questionType === "matching" ? (
         <MatchingBody question={question} onChange={onChange} />
       ) : (
@@ -1090,6 +1110,121 @@ function ReorderBody({
         <Plus className="h-3.5 w-3.5" />
         {t("quiz.reorderAddItem")}
       </button>
+    </div>
+  );
+}
+
+function HotspotBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const zones: HotspotZone[] = question.hotspotZones ?? [];
+  const correctId = question.correctOption ?? "";
+
+  if (!question.imageUrl) {
+    return (
+      <div className="mt-3 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-4 text-center text-xs text-[var(--text-muted)]">
+        {t("quiz.hotspot.noImage")}
+      </div>
+    );
+  }
+
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(2));
+    const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(2));
+    const newId = zones.length > 0 ? Math.max(...zones.map((z) => z.id)) + 1 : 1;
+    onChange({ hotspotZones: [...zones, { id: newId, x, y, r: 12 }] });
+  };
+
+  const updateZone = (id: number, patch: Partial<HotspotZone>) => {
+    onChange({ hotspotZones: zones.map((z) => (z.id === id ? { ...z, ...patch } : z)) });
+  };
+
+  const removeZone = (id: number) => {
+    onChange({
+      hotspotZones: zones.filter((z) => z.id !== id),
+      correctOption: correctId === String(id) ? "" : correctId,
+    });
+  };
+
+  return (
+    <div className="mt-3 space-y-3">
+      <p className="text-[11px] text-[var(--text-muted)]">{t("quiz.hotspot.addZoneHint")}</p>
+      {/* Image with zone overlay */}
+      <div
+        className="relative cursor-crosshair select-none overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]"
+        onClick={handleImageClick}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={question.imageUrl} alt="" className="pointer-events-none w-full" draggable={false} />
+        {zones.map((zone) => (
+          <div
+            key={zone.id}
+            style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
+            className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold ${
+              correctId === String(zone.id)
+                ? "border-emerald-400 bg-emerald-500 text-white"
+                : "border-white bg-[var(--primary)] text-white"
+            }`}
+          >
+            {zone.label || String(zone.id)}
+          </div>
+        ))}
+      </div>
+      {zones.length === 0 ? (
+        <p className="text-[11px] text-[var(--text-muted)]">{t("quiz.hotspot.minZones")}</p>
+      ) : (
+        <div className="space-y-2">
+          {zones.map((zone) => (
+            <div
+              key={zone.id}
+              className={`flex items-center gap-2 rounded-[var(--radius-md)] border px-3 py-2 ${
+                correctId === String(zone.id)
+                  ? "border-emerald-500/50 bg-emerald-500/10"
+                  : "border-[var(--border)] bg-[var(--bg-surface)]"
+              }`}
+            >
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
+                  correctId === String(zone.id) ? "bg-emerald-500" : "bg-[var(--primary)]"
+                }`}
+              >
+                {zone.id}
+              </span>
+              <input
+                value={zone.label ?? ""}
+                onChange={(e) => updateZone(zone.id, { label: e.target.value })}
+                placeholder={t("quiz.hotspot.zoneLabel")}
+                className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => onChange({ correctOption: String(zone.id) })}
+                className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${
+                  correctId === String(zone.id)
+                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400"
+                    : "border-[var(--border)] text-[var(--text-secondary)] hover:border-emerald-500 hover:text-emerald-400"
+                }`}
+              >
+                {correctId === String(zone.id) ? t("quiz.hotspot.correct") : t("quiz.hotspot.markCorrect")}
+              </button>
+              <button
+                type="button"
+                onClick={() => removeZone(zone.id)}
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
+                aria-label={t("quiz.removeQuestion")}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

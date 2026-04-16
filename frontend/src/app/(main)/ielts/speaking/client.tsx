@@ -284,7 +284,7 @@ export function SpeakingPracticeClient() {
   if (phase === "select") {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] lg:grid-cols-5">
+        <div className="grid gap-4 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] lg:grid-cols-5">
           <FilterSelect
             label="Speaking part"
             value={part}
@@ -341,7 +341,7 @@ export function SpeakingPracticeClient() {
           />
         </div>
 
-        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]">
+        <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-semibold text-[var(--text-primary)]">
@@ -555,7 +555,7 @@ export function SpeakingPracticeClient() {
   if (phase === "evaluating") {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-600 shadow-lg shadow-violet-500/25">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--bg-surface)] shadow-[var(--shadow-lg)]">
           <Loader2 className="h-8 w-8 animate-spin text-white" />
         </div>
         <h2 className="mt-6 text-xl font-semibold text-[var(--text-primary)]">
@@ -687,7 +687,7 @@ export function SpeakingPracticeClient() {
         <IssueSection
           title="Vocabulary upgrades"
           items={result.feedback.vocabularyHighlights ?? []}
-          tone="text-sky-400"
+          tone="text-[var(--text-secondary)]"
         />
 
         {activeFollowUps.length > 0 ? (

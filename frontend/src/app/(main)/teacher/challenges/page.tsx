@@ -31,7 +31,7 @@ export default async function TeacherChallengesPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.2fr]">
-        <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)]">
+        <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)]">
           <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
             {t("teacher.challengesEyebrow")}
           </p>
@@ -57,7 +57,7 @@ export default async function TeacherChallengesPage() {
             <select
               name="group_id"
               required
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] outline-none focus:border-[rgba(99,91,255,0.48)] focus:ring-4 focus:ring-[rgba(99,91,255,0.12)]"
+              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] outline-none focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-soft)]"
             >
               <option value="">{t("teacher.selectClass")}</option>
               {groups.map((group) => (
@@ -69,7 +69,7 @@ export default async function TeacherChallengesPage() {
             <select
               name="set_id"
               required
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] outline-none focus:border-[rgba(99,91,255,0.48)] focus:ring-4 focus:ring-[rgba(99,91,255,0.12)]"
+              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] outline-none focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-soft)]"
             >
               <option value="">{t("teacher.selectSet")}</option>
               {sets.map((set) => (
@@ -81,17 +81,17 @@ export default async function TeacherChallengesPage() {
             <input
               name="deadline"
               type="datetime-local"
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--surface-shadow)] outline-none focus:border-[rgba(99,91,255,0.48)] focus:ring-4 focus:ring-[rgba(99,91,255,0.12)]"
+              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] outline-none focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-soft)]"
             />
             <Button type="submit">{t("teacher.createChallenge")}</Button>
           </form>
         </section>
 
-        <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow)]">
+        <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-indigo-400" />
+                <Trophy className="h-5 w-5 text-[var(--primary)]" />
                 <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                 {t("teacher.activeChallenges")}
                 </h2>
@@ -112,7 +112,7 @@ export default async function TeacherChallengesPage() {
                 .map((challenge) => (
                   <div
                     key={challenge.id}
-                    className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
+                    className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
@@ -142,7 +142,7 @@ export default async function TeacherChallengesPage() {
                   </div>
                 ))
             ) : (
-              <div className="rounded-[1.5rem] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10">
+              <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10">
                 <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
                   {t("teacher.noChallengesTitle")}

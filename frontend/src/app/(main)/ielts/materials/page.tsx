@@ -75,7 +75,7 @@ export default async function IELTSMaterialsPage() {
         )}
       </div>
 
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--surface-shadow-strong)] sm:p-8">
+      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
           {t("ielts.materialsTitle")}
         </h1>
@@ -99,7 +99,7 @@ export default async function IELTSMaterialsPage() {
       </div>
 
       {allMaterials.length === 0 ? (
-        <div className="mt-8 rounded-[1.75rem] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-16 text-center">
+        <div className="mt-8 rounded-[var(--radius-2xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-16 text-center">
           <BookOpenText className="mx-auto h-8 w-8 text-[var(--text-muted)]" />
           <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">{t("admin.emptyTitle")}</h2>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">{t("admin.emptyPublicBody")}</p>
@@ -123,7 +123,7 @@ export default async function IELTSMaterialsPage() {
               <section key={group.key} id={group.key}>
                 {/* ─── Group header ─── */}
                 <div className="flex items-center gap-3">
-                  <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8 bg-gradient-to-br ${group.tone}`}>
+                  <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--bg-surface)]`}>
                     <GroupIcon className="h-5 w-5 text-[var(--text-primary)]" />
                   </div>
                   <div>
@@ -154,7 +154,7 @@ export default async function IELTSMaterialsPage() {
                           {catItems.map((material) => (
                             <article
                               key={material.id}
-                              className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)]"
+                              className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)]"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <h3 className="text-base font-semibold text-[var(--text-primary)] sm:text-lg">

@@ -60,6 +60,31 @@ func matchPairsCorrect(submittedJSON string, canonical []model.MatchPair) bool {
 	return true
 }
 
+// encodeHotspotZones serializes a HotspotZone slice to a JSONB string pointer.
+func encodeHotspotZones(zones []model.HotspotZone) *string {
+	if len(zones) == 0 {
+		return nil
+	}
+	buf, err := json.Marshal(zones)
+	if err != nil {
+		return nil
+	}
+	s := string(buf)
+	return &s
+}
+
+// decodeHotspotZones parses a JSONB-stored string pointer back into a HotspotZone slice.
+func decodeHotspotZones(src *string) []model.HotspotZone {
+	if src == nil || *src == "" {
+		return nil
+	}
+	var out []model.HotspotZone
+	if err := json.Unmarshal([]byte(*src), &out); err != nil {
+		return nil
+	}
+	return out
+}
+
 // encodeStringArray serializes a slice of strings to a JSON string pointer
 // for storage in a JSONB column. Returns nil for empty input so the column
 // stores SQL NULL rather than an empty array.
@@ -346,7 +371,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
-		       match_pairs, image_url, explanation, hint, order_index
+		       match_pairs, hotspot_zones, image_url, explanation, hint, order_index
 		FROM public.quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -359,7 +384,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 	d.Questions = make([]model.QuizQuestionDTO, 0)
 	for qRows.Next() {
 		var q model.QuizQuestionDTO
-		var correct, blank, reorderJSON, matchPairsJSON, imageURL, explanation, hint *string
+		var correct, blank, reorderJSON, matchPairsJSON, hotspotJSON, imageURL, explanation, hint *string
 		if err := qRows.Scan(
 			&q.ID,
 			&q.QuestionText,
@@ -372,6 +397,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 			&blank,
 			&reorderJSON,
 			&matchPairsJSON,
+			&hotspotJSON,
 			&imageURL,
 			&explanation,
 			&hint,
@@ -383,6 +409,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		q.BlankAnswer = blank
 		q.ReorderItems = decodeStringArray(reorderJSON)
 		q.MatchPairs = decodeMatchPairs(matchPairsJSON)
+		q.HotspotZones = decodeHotspotZones(hotspotJSON)
 		q.ImageURL = imageURL
 		q.Explanation = explanation
 		q.Hint = hint
@@ -464,6 +491,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 			nullableString(q.BlankAnswer),
 			encodeStringArray(q.ReorderItems),
 			encodeMatchPairs(q.MatchPairs),
+			encodeHotspotZones(q.HotspotZones),
 			nullableString(q.ImageURL),
 			nullableString(q.Explanation),
 			nullableString(q.Hint),
@@ -488,6 +516,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 				"blank_answer",
 				"reorder_items",
 				"match_pairs",
+				"hotspot_zones",
 				"image_url",
 				"explanation",
 				"hint",
@@ -600,22 +629,23 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 			qType = "mcq"
 		}
 		args := []any{
-			id,                                // $1
-			quizID,                            // $2
-			q.QuestionText,                    // $3
-			qType,                             // $4
-			nullableString(q.OptionA),         // $5
-			nullableString(q.OptionB),         // $6
-			nullableString(q.OptionC),         // $7
-			nullableString(q.OptionD),         // $8
-			nullableString(q.CorrectOption),   // $9
-			nullableString(q.BlankAnswer),     // $10
-			encodeStringArray(q.ReorderItems), // $11
-			nullableString(q.ImageURL),        // $12
-			nullableString(q.Explanation),     // $13
-			i,                                 // $14 (order_index)
-			nullableString(q.Hint),            // $15
-			encodeMatchPairs(q.MatchPairs),    // $16
+			id,                                 // $1
+			quizID,                             // $2
+			q.QuestionText,                     // $3
+			qType,                              // $4
+			nullableString(q.OptionA),          // $5
+			nullableString(q.OptionB),          // $6
+			nullableString(q.OptionC),          // $7
+			nullableString(q.OptionD),          // $8
+			nullableString(q.CorrectOption),    // $9
+			nullableString(q.BlankAnswer),      // $10
+			encodeStringArray(q.ReorderItems),  // $11
+			nullableString(q.ImageURL),         // $12
+			nullableString(q.Explanation),      // $13
+			i,                                  // $14 (order_index)
+			nullableString(q.Hint),             // $15
+			encodeMatchPairs(q.MatchPairs),     // $16
+			encodeHotspotZones(q.HotspotZones), // $17
 		}
 		if _, ok := existingIDs[id]; ok {
 			if _, err := tx.Exec(ctx, `
@@ -633,7 +663,8 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				    explanation    = $13,
 				    order_index    = $14,
 				    hint           = $15,
-				    match_pairs    = $16
+				    match_pairs    = $16,
+				    hotspot_zones  = $17
 				WHERE id = $1 AND quiz_id = $2
 			`, args...); err != nil {
 				return fmt.Errorf("update question %d: %w", i, err)
@@ -648,9 +679,9 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				quiz_id, question_text, question_type,
 				option_a, option_b, option_c, option_d,
 				correct_option, blank_answer, reorder_items,
-				image_url, explanation, order_index, hint, match_pairs, created_at
+				image_url, explanation, order_index, hint, match_pairs, hotspot_zones, created_at
 			)
-			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
 			RETURNING id
 		`, args...).Scan(&newID)
 		if err != nil {
@@ -754,12 +785,12 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 			quiz_id, question_text, question_type,
 			option_a, option_b, option_c, option_d,
 			correct_option, blank_answer, reorder_items,
-			match_pairs, image_url, explanation, order_index, hint, created_at
+			match_pairs, hotspot_zones, image_url, explanation, order_index, hint, created_at
 		)
 		SELECT $1, question_text, question_type,
 		       option_a, option_b, option_c, option_d,
 		       correct_option, blank_answer, reorder_items,
-		       match_pairs, image_url, explanation, order_index, hint, NOW()
+		       match_pairs, hotspot_zones, image_url, explanation, order_index, hint, NOW()
 		FROM quiz_questions
 		WHERE quiz_id = $2
 		ORDER BY order_index, created_at
@@ -793,6 +824,7 @@ type questionAnswerRow struct {
 	BlankAnswer   *string
 	ReorderItems  []string
 	MatchPairs    []model.MatchPair
+	HotspotZones  []model.HotspotZone
 	ImageURL      *string
 	Explanation   *string
 	OrderIndex    int
@@ -824,7 +856,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
-		       match_pairs, image_url, explanation, order_index
+		       match_pairs, hotspot_zones, image_url, explanation, order_index
 		FROM quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -838,17 +870,18 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 	order := make([]string, 0)
 	for rows.Next() {
 		var q questionAnswerRow
-		var reorderJSON, matchPairsJSON *string
+		var reorderJSON, matchPairsJSON, hotspotJSON *string
 		if err := rows.Scan(
 			&q.ID, &q.QuestionText, &q.QuestionType,
 			&q.OptionA, &q.OptionB, &q.OptionC, &q.OptionD,
 			&q.CorrectOption, &q.BlankAnswer, &reorderJSON,
-			&matchPairsJSON, &q.ImageURL, &q.Explanation, &q.OrderIndex,
+			&matchPairsJSON, &hotspotJSON, &q.ImageURL, &q.Explanation, &q.OrderIndex,
 		); err != nil {
 			return nil, fmt.Errorf("scan question: %w", err)
 		}
 		q.ReorderItems = decodeStringArray(reorderJSON)
 		q.MatchPairs = decodeMatchPairs(matchPairsJSON)
+		q.HotspotZones = decodeHotspotZones(hotspotJSON)
 		questions[q.ID] = q
 		order = append(order, q.ID)
 	}
@@ -939,6 +972,18 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 						}
 					}
 				}
+			case "hotspot":
+				// SelectedOption is the clicked zone ID (string like "1", "2").
+				if a.SelectedOption != nil {
+					t := strings.TrimSpace(*a.SelectedOption)
+					if t != "" {
+						selected = &t
+						if q.CorrectOption != nil && t == *q.CorrectOption {
+							isCorrect = true
+							score++
+						}
+					}
+				}
 			default: // mcq
 				if a.SelectedOption != nil {
 					normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
@@ -974,6 +1019,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 			OrderAnswer:    orderAnswer,
 			ReorderItems:   q.ReorderItems,
 			MatchPairs:     q.MatchPairs,
+			HotspotZones:   q.HotspotZones,
 			ImageURL:       q.ImageURL,
 			Explanation:    q.Explanation,
 			IsCorrect:      isCorrect,
@@ -1024,7 +1070,8 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 			attemptID, qid, g.SelectedOption,
 			g.TextAnswer, encodeStringArray(g.OrderAnswer),
 			g.IsCorrect, g.TimeSpent,
-			// snapshots
+			// snapshots (hotspot_zones intentionally not snapshotted here —
+			// the GetAttempt COALESCE pulls it from the live question when needed)
 			g.QuestionText, g.QuestionType,
 			nullableString(g.OptionA), nullableString(g.OptionB),
 			nullableString(g.OptionC), nullableString(g.OptionD),
@@ -1131,6 +1178,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			aa.order_answer,
 			COALESCE(aa.reorder_items_snapshot, qq.reorder_items),
 			COALESCE(aa.match_pairs_snapshot, qq.match_pairs),
+			qq.hotspot_zones,
 			qq.image_url,
 			qq.explanation,
 			aa.is_correct,
@@ -1150,7 +1198,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 	for rows.Next() {
 		var a model.AttemptAnswerResult
 		var questionID *string
-		var orderAnswerJSON, reorderItemsJSON, matchPairsJSON *string
+		var orderAnswerJSON, reorderItemsJSON, matchPairsJSON, hotspotJSON *string
 		if err := rows.Scan(
 			&questionID,
 			&a.QuestionText,
@@ -1163,6 +1211,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			&orderAnswerJSON,
 			&reorderItemsJSON,
 			&matchPairsJSON,
+			&hotspotJSON,
 			&a.ImageURL,
 			&a.Explanation,
 			&a.IsCorrect,
@@ -1177,6 +1226,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 		a.OrderAnswer = decodeStringArray(orderAnswerJSON)
 		a.ReorderItems = decodeStringArray(reorderItemsJSON)
 		a.MatchPairs = decodeMatchPairs(matchPairsJSON)
+		a.HotspotZones = decodeHotspotZones(hotspotJSON)
 		res.Answers = append(res.Answers, a)
 	}
 

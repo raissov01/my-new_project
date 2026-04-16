@@ -57,7 +57,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8">
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-xl)] sm:rounded-[var(--radius-2xl)] sm:p-8">
         <div className="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
             <ProfileAvatar username={username} avatarUrl={profile?.avatar_url} size="lg" />
@@ -74,7 +74,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
                   {user.email}
                 </span>
-                <span className="rounded-full border border-[rgba(99,91,255,0.18)] bg-indigo-500/10 px-3 py-1.5 text-indigo-400">
+                <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-[var(--primary)]">
                   {t("profile.joined")} {formatDate(joinDate, locale)}
                 </span>
                 <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
@@ -114,7 +114,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         {metricCards.map((metric) => (
           <div
             key={metric.label}
-            className="rounded-[1.3rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.5rem] sm:p-5"
+            className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-xl)] sm:p-5"
           >
             <p className="text-sm text-[var(--text-secondary)]">{metric.label}</p>
             <p className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:mt-3 sm:text-3xl">
@@ -125,9 +125,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       </div>
 
       <div className="mt-5 grid gap-4 sm:mt-8 sm:gap-6 xl:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+        <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-2xl)] sm:p-6">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-indigo-400" />
+            <Sparkles className="h-5 w-5 text-[var(--primary)]" />
             <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
               {t("profile.statsOverview")}
             </h2>
@@ -165,7 +165,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
 
         <div className="space-y-4 sm:space-y-6">
-          <div className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+          <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-2xl)] sm:p-6">
             <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
               {t("profile.recentActivity")}
             </h2>
@@ -186,7 +186,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </div>
           </div>
 
-          <div className="rounded-[1.45rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--surface-shadow)] sm:rounded-[1.75rem] sm:p-6">
+          <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-2xl)] sm:p-6">
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-amber-400" />
             <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">

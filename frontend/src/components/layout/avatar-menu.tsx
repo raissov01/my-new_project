@@ -89,7 +89,7 @@ export function AvatarMenu() {
 
   const menuContent = (
     <>
-      <div className="rounded-[1.35rem] bg-[var(--bg-surface)] px-4 py-4">
+      <div className="rounded-[var(--radius-lg)] bg-[var(--bg-soft)] px-4 py-4">
         <div className="flex items-center gap-3">
           <ProfileAvatar username={username} avatarUrl={avatarUrl} size="sm" />
           <div className="min-w-0">
@@ -107,10 +107,10 @@ export function AvatarMenu() {
         <Link
           href="/profile"
           onClick={() => setOpen(false)}
-          className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] active:bg-[var(--bg-surface)]"
+          className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-soft)] active:bg-[var(--bg-soft)]"
         >
           <span className="flex items-center gap-3">
-            <UserCircle2 className="h-4 w-4 text-indigo-500" />
+            <UserCircle2 className="h-4 w-4 text-[var(--text-secondary)]" />
             {t("nav.profile")}
           </span>
         </Link>
@@ -118,16 +118,16 @@ export function AvatarMenu() {
         <Link
           href="/settings"
           onClick={() => setOpen(false)}
-          className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] active:bg-[var(--bg-surface)]"
+          className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-soft)] active:bg-[var(--bg-soft)]"
         >
           <span className="flex items-center gap-3">
-            <Settings className="h-4 w-4 text-sky-500" />
+            <Settings className="h-4 w-4 text-[var(--text-secondary)]" />
             {t("nav.settings")}
           </span>
         </Link>
       </div>
 
-      <div className="mt-3 rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-surface)] p-3">
+      <div className="mt-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-3">
         <LanguageSwitcher variant="menu" />
       </div>
 
@@ -139,7 +139,7 @@ export function AvatarMenu() {
         type="button"
         onClick={handleLogout}
         disabled={loggingOut}
-        className="mt-3 flex w-full items-center justify-between rounded-2xl border border-red-500/10 bg-red-500/5 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 active:bg-red-500/15 disabled:opacity-60"
+        className="mt-3 flex w-full items-center justify-between rounded-[var(--radius-md)] border border-red-500/10 bg-red-500/5 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 active:bg-red-500/15 disabled:opacity-60 dark:text-red-400"
       >
         <span className="flex items-center gap-3">
           <LogOut className="h-4 w-4" />
@@ -155,8 +155,8 @@ export function AvatarMenu() {
         type="button"
         onClick={() => setOpen((current) => !current)}
         className={cn(
-          "flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-1.5 py-1.5 shadow-sm transition-all hover:bg-[var(--bg-surface)]",
-          open && "border-indigo-400/60 shadow-indigo-500/10"
+          "flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-1.5 py-1.5 shadow-sm transition-all hover:bg-[var(--bg-soft)]",
+          open && "border-[var(--border-strong)]"
         )}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -166,7 +166,6 @@ export function AvatarMenu() {
           username={username}
           avatarUrl={avatarUrl}
           size="xs"
-          className="ring-2 ring-white/60 dark:ring-slate-900/50"
         />
         <ChevronDown
           className={cn(
@@ -178,7 +177,7 @@ export function AvatarMenu() {
 
       {/* Desktop dropdown */}
       {open && (
-        <div className="animate-fade-in-up absolute right-0 top-[calc(100%+0.75rem)] z-50 hidden w-[min(22rem,calc(100vw-2rem))] rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-2xl shadow-slate-900/10 backdrop-blur lg:block">
+        <div className="animate-fade-in-up absolute right-0 top-[calc(100%+0.75rem)] z-50 hidden w-[min(22rem,calc(100vw-2rem))] rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-[var(--shadow-lg)] lg:block">
           {menuContent}
         </div>
       )}
@@ -187,12 +186,12 @@ export function AvatarMenu() {
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-black/30 animate-fade-in"
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
           <div className="absolute inset-x-0 bottom-0 animate-slide-up-sheet">
-            <div className="max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-[1.75rem] border-t border-[var(--border)] bg-[var(--bg-elevated)] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl">
+            <div className="max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-[var(--radius-xl)] border-t border-[var(--border)] bg-[var(--bg-elevated)] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[var(--shadow-lg)]">
               {/* Drag handle */}
               <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--border)]" />
               {menuContent}

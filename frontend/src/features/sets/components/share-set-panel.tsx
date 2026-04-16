@@ -108,14 +108,14 @@ export function ShareSetPanel({
   return (
     <section
       className={cn(
-        "rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--surface-shadow)] sm:p-6",
+        "rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] sm:p-6",
         highlight &&
-          "border-[rgba(99,91,255,0.4)] bg-[linear-gradient(180deg,rgba(99,91,255,0.12),rgba(13,14,22,0.96))] shadow-[0_22px_48px_-34px_rgba(99,91,255,0.72)]"
+          "border-[rgba(99,91,255,0.4)] bg-[var(--bg-surface)] shadow-[var(--shadow-lg)]"
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary)]">
             {labels.badge}
           </p>
           <div>

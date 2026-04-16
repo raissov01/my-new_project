@@ -38,8 +38,8 @@ export default async function GuidePage() {
 
       <div className="mt-6">
         <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 p-3 shadow-md shadow-indigo-500/20">
-            <Sparkles className="h-6 w-6 text-white" />
+          <div className="rounded-2xl bg-[var(--primary-soft)] p-3 shadow-[var(--shadow-md)]">
+            <Sparkles className="h-6 w-6 text-[var(--primary)]" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-[var(--text-primary)]">
@@ -82,7 +82,7 @@ export default async function GuidePage() {
         />
 
         {/* 3. Study Modes */}
-        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-sm">
+        <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/15 text-sm font-bold text-purple-600">
               3
@@ -146,7 +146,7 @@ export default async function GuidePage() {
         />
 
         {/* 6. Gamification */}
-        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-sm">
+        <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/15 text-sm font-bold text-amber-600">
               6
@@ -196,7 +196,7 @@ export default async function GuidePage() {
         />
 
         {/* 8. Profile & Settings */}
-        <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-sm">
+        <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 text-sm font-bold text-sky-600">
               8
@@ -227,9 +227,9 @@ export default async function GuidePage() {
       </div>
 
       {/* CTA */}
-      <div className="mt-10 rounded-[2rem] bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-center text-white shadow-lg shadow-indigo-500/20">
+      <div className="mt-10 rounded-[var(--radius-2xl)] bg-[var(--primary)] p-8 text-center text-white shadow-[var(--shadow-lg)]">
         <h2 className="text-2xl font-bold">{t("guide.ctaTitle")}</h2>
-        <p className="mt-2 text-sm text-indigo-200">{t("guide.ctaBody")}</p>
+        <p className="mt-2 text-sm text-white/80">{t("guide.ctaBody")}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
             href={user ? "/dashboard" : "/sets"}
@@ -294,7 +294,7 @@ function GuideSection({
   const colorClass = COLOR_MAP[color] ?? COLOR_MAP.indigo;
 
   return (
-    <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-sm">
+    <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
       <div className="flex items-center gap-3">
         <span
           className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${colorClass}`}

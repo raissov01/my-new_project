@@ -22,6 +22,7 @@ import { AnswerAnimation } from "@/features/quizzes/components/answer-animation"
 import { usePowerUps, type PowerUpKey } from "@/features/quizzes/use-power-ups";
 import { PowerUpBar } from "@/features/quizzes/components/power-up-bar";
 import type {
+  HotspotZone,
   MatchPair,
   QuizDetail,
   QuizQuestionDTO,
@@ -209,6 +210,7 @@ export function PlayQuizClient({
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   // matchDraft: for matching questions, maps left item → selected right item ("" = unselected).
   const [matchDraft, setMatchDraft] = useState<Record<string, string>>({});
+  const [hotspotSelected, setHotspotSelected] = useState<string | null>(null);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
   const [hintVisible, setHintVisible] = useState(false);
 
@@ -261,6 +263,7 @@ export function PlayQuizClient({
     } else {
       setMatchDraft({});
     }
+    setHotspotSelected(null);
     setBlankInput("");
     setMcqMultiSelected(new Set());
   }, [currentIdx, quiz.questions, quiz.shuffleOptions]);
@@ -321,6 +324,7 @@ export function PlayQuizClient({
     setSelectedLetter(null);
     setMcqMultiSelected(new Set());
     setMatchDraft({});
+    setHotspotSelected(null);
     setLastCorrect(null);
     setHintVisible(false);
     setPhase("asking");
@@ -480,6 +484,18 @@ export function PlayQuizClient({
     [question.reorderItems, recordAnswer]
   );
 
+  const recordHotspot = useCallback(
+    (zoneId: string | null) => {
+      const isCorrect = zoneId !== null && zoneId === question.correctOption;
+      setHotspotSelected(zoneId);
+      recordAnswer(
+        { selectedOption: zoneId, textAnswer: null, orderAnswer: null },
+        isCorrect
+      );
+    },
+    [question.correctOption, recordAnswer]
+  );
+
   const recordMatching = useCallback(
     (draft: Record<string, string> | null) => {
       const pairs = question.matchPairs ?? [];
@@ -523,8 +539,11 @@ export function PlayQuizClient({
       case "matching":
         recordMatching(null);
         return;
+      case "hotspot":
+        recordHotspot(null);
+        return;
     }
-  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching]);
+  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
   // Practice mode disables the timer entirely so students can dwell on
@@ -724,7 +743,7 @@ export function PlayQuizClient({
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
               {t("quiz.question")} {currentIdx + 1}
             </p>
-            {question.imageUrl ? (
+            {question.imageUrl && questionType !== "hotspot" ? (
               <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-base)]">
                 {/* Images are relative paths served via nginx/backend — next/image not usable here */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -790,6 +809,16 @@ export function PlayQuizClient({
               revealed={revealed}
               lastCorrect={lastCorrect}
               onSubmit={() => recordBlank(blankInput)}
+            />
+          ) : questionType === "hotspot" ? (
+            <HotspotPlayBody
+              t={t}
+              imageUrl={question.imageUrl ?? null}
+              zones={question.hotspotZones ?? []}
+              correctOption={question.correctOption ?? null}
+              selected={hotspotSelected}
+              revealed={revealed}
+              onPick={recordHotspot}
             />
           ) : questionType === "matching" ? (
             <MatchingBody
@@ -1303,6 +1332,127 @@ function ReorderBody({
           {t("quiz.play.submitAnswer")}
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ── Hotspot body ──────────────────────────────────────────────────────────────
+
+function HotspotPlayBody({
+  t,
+  imageUrl,
+  zones,
+  correctOption,
+  selected,
+  revealed,
+  onPick,
+}: {
+  t: (key: string) => string;
+  imageUrl: string | null;
+  zones: HotspotZone[];
+  correctOption: string | null;
+  selected: string | null;
+  revealed: boolean;
+  onPick: (zoneId: string | null) => void;
+}) {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (revealed) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    // Find the closest zone whose center is within its radius
+    let hitZone: HotspotZone | null = null;
+    let minDist = Infinity;
+    for (const z of zones) {
+      const dx = x - z.x;
+      const dy = y - z.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist <= z.r && dist < minDist) {
+        minDist = dist;
+        hitZone = z;
+      }
+    }
+    if (hitZone) {
+      onPick(String(hitZone.id));
+    }
+  };
+
+  if (!imageUrl) {
+    return (
+      <div className="mt-4 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-4 text-center text-sm text-[var(--text-muted)]">
+        {t("quiz.hotspot.noImage")}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-3 sm:mt-6">
+      {!revealed ? (
+        <p className="text-sm text-[var(--text-muted)]">{t("quiz.hotspot.clickToAnswer")}</p>
+      ) : null}
+      <div
+        className={`relative select-none overflow-hidden rounded-[var(--radius-xl)] border-2 border-[var(--border)] ${
+          revealed ? "cursor-default" : "cursor-crosshair"
+        }`}
+        onClick={handleClick}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imageUrl} alt="" loading="lazy" decoding="async" className="pointer-events-none w-full" />
+        {zones.map((zone) => {
+          const zoneIdStr = String(zone.id);
+          const isSelected = selected === zoneIdStr;
+          const isCorrect = correctOption === zoneIdStr;
+          let circleClasses =
+            "border-white/70 bg-[var(--primary)]/80 text-white";
+          if (revealed) {
+            if (isCorrect) {
+              circleClasses =
+                "border-emerald-300 bg-emerald-500 text-white animate-success-glow";
+            } else if (isSelected) {
+              circleClasses =
+                "border-rose-300 bg-rose-500 text-white animate-shake";
+            } else {
+              circleClasses =
+                "border-white/30 bg-white/15 text-white/50";
+            }
+          } else if (isSelected) {
+            circleClasses =
+              "border-[var(--primary)] bg-[var(--primary)] text-white scale-110";
+          }
+          return (
+            <div
+              key={zone.id}
+              style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
+              className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-transform ${circleClasses}`}
+            >
+              {zone.label || zoneIdStr}
+            </div>
+          );
+        })}
+      </div>
+      {revealed ? (
+        <div
+          className={`rounded-[var(--radius-md)] border-2 px-4 py-3 text-sm ${
+            selected !== null && selected === correctOption
+              ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
+              : "border-rose-400/60 bg-rose-500/10 text-rose-200"
+          }`}
+        >
+          <p className="font-semibold">
+            {selected !== null && selected === correctOption
+              ? t("quiz.play.correct")
+              : t("quiz.play.wrong")}
+          </p>
+          {(selected === null || selected !== correctOption) && correctOption ? (
+            <p className="mt-1">
+              {t("quiz.play.correctAnswerLabel")}{" "}
+              <span className="font-semibold">
+                {zones.find((z) => String(z.id) === correctOption)?.label ?? correctOption}
+              </span>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
