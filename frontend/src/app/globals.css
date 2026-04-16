@@ -462,13 +462,13 @@ a, button, input, textarea, select {
 }
 
 @keyframes encourage-rise {
-  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.92); }
-  20% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-  80% { opacity: 1; }
-  100% { opacity: 0; transform: translate(-50%, -12px) scale(0.98); }
+  0%   { opacity: 0; transform: translate(-50%, 16px) scale(0.88); }
+  18%  { opacity: 1; transform: translate(-50%, 0)    scale(1);    }
+  75%  { opacity: 1; transform: translate(-50%, 0)    scale(1);    }
+  100% { opacity: 0; transform: translate(-50%, -16px) scale(0.96); }
 }
 .animate-encourage-rise {
-  animation: encourage-rise 1.1s ease-out forwards;
+  animation: encourage-rise 1.4s ease-out forwards;
 }
 
 @keyframes special-bounce {
