@@ -881,3 +881,18 @@ a, button, input, textarea, select {
   .active\:scale-95:active { transform: scale(0.95); }
   .active\:scale-\[0\.98\]:active { transform: scale(0.98); }
 }
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+/* Respects the OS-level "reduce motion" accessibility preference.
+   0.01ms collapses animations/transitions to instant while still firing
+   animationend events (0ms can silently drop them in some engines).
+   Covers Tailwind utilities (animate-spin, animate-pulse…) and all
+   custom keyframe classes defined above. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
