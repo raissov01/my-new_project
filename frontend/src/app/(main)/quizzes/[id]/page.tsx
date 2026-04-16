@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
+  BarChart2,
   Clock3,
   Globe2,
   ListChecks,
@@ -16,7 +17,7 @@ import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 import { formatDate } from "@/lib/shared/utils";
-import { getQuizById } from "@/server/services/quizzes";
+import { getQuizById, getQuizStats, type QuestionStat } from "@/server/services/quizzes";
 import { ShareQuizButton } from "@/features/quizzes/components/share-quiz-button";
 
 interface QuizDetailPageProps {
@@ -56,6 +57,8 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
   if (!quiz) {
     notFound();
   }
+
+  const stats = quiz.isAuthor ? await getQuizStats(id) : null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
@@ -229,6 +232,45 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
           ))}
         </div>
       </section>
+
+      {quiz.isAuthor && stats ? (
+        <section className="mt-8">
+          <div className="flex items-center gap-3">
+            <BarChart2 className="h-5 w-5 text-[var(--text-muted)]" />
+            <div>
+              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                {t("quiz.stats.title")}
+              </h2>
+              {stats.totalAttempts > 0 ? (
+                <p className="text-sm text-[var(--text-muted)]">
+                  {t("quiz.stats.subtitle", { n: stats.totalAttempts })}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          {stats.totalAttempts === 0 ? (
+            <p className="mt-4 text-sm text-[var(--text-secondary)]">
+              {t("quiz.stats.noData")}
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {stats.questions.map((q, index) => (
+                <AccuracyRow
+                  key={q.questionId}
+                  index={index}
+                  stat={q}
+                  accuracyLabel={t("quiz.stats.accuracy")}
+                  outOfLabel={t("quiz.stats.outOf", {
+                    correct: q.correctCount,
+                    total: q.totalCount,
+                  })}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -242,6 +284,49 @@ function MetricCard({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
         {value}
       </p>
+    </div>
+  );
+}
+
+function AccuracyRow({
+  index,
+  stat,
+  accuracyLabel,
+  outOfLabel,
+}: {
+  index: number;
+  stat: QuestionStat;
+  accuracyLabel: string;
+  outOfLabel: string;
+}) {
+  const pct = stat.accuracy;
+  const color =
+    pct >= 70
+      ? "bg-emerald-500"
+      : pct >= 40
+        ? "bg-amber-500"
+        : "bg-red-500";
+
+  return (
+    <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 shadow-[var(--shadow-sm)]">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm font-medium text-[var(--text-primary)]">
+          <span className="mr-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            Q{index + 1}
+          </span>
+          {stat.questionText}
+        </p>
+        <span className="shrink-0 text-sm text-[var(--text-secondary)]">
+          {outOfLabel} &middot; <span className="font-semibold text-[var(--text-primary)]">{pct}%</span>{" "}
+          {accuracyLabel}
+        </span>
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[var(--bg-base)]">
+        <div
+          className={`h-full rounded-full transition-all ${color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
     </div>
   );
 }
