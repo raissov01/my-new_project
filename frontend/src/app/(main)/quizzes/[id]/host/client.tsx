@@ -103,6 +103,8 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
   const [error, setError] = useState("");
 
   const wsRef = useRef<WebSocket | null>(null);
+  // Tracks the last-known rank for each player so we can show rank deltas.
+  const prevRanksRef = useRef<Map<string, number>>(new Map());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const joinUrl = typeof window !== "undefined" ? `${window.location.origin}/quizzes/join?code=${joinCode}` : "";
 
@@ -166,13 +168,22 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
 
       case "question_ended":
         stopTimer();
-        setLeaderboard(msg.data.leaderboard);
+        setLeaderboard((prev) => {
+          // Capture prev ranks before the new leaderboard lands.
+          prevRanksRef.current = new Map(prev.map((e) => [e.id, e.rank]));
+          return msg.data.leaderboard;
+        });
         setCurrentQData(null);
         setPhase("result");
         break;
 
       case "game_ended":
         stopTimer();
+        setLeaderboard((prev) => {
+          // Capture final question's leaderboard ranks for the finished screen.
+          prevRanksRef.current = new Map(prev.map((e) => [e.id, e.rank]));
+          return prev; // unchanged — just snapshotting ranks
+        });
         setFinalLeaderboard(msg.data.finalLeaderboard);
         setPhase("finished");
         break;
@@ -459,7 +470,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">{t("quiz.live.leaderboard")}</h2>
           <ConnectionBadge status={wsStatus} />
         </div>
-        <LeaderboardTable entries={leaderboard} />
+        <LeaderboardTable entries={leaderboard} prevRanks={prevRanksRef.current} />
         {mode === "teacher_paced" ? (
           <div className="flex flex-wrap gap-3">
             {currentQ + 1 < totalQ ? (
@@ -486,7 +497,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
           <Trophy className="h-7 w-7" />
           <h1 className="text-2xl font-semibold tracking-[-0.04em]">{t("quiz.live.finalResults")}</h1>
         </div>
-        <LeaderboardTable entries={finalLeaderboard} medal />
+        <LeaderboardTable entries={finalLeaderboard} medal prevRanks={prevRanksRef.current} />
         <Link href={`/quizzes/${quizId}`}>
           <Button variant="outline" size="lg">
             <ArrowLeft className="h-4 w-4" />
@@ -515,7 +526,17 @@ function ConnectionBadge({ status }: { status: "connected" | "disconnected" }) {
   );
 }
 
-function LeaderboardTable({ entries, medal }: { entries: { id: string; displayName: string; score: number; streak: number; rank: number }[]; medal?: boolean }) {
+function LeaderboardTable({
+  entries,
+  medal,
+  prevRanks,
+  highlightId,
+}: {
+  entries: { id: string; displayName: string; score: number; streak: number; rank: number }[];
+  medal?: boolean;
+  prevRanks?: Map<string, number>;
+  highlightId?: string;
+}) {
   const medals = ["🥇", "🥈", "🥉"];
   return (
     <div className="overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)]">
@@ -523,15 +544,37 @@ function LeaderboardTable({ entries, medal }: { entries: { id: string; displayNa
         <p className="p-5 text-sm text-[var(--text-muted)]">—</p>
       ) : (
         <ul className="divide-y divide-[var(--border)]">
-          {entries.map((e, i) => (
-            <li key={e.id} className="flex items-center gap-3 px-5 py-3">
-              <span className="w-7 text-center text-sm font-bold text-[var(--text-muted)]">
-                {medal && i < 3 ? medals[i] : e.rank}
-              </span>
-              <span className="flex-1 text-sm font-medium text-[var(--text-primary)]">{e.displayName}</span>
-              <span className="text-sm font-semibold text-[var(--primary)]">{e.score}</span>
-            </li>
-          ))}
+          {entries.map((e, i) => {
+            const prevRank = prevRanks?.get(e.id);
+            // positive delta = moved up in ranking
+            const delta = prevRank != null ? prevRank - e.rank : null;
+            const isHighlighted = e.id === highlightId;
+            return (
+              <li
+                key={e.id}
+                className={`flex items-center gap-3 px-5 py-3.5 ${isHighlighted ? "bg-[var(--primary)]/6" : ""}`}
+                style={{ animation: `leader-enter 0.38s cubic-bezier(0.16,1,0.3,1) ${i * 55}ms both` }}
+              >
+                <span className="w-7 shrink-0 text-center text-sm font-bold text-[var(--text-muted)]">
+                  {medal && i < 3 ? medals[i] : e.rank}
+                </span>
+                <span className={`flex-1 text-sm font-medium ${isHighlighted ? "text-[var(--primary)]" : "text-[var(--text-primary)]"}`}>
+                  {e.displayName}
+                </span>
+                {delta !== null && delta !== 0 ? (
+                  <span
+                    className={`animate-rank-badge-pop text-xs font-bold tabular-nums ${
+                      delta > 0 ? "text-emerald-400" : "text-rose-400"
+                    }`}
+                    style={{ animationDelay: `${i * 55 + 160}ms` }}
+                  >
+                    {delta > 0 ? `▲${delta}` : `▼${Math.abs(delta)}`}
+                  </span>
+                ) : null}
+                <span className="text-sm font-semibold text-[var(--primary)] tabular-nums">{e.score}</span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

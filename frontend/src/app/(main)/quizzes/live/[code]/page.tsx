@@ -99,6 +99,7 @@ function LiveGameInner() {
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startRef = useRef<number>(0); // question start time for timeSpent
+  const prevLbRanksRef = useRef<Map<string, number>>(new Map());
   // phaseRef always holds the latest phase so ws.onclose never reads a
   // stale closure value captured when the WebSocket was first opened.
   const phaseRef = useRef<Phase>("waiting");
@@ -209,12 +210,24 @@ function LiveGameInner() {
 
       case "question_ended":
         stopTimer();
-        setQuestionEnded(msg.data);
+        setQuestionEnded((prev) => {
+          prevLbRanksRef.current = new Map(
+            (prev?.leaderboard ?? []).map((e) => [e.id, e.rank])
+          );
+          return msg.data;
+        });
         setPhase("revealed");
         break;
 
       case "game_ended":
         stopTimer();
+        setQuestionEnded((prev) => {
+          // Snapshot last leaderboard ranks for the finished screen.
+          prevLbRanksRef.current = new Map(
+            (prev?.leaderboard ?? []).map((e) => [e.id, e.rank])
+          );
+          return prev;
+        });
         setFinalLeaderboard(msg.data.finalLeaderboard);
         setPhase("finished");
         break;
@@ -366,11 +379,22 @@ function LiveGameInner() {
       )}
 
       {phase === "revealed" && questionEnded && (
-        <RevealedScreen ended={questionEnded} result={answerResult} pid={pid} t={t} />
+        <RevealedScreen
+          ended={questionEnded}
+          result={answerResult}
+          pid={pid}
+          t={t}
+          prevRanks={prevLbRanksRef.current}
+        />
       )}
 
       {phase === "finished" && (
-        <FinishedScreen leaderboard={finalLeaderboard} pid={pid} t={t} />
+        <FinishedScreen
+          leaderboard={finalLeaderboard}
+          pid={pid}
+          t={t}
+          prevRanks={prevLbRanksRef.current}
+        />
       )}
     </div>
   );
@@ -672,9 +696,19 @@ function AnsweredScreen({ result, t }: { result: AnswerResult; t: (k: string) =>
   );
 }
 
-function RevealedScreen({ ended, result, pid, t }: { ended: QuestionEndedEvt; result: AnswerResult | null; pid: string; t: (k: string) => string }) {
-  const myEntry = ended.leaderboard.find((e) => e.id === pid);
-
+function RevealedScreen({
+  ended,
+  result,
+  pid,
+  t,
+  prevRanks,
+}: {
+  ended: QuestionEndedEvt;
+  result: AnswerResult | null;
+  pid: string;
+  t: (k: string) => string;
+  prevRanks: Map<string, number>;
+}) {
   return (
     <div className="space-y-5">
       {result ? (
@@ -715,19 +749,38 @@ function RevealedScreen({ ended, result, pid, t }: { ended: QuestionEndedEvt; re
         </div>
       )}
 
-      {/* Mini leaderboard top-3 */}
+      {/* Mini leaderboard top-5 with rank change badges */}
       <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
         <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
           {t("quiz.live.leaderboard")}
         </p>
-        <ul className="space-y-2">
-          {ended.leaderboard.slice(0, 5).map((e) => (
-            <li key={e.id} className="flex items-center gap-2 text-sm">
-              <span className="w-6 text-center font-bold text-[var(--text-muted)]">{e.rank}</span>
-              <span className="flex-1 text-[var(--text-primary)]">{e.displayName}</span>
-              <span className="font-semibold text-[var(--primary)]">{e.score}</span>
-            </li>
-          ))}
+        <ul className="space-y-1.5">
+          {ended.leaderboard.slice(0, 5).map((e, i) => {
+            const prevRank = prevRanks.get(e.id);
+            const delta = prevRank != null ? prevRank - e.rank : null;
+            const isMe = e.id === pid;
+            return (
+              <li
+                key={e.id}
+                className={`flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm ${isMe ? "bg-[var(--primary)]/8" : ""}`}
+                style={{ animation: `leader-enter 0.38s cubic-bezier(0.16,1,0.3,1) ${i * 55}ms both` }}
+              >
+                <span className="w-5 shrink-0 text-center text-xs font-bold text-[var(--text-muted)]">{e.rank}</span>
+                <span className={`flex-1 font-medium ${isMe ? "text-[var(--primary)]" : "text-[var(--text-primary)]"}`}>
+                  {e.displayName}
+                </span>
+                {delta !== null && delta !== 0 ? (
+                  <span
+                    className={`animate-rank-badge-pop text-xs font-bold tabular-nums ${delta > 0 ? "text-emerald-400" : "text-rose-400"}`}
+                    style={{ animationDelay: `${i * 55 + 160}ms` }}
+                  >
+                    {delta > 0 ? `▲${delta}` : `▼${Math.abs(delta)}`}
+                  </span>
+                ) : null}
+                <span className="font-semibold text-[var(--primary)] tabular-nums">{e.score}</span>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
@@ -754,7 +807,17 @@ function RevealedScreen({ ended, result, pid, t }: { ended: QuestionEndedEvt; re
   );
 }
 
-function FinishedScreen({ leaderboard, pid, t }: { leaderboard: LeaderEntry[]; pid: string; t: (k: string) => string }) {
+function FinishedScreen({
+  leaderboard,
+  pid,
+  t,
+  prevRanks,
+}: {
+  leaderboard: LeaderEntry[];
+  pid: string;
+  t: (k: string) => string;
+  prevRanks: Map<string, number>;
+}) {
   const myEntry = leaderboard.find((e) => e.id === pid);
   const medals = ["🥇", "🥈", "🥉"];
 
@@ -772,18 +835,36 @@ function FinishedScreen({ leaderboard, pid, t }: { leaderboard: LeaderEntry[]; p
 
       <div className="overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)]">
         <ul className="divide-y divide-[var(--border)]">
-          {leaderboard.map((e, i) => (
-            <li
-              key={e.id}
-              className={`flex items-center gap-3 px-5 py-3 ${e.id === pid ? "bg-[var(--primary)]/5" : ""}`}
-            >
-              <span className="w-7 text-center text-sm font-bold text-[var(--text-muted)]">
-                {i < 3 ? medals[i] : e.rank}
-              </span>
-              <span className="flex-1 text-sm font-medium text-[var(--text-primary)]">{e.displayName}</span>
-              <span className="font-semibold text-[var(--primary)]">{e.score}</span>
-            </li>
-          ))}
+          {leaderboard.map((e, i) => {
+            const prevRank = prevRanks.get(e.id);
+            const delta = prevRank != null ? prevRank - e.rank : null;
+            const isMe = e.id === pid;
+            return (
+              <li
+                key={e.id}
+                className={`flex items-center gap-3 px-5 py-3.5 ${isMe ? "bg-[var(--primary)]/6" : ""}`}
+                style={{ animation: `leader-enter 0.38s cubic-bezier(0.16,1,0.3,1) ${i * 55}ms both` }}
+              >
+                <span className="w-7 shrink-0 text-center text-sm font-bold text-[var(--text-muted)]">
+                  {i < 3 ? medals[i] : e.rank}
+                </span>
+                <span className={`flex-1 text-sm font-medium ${isMe ? "text-[var(--primary)]" : "text-[var(--text-primary)]"}`}>
+                  {e.displayName}
+                </span>
+                {delta !== null && delta !== 0 ? (
+                  <span
+                    className={`animate-rank-badge-pop text-xs font-bold tabular-nums ${delta > 0 ? "text-emerald-400" : "text-rose-400"}`}
+                    style={{ animationDelay: `${i * 55 + 160}ms` }}
+                  >
+                    {delta > 0 ? `▲${delta}` : `▼${Math.abs(delta)}`}
+                  </span>
+                ) : null}
+                <span className={`font-semibold tabular-nums ${isMe ? "text-[var(--primary)]" : "text-[var(--primary)]"}`}>
+                  {e.score}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </div>
 

@@ -673,6 +673,23 @@ a, button, input, textarea, select {
   animation: slide-up-sheet 0.35s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
+@keyframes leader-enter {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-leader-enter {
+  animation: leader-enter 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes rank-badge-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.18); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-rank-badge-pop {
+  animation: rank-badge-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .safe-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
