@@ -1,9 +1,22 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(projectRoot, "..");
+
+const withPWA = withPWAInit({
+  dest: "public",
+  // Only register the SW in production so hot-reload isn't affected in dev.
+  disable: process.env.NODE_ENV !== "production",
+  register: true,
+  reloadOnOnline: true,
+  // Cache all Next.js static chunks (JS, CSS) with a long-lived strategy.
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
 
 const nextConfig: NextConfig = {
   // Produce a self-contained .next/standalone folder that can run on any VPS
@@ -26,4 +39,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

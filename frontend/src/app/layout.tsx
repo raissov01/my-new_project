@@ -10,16 +10,27 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#7C3AED",
 };
 
 export const metadata: Metadata = {
   title: "StudyWithRaissov — Premium IELTS Preparation Platform",
   description:
     "StudyWithRaissov — студенттер мен оқытушыларға арналған жан-жақты оқу экожүйесі. Флешкарталар, тесттер, челленджтер және тағы басқа.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "StudyWithRaissov",
+  },
   icons: {
-    icon: "/brand-mark.svg",
+    icon: [
+      { url: "/brand-mark.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
     shortcut: "/brand-mark.svg",
-    apple: "/brand-mark.svg",
+    apple: "/icon-192.png",
   },
 };
 
