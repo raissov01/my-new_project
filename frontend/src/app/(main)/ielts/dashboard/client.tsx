@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ComponentType } from "react";
 import Link from "next/link";
-import { BookOpen, CalendarDays, ChartColumn, Loader2, PenLine, Sparkles, Target, Mic } from "lucide-react";
+import { BookOpen, CalendarDays, ChartColumn, PenLine, Sparkles, Target, Mic } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { getIELTSDashboard, getIELTSWeakness, getRoadmapProgress } from "../simulator/attempt-actions";
@@ -103,8 +103,24 @@ export function IELTSDashboardClient() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[var(--primary)]" />
+      <div className="space-y-6">
+        <section className="grid gap-4 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
+              <div className="h-3.5 w-24 animate-pulse rounded-full bg-[var(--border)]" />
+              <div className="mt-3 h-8 w-16 animate-pulse rounded-lg bg-[var(--border)]" />
+            </div>
+          ))}
+        </section>
+        <section className="grid gap-4 lg:grid-cols-[1.3fr_0.9fr]">
+          <div className="h-64 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]" />
+          <div className="h-64 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]" />
+        </section>
+        <section className="grid gap-4 lg:grid-cols-2">
+          <div className="h-48 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]" />
+          <div className="h-48 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]" />
+        </section>
+        <div className="h-48 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]" />
       </div>
     );
   }

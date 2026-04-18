@@ -22,7 +22,7 @@ type AchievementRule = Achievement & {
   }) => boolean;
 };
 
-const ACHIEVEMENT_RULES: AchievementRule[] = [
+export const ACHIEVEMENT_RULES: AchievementRule[] = [
   {
     id: "first_session",
     label: "achievement.first_session.label",

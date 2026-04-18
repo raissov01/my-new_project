@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Pencil, Sparkles, Trophy } from "lucide-react";
+import { Lock, Pencil, Sparkles, Trophy } from "lucide-react";
 import {
   getCurrentProfile,
   getCurrentUser,
@@ -12,6 +12,7 @@ import { getServerLocale } from "@/server/i18n";
 import { ProfileAvatar } from "@/features/profile/components/profile-avatar";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/shared/utils";
+import { ACHIEVEMENT_RULES } from "@/lib/shared/study/gamification";
 
 interface ProfilePageProps {
   searchParams: Promise<{ status?: string }>;
@@ -47,6 +48,17 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const username = profile?.username ?? fallbackUsername ?? user.email?.split("@")[0] ?? "User";
   const rankLabel = `${t("profile.rankLevel", { level: stats.xpLevel })} • ${stats.levelName}`;
   const currentRole = profile?.role === "teacher" ? t("auth.roleTeacher") : t("auth.roleStudent");
+
+  const unlockedIds = new Set(stats.achievements.map((a) => a.id));
+  const allAchievements = ACHIEVEMENT_RULES.map((rule) => {
+    const unlocked = unlockedIds.has(rule.id);
+    return {
+      id: rule.id,
+      label: t(rule.label),
+      description: t(rule.description),
+      unlocked,
+    };
+  });
 
   const metricCards = [
     { label: t("profile.totalCardsStudied"), value: stats.totalStudied },
@@ -180,27 +192,30 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </h2>
           </div>
 
-          <div className="mt-5 space-y-3 sm:mt-6">
-            {stats.achievements.length > 0 ? (
-              stats.achievements.slice(0, 4).map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4"
-                >
-                  <p className="font-medium text-[var(--text-primary)]">
-                    {achievement.label}
-                  </p>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                    {achievement.description}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-2xl bg-[var(--bg-surface)] p-4 text-sm text-[var(--text-secondary)]">
-                <p>{t("profile.noAchievements")}</p>
-                <p className="mt-2 leading-6">{t("profile.achievementsHint")}</p>
+          <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2">
+            {allAchievements.map((achievement) => (
+              <div
+                key={achievement.id}
+                className={`relative rounded-2xl border p-4 transition-colors ${
+                  achievement.unlocked
+                    ? "border-[var(--border)] bg-[var(--bg-surface)]"
+                    : "border-dashed border-[var(--border)] bg-[var(--bg-soft)] opacity-60"
+                }`}
+              >
+                {!achievement.unlocked && (
+                  <Lock className="absolute right-3 top-3 h-3.5 w-3.5 text-[var(--text-muted)]" />
+                )}
+                {achievement.unlocked && (
+                  <Trophy className="absolute right-3 top-3 h-3.5 w-3.5 text-amber-400" />
+                )}
+                <p className={`pr-6 font-medium ${achievement.unlocked ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
+                  {achievement.label}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+                  {achievement.description}
+                </p>
               </div>
-            )}
+            ))}
           </div>
         </div>
         </div>
