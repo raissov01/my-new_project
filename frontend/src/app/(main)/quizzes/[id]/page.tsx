@@ -32,9 +32,16 @@ export async function generateMetadata({ params }: QuizDetailPageProps) {
     quiz.description ??
     `${quiz.questionCount} questions · ${quiz.subject ?? "Quiz"}`;
   return {
-    title: `${quiz.title} — StudyWithRaissov`,
+    title: quiz.title,
     description,
     openGraph: {
+      type: "website",
+      title: quiz.title,
+      description,
+      images: [{ url: "/icon-512.png", width: 512, height: 512, alt: quiz.title }],
+    },
+    twitter: {
+      card: "summary",
       title: quiz.title,
       description,
     },

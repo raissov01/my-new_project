@@ -137,16 +137,23 @@ export function FlashcardViewer({
       <div className="flex flex-col items-center gap-3 sm:gap-4">
         <Button variant="secondary" size="md" onClick={handleFlip} className="min-w-40 tap-target">
           {t("study.flip")}
+          <kbd className="kbd-hint ml-2 hidden rounded bg-[var(--bg-soft)] px-1.5 py-0.5 text-[10px] font-mono text-[var(--text-muted)] sm:inline">
+            Space
+          </kbd>
         </Button>
         <div className="flex items-center justify-center gap-2 sm:gap-3">
           <Button variant="outline" size="md" onClick={goPrev} disabled={currentIndex === 0} className="tap-target">
             <ChevronLeft className="mr-1 h-4 w-4" />
-            <span className="hidden sm:inline">{t("study.previous")}</span>
-            <span className="sm:hidden">{t("study.previous")}</span>
+            {t("study.previous")}
+            <kbd className="kbd-hint ml-2 hidden rounded bg-[var(--bg-soft)] px-1.5 py-0.5 text-[10px] font-mono text-[var(--text-muted)] sm:inline">
+              ←
+            </kbd>
           </Button>
           <Button variant="outline" size="md" onClick={goNext} disabled={currentIndex === total - 1} className="tap-target">
-            <span className="hidden sm:inline">{t("study.next")}</span>
-            <span className="sm:hidden">{t("study.next")}</span>
+            {t("study.next")}
+            <kbd className="kbd-hint ml-2 hidden rounded bg-[var(--bg-soft)] px-1.5 py-0.5 text-[10px] font-mono text-[var(--text-muted)] sm:inline">
+              →
+            </kbd>
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>

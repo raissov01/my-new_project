@@ -105,14 +105,14 @@ export async function getAuthToken(): Promise<string | null> {
   return getAuthTokenCached();
 }
 
-export async function setAuthToken(token: string) {
+export async function setAuthToken(token: string, rememberMe = true) {
   const cookieStore = await cookies();
   cookieStore.set(TOKEN_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 7 * 24 * 60 * 60,
+    ...(rememberMe ? { maxAge: 30 * 24 * 60 * 60 } : {}),
   });
 }
 

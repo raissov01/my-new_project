@@ -8,10 +8,10 @@
   --primary-hover: #1d4ed8;
   --primary-soft: rgba(37, 99, 235, 0.08);
   --primary-glow: rgba(37, 99, 235, 0.18);
-  --accent: #f97316;
-  --accent-hover: #ea580c;
-  --accent-soft: rgba(249, 115, 22, 0.08);
-  --accent-glow: rgba(249, 115, 22, 0.15);
+  --accent: #c2500a;
+  --accent-hover: #a84208;
+  --accent-soft: rgba(194, 80, 10, 0.08);
+  --accent-glow: rgba(194, 80, 10, 0.15);
   --success: #10b981;
   --success-soft: rgba(16, 185, 129, 0.08);
   --gold: #eab308;
@@ -31,7 +31,7 @@
   /* Text — high contrast, readable */
   --text-primary: #18181b;
   --text-secondary: #52525b;
-  --text-muted: #a1a1aa;
+  --text-muted: #6b7280;
   --text-inverted: #ffffff;
 
   /* Borders */
@@ -70,6 +70,8 @@
 .dark {
   --primary-soft: rgba(37, 99, 235, 0.12);
   --primary-glow: rgba(37, 99, 235, 0.25);
+  --accent: #f97316;
+  --accent-hover: #ea580c;
   --accent-soft: rgba(249, 115, 22, 0.10);
   --accent-glow: rgba(249, 115, 22, 0.20);
   --success-soft: rgba(16, 185, 129, 0.10);
@@ -99,7 +101,7 @@
   --shadow-lg: 0 8px 20px -4px rgba(0, 0, 0, 0.60), 0 4px 8px -2px rgba(0, 0, 0, 0.35);
   --shadow-xl: 0 16px 32px -8px rgba(0, 0, 0, 0.70), 0 8px 16px -4px rgba(0, 0, 0, 0.40);
   --shadow-glow: 0 0 0 1px var(--primary-soft), 0 4px 16px -4px rgba(37, 99, 235, 0.30);
-  --shadow-accent-glow: 0 0 0 1px var(--accent-soft), 0 4px 16px -4px rgba(249, 115, 22, 0.25);
+  --shadow-accent-glow: 0 0 0 1px var(--accent-soft), 0 4px 16px -4px rgba(249, 115, 22, 0.30);
 
   --surface-shadow: var(--shadow-sm);
   --surface-shadow-strong: var(--shadow-md);

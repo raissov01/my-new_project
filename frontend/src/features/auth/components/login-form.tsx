@@ -116,7 +116,17 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
           hideLabel={t("auth.hidePassword")}
         />
 
-        <div className="flex justify-end -mt-1">
+        <div className="flex items-center justify-between -mt-1">
+          <label className="flex cursor-pointer items-center gap-2 select-none">
+            <input
+              type="checkbox"
+              name="rememberMe"
+              defaultChecked
+              className="h-4 w-4 rounded border border-[var(--border)] accent-[var(--primary)]"
+              disabled={isDisabled}
+            />
+            <span className="text-sm text-[var(--text-secondary)]">{t("auth.rememberMe")}</span>
+          </label>
           <Link
             href="/forgot-password"
             className="text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]"

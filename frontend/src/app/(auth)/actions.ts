@@ -97,6 +97,7 @@ export async function login(formData: FormData): Promise<AuthResult> {
   const t = createTranslator(await getServerLocale());
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const rememberMe = formData.get("rememberMe") === "on";
 
   if (!email || !password) return { error: t("action.requiredEmailPassword") };
 
@@ -112,7 +113,7 @@ export async function login(formData: FormData): Promise<AuthResult> {
       password,
     });
 
-    await setAuthToken(resp.token);
+    await setAuthToken(resp.token, rememberMe);
     redirect(resp.user.role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err) throw err;

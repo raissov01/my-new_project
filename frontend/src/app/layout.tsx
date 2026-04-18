@@ -13,10 +13,18 @@ export const viewport: Viewport = {
   themeColor: "#2563eb",
 };
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
+const SITE_TITLE = "StudyWithRaissov — Premium IELTS Preparation Platform";
+const SITE_DESCRIPTION =
+  "StudyWithRaissov — студенттер мен оқытушыларға арналған жан-жақты оқу экожүйесі. Флешкарталар, тесттер, челленджтер және тағы басқа.";
+
 export const metadata: Metadata = {
-  title: "StudyWithRaissov — Premium IELTS Preparation Platform",
-  description:
-    "StudyWithRaissov — студенттер мен оқытушыларға арналған жан-жақты оқу экожүйесі. Флешкарталар, тесттер, челленджтер және тағы басқа.",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: SITE_TITLE,
+    template: "%s | StudyWithRaissov",
+  },
+  description: SITE_DESCRIPTION,
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -31,6 +39,26 @@ export const metadata: Metadata = {
     ],
     shortcut: "/brand-mark.svg",
     apple: "/icon-192.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "StudyWithRaissov",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "StudyWithRaissov",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/icon-512.png"],
   },
 };
 

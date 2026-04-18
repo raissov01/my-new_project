@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ComponentType } from "react";
 import Link from "next/link";
-import { BookOpen, CalendarDays, ChartColumn, PenLine, Sparkles, Target, Mic } from "lucide-react";
+import { AlertCircle, BookOpen, CalendarDays, ChartColumn, PenLine, RefreshCw, Sparkles, Target, Mic } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { getIELTSDashboard, getIELTSWeakness, getRoadmapProgress } from "../simulator/attempt-actions";
@@ -66,32 +66,26 @@ export function IELTSDashboardClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const [dash, weak, progress] = await Promise.all([getIELTSDashboard(), getIELTSWeakness(), getRoadmapProgress()]);
-        if (!mounted) return;
-        setDashboard(dash as DashboardData);
-        setWeakness(weak as WeaknessData);
-        if (progress && typeof progress === "object" && "progress" in progress) {
-          setRoadmap((progress as { progress: RoadmapProgress | null }).progress);
-        }
-      } catch (err) {
-        if (!mounted) return;
-        setError(err instanceof Error ? err.message : "Failed to load dashboard.");
-      } finally {
-        if (mounted) setLoading(false);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [dash, weak, progress] = await Promise.all([getIELTSDashboard(), getIELTSWeakness(), getRoadmapProgress()]);
+      setDashboard(dash as DashboardData);
+      setWeakness(weak as WeaknessData);
+      if (progress && typeof progress === "object" && "progress" in progress) {
+        setRoadmap((progress as { progress: RoadmapProgress | null }).progress);
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "error");
+    } finally {
+      setLoading(false);
     }
-
-    void load();
-    return () => {
-      mounted = false;
-    };
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const bandItems = useMemo(() => {
     if (!dashboard) return [];
@@ -126,7 +120,24 @@ export function IELTSDashboardClient() {
   }
 
   if (error) {
-    return <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-5 text-sm text-red-400">{error}</div>;
+    return (
+      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 sm:p-8">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="h-10 w-10 text-red-400" />
+          <div>
+            <p className="font-semibold text-[var(--text-primary)]">{t("error.pageTitle")}</p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("error.pageBody")}</p>
+          </div>
+          <button
+            onClick={() => void load()}
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-elevated)]"
+          >
+            <RefreshCw className="h-4 w-4" />
+            {t("error.tryAgain")}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!dashboard || !weakness) {
