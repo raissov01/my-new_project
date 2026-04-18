@@ -411,7 +411,7 @@ func (r *Room) endQuestion(timedOut bool) {
 		evt.BlankAnswer = q.BlankAnswer
 	case "reorder":
 		evt.CorrectOrder = q.ReorderItems
-	case "matching":
+	case "matching", "categorization":
 		pairs := make([]MatchPair, 0, len(q.MatchCorrect))
 		for left, right := range q.MatchCorrect {
 			pairs = append(pairs, MatchPair{Left: left, Right: right})
@@ -556,8 +556,12 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 		isCorrect = normalizeBlank(req.TextAns) == normalizeBlank(q.BlankAnswer)
 	case "reorder":
 		isCorrect = liveSlicesEqual(req.OrderAnswer, q.ReorderItems)
-	case "matching":
+	case "matching", "categorization":
 		isCorrect = liveMatchingCorrect(req.MatchAnswer, q.MatchCorrect)
+	case "dropdown":
+		isCorrect = strings.EqualFold(req.Option, q.CorrectOption)
+	case "poll":
+		isCorrect = false // non-graded
 	default:
 		isCorrect = false
 	}
@@ -601,8 +605,8 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 			textAns = &s
 		}
 	}
-	// For matching, store the submitted map as JSON in TextAnswer.
-	if q.QuestionType == "matching" && len(req.MatchAnswer) > 0 {
+	// For matching/categorization, store the submitted map as JSON in TextAnswer.
+	if (q.QuestionType == "matching" || q.QuestionType == "categorization") && len(req.MatchAnswer) > 0 {
 		if b, err := json.Marshal(req.MatchAnswer); err == nil {
 			s := string(b)
 			textAns = &s

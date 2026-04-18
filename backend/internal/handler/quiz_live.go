@@ -200,12 +200,16 @@ func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 	var quiz models.Quiz
 	h.db.Preload("Questions").First(&quiz, "id = ?", session.QuizID)
 
-	// Ensure the room exists in the hub (may have been lost after server restart)
-	// For now, if the room isn't in the hub, reject the join (session is stale)
-	room := h.hub.GetRoom(code)
-	if room == nil {
-		writeError(w, http.StatusGone, "session is no longer active", nil)
-		return
+	// Ensure the room exists in the hub.
+	// After a server restart the hub is empty but the DB session is still valid.
+	// Recreate the room so the player (and any reconnecting host) can continue.
+	if h.hub.GetRoom(code) == nil {
+		if len(quiz.Questions) == 0 {
+			writeError(w, http.StatusGone, "session is no longer active", nil)
+			return
+		}
+		liveQuiz := buildLiveQuiz(&quiz)
+		h.hub.CreateRoom(session.ID, code, session.Mode, liveQuiz)
 	}
 
 	writeJSON(w, http.StatusOK, joinSessionResponse{

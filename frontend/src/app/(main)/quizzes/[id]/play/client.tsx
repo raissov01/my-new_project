@@ -208,9 +208,11 @@ export function PlayQuizClient({
   );
   const [blankInput, setBlankInput] = useState("");
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
-  // matchDraft: for matching questions, maps left item → selected right item ("" = unselected).
+  // matchDraft: for matching/categorization, maps left item → selected right item ("" = unselected).
   const [matchDraft, setMatchDraft] = useState<Record<string, string>>({});
   const [hotspotSelected, setHotspotSelected] = useState<string | null>(null);
+  // pollSelected / dropdownSelected reuse selectedLetter slot visually but kept separate for clarity.
+  const [pollSelected, setPollSelected] = useState<string | null>(null);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
   const [hintVisible, setHintVisible] = useState(false);
 
@@ -244,10 +246,10 @@ export function PlayQuizClient({
   useEffect(() => {
     const q = quiz.questions[currentIdx];
     const qt = q.questionType ?? "mcq";
-    if (qt === "mcq" || qt === "mcq_multi") {
+    if (qt === "mcq" || qt === "mcq_multi" || qt === "poll" || qt === "dropdown") {
       const base = buildBaseOptions(q);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDisplayOptions(quiz.shuffleOptions ? shuffleOptions(base) : base);
+      setDisplayOptions(quiz.shuffleOptions && (qt === "mcq" || qt === "mcq_multi") ? shuffleOptions(base) : base);
     }
     if (qt === "reorder") {
       const items = q.reorderItems ?? [];
@@ -255,7 +257,7 @@ export function PlayQuizClient({
     } else {
       setReorderDraft([]);
     }
-    if (qt === "matching") {
+    if (qt === "matching" || qt === "categorization") {
       const pairs = q.matchPairs ?? [];
       const draft: Record<string, string> = {};
       for (const p of pairs) draft[p.left] = "";
@@ -264,6 +266,7 @@ export function PlayQuizClient({
       setMatchDraft({});
     }
     setHotspotSelected(null);
+    setPollSelected(null);
     setBlankInput("");
     setMcqMultiSelected(new Set());
   }, [currentIdx, quiz.questions, quiz.shuffleOptions]);
@@ -325,6 +328,7 @@ export function PlayQuizClient({
     setMcqMultiSelected(new Set());
     setMatchDraft({});
     setHotspotSelected(null);
+    setPollSelected(null);
     setLastCorrect(null);
     setHintVisible(false);
     setPhase("asking");
@@ -517,6 +521,50 @@ export function PlayQuizClient({
     [question.matchPairs, recordAnswer]
   );
 
+  const recordPoll = useCallback(
+    (letter: string | null) => {
+      setPollSelected(letter);
+      // Poll is non-graded — always treated as "correct" for UX (no red flash).
+      recordAnswer(
+        { selectedOption: letter, textAnswer: null, orderAnswer: null },
+        true
+      );
+    },
+    [recordAnswer]
+  );
+
+  const recordDropdown = useCallback(
+    (letter: OptionLetter | null) => {
+      const isCorrect = letter !== null && letter === question.correctOption;
+      setSelectedLetter(letter);
+      recordAnswer(
+        { selectedOption: letter, textAnswer: null, orderAnswer: null },
+        isCorrect
+      );
+    },
+    [question.correctOption, recordAnswer]
+  );
+
+  const recordCategorization = useCallback(
+    (draft: Record<string, string> | null) => {
+      const pairs = question.matchPairs ?? [];
+      let isCorrect = false;
+      let textAnswer: string | null = null;
+      if (draft !== null && pairs.length > 0) {
+        const allSelected = pairs.every((p) => draft[p.left] && draft[p.left] !== "");
+        if (allSelected) {
+          isCorrect = pairs.every((p) => draft[p.left] === p.right);
+          textAnswer = JSON.stringify(draft);
+        }
+      }
+      recordAnswer(
+        { selectedOption: null, textAnswer, orderAnswer: null },
+        isCorrect
+      );
+    },
+    [question.matchPairs, recordAnswer]
+  );
+
   // Timeout handler: fires a "null" answer of the right shape for the
   // current question type so the backend still gets a row per question.
   const handleTimeout = useCallback(() => {
@@ -542,8 +590,17 @@ export function PlayQuizClient({
       case "hotspot":
         recordHotspot(null);
         return;
+      case "poll":
+        recordPoll(null);
+        return;
+      case "dropdown":
+        recordDropdown(null);
+        return;
+      case "categorization":
+        recordCategorization(null);
+        return;
     }
-  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot]);
+  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot, recordPoll, recordDropdown, recordCategorization]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
   // Practice mode disables the timer entirely so students can dwell on
@@ -829,6 +886,33 @@ export function PlayQuizClient({
               revealed={revealed}
               lastCorrect={lastCorrect}
               onSubmit={() => recordMatching(matchDraft)}
+            />
+          ) : questionType === "poll" ? (
+            <PollPlayBody
+              t={t}
+              options={displayOptions}
+              selected={pollSelected}
+              revealed={revealed}
+              onPick={recordPoll}
+            />
+          ) : questionType === "dropdown" ? (
+            <DropdownPlayBody
+              t={t}
+              options={displayOptions}
+              selected={selectedLetter as OptionLetter | null}
+              correct={question.correctOption as OptionLetter | null | undefined}
+              revealed={revealed}
+              onPick={recordDropdown}
+            />
+          ) : questionType === "categorization" ? (
+            <CategorizationPlayBody
+              t={t}
+              pairs={question.matchPairs ?? []}
+              draft={matchDraft}
+              onDraftChange={setMatchDraft}
+              revealed={revealed}
+              lastCorrect={lastCorrect}
+              onSubmit={() => recordCategorization(matchDraft)}
             />
           ) : (
             <ReorderBody
@@ -1523,6 +1607,218 @@ function MatchingBody({
                 <option value="">{t("quiz.matching.selectMatch")}</option>
                 {rightOptions.map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+              {revealed ? (
+                isCorrectPair ? (
+                  <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                ) : isWrongPair ? (
+                  <X className="h-4 w-4 shrink-0 text-red-400" />
+                ) : null
+              ) : null}
+            </div>
+            {revealed && isWrongPair ? (
+              <span className="text-xs text-emerald-400 sm:hidden">
+                ✓ {pair.right}
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
+      {revealed && (
+        <div className="mt-1 space-y-1">
+          {pairs.filter((p) => draft[p.left] !== "" && draft[p.left] !== p.right).map((p) => (
+            <p key={p.left} className="hidden text-xs text-emerald-400 sm:block">
+              {p.left} → <strong>{p.right}</strong>
+            </p>
+          ))}
+        </div>
+      )}
+      {!revealed && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={!allSelected}
+          >
+            {t("quiz.matching.submitAll")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PollPlayBody({
+  t,
+  options,
+  selected,
+  revealed,
+  onPick,
+}: {
+  t: ReturnType<typeof createTranslator>;
+  options: DisplayOption[];
+  selected: string | null;
+  revealed: boolean;
+  onPick: (letter: string) => void;
+}) {
+  const nonEmpty = options.filter((o) => o.text !== "");
+  return (
+    <div className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2">
+      {nonEmpty.map((opt, index) => {
+        const isSelected = selected === opt.letter;
+        return (
+          <button
+            key={opt.letter}
+            type="button"
+            disabled={revealed}
+            onClick={() => !revealed && onPick(opt.letter)}
+            className={`relative flex min-h-[80px] items-center gap-3 overflow-hidden rounded-[var(--radius-lg)] border bg-gradient-to-br p-4 text-left font-medium transition-all ${
+              revealed && isSelected
+                ? "border-indigo-400/50 from-indigo-500/20 to-indigo-500/5 text-white"
+                : revealed
+                  ? "border-[var(--border)]/40 from-transparent to-transparent opacity-50 text-[var(--text-muted)]"
+                  : isSelected
+                    ? `border-indigo-400/50 ${ACCENT_BY_POSITION[index % 4]} text-white`
+                    : `border-[var(--border)]/50 ${ACCENT_BY_POSITION[index % 4]} text-[var(--text-secondary)] hover:border-white/30 hover:text-white`
+            }`}
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/20 bg-white/10 text-sm font-bold uppercase">
+              {POSITION_LABELS[index]}
+            </span>
+            <span className="flex-1 text-sm leading-snug">{opt.text}</span>
+          </button>
+        );
+      })}
+      {revealed ? (
+        <p className="col-span-full mt-1 text-center text-sm text-[var(--text-muted)]">
+          {t("quiz.poll.resultLabel")}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function DropdownPlayBody({
+  t,
+  options,
+  selected,
+  correct,
+  revealed,
+  onPick,
+}: {
+  t: ReturnType<typeof createTranslator>;
+  options: DisplayOption[];
+  selected: OptionLetter | null;
+  correct: OptionLetter | null | undefined;
+  revealed: boolean;
+  onPick: (letter: OptionLetter) => void;
+}) {
+  const nonEmpty = options.filter((o) => o.text !== "");
+  const isCorrect = revealed && selected !== null && selected === correct;
+  const isWrong = revealed && selected !== null && selected !== correct;
+
+  return (
+    <div className="mt-4 sm:mt-6">
+      <div className={`rounded-[var(--radius-md)] border p-4 transition-colors ${
+        revealed
+          ? isCorrect
+            ? "border-emerald-500/40 bg-emerald-500/8"
+            : isWrong
+              ? "border-red-500/40 bg-red-500/8"
+              : "border-[var(--border)] bg-[var(--bg-surface)]"
+          : "border-[var(--border)] bg-[var(--bg-surface)]"
+      }`}>
+        <label className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          {t("quiz.dropdown.selectLabel")}
+        </label>
+        <select
+          value={selected ?? ""}
+          onChange={(e) => {
+            if (revealed) return;
+            onPick(e.target.value as OptionLetter);
+          }}
+          disabled={revealed}
+          className="w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--primary)]"
+        >
+          <option value="">{t("quiz.dropdown.selectPlaceholder")}</option>
+          {nonEmpty.map((opt) => (
+            <option key={opt.letter} value={opt.letter}>{opt.text}</option>
+          ))}
+        </select>
+      </div>
+      {revealed && correct && (
+        <p className="mt-2 text-sm text-emerald-400">
+          ✓ {nonEmpty.find((o) => o.letter === correct)?.text}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CategorizationPlayBody({
+  t,
+  pairs,
+  draft,
+  onDraftChange,
+  revealed,
+  lastCorrect,
+  onSubmit,
+}: {
+  t: ReturnType<typeof createTranslator>;
+  pairs: MatchPair[];
+  draft: Record<string, string>;
+  onDraftChange: (next: Record<string, string>) => void;
+  revealed: boolean;
+  lastCorrect: boolean | null;
+  onSubmit: () => void;
+}) {
+  const categories = Array.from(new Set(pairs.map((p) => p.right)));
+  const allSelected = pairs.length > 0 && pairs.every((p) => draft[p.left] && draft[p.left] !== "");
+
+  return (
+    <div className="mt-4 space-y-2.5 sm:mt-6">
+      {pairs.map((pair) => {
+        const selected = draft[pair.left] ?? "";
+        const isCorrectPair = revealed && selected === pair.right;
+        const isWrongPair = revealed && selected !== "" && selected !== pair.right;
+        return (
+          <div
+            key={pair.left}
+            className={`flex flex-col gap-2 rounded-[var(--radius-md)] border p-3 transition-colors sm:flex-row sm:items-center ${
+              revealed
+                ? isCorrectPair
+                  ? "border-emerald-500/40 bg-emerald-500/8"
+                  : isWrongPair
+                    ? "border-red-500/40 bg-red-500/8"
+                    : "border-[var(--border)] bg-[var(--bg-surface)] opacity-60"
+                : "border-[var(--border)] bg-[var(--bg-surface)]"
+            }`}
+          >
+            <span className="flex-1 text-sm font-medium text-[var(--text-primary)]">
+              {pair.left}
+            </span>
+            <div className="flex items-center gap-2 sm:w-52">
+              <select
+                value={selected}
+                onChange={(e) => {
+                  if (revealed) return;
+                  onDraftChange({ ...draft, [pair.left]: e.target.value });
+                }}
+                disabled={revealed}
+                className={`w-full rounded-[var(--radius-sm)] border px-2 py-1.5 text-sm outline-none transition-colors ${
+                  revealed
+                    ? isCorrectPair
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                      : isWrongPair
+                        ? "border-red-500 bg-red-500/10 text-red-300"
+                        : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-muted)]"
+                    : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)] focus:border-[var(--primary)]"
+                }`}
+              >
+                <option value="">{t("quiz.categorization.selectCategory")}</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
               {revealed ? (

@@ -22,6 +22,9 @@ import {
   ImagePlus,
   Loader2,
   X,
+  BarChart2,
+  ChevronDown,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -167,6 +170,44 @@ function applyTypeChange(
         reorderItems: [],
         matchPairs: [],
         hotspotZones: q.hotspotZones && q.hotspotZones.length > 0 ? q.hotspotZones : [],
+      };
+    case "poll":
+      return {
+        ...base,
+        optionA: q.optionA ?? "",
+        optionB: q.optionB ?? "",
+        optionC: q.optionC ?? "",
+        optionD: q.optionD ?? "",
+        correctOption: "",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
+      };
+    case "dropdown":
+      return {
+        ...base,
+        optionA: q.optionA ?? "",
+        optionB: q.optionB ?? "",
+        optionC: q.optionC ?? "",
+        optionD: q.optionD ?? "",
+        correctOption: q.correctOption === "a" || q.correctOption === "b" || q.correctOption === "c" || q.correctOption === "d"
+          ? q.correctOption
+          : "a",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
+      };
+    case "categorization":
+      return {
+        ...base,
+        optionA: "",
+        optionB: "",
+        optionC: "",
+        optionD: "",
+        correctOption: "",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: q.matchPairs && q.matchPairs.length > 0 ? q.matchPairs : [{ left: "", right: "" }, { left: "", right: "" }],
       };
   }
 }
@@ -598,6 +639,9 @@ const TYPE_OPTIONS: TypeOption[] = [
   { key: "reorder", labelKey: "quiz.typeReorder", icon: ListOrdered },
   { key: "matching", labelKey: "quiz.typeMatching", icon: Shuffle },
   { key: "hotspot", labelKey: "quiz.typeHotspot", icon: MapPin },
+  { key: "poll", labelKey: "quiz.typePoll", icon: BarChart2 },
+  { key: "dropdown", labelKey: "quiz.typeDropdown", icon: ChevronDown },
+  { key: "categorization", labelKey: "quiz.typeCategorization", icon: Layers },
 ];
 
 function QuestionEditor({
@@ -705,6 +749,12 @@ function QuestionEditor({
         <HotspotBody question={question} onChange={onChange} />
       ) : questionType === "matching" ? (
         <MatchingBody question={question} onChange={onChange} />
+      ) : questionType === "poll" ? (
+        <PollBody question={question} onChange={onChange} />
+      ) : questionType === "dropdown" ? (
+        <DropdownBody question={question} onChange={onChange} />
+      ) : questionType === "categorization" ? (
+        <CategorizationBody question={question} onChange={onChange} />
       ) : (
         <ReorderBody question={question} onChange={onChange} />
       )}
@@ -1299,6 +1349,177 @@ function MatchingBody({
       >
         <Plus className="h-3.5 w-3.5" />
         {t("quiz.matching.addPair")}
+      </button>
+    </div>
+  );
+}
+
+function PollBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const options: Array<{ key: "a" | "b" | "c" | "d"; field: keyof QuizQuestionInput; required: boolean }> = [
+    { key: "a", field: "optionA", required: true },
+    { key: "b", field: "optionB", required: true },
+    { key: "c", field: "optionC", required: false },
+    { key: "d", field: "optionD", required: false },
+  ];
+  return (
+    <div className="mt-3 space-y-2">
+      <p className="text-[11px] text-[var(--text-muted)]">{t("quiz.poll.hint")}</p>
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        {options.map((opt) => (
+          <div
+            key={opt.key}
+            className="flex items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-xs font-semibold uppercase text-[var(--text-secondary)]">
+              {opt.key}
+            </span>
+            <input
+              value={(question[opt.field] as string | undefined) ?? ""}
+              onChange={(e) => onChange({ [opt.field]: e.target.value })}
+              placeholder={opt.required ? t("quiz.optionPlaceholder") : t("quiz.optionPlaceholderOptional")}
+              className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DropdownBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const options: Array<{ key: "a" | "b" | "c" | "d"; field: keyof QuizQuestionInput }> = [
+    { key: "a", field: "optionA" },
+    { key: "b", field: "optionB" },
+    { key: "c", field: "optionC" },
+    { key: "d", field: "optionD" },
+  ];
+  return (
+    <div className="mt-3 space-y-2">
+      <p className="text-[11px] text-[var(--text-muted)]">{t("quiz.dropdown.hint")}</p>
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        {options.map((opt) => {
+          const selected = question.correctOption === opt.key;
+          return (
+            <div
+              key={opt.key}
+              className={`flex items-center gap-2.5 rounded-[var(--radius-md)] border px-3 py-2 transition-colors ${
+                selected
+                  ? "border-[var(--success)] bg-[var(--success)]/10"
+                  : "border-[var(--border)] bg-[var(--bg-surface)]"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => onChange({ correctOption: opt.key })}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold uppercase transition-colors ${
+                  selected
+                    ? "border-[var(--success)] bg-[var(--success)] text-white"
+                    : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                }`}
+                aria-label={t("quiz.markCorrect")}
+              >
+                {opt.key}
+              </button>
+              <input
+                value={(question[opt.field] as string | undefined) ?? ""}
+                onChange={(e) => onChange({ [opt.field]: e.target.value })}
+                placeholder={t("quiz.optionPlaceholder")}
+                className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CategorizationBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const pairs: MatchPair[] = question.matchPairs && question.matchPairs.length > 0
+    ? question.matchPairs
+    : [{ left: "", right: "" }, { left: "", right: "" }];
+
+  const setPair = (idx: number, field: "left" | "right", value: string) => {
+    const next = [...pairs];
+    next[idx] = { ...next[idx], [field]: value };
+    onChange({ matchPairs: next });
+  };
+  const addPair = () => {
+    if (pairs.length >= 8) return;
+    onChange({ matchPairs: [...pairs, { left: "", right: "" }] });
+  };
+  const removePair = (idx: number) => {
+    if (pairs.length <= 2) return;
+    onChange({ matchPairs: pairs.filter((_, i) => i !== idx) });
+  };
+
+  return (
+    <div className="mt-3">
+      <p className="mb-2 text-[11px] text-[var(--text-muted)]">{t("quiz.categorization.hint")}</p>
+      <div className="mb-2 grid grid-cols-2 gap-2 px-8">
+        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">{t("quiz.categorization.colItem")}</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">{t("quiz.categorization.colCategory")}</span>
+      </div>
+      <div className="space-y-2">
+        {pairs.map((pair, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--bg-soft)] text-xs font-semibold text-[var(--text-secondary)]">
+              {idx + 1}
+            </span>
+            <input
+              value={pair.left}
+              onChange={(e) => setPair(idx, "left", e.target.value)}
+              placeholder={t("quiz.categorization.itemPlaceholder")}
+              className="min-w-0 flex-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+            />
+            <span className="shrink-0 text-xs font-semibold text-[var(--text-muted)]">→</span>
+            <input
+              value={pair.right}
+              onChange={(e) => setPair(idx, "right", e.target.value)}
+              placeholder={t("quiz.categorization.categoryPlaceholder")}
+              className="min-w-0 flex-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+            />
+            <button
+              type="button"
+              onClick={() => removePair(idx)}
+              disabled={pairs.length <= 2}
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--danger)]/10 hover:text-[var(--danger)] disabled:opacity-30"
+              aria-label={t("quiz.removeQuestion")}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={addPair}
+        disabled={pairs.length >= 8}
+        className="mt-2 inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-dashed border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-40"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        {t("quiz.categorization.addItem")}
       </button>
     </div>
   );

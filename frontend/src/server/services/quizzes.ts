@@ -24,7 +24,7 @@ export type QuizOverview = {
   tags?: string[];
 };
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization";
 
 export type MatchPair = { left: string; right: string };
 export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string };

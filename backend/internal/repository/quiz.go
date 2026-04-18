@@ -984,6 +984,34 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 						}
 					}
 				}
+			case "dropdown":
+				if a.SelectedOption != nil {
+					normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
+					if normalized == "a" || normalized == "b" || normalized == "c" || normalized == "d" {
+						selected = &normalized
+						if q.CorrectOption != nil && normalized == *q.CorrectOption {
+							isCorrect = true
+							score++
+						}
+					}
+				}
+			case "categorization":
+				if a.TextAnswer != nil && *a.TextAnswer != "" {
+					t := strings.TrimSpace(*a.TextAnswer)
+					textAnswer = &t
+					if matchPairsCorrect(t, q.MatchPairs) {
+						isCorrect = true
+						score++
+					}
+				}
+			case "poll":
+				// Non-graded: record selection but never award a point.
+				if a.SelectedOption != nil {
+					t := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
+					if t == "a" || t == "b" || t == "c" || t == "d" {
+						selected = &t
+					}
+				}
 			default: // mcq
 				if a.SelectedOption != nil {
 					normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
@@ -1028,7 +1056,14 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		})
 	}
 
-	total := len(order)
+	// Poll questions are non-graded and excluded from the denominator.
+	gradableTotal := 0
+	for _, qid := range order {
+		if questions[qid].QuestionType != "poll" {
+			gradableTotal++
+		}
+	}
+	total := gradableTotal
 	percentage := 0
 	if total > 0 {
 		percentage = int((float64(score) / float64(total)) * 100)

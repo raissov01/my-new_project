@@ -235,8 +235,8 @@ function LiveGameInner() {
         setBlankInput("");
         setReorderDraft(q.reorderItems ?? []);
         setReorderSubmitted(false);
-        // Init matching draft: one key per left item, value = "" (unselected).
-        if (q.questionType === "matching" && q.matchLeft) {
+        // Init matching/categorization draft: one key per left item, value = "" (unselected).
+        if ((q.questionType === "matching" || q.questionType === "categorization") && q.matchLeft) {
           const draft: Record<string, string> = {};
           for (const left of q.matchLeft) draft[left] = "";
           setMatchDraft(draft);
@@ -726,6 +726,70 @@ function QuestionScreen({
           zones={q.hotspotZones}
           selected={selectedOpt}
           onSelect={onSelect}
+        />
+      )}
+
+      {q.questionType === "poll" && (
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { key: "a", text: q.optionA },
+            { key: "b", text: q.optionB },
+            { key: "c", text: q.optionC },
+            { key: "d", text: q.optionD },
+          ].filter((o) => o.text).map((opt, i) => (
+            <button
+              key={opt.key}
+              type="button"
+              disabled={!!selectedOpt}
+              onClick={() => !selectedOpt && onSelect(opt.key)}
+              className={`flex min-h-[64px] items-center gap-3 rounded-[var(--radius-lg)] border p-4 text-left text-sm font-medium transition-colors ${
+                selectedOpt === opt.key
+                  ? "border-indigo-400/50 bg-indigo-500/20 text-white"
+                  : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:border-[var(--primary)]"
+              }`}
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold uppercase">
+                {["A","B","C","D"][i]}
+              </span>
+              {opt.text}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {q.questionType === "dropdown" && (
+        <div className="space-y-3">
+          <p className="text-xs text-[var(--text-muted)]">
+            {t("quiz.dropdown.selectLabel")}
+          </p>
+          <select
+            value={selectedOpt ?? ""}
+            disabled={!!selectedOpt}
+            onChange={(e) => e.target.value && onSelect(e.target.value)}
+            className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none disabled:opacity-60"
+          >
+            <option value="">{t("quiz.dropdown.selectPlaceholder")}</option>
+            {[
+              { key: "a", text: q.optionA },
+              { key: "b", text: q.optionB },
+              { key: "c", text: q.optionC },
+              { key: "d", text: q.optionD },
+            ].filter((o) => o.text).map((opt) => (
+              <option key={opt.key} value={opt.key}>{opt.text}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {q.questionType === "categorization" && q.matchLeft && q.matchRight && (
+        <LiveMatchingInput
+          t={t}
+          leftItems={q.matchLeft}
+          rightItems={q.matchRight}
+          draft={matchDraft}
+          submitted={!!selectedOpt}
+          onDraftChange={onMatchChange}
+          onSubmit={onMatchSubmit}
         />
       )}
     </div>

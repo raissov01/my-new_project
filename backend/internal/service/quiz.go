@@ -34,11 +34,16 @@ const (
 
 // Supported question types. MCQ is the default for empty/unknown values.
 const (
-	QTypeMCQ       = "mcq"
-	QTypeMCQMulti  = "mcq_multi"
-	QTypeTrueFalse = "true_false"
-	QTypeFillBlank = "fill_blank"
-	QTypeReorder   = "reorder"
+	QTypeMCQ            = "mcq"
+	QTypeMCQMulti       = "mcq_multi"
+	QTypeTrueFalse      = "true_false"
+	QTypeFillBlank      = "fill_blank"
+	QTypeReorder        = "reorder"
+	QTypeMatching       = "matching"
+	QTypeHotspot        = "hotspot"
+	QTypePoll           = "poll"
+	QTypeDropdown       = "dropdown"
+	QTypeCategorization = "categorization"
 )
 
 func (s *Quiz) GetOverview(ctx context.Context, userID string, filters repository.QuizListFilters) ([]model.QuizOverview, error) {
@@ -282,6 +287,66 @@ func (s *Quiz) validateAndNormalize(
 				return nil, fmt.Errorf("question %d: reorder needs %d-%d items", i+1, minReorderItems, maxReorderItems)
 			}
 			out.ReorderItems = items
+
+		case QTypeMatching, QTypeCategorization:
+			if len(q.MatchPairs) < 2 || len(q.MatchPairs) > 8 {
+				return nil, fmt.Errorf("question %d: %s needs 2–8 pairs", i+1, qType)
+			}
+			pairs := make([]model.MatchPair, 0, len(q.MatchPairs))
+			for j, p := range q.MatchPairs {
+				l := strings.TrimSpace(p.Left)
+				r := strings.TrimSpace(p.Right)
+				if l == "" || r == "" {
+					return nil, fmt.Errorf("question %d: pair %d: both sides are required", i+1, j+1)
+				}
+				pairs = append(pairs, model.MatchPair{Left: l, Right: r})
+			}
+			out.MatchPairs = pairs
+
+		case QTypeHotspot:
+			if len(q.HotspotZones) == 0 {
+				return nil, fmt.Errorf("question %d: hotspot needs at least one zone", i+1)
+			}
+			if correct == "" {
+				return nil, fmt.Errorf("question %d: hotspot needs a correct zone ID", i+1)
+			}
+			out.HotspotZones = q.HotspotZones
+			out.CorrectOption = correct
+
+		case QTypePoll:
+			if a == "" || b == "" {
+				return nil, fmt.Errorf("question %d: poll needs at least two options (A and B)", i+1)
+			}
+			out.OptionA = a
+			out.OptionB = b
+			out.OptionC = c
+			out.OptionD = d
+
+		case QTypeDropdown:
+			if a == "" || b == "" {
+				return nil, fmt.Errorf("question %d: dropdown needs at least two options (A and B)", i+1)
+			}
+			validOpts := map[string]bool{}
+			if a != "" {
+				validOpts["a"] = true
+			}
+			if b != "" {
+				validOpts["b"] = true
+			}
+			if c != "" {
+				validOpts["c"] = true
+			}
+			if d != "" {
+				validOpts["d"] = true
+			}
+			if !validOpts[correct] {
+				return nil, fmt.Errorf("question %d: dropdown correct option must match one of the filled options", i+1)
+			}
+			out.OptionA = a
+			out.OptionB = b
+			out.OptionC = c
+			out.OptionD = d
+			out.CorrectOption = correct
 
 		default:
 			return nil, fmt.Errorf("question %d: unsupported question type %q", i+1, qType)
