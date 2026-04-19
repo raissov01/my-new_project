@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { IELTSDashboardClient } from "./client";
+
+export const metadata: Metadata = {
+  title: "IELTS кабинеті",
+  description: "Жеке IELTS прогресіңіз, band трендтері, әлсіз тараптар талдауы және жол картасы.",
+  robots: { index: false, follow: false },
+};
 
 export default async function IELTSDashboardPage() {
   const locale = await getServerLocale();

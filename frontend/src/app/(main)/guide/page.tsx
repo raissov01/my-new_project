@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   BookOpen,
@@ -18,6 +19,19 @@ import {
 } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
+
+export const metadata: Metadata = {
+  title: "Нұсқаулық",
+  description: "StudyWithRaissov платформасын қалай пайдалану керек — флешкарталар, квиздер, IELTS дайындығы және AI-қолдауы туралы толық нұсқаулық.",
+  alternates: { canonical: "/guide" },
+  openGraph: {
+    title: "Нұсқаулық — StudyWithRaissov",
+    description: "Платформаны қалай пайдалану керек — толық нұсқаулық.",
+    url: "/guide",
+    locale: "kk_KZ",
+  },
+  robots: { index: true, follow: true },
+};
 import { getCurrentUser } from "@/server/auth";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LibraryBig, Layers3, Plus, Search, Sparkles, Target } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
@@ -7,6 +8,19 @@ import { Button } from "@/components/ui/button";
 import { SetCard } from "@/features/sets/components";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 import { getPublicSetsOverview, getUserSetsOverview } from "@/server/services/sets-overview";
+
+export const metadata: Metadata = {
+  title: "Флешкарта кітапханасы",
+  description: "Платформадағы барлық ашық флешкарта жинақтарын қараңыз. IELTS, тіл үйрену, пән бойынша жинақтар.",
+  alternates: { canonical: "/flashcards" },
+  openGraph: {
+    title: "Флешкарта кітапханасы — StudyWithRaissov",
+    description: "Платформадағы барлық ашық флешкарта жинақтарын қараңыз.",
+    url: "/flashcards",
+    locale: "kk_KZ",
+  },
+  robots: { index: true, follow: true },
+};
 
 interface FlashcardsPageProps {
   searchParams: Promise<{

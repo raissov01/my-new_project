@@ -40,11 +40,21 @@ export const metadata: Metadata = {
     shortcut: "/brand-mark.svg",
     apple: "/icon-192.png",
   },
+  alternates: {
+    canonical: APP_URL,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
   openGraph: {
     type: "website",
     siteName: "StudyWithRaissov",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
+    url: APP_URL,
+    locale: "kk_KZ",
     images: [
       {
         url: "/icon-512.png",
@@ -87,8 +97,52 @@ export default async function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": `${APP_URL}/#organization`,
+                  name: "StudyWithRaissov",
+                  url: APP_URL,
+                  logo: {
+                    "@type": "ImageObject",
+                    url: `${APP_URL}/icon-512.png`,
+                    width: 512,
+                    height: 512,
+                  },
+                  description: SITE_DESCRIPTION,
+                  inLanguage: "kk",
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": `${APP_URL}/#website`,
+                  url: APP_URL,
+                  name: "StudyWithRaissov",
+                  description: SITE_DESCRIPTION,
+                  publisher: { "@id": `${APP_URL}/#organization` },
+                  inLanguage: "kk",
+                  potentialAction: {
+                    "@type": "SearchAction",
+                    target: { "@type": "EntryPoint", urlTemplate: `${APP_URL}/quizzes?q={search_term_string}` },
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-xl focus:bg-[var(--primary)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+        >
+          Негізгі мазмұнға өту
+        </a>
         <LocaleProvider initialLocale={initialLocale}>
           <ToastProvider>{children}</ToastProvider>
         </LocaleProvider>

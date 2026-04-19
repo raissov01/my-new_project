@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Lock, Pencil, Sparkles, Trophy } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Профиль",
+  description: "Жеке профиль, XP, жетістіктер және оқу статистикасы.",
+  robots: { index: false, follow: false },
+};
 import {
   getCurrentProfile,
   getCurrentUser,

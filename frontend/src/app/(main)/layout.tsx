@@ -13,7 +13,7 @@ export default function MainLayout({
     <div className="relative z-10 flex min-h-screen flex-col">
       <Navbar />
       <GhostModeBanner />
-      <main className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1">{children}</main>
       <AppFooter />
     </div>
   );

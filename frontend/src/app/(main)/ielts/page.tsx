@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   BookOpenText,
@@ -14,6 +15,19 @@ import { Button } from "@/components/ui/button";
 import { GuestIELTSCta } from "@/features/auth/components/guest-ielts-cta";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
+
+export const metadata: Metadata = {
+  title: "IELTS дайындығы",
+  description: "AI-көмекшімен IELTS-ке дайындалыңыз. Жазу, сөйлеу, оқу жаттығулары, жол картасы және жеке ұсыныстар.",
+  alternates: { canonical: "/ielts" },
+  openGraph: {
+    title: "IELTS дайындығы — StudyWithRaissov",
+    description: "AI-көмекшімен IELTS-ке дайындалыңыз. Жазу, сөйлеу, оқу жаттығулары және жол картасы.",
+    url: "/ielts",
+    locale: "kk_KZ",
+  },
+  robots: { index: true, follow: true },
+};
 
 export default async function IELTSHubPage() {
   const locale = await getServerLocale();
