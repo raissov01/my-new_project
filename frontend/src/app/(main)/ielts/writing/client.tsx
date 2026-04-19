@@ -281,10 +281,10 @@ export function WritingPracticeClient() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                Dynamic task pool
+                {t("ielts.wr.dynamicPool")}
               </h3>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                Choose a real IELTS-style task from the question bank or paste your own prompt.
+                {t("ielts.wr.dynamicPoolDesc")}
               </p>
             </div>
             <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)]">

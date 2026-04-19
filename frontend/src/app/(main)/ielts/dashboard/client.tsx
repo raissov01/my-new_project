@@ -174,14 +174,14 @@ export function IELTSDashboardClient() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-medium text-[var(--text-primary)]">{attempt.attemptType.replaceAll("_", " ")}</p>
-                    <p className="text-xs text-[var(--text-secondary)]">{attempt.section} · Band target {attempt.bandTarget}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">{attempt.section} · {t("ielts.dashboard.bandTarget")} {attempt.bandTarget}</p>
                   </div>
                   <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--text-secondary)]">
                     {attempt.status}
                   </span>
                 </div>
                 <div className="mt-2 text-xs text-[var(--text-muted)]">
-                  Violations: {attempt.violationCount} · {new Date(attempt.createdAt).toLocaleString()}
+                  {t("ielts.dashboard.violations")}: {attempt.violationCount} · {new Date(attempt.createdAt).toLocaleString()}
                 </div>
               </div>
             ))}
@@ -318,8 +318,8 @@ export function IELTSDashboardClient() {
           <CalendarDays className="h-4 w-4" /> {t("ielts.dashboard.weaknessAnalysis")}
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <WeaknessCard title="Writing" weakest={weakness.writingWeakest} band={weakness.writingWeakestBand} criteria={weakness.writingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} />
-          <WeaknessCard title="Speaking" weakest={weakness.speakingWeakest} band={weakness.speakingWeakestBand} criteria={weakness.speakingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} />
+          <WeaknessCard title={t("ielts.dashboard.writing")} weakest={weakness.writingWeakest} band={weakness.writingWeakestBand} criteria={weakness.writingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} />
+          <WeaknessCard title={t("ielts.dashboard.speaking")} weakest={weakness.speakingWeakest} band={weakness.speakingWeakestBand} criteria={weakness.speakingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} />
         </div>
         <div className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
           {weakness.recommendations.map((item) => <p key={item}>• {item}</p>)}

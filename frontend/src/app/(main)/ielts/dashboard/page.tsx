@@ -20,7 +20,7 @@ export default async function IELTSDashboardPage() {
           {t("ielts.hubTitle")}
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--text-secondary)]">
-          Dashboard summary, recent attempts, performance trends, and weakness analysis.
+          {t("ielts.dashboard.dashboardSummary")}
         </p>
       </div>
       <div className="mt-8">

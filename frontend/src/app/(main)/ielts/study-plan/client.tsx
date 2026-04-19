@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useLocale } from "@/lib/shared/i18n";
 import {
   checkAdaptive,
   completeStudyTask,
@@ -723,13 +724,15 @@ function PlanHistorySection() {
 
 // ── Wizard Flow ─────────────────────────────────────────────────────────────
 
-const WIZARD_STEPS = [
-  { title: "Exam Goal", desc: "What band score do you need?" },
-  { title: "Current Level", desc: "Where are you right now?" },
-  { title: "Time & Schedule", desc: "How much time do you have?" },
-  { title: "Strengths & Weaknesses", desc: "Which skills need work?" },
-  { title: "Generate", desc: "Review and create your roadmap" },
-];
+function getWizardSteps(t: (key: string) => string) {
+  return [
+    { title: t("ielts.plan.stepExam"), desc: t("ielts.plan.stepExamDesc") },
+    { title: t("ielts.plan.stepLevel"), desc: t("ielts.plan.stepLevelDesc") },
+    { title: t("ielts.plan.stepTime"), desc: t("ielts.plan.stepTimeDesc") },
+    { title: t("ielts.plan.stepSkills"), desc: t("ielts.plan.stepSkillsDesc") },
+    { title: t("ielts.plan.stepGenerate"), desc: t("ielts.plan.stepGenerateDesc") },
+  ];
+}
 
 function WizardFlow({
   step,
@@ -750,11 +753,13 @@ function WizardFlow({
   onBack: () => void;
   onGenerate: () => void;
 }) {
+  const { t } = useLocale();
+  const wizardSteps = getWizardSteps(t);
   return (
     <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
       {/* Progress */}
       <div className="mb-6 flex items-center gap-2">
-        {WIZARD_STEPS.map((_, i) => (
+        {wizardSteps.map((_, i) => (
           <div key={i} className="flex items-center gap-2">
             <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
               i < step ? "bg-[var(--success)] text-white"
@@ -763,15 +768,15 @@ function WizardFlow({
             }`}>
               {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
             </div>
-            {i < WIZARD_STEPS.length - 1 && (
+            {i < wizardSteps.length - 1 && (
               <div className={`hidden h-0.5 w-6 sm:block ${i < step ? "bg-[var(--success)]" : "bg-[var(--border)]"}`} />
             )}
           </div>
         ))}
       </div>
 
-      <h2 className="text-xl font-bold text-[var(--text-primary)]">{WIZARD_STEPS[step].title}</h2>
-      <p className="mt-1 text-sm text-[var(--text-secondary)]">{WIZARD_STEPS[step].desc}</p>
+      <h2 className="text-xl font-bold text-[var(--text-primary)]">{wizardSteps[step].title}</h2>
+      <p className="mt-1 text-sm text-[var(--text-secondary)]">{wizardSteps[step].desc}</p>
 
       <div className="mt-6">
         {step === 0 && (

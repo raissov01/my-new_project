@@ -286,7 +286,7 @@ export function SpeakingPracticeClient() {
       <div className="space-y-6">
         <div className="grid gap-4 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] lg:grid-cols-5">
           <FilterSelect
-            label="Speaking part"
+            label={t("ielts.sp.filterPart")}
             value={part}
             onChange={(value) => setPart(value as PartKey)}
             options={[
