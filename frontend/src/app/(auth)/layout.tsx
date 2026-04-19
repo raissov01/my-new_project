@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   return (
     <div className="relative z-10 min-h-screen bg-[var(--bg-base)] px-4 py-4 sm:px-5 sm:py-6 lg:px-8">
       <div className="mx-auto flex max-w-6xl justify-end">
@@ -20,29 +25,28 @@ export default function AuthLayout({
           </Link>
           <div className="mt-14 max-w-xl">
             <div className="badge-primary mb-4">
-              Premium IELTS Platform
+              {t("auth.panelBadge")}
             </div>
             <h1 className="text-4xl font-extrabold tracking-[-0.03em] leading-[1.15] text-[var(--text-primary)] xl:text-5xl">
-              Calm, focused learning for students and teachers.
+              {t("auth.panelHeading")}
             </h1>
             <p className="mt-5 max-w-lg text-base leading-8 text-[var(--text-secondary)]">
-              Flashcards, class challenges, assignments, and progress tracking in one
-              clean workspace designed to feel fast, clear, and professional.
+              {t("auth.panelBody")}
             </p>
           </div>
 
           <div className="mt-12 grid gap-3 sm:grid-cols-3">
             <div className="rounded-[var(--radius-lg)] border border-[var(--border)] border-l-[3px] border-l-[var(--primary)] bg-[var(--bg-soft)] p-4">
-              <p className="text-xs font-medium text-[var(--text-muted)]">Built for</p>
-              <p className="mt-1.5 text-lg font-bold text-[var(--text-primary)]">Students</p>
+              <p className="text-xs font-medium text-[var(--text-muted)]">{t("auth.panelBuiltFor")}</p>
+              <p className="mt-1.5 text-lg font-bold text-[var(--text-primary)]">{t("auth.panelStudents")}</p>
             </div>
             <div className="rounded-[var(--radius-lg)] border border-[var(--border)] border-l-[3px] border-l-emerald-500 bg-[var(--bg-soft)] p-4">
-              <p className="text-xs font-medium text-[var(--text-muted)]">Prepared for</p>
-              <p className="mt-1.5 text-lg font-bold text-[var(--text-primary)]">Teachers</p>
+              <p className="text-xs font-medium text-[var(--text-muted)]">{t("auth.panelPreparedFor")}</p>
+              <p className="mt-1.5 text-lg font-bold text-[var(--text-primary)]">{t("auth.panelTeachers")}</p>
             </div>
             <div className="rounded-[var(--radius-lg)] border border-[var(--border)] border-l-[3px] border-l-[var(--accent)] bg-[var(--bg-soft)] p-4">
-              <p className="text-xs font-medium text-[var(--text-muted)]">Ready for</p>
-              <p className="mt-1.5 text-lg font-bold text-[var(--text-primary)]">AI tools</p>
+              <p className="text-xs font-medium text-[var(--text-muted)]">{t("auth.panelReadyFor")}</p>
+              <p className="mt-1.5 text-lg font-bold text-[var(--text-primary)]">{t("auth.panelAI")}</p>
             </div>
           </div>
         </div>

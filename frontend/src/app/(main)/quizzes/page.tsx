@@ -9,9 +9,9 @@ import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-pro
 import { getQuizzesOverview, type QuizListFilters } from "@/server/services/quizzes";
 
 export const metadata = {
-  title: "Quiz Library — StudyWithRaissov",
+  title: "Квиз кітапханасы",
   description:
-    "Browse and play public quizzes. Practice IELTS, flashcards and more.",
+    "Ашық квиздерді қараңыз, ойнаңыз және өзіңіздікін жасаңыз. IELTS дайындығы, флешкарталар және басқалары.",
 };
 
 interface QuizzesPageProps {
