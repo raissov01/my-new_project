@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useLocale } from "@/lib/shared/i18n";
+import { useLocale } from "@/components/providers/locale-provider";
 import {
   checkAdaptive,
   completeStudyTask,
@@ -913,7 +913,7 @@ function WizardFlow({
           </Button>
         ) : <div />}
 
-        {step < WIZARD_STEPS.length - 1 ? (
+        {step < wizardSteps.length - 1 ? (
           <Button onClick={onNext}>
             Next <ArrowRight className="h-4 w-4" />
           </Button>

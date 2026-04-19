@@ -1,6 +1,9 @@
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { IELTSStudyPlanClient } from "./client";
 
@@ -47,12 +50,19 @@ export default async function IELTSStudyPlanPage() {
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
+      <Breadcrumbs
+        baseUrl={APP_URL}
+        items={[
+          { label: t("ielts.hubTitle"), href: "/ielts" },
+          { label: t("ielts.studyPlanTitle") },
+        ]}
+      />
+      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-          {t("ielts.hubTitle")}
+          {t("ielts.studyPlanTitle")}
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--text-secondary)]">
-          Generate a structured weekly IELTS study plan based on your target band, exam date, and weakest skills.
+          {t("ielts.studyPlanSubtitle")}
         </p>
       </div>
       <div className="mt-8">

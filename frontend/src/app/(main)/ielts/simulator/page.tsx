@@ -1,8 +1,10 @@
-import Link from "next/link";
-import { ArrowLeft, ClipboardCheck } from "lucide-react";
+import { ClipboardCheck } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SimulatorClient } from "./client";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
 
 export default async function IELTSSimulatorPage() {
   const locale = await getServerLocale();
@@ -10,10 +12,13 @@ export default async function IELTSSimulatorPage() {
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <Link href="/ielts" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-        <ArrowLeft className="h-4 w-4" />
-        {t("ielts.backToHub")}
-      </Link>
+      <Breadcrumbs
+        baseUrl={APP_URL}
+        items={[
+          { label: t("ielts.hubTitle"), href: "/ielts" },
+          { label: t("ielts.simulatorTitle") },
+        ]}
+      />
 
       <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <div className="flex items-center gap-3">

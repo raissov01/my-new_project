@@ -1,8 +1,10 @@
-import Link from "next/link";
-import { ArrowLeft, PenLine, Sparkles } from "lucide-react";
+import { PenLine, Sparkles } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { WritingPracticeClient } from "./client";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
 
 export default async function IELTSWritingPage() {
   const locale = await getServerLocale();
@@ -10,10 +12,13 @@ export default async function IELTSWritingPage() {
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <Link href="/ielts" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-        <ArrowLeft className="h-4 w-4" />
-        {t("ielts.backToHub")}
-      </Link>
+      <Breadcrumbs
+        baseUrl={APP_URL}
+        items={[
+          { label: t("ielts.hubTitle"), href: "/ielts" },
+          { label: t("ielts.writingTitle") },
+        ]}
+      />
 
       <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <div className="flex items-center gap-3">
