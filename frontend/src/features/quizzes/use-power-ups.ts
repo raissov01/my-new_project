@@ -19,9 +19,10 @@ export const POWER_UP_KEYS: PowerUpKey[] = [
 ];
 
 // Grant rule: every STREAK_GRANT_STEP correct answers in a row, award one
-// random power-up. At 0 (game start) the hook seeds the inventory with a
-// single random power-up so the student always has *something* to play with.
+// random power-up. At game start the hook seeds the inventory with 2 of each
+// power-up (8 total) so the student can experiment with all abilities.
 const STREAK_GRANT_STEP = 3;
+const INITIAL_COUNT_PER_POWER_UP = 2;
 
 type Inventory = Record<PowerUpKey, number>;
 
@@ -62,15 +63,12 @@ export function usePowerUps(enabled: boolean) {
     if (!enabled) {
       return { fifty_fifty: 0, double_points: 0, time_freeze: 0, streak_saver: 0 };
     }
-    const seed = randomKey();
-    const base: Inventory = {
-      fifty_fifty: 0,
-      double_points: 0,
-      time_freeze: 0,
-      streak_saver: 0,
+    return {
+      fifty_fifty: INITIAL_COUNT_PER_POWER_UP,
+      double_points: INITIAL_COUNT_PER_POWER_UP,
+      time_freeze: INITIAL_COUNT_PER_POWER_UP,
+      streak_saver: INITIAL_COUNT_PER_POWER_UP,
     };
-    base[seed] = 1;
-    return base;
   });
   const [effects, setEffects] = useState<ActiveEffects>(EMPTY_EFFECTS);
   // Counter so we don't grant twice for the same streak milestone. Refs

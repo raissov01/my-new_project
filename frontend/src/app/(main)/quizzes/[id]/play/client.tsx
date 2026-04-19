@@ -220,6 +220,9 @@ export function PlayQuizClient({
   const questionStartRef = useRef<number>(0);
   const quizStartRef = useRef<number>(savedProgress?.quizStartedAt ?? 0);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set to true when the user confirms exit so submitAttempt's router.push
+  // doesn't race against the exit navigation.
+  const isExitingRef = useRef(false);
   // Refs for values read inside recordAnswer's stable closure. Using refs
   // avoids adding fast-changing state to the useCallback dep array (which
   // would recreate the callback on every answer and break timing).
@@ -303,6 +306,8 @@ export function PlayQuizClient({
         setPhase("revealed");
         return;
       }
+      // Don't navigate to results if the user has already chosen to exit.
+      if (isExitingRef.current) return;
       clearProgress(quiz.id);
       router.push(
         `/quizzes/${encodeURIComponent(quiz.id)}/results?attempt=${encodeURIComponent(data.id)}`
@@ -757,7 +762,7 @@ export function PlayQuizClient({
           </button>
           <button
             type="button"
-            onClick={() => setShowExit(true)}
+            onClick={() => { clearAdvanceTimer(); setShowExit(true); }}
             className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
             aria-label={t("quiz.play.exit")}
           >
@@ -998,7 +1003,13 @@ export function PlayQuizClient({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setShowExit(false)}
+                onClick={() => {
+                  setShowExit(false);
+                  // Re-arm the auto-advance timer we cleared when opening the dialog.
+                  if (phase === "revealed") {
+                    advanceTimerRef.current = setTimeout(() => advance(), 1800);
+                  }
+                }}
               >
                 {t("quiz.play.exitConfirmCancel")}
               </Button>
@@ -1007,6 +1018,7 @@ export function PlayQuizClient({
                 variant="danger"
                 size="sm"
                 onClick={() => {
+                  isExitingRef.current = true;
                   clearAdvanceTimer();
                   clearProgress(quiz.id);
                   router.push(`/quizzes/${encodeURIComponent(quiz.id)}`);

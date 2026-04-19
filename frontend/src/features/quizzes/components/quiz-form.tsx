@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import {
   Plus,
   Trash2,
@@ -320,6 +321,7 @@ export function QuizForm({
         (q.optionD ?? "").trim() ||
         (q.blankAnswer ?? "").trim() ||
         (q.reorderItems?.length ?? 0) > 0 ||
+        (q.matchPairs?.length ?? 0) > 0 ||
         (q.hotspotZones?.length ?? 0) > 0
     );
 
@@ -352,7 +354,10 @@ export function QuizForm({
         if (result?.error) {
           toast("error", result.error);
         }
-      } catch {
+      } catch (error) {
+        // redirect() in server actions throws NEXT_REDIRECT — re-throw it so
+        // Next.js can perform the navigation instead of swallowing it here.
+        if (isRedirectError(error)) throw error;
         toast("error", t("quiz.errCreateFailed"));
       }
     });
