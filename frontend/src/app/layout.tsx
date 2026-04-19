@@ -55,20 +55,11 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     url: APP_URL,
     locale: "kk_KZ",
-    images: [
-      {
-        url: "/icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "StudyWithRaissov",
-      },
-    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: ["/icon-512.png"],
   },
 };
 
