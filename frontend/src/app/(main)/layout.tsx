@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/layout";
 import { GhostModeBanner } from "@/components/layout/ghost-mode-banner";
+import { AppFooter } from "@/components/layout/app-footer";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default function MainLayout({
       <Navbar />
       <GhostModeBanner />
       <main className="flex-1">{children}</main>
+      <AppFooter />
     </div>
   );
 }
