@@ -283,6 +283,7 @@ export function ChatClient() {
             onClick={handleSend}
             disabled={!input.trim() || loading}
             size="sm"
+            aria-label={t("chat.send")}
             className="h-11 w-11 shrink-0 rounded-xl p-0"
           >
             {loading ? (
