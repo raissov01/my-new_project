@@ -53,6 +53,7 @@ export default function Image() {
         {/* Heading */}
         <div
           style={{
+            display: "flex",
             fontSize: 72,
             fontWeight: 800,
             color: "#f8fafc",
@@ -61,7 +62,7 @@ export default function Image() {
             marginBottom: 24,
           }}
         >
-          StudyWith
+          <span>StudyWith</span>
           <span style={{ color: "#f97316" }}>Raissov</span>
         </div>
 
