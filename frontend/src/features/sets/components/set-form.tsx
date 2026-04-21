@@ -470,6 +470,11 @@ export function SetForm({
     e.preventDefault();
     setError(null);
 
+    if (title.trim().length < 3) {
+      setError(t("validation.titleTooShort"));
+      return;
+    }
+
     // Client-side validation: require at least one card with both term and definition
     const filledCards = cards.filter(
       (c) => c.term.trim() !== "" && c.definition.trim() !== ""
@@ -534,7 +539,6 @@ export function SetForm({
             placeholder={t("form.titlePlaceholder")}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            required
             disabled={isPending}
           />
           <div className="w-full">

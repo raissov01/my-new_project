@@ -6,42 +6,27 @@ import {
 } from "@/server/auth";
 import { getPomodoroPreferences } from "@/app/(main)/sets/pomodoro-actions";
 import { logout } from "@/app/(auth)/actions";
-import { updateEmail, updatePassword } from "@/app/(main)/settings/actions";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
+import { EmailChangeForm } from "@/features/settings/components/email-change-form";
+import { PasswordChangeForm } from "@/features/settings/components/password-change-form";
 import { PreferencesPanel } from "@/features/settings/components/preferences-panel";
 import { DeleteAccountSection } from "@/features/settings/components/delete-account-section";
 import { RoleSection } from "@/features/settings/components/role-section";
 import type { ProfileRole } from "@/lib/shared/types/database";
 
 interface SettingsPageProps {
-  searchParams: Promise<{ status?: string; error?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }
 
 function getFeedbackMessage(
   t: (key: string) => string,
-  status?: string,
   error?: string
 ) {
-  if (status === "email-updated") return { type: "success", text: t("settings.emailUpdated") };
-  if (status === "password-updated") return { type: "success", text: t("settings.passwordUpdated") };
-
   switch (error) {
     case "settings-disabled":
       return { type: "error", text: t("settings.settingsDisabled") };
-    case "email-required":
-      return { type: "error", text: t("settings.emailRequired") };
-    case "email-update-failed":
-      return { type: "error", text: t("settings.emailUpdateFailed") };
-    case "password-too-short":
-      return { type: "error", text: t("settings.passwordTooShort") };
-    case "passwords-mismatch":
-      return { type: "error", text: t("settings.passwordsMismatch") };
-    case "password-update-failed":
-      return { type: "error", text: t("settings.passwordUpdateFailed") };
     case "delete-confirmation-invalid":
       return { type: "error", text: t("settings.deleteConfirmationInvalid") };
     case "delete-account-failed":
@@ -60,13 +45,13 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     redirect("/login");
   }
 
-  const [{ status, error }, profile, pomodoro] = await Promise.all([
+  const [{ error }, profile, pomodoro] = await Promise.all([
     searchParams,
     getCurrentProfile(user),
     getPomodoroPreferences(),
   ]);
 
-  const feedback = getFeedbackMessage(t, status, error);
+  const feedback = getFeedbackMessage(t, error);
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
@@ -113,50 +98,25 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               </div>
             </div>
 
-            <form action={updateEmail} className="mt-5 space-y-3.5">
-              <Input
-                name="email"
-                type="email"
-                label={t("settings.changeEmail")}
-                defaultValue={user.email ?? ""}
-                required
-              />
-              <Button type="submit">{t("settings.updateEmail")}</Button>
-            </form>
+            <EmailChangeForm defaultEmail={user.email ?? ""} />
 
             <div className="section-divider my-5" />
 
-            <form action={updatePassword} className="space-y-3.5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-amber-500/10 text-amber-500">
-                  <LockKeyhole className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold tracking-[-0.02em] text-[var(--text-primary)]">
-                    {t("settings.changePassword")}
-                  </h3>
-                  <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
-                    {t("settings.passwordDescription")}
-                  </p>
-                </div>
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-amber-500/10 text-amber-500">
+                <LockKeyhole className="h-5 w-5" />
               </div>
+              <div>
+                <h3 className="text-base font-bold tracking-[-0.02em] text-[var(--text-primary)]">
+                  {t("settings.changePassword")}
+                </h3>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
+                  {t("settings.passwordDescription")}
+                </p>
+              </div>
+            </div>
 
-              <PasswordInput
-                name="password"
-                label={t("settings.newPassword")}
-                required
-                showLabel={t("auth.showPassword")}
-                hideLabel={t("auth.hidePassword")}
-              />
-              <PasswordInput
-                name="confirm_password"
-                label={t("settings.confirmPassword")}
-                required
-                showLabel={t("auth.showPassword")}
-                hideLabel={t("auth.hidePassword")}
-              />
-              <Button type="submit">{t("settings.updatePassword")}</Button>
-            </form>
+            <PasswordChangeForm />
 
             <div className="section-divider my-5" />
 

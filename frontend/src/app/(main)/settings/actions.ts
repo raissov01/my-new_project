@@ -10,7 +10,16 @@ function normalizeText(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
 }
 
-export async function updateEmail(formData: FormData) {
+export type UpdateEmailState = {
+  status: "idle" | "success" | "error";
+  emailError?: string;
+  error?: string;
+};
+
+export async function updateEmail(
+  _prev: UpdateEmailState,
+  formData: FormData
+): Promise<UpdateEmailState> {
   if (DEV_MODE) {
     redirect("/settings?error=settings-disabled");
   }
@@ -22,7 +31,7 @@ export async function updateEmail(formData: FormData) {
 
   const email = normalizeText(formData.get("email"));
   if (!email) {
-    redirect("/settings?error=email-required");
+    return { status: "error", emailError: "email-required" };
   }
 
   try {
@@ -34,14 +43,24 @@ export async function updateEmail(formData: FormData) {
       headers: { "Content-Type": "application/json" },
     });
   } catch {
-    redirect("/settings?error=email-update-failed");
+    return { status: "error", error: "email-update-failed" };
   }
 
   revalidatePath("/settings");
-  redirect("/settings?status=email-updated");
+  return { status: "success" };
 }
 
-export async function updatePassword(formData: FormData) {
+export type UpdatePasswordState = {
+  status: "idle" | "success" | "error";
+  passwordError?: string;
+  confirmError?: string;
+  error?: string;
+};
+
+export async function updatePassword(
+  _prev: UpdatePasswordState,
+  formData: FormData
+): Promise<UpdatePasswordState> {
   if (DEV_MODE) {
     redirect("/settings?error=settings-disabled");
   }
@@ -54,12 +73,12 @@ export async function updatePassword(formData: FormData) {
   const password = normalizeText(formData.get("password"));
   const confirmPassword = normalizeText(formData.get("confirm_password"));
 
-  if (password.length < 6) {
-    redirect("/settings?error=password-too-short");
+  if (password.length < 8) {
+    return { status: "error", passwordError: "password-too-short" };
   }
 
   if (password !== confirmPassword) {
-    redirect("/settings?error=passwords-mismatch");
+    return { status: "error", confirmError: "passwords-mismatch" };
   }
 
   try {
@@ -71,10 +90,10 @@ export async function updatePassword(formData: FormData) {
       headers: { "Content-Type": "application/json" },
     });
   } catch {
-    redirect("/settings?error=password-update-failed");
+    return { status: "error", error: "password-update-failed" };
   }
 
-  redirect("/settings?status=password-updated");
+  return { status: "success" };
 }
 
 export async function deleteAccount(formData: FormData) {
