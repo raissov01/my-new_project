@@ -8,12 +8,13 @@ const GHOST_COOKIE = "swr_ghost";
 
 export async function updateSession(request: NextRequest) {
   const response = NextResponse.next({ request });
+  const pathname = request.nextUrl.pathname;
+  // Forward pathname so generateMetadata in layout can build a per-page canonical URL.
+  response.headers.set("x-pathname", pathname);
 
   if (DEV_MODE) {
     return response;
   }
-
-  const pathname = request.nextUrl.pathname;
 
   const isProtectedRoute =
     pathname === "/dashboard" ||
