@@ -77,6 +77,7 @@ export function SimulatorClient() {
   const [speechEnabled, setSpeechEnabled] = useState(false);
   const [playingGroupKey, setPlayingGroupKey] = useState<string | null>(null);
   const [strictMode, setStrictMode] = useState(true);
+  const [unlockedUpToIndex, setUnlockedUpToIndex] = useState(0);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptStartedAt, setAttemptStartedAt] = useState<number | null>(null);
   const [isTerminating, setIsTerminating] = useState(false);
@@ -225,6 +226,8 @@ export function SimulatorClient() {
     if (stage !== "exam" || !currentSection) {
       return;
     }
+    // Listening timer starts when audio begins, not immediately on section load
+    if (currentSection.key === "listening") return;
     startSectionTimer(currentSection.durationMinutes);
   }, [activeSectionIndex, currentSection, stage, startSectionTimer]);
 
@@ -274,6 +277,7 @@ export function SimulatorClient() {
 
       setMock(response);
       setActiveSectionIndex(0);
+      setUnlockedUpToIndex(0);
       setObjectiveAnswers({});
       setRevealedSections({});
       setWritingResponses({});
@@ -300,6 +304,7 @@ export function SimulatorClient() {
 
   function handleSectionTab(index: number) {
     if (!mock) return;
+    if (index > unlockedUpToIndex) return;
     stopSpeaking();
     setActiveSectionIndex(index);
   }
@@ -317,6 +322,7 @@ export function SimulatorClient() {
     }
 
     if (activeSectionIndex < mock.sections.length - 1) {
+      setUnlockedUpToIndex((prev) => Math.max(prev, activeSectionIndex + 1));
       setActiveSectionIndex((prev) => prev + 1);
       return;
     }
@@ -466,6 +472,11 @@ export function SimulatorClient() {
 
     window.speechSynthesis.speak(utterance);
     setPlayingGroupKey(group.key);
+
+    // Start section timer when audio first plays
+    if (!timerRef.current && currentSection?.key === "listening") {
+      startSectionTimer(currentSection.durationMinutes);
+    }
   }
 
   const resultSummary = useMemo(() => {
@@ -782,16 +793,16 @@ export function SimulatorClient() {
           {resultSummary.reading ? (
             <ScoreCard
               title="Reading"
-              value={`${resultSummary.reading.correct}/${resultSummary.reading.total}`}
-              subtitle={`${resultSummary.reading.percent}% correct`}
+              value={`Band ${rawScoreToBand(resultSummary.reading.correct, resultSummary.reading.total).toFixed(1)}`}
+              subtitle={`${resultSummary.reading.correct}/${resultSummary.reading.total} correct · ${resultSummary.reading.percent}%`}
               tone="text-blue-400"
             />
           ) : null}
           {resultSummary.listening ? (
             <ScoreCard
               title="Listening"
-              value={`${resultSummary.listening.correct}/${resultSummary.listening.total}`}
-              subtitle={`${resultSummary.listening.percent}% correct`}
+              value={`Band ${rawScoreToBand(resultSummary.listening.correct, resultSummary.listening.total).toFixed(1)}`}
+              subtitle={`${resultSummary.listening.correct}/${resultSummary.listening.total} correct · ${resultSummary.listening.percent}%`}
               tone="text-cyan-400"
             />
           ) : null}
@@ -899,25 +910,35 @@ export function SimulatorClient() {
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {mock.sections.map((item, index) => (
-            <button
-              key={item.key}
-              onClick={() => handleSectionTab(index)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
-                activeSectionIndex === index
-                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
-                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
-              }`}
-            >
-              {item.title}
-            </button>
-          ))}
+          {mock.sections.map((item, index) => {
+            const isLocked = index > unlockedUpToIndex;
+            return (
+              <button
+                key={item.key}
+                onClick={() => handleSectionTab(index)}
+                disabled={isLocked}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                  activeSectionIndex === index
+                    ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                    : isLocked
+                      ? "cursor-not-allowed border-[var(--border)] text-[var(--text-muted)] opacity-40"
+                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+                }`}
+              >
+                {item.title}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {(currentSection.key === "reading" || currentSection.key === "listening") && (
         <div className="space-y-5">
-          {groupedQuestions.map((group) => (
+          {groupedQuestions.map((group, groupIndex) => {
+            const questionStartIndex = groupedQuestions
+              .slice(0, groupIndex)
+              .reduce((acc, g) => acc + g.questions.length, 0);
+            return (
             <section
               key={group.key}
               className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
@@ -950,19 +971,21 @@ export function SimulatorClient() {
                         {playingGroupKey === group.key ? "Stop audio" : "Play audio"}
                       </Button>
                     ) : null}
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        setShowListeningTranscript((prev) => ({
-                          ...prev,
-                          [group.key]: !prev[group.key],
-                        }))
-                      }
-                    >
-                      <Volume2 className="h-4 w-4" />
-                      {showListeningTranscript[group.key] ? "Hide script" : "Show script"}
-                    </Button>
+                    {isCurrentSectionRevealed ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          setShowListeningTranscript((prev) => ({
+                            ...prev,
+                            [group.key]: !prev[group.key],
+                          }))
+                        }
+                      >
+                        <Volume2 className="h-4 w-4" />
+                        {showListeningTranscript[group.key] ? "Hide script" : "Show script"}
+                      </Button>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -989,10 +1012,10 @@ export function SimulatorClient() {
               ) : null}
 
               <div className="mt-5 space-y-4">
-                {group.questions.map((question, index) => (
+                {group.questions.map((question, localIndex) => (
                   <ObjectiveQuestionCard
                     key={question.id}
-                    index={index + 1}
+                    index={questionStartIndex + localIndex + 1}
                     question={question}
                     value={objectiveAnswers[question.id] ?? ""}
                     revealed={isCurrentSectionRevealed}
@@ -1001,7 +1024,8 @@ export function SimulatorClient() {
                 ))}
               </div>
             </section>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -1337,6 +1361,20 @@ function formatTime(totalSeconds: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+function rawScoreToBand(correct: number, total: number): number {
+  // Official IELTS Listening/Reading band scale (40-question sections)
+  const scale: Record<number, number> = {
+    40: 9.0, 39: 9.0, 38: 8.5, 37: 8.5, 36: 8.5,
+    35: 8.0, 34: 7.5, 33: 7.0, 32: 7.0, 31: 6.5,
+    30: 6.5, 29: 6.0, 28: 6.0, 27: 5.5, 26: 5.5,
+    25: 5.0, 24: 5.0, 23: 4.5, 22: 4.5, 21: 4.0,
+    20: 4.0, 19: 3.5, 18: 3.5, 17: 3.0, 16: 3.0,
+    15: 2.5, 14: 2.5, 13: 2.0,
+  };
+  if (total === 40 && correct in scale) return scale[correct];
+  return objectivePercentToBand(Math.round((correct / total) * 100));
+}
+
 function objectivePercentToBand(percent: number) {
   if (percent >= 90) return 9.0;
   if (percent >= 85) return 8.5;
@@ -1478,19 +1516,26 @@ function ObjectiveQuestionCard({
       </p>
 
       {options.length > 0 ? (
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3 grid gap-2" role="radiogroup">
           {options.map((option) => (
-            <button
+            <label
               key={option}
-              onClick={() => onChange(question.id, option)}
-              className={`rounded-xl border px-4 py-3 text-left text-sm transition-all ${
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all ${
                 value === option
                   ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
                   : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
               }`}
             >
+              <input
+                type="radio"
+                name={`q-${question.id}`}
+                value={option}
+                checked={value === option}
+                onChange={() => onChange(question.id, option)}
+                className="h-4 w-4 shrink-0 accent-[var(--primary)]"
+              />
               {option}
-            </button>
+            </label>
           ))}
         </div>
       ) : (
