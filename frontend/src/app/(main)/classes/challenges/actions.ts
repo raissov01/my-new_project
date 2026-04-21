@@ -152,7 +152,15 @@ export async function joinClassChallenge(challengeId: string) {
   }
 }
 
-export async function joinClassByCode(formData: FormData) {
+export type JoinClassByCodeState = {
+  status: "idle" | "success" | "error";
+  error?: string;
+};
+
+export async function joinClassByCode(
+  _prev: JoinClassByCodeState,
+  formData: FormData
+): Promise<JoinClassByCodeState> {
   const access = await requireStudentProfile();
   if (access.error || !access.user) {
     redirect("/login");
@@ -160,7 +168,7 @@ export async function joinClassByCode(formData: FormData) {
 
   const joinCode = String(formData.get("join_code") ?? "").trim().toUpperCase();
   if (!joinCode) {
-    redirect("/student/classes?join_error=code-required");
+    return { status: "error", error: "code-required" };
   }
 
   try {
@@ -168,9 +176,9 @@ export async function joinClassByCode(formData: FormData) {
     revalidatePath("/student/classes");
     revalidatePath("/student/dashboard");
   } catch {
-    redirect("/student/classes?join_error=invalid-code");
+    return { status: "error", error: "invalid-code" };
   }
-  redirect("/student/classes?join_status=joined");
+  return { status: "success" };
 }
 
 export async function assignClassSet(formData: FormData) {
