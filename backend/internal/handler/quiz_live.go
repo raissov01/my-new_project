@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	mrand "math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/midoriya/flashlearn-backend/internal/hub"
@@ -339,19 +340,27 @@ func buildLiveQuiz(quiz *models.Quiz) *hub.LiveQuiz {
 		}
 		if q.HotspotZones != nil && *q.HotspotZones != "" {
 			type zone struct {
-				ID    int     `json:"id"`
-				X     float64 `json:"x"`
-				Y     float64 `json:"y"`
-				R     float64 `json:"r"`
-				Label string  `json:"label,omitempty"`
+				ID           int     `json:"id"`
+				X            float64 `json:"x"`
+				Y            float64 `json:"y"`
+				R            float64 `json:"r"`
+				Label        string  `json:"label,omitempty"`
+				CorrectLabel string  `json:"correctLabel,omitempty"`
 			}
 			var zones []zone
 			if err := json.Unmarshal([]byte(*q.HotspotZones), &zones); err == nil {
 				liveZones := make([]hub.LiveHotspotZone, len(zones))
+				labelingCorrect := make(map[string]string, len(zones))
 				for k, z := range zones {
 					liveZones[k] = hub.LiveHotspotZone{ID: z.ID, X: z.X, Y: z.Y, R: z.R, Label: z.Label}
+					if z.CorrectLabel != "" {
+						labelingCorrect[strconv.Itoa(z.ID)] = z.CorrectLabel
+					}
 				}
 				lq.HotspotZones = liveZones
+				if q.QuestionType == "labeling" {
+					lq.LabelingCorrect = labelingCorrect
+				}
 			}
 		}
 		questions = append(questions, lq)

@@ -6,16 +6,18 @@ type MatchPair struct {
 	Right string `json:"right"`
 }
 
-// HotspotZone is one clickable circle on a hotspot question image.
+// HotspotZone is one clickable circle on a hotspot or labeling question image.
 // X, Y are the centre coordinates as a percentage of the image (0–100).
 // R is the radius as a percentage of the image width (0–100, default 8).
-// The correct zone is identified by QuizQuestion.CorrectOption (the zone ID as a string).
+// For hotspot: the correct zone is identified by QuizQuestion.CorrectOption.
+// For labeling: CorrectLabel holds the expected answer text for each zone.
 type HotspotZone struct {
-	ID    int     `json:"id"`
-	X     float64 `json:"x"`
-	Y     float64 `json:"y"`
-	R     float64 `json:"r"`
-	Label string  `json:"label,omitempty"`
+	ID           int     `json:"id"`
+	X            float64 `json:"x"`
+	Y            float64 `json:"y"`
+	R            float64 `json:"r"`
+	Label        string  `json:"label,omitempty"`
+	CorrectLabel string  `json:"correctLabel,omitempty"`
 }
 
 // QuizQuestionInput is a question to create or update inside a quiz.

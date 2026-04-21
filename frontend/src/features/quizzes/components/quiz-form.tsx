@@ -210,6 +210,19 @@ function applyTypeChange(
         reorderItems: [],
         matchPairs: q.matchPairs && q.matchPairs.length > 0 ? q.matchPairs : [{ left: "", right: "" }, { left: "", right: "" }],
       };
+    case "labeling":
+      return {
+        ...base,
+        optionA: "",
+        optionB: "",
+        optionC: "",
+        optionD: "",
+        correctOption: "",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
+        hotspotZones: q.hotspotZones && q.hotspotZones.length > 0 ? q.hotspotZones : [],
+      };
   }
 }
 
@@ -752,6 +765,8 @@ function QuestionEditor({
         <FillBlankBody question={question} onChange={onChange} />
       ) : questionType === "hotspot" ? (
         <HotspotBody question={question} onChange={onChange} />
+      ) : questionType === "labeling" ? (
+        <LabelingBody question={question} onChange={onChange} />
       ) : questionType === "matching" ? (
         <MatchingBody question={question} onChange={onChange} />
       ) : questionType === "poll" ? (
@@ -1268,6 +1283,94 @@ function HotspotBody({
               >
                 {correctId === String(zone.id) ? t("quiz.hotspot.correct") : t("quiz.hotspot.markCorrect")}
               </button>
+              <button
+                type="button"
+                onClick={() => removeZone(zone.id)}
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
+                aria-label={t("quiz.removeQuestion")}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LabelingBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const zones: HotspotZone[] = question.hotspotZones ?? [];
+
+  if (!question.imageUrl) {
+    return (
+      <div className="mt-3 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-4 text-center text-xs text-[var(--text-muted)]">
+        {t("quiz.labeling.noImage")}
+      </div>
+    );
+  }
+
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(2));
+    const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(2));
+    const newId = zones.length > 0 ? Math.max(...zones.map((z) => z.id)) + 1 : 1;
+    onChange({ hotspotZones: [...zones, { id: newId, x, y, r: 10, correctLabel: "" }] });
+  };
+
+  const updateZone = (id: number, patch: Partial<HotspotZone>) => {
+    onChange({ hotspotZones: zones.map((z) => (z.id === id ? { ...z, ...patch } : z)) });
+  };
+
+  const removeZone = (id: number) => {
+    onChange({ hotspotZones: zones.filter((z) => z.id !== id) });
+  };
+
+  return (
+    <div className="mt-3 space-y-3">
+      <p className="text-[11px] text-[var(--text-muted)]">{t("quiz.labeling.addZoneHint")}</p>
+      <div
+        className="relative cursor-crosshair select-none overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]"
+        onClick={handleImageClick}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={question.imageUrl} alt="" className="pointer-events-none w-full" draggable={false} />
+        {zones.map((zone) => (
+          <div
+            key={zone.id}
+            style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--primary)] text-xs font-bold text-white"
+          >
+            {zone.id}
+          </div>
+        ))}
+      </div>
+      {zones.length < 2 ? (
+        <p className="text-[11px] text-[var(--text-muted)]">{t("quiz.labeling.minZones")}</p>
+      ) : null}
+      {zones.length > 0 && (
+        <div className="space-y-2">
+          {zones.map((zone) => (
+            <div
+              key={zone.id}
+              className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-white">
+                {zone.id}
+              </span>
+              <input
+                value={zone.correctLabel ?? ""}
+                onChange={(e) => updateZone(zone.id, { correctLabel: e.target.value })}
+                placeholder={t("quiz.labeling.correctLabelPlaceholder")}
+                className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+              />
               <button
                 type="button"
                 onClick={() => removeZone(zone.id)}

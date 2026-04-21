@@ -211,6 +211,8 @@ export function PlayQuizClient({
   // matchDraft: for matching/categorization, maps left item → selected right item ("" = unselected).
   const [matchDraft, setMatchDraft] = useState<Record<string, string>>({});
   const [hotspotSelected, setHotspotSelected] = useState<string | null>(null);
+  // labelingDraft: zoneId → typed label; submitted as JSON via textAnswer.
+  const [labelingDraft, setLabelingDraft] = useState<Record<string, string>>({});
   // pollSelected / dropdownSelected reuse selectedLetter slot visually but kept separate for clarity.
   const [pollSelected, setPollSelected] = useState<string | null>(null);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
@@ -269,6 +271,7 @@ export function PlayQuizClient({
       setMatchDraft({});
     }
     setHotspotSelected(null);
+    setLabelingDraft({});
     setPollSelected(null);
     setBlankInput("");
     setMcqMultiSelected(new Set());
@@ -333,6 +336,7 @@ export function PlayQuizClient({
     setMcqMultiSelected(new Set());
     setMatchDraft({});
     setHotspotSelected(null);
+    setLabelingDraft({});
     setPollSelected(null);
     setLastCorrect(null);
     setHintVisible(false);
@@ -503,6 +507,22 @@ export function PlayQuizClient({
       );
     },
     [question.correctOption, recordAnswer]
+  );
+
+  const recordLabeling = useCallback(
+    (draft: Record<string, string>) => {
+      const zones = question.hotspotZones ?? [];
+      const allFilled = zones.every((z) => (draft[String(z.id)] ?? "").trim() !== "");
+      if (!allFilled) return;
+      const isCorrect = zones.every(
+        (z) =>
+          (draft[String(z.id)] ?? "").trim().toLowerCase() ===
+          (z.correctLabel ?? "").trim().toLowerCase()
+      );
+      const textAnswer = JSON.stringify(draft);
+      recordAnswer({ selectedOption: null, textAnswer, orderAnswer: null }, isCorrect);
+    },
+    [question.hotspotZones, recordAnswer]
   );
 
   const recordMatching = useCallback(
@@ -881,6 +901,17 @@ export function PlayQuizClient({
               selected={hotspotSelected}
               revealed={revealed}
               onPick={recordHotspot}
+            />
+          ) : questionType === "labeling" ? (
+            <LabelingPlayBody
+              t={t}
+              imageUrl={question.imageUrl ?? null}
+              zones={question.hotspotZones ?? []}
+              draft={labelingDraft}
+              onDraftChange={setLabelingDraft}
+              revealed={revealed}
+              lastCorrect={lastCorrect}
+              onSubmit={recordLabeling}
             />
           ) : questionType === "matching" ? (
             <MatchingBody
@@ -1549,6 +1580,105 @@ function HotspotPlayBody({
           ) : null}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+// ── Labeling body ─────────────────────────────────────────────────────────────
+
+function LabelingPlayBody({
+  t,
+  imageUrl,
+  zones,
+  draft,
+  onDraftChange,
+  revealed,
+  lastCorrect,
+  onSubmit,
+}: {
+  t: (key: string) => string;
+  imageUrl: string | null;
+  zones: HotspotZone[];
+  draft: Record<string, string>;
+  onDraftChange: (d: Record<string, string>) => void;
+  revealed: boolean;
+  lastCorrect: boolean | null;
+  onSubmit: (d: Record<string, string>) => void;
+}) {
+  const allFilled = zones.every((z) => (draft[String(z.id)] ?? "").trim() !== "");
+
+  return (
+    <div className="space-y-4">
+      {imageUrl && (
+        <div className="relative select-none overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={imageUrl} alt="" className="pointer-events-none w-full" draggable={false} />
+          {zones.map((zone) => (
+            <div
+              key={zone.id}
+              style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
+              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--primary)] text-xs font-bold text-white"
+            >
+              {zone.id}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {zones.map((zone) => {
+          const val = draft[String(zone.id)] ?? "";
+          const isCorrectZone = val.trim().toLowerCase() === (zone.correctLabel ?? "").trim().toLowerCase();
+          return (
+            <div key={zone.id} className="flex items-center gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-white">
+                {zone.id}
+              </span>
+              <input
+                disabled={revealed}
+                value={val}
+                onChange={(e) => onDraftChange({ ...draft, [String(zone.id)]: e.target.value })}
+                placeholder={t("quiz.labeling.typeLabel")}
+                className={`flex-1 rounded-[var(--radius-md)] border px-3 py-2 text-sm outline-none transition-colors ${
+                  revealed
+                    ? isCorrectZone
+                      ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
+                      : "border-rose-400/60 bg-rose-500/10 text-rose-300"
+                    : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)]"
+                }`}
+              />
+              {revealed && !isCorrectZone && (
+                <span className="text-xs text-emerald-400">{zone.correctLabel}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {!revealed && (
+        <button
+          type="button"
+          disabled={!allFilled}
+          onClick={() => allFilled && onSubmit(draft)}
+          className="mt-1 w-full rounded-[var(--radius-md)] bg-[var(--primary)] py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
+        >
+          {t("quiz.play.submit")}
+        </button>
+      )}
+
+      {revealed && (
+        <div
+          className={`rounded-[var(--radius-md)] border-2 px-4 py-3 text-sm ${
+            lastCorrect
+              ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
+              : "border-rose-400/60 bg-rose-500/10 text-rose-200"
+          }`}
+        >
+          <p className="font-semibold">
+            {lastCorrect ? t("quiz.play.correct") : t("quiz.play.wrong")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

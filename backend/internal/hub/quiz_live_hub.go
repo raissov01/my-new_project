@@ -89,8 +89,10 @@ type LiveQuestion struct {
 	MatchCorrect   map[string]string `json:"-"`                     // left→right, never sent
 	// Hotspot: zone positions sent to players (no correct field); correct zone ID in CorrectOption.
 	HotspotZones []LiveHotspotZone `json:"hotspotZones,omitempty"`
-	ImageURL     string            `json:"imageUrl,omitempty"`
-	TimeLimit    int               `json:"timeLimit"` // seconds
+	// Labeling: zones sent without CorrectLabel; correct labels held server-side.
+	LabelingCorrect map[string]string `json:"-"` // zoneID→correctLabel, never sent
+	ImageURL        string            `json:"imageUrl,omitempty"`
+	TimeLimit       int               `json:"timeLimit"` // seconds
 }
 
 // LiveHotspotZone is a clickable circle zone sent to quiz players.
@@ -393,12 +395,13 @@ func (r *Room) endQuestion(timedOut bool) {
 
 	lb := r.leaderboard()
 	type endEvt struct {
-		QuestionIndex int                `json:"questionIndex"`
-		CorrectOption string             `json:"correctOption,omitempty"`
-		BlankAnswer   string             `json:"blankAnswer,omitempty"`
-		CorrectOrder  []string           `json:"correctOrder,omitempty"`  // for reorder reveal
-		MatchPairs    []MatchPair        `json:"matchPairs,omitempty"`    // for matching reveal
-		Leaderboard   []ParticipantScore `json:"leaderboard"`
+		QuestionIndex   int                `json:"questionIndex"`
+		CorrectOption   string             `json:"correctOption,omitempty"`
+		BlankAnswer     string             `json:"blankAnswer,omitempty"`
+		CorrectOrder    []string           `json:"correctOrder,omitempty"`  // for reorder reveal
+		MatchPairs      []MatchPair        `json:"matchPairs,omitempty"`    // for matching reveal
+		LabelingCorrect map[string]string  `json:"labelingCorrect,omitempty"` // for labeling reveal
+		Leaderboard     []ParticipantScore `json:"leaderboard"`
 	}
 	evt := endEvt{
 		QuestionIndex: r.currentQ,
@@ -417,6 +420,8 @@ func (r *Room) endQuestion(timedOut bool) {
 			pairs = append(pairs, MatchPair{Left: left, Right: right})
 		}
 		evt.MatchPairs = pairs
+	case "labeling":
+		evt.LabelingCorrect = q.LabelingCorrect
 	}
 	r.broadcast(OutMsg{Type: EvtQuestionEnded, Data: evt})
 
@@ -560,6 +565,8 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 		isCorrect = liveMatchingCorrect(req.MatchAnswer, q.MatchCorrect)
 	case "dropdown":
 		isCorrect = strings.EqualFold(req.Option, q.CorrectOption)
+	case "labeling":
+		isCorrect = liveLabelingCorrect(req.TextAns, q.LabelingCorrect)
 	case "poll":
 		isCorrect = false // non-graded
 	default:
@@ -676,6 +683,28 @@ func liveMatchingCorrect(submitted map[string]string, correct map[string]string)
 	}
 	for left, right := range correct {
 		if got, ok := submitted[left]; !ok || got != right {
+			return false
+		}
+	}
+	return true
+}
+
+// liveLabelingCorrect checks that the submitted JSON {"zoneID":"label"} map
+// matches every correct label (case-insensitive, trimmed).
+func liveLabelingCorrect(submittedJSON string, correct map[string]string) bool {
+	if submittedJSON == "" || len(correct) == 0 {
+		return false
+	}
+	var submitted map[string]string
+	if err := json.Unmarshal([]byte(submittedJSON), &submitted); err != nil {
+		return false
+	}
+	if len(submitted) != len(correct) {
+		return false
+	}
+	for id, want := range correct {
+		got, ok := submitted[id]
+		if !ok || strings.ToLower(strings.TrimSpace(got)) != strings.ToLower(strings.TrimSpace(want)) {
 			return false
 		}
 	}

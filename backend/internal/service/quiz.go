@@ -44,6 +44,7 @@ const (
 	QTypePoll           = "poll"
 	QTypeDropdown       = "dropdown"
 	QTypeCategorization = "categorization"
+	QTypeLabeling       = "labeling"
 )
 
 func (s *Quiz) GetOverview(ctx context.Context, userID string, filters repository.QuizListFilters) ([]model.QuizOverview, error) {
@@ -312,6 +313,17 @@ func (s *Quiz) validateAndNormalize(
 			}
 			out.HotspotZones = q.HotspotZones
 			out.CorrectOption = correct
+
+		case QTypeLabeling:
+			if len(q.HotspotZones) < 2 {
+				return nil, fmt.Errorf("question %d: labeling needs at least 2 zones", i+1)
+			}
+			for j, z := range q.HotspotZones {
+				if strings.TrimSpace(z.CorrectLabel) == "" {
+					return nil, fmt.Errorf("question %d: zone %d needs a correct label", i+1, j+1)
+				}
+			}
+			out.HotspotZones = q.HotspotZones
 
 		case QTypePoll:
 			if a == "" || b == "" {

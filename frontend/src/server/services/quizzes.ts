@@ -24,10 +24,10 @@ export type QuizOverview = {
   tags?: string[];
 };
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling";
 
 export type MatchPair = { left: string; right: string };
-export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string };
+export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string; correctLabel?: string };
 
 export type QuizQuestionDTO = {
   id: string;

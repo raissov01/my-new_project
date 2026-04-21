@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -54,6 +55,28 @@ func matchPairsCorrect(submittedJSON string, canonical []model.MatchPair) bool {
 	}
 	for _, p := range canonical {
 		if got, ok := submitted[p.Left]; !ok || got != p.Right {
+			return false
+		}
+	}
+	return true
+}
+
+// labelingCorrect returns true when the submitted JSON map matches every zone's CorrectLabel
+// (case-insensitive, trimmed). All zones must be answered.
+func labelingCorrect(submittedJSON string, zones []model.HotspotZone) bool {
+	if submittedJSON == "" || len(zones) == 0 {
+		return false
+	}
+	var submitted map[string]string
+	if err := json.Unmarshal([]byte(submittedJSON), &submitted); err != nil {
+		return false
+	}
+	if len(submitted) != len(zones) {
+		return false
+	}
+	for _, z := range zones {
+		got, ok := submitted[strconv.Itoa(z.ID)]
+		if !ok || strings.ToLower(strings.TrimSpace(got)) != strings.ToLower(strings.TrimSpace(z.CorrectLabel)) {
 			return false
 		}
 	}
@@ -982,6 +1005,16 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 							isCorrect = true
 							score++
 						}
+					}
+				}
+			case "labeling":
+				// TextAnswer is JSON-encoded map[zoneID]→label, e.g. {"1":"Heart","2":"Liver"}.
+				if a.TextAnswer != nil && *a.TextAnswer != "" {
+					t := strings.TrimSpace(*a.TextAnswer)
+					textAnswer = &t
+					if labelingCorrect(t, q.HotspotZones) {
+						isCorrect = true
+						score++
 					}
 				}
 			case "dropdown":
