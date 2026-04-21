@@ -78,6 +78,8 @@ export function SimulatorClient() {
   const [playingGroupKey, setPlayingGroupKey] = useState<string | null>(null);
   const [strictMode, setStrictMode] = useState(true);
   const [unlockedUpToIndex, setUnlockedUpToIndex] = useState(0);
+  const [activeListeningGroupIndex, setActiveListeningGroupIndex] = useState(0);
+  const [showListeningSectionConfirm, setShowListeningSectionConfirm] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptStartedAt, setAttemptStartedAt] = useState<number | null>(null);
   const [isTerminating, setIsTerminating] = useState(false);
@@ -278,6 +280,8 @@ export function SimulatorClient() {
       setMock(response);
       setActiveSectionIndex(0);
       setUnlockedUpToIndex(0);
+      setActiveListeningGroupIndex(0);
+      setShowListeningSectionConfirm(false);
       setObjectiveAnswers({});
       setRevealedSections({});
       setWritingResponses({});
@@ -477,6 +481,12 @@ export function SimulatorClient() {
     if (!timerRef.current && currentSection?.key === "listening") {
       startSectionTimer(currentSection.durationMinutes);
     }
+  }
+
+  function handleAdvanceListeningGroup() {
+    setShowListeningSectionConfirm(false);
+    stopSpeaking();
+    setActiveListeningGroupIndex((prev) => prev + 1);
   }
 
   const resultSummary = useMemo(() => {
@@ -947,7 +957,7 @@ export function SimulatorClient() {
         </div>
       </div>
 
-      {(currentSection.key === "reading" || currentSection.key === "listening") && (
+      {currentSection.key === "reading" && (
         <div className="space-y-5">
           {groupedQuestions.map((group, groupIndex) => {
             const questionStartIndex = groupedQuestions
@@ -969,8 +979,84 @@ export function SimulatorClient() {
                     </p>
                   ) : null}
                 </div>
+              </div>
 
-                {currentSection.key === "listening" && group.audioScript ? (
+              {group.content ? (
+                <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
+                    {group.content}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="mt-5 space-y-4">
+                {group.questions.map((question, localIndex) => (
+                  <ObjectiveQuestionCard
+                    key={question.id}
+                    index={questionStartIndex + localIndex + 1}
+                    question={question}
+                    value={objectiveAnswers[question.id] ?? ""}
+                    revealed={isCurrentSectionRevealed}
+                    onChange={handleObjectiveAnswer}
+                  />
+                ))}
+              </div>
+            </section>
+            );
+          })}
+        </div>
+      )}
+
+      {currentSection.key === "listening" && (
+        <div className="space-y-5">
+          {groupedQuestions.length > 1 && (
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+              <span className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                {t("ielts.sim.listeningSectionLabel")}
+              </span>
+              <div className="flex gap-2">
+                {groupedQuestions.map((g, idx) => (
+                  <div
+                    key={g.key}
+                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-all ${
+                      isCurrentSectionRevealed || idx < activeListeningGroupIndex
+                        ? "bg-[var(--primary)] text-white"
+                        : idx === activeListeningGroupIndex
+                          ? "border-2 border-[var(--primary)] text-[var(--primary)]"
+                          : "border border-[var(--border)] text-[var(--text-muted)] opacity-40"
+                    }`}
+                  >
+                    {idx + 1}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(isCurrentSectionRevealed ? groupedQuestions : [groupedQuestions[activeListeningGroupIndex]].filter((g): g is QuestionGroup => Boolean(g))).map((group) => {
+            const groupIndex = groupedQuestions.indexOf(group);
+            const questionStartIndex = groupedQuestions
+              .slice(0, groupIndex)
+              .reduce((acc, g) => acc + g.questions.length, 0);
+            const isLastGroup = groupIndex === groupedQuestions.length - 1;
+            return (
+            <section
+              key={group.key}
+              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                    {group.title}
+                  </h3>
+                  {group.topic ? (
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                      {t("ielts.sim.topic")}: {group.topic}
+                    </p>
+                  ) : null}
+                </div>
+
+                {group.audioScript ? (
                   <div className="flex flex-wrap gap-2">
                     {speechEnabled ? (
                       <Button
@@ -1013,9 +1099,7 @@ export function SimulatorClient() {
                 </div>
               ) : null}
 
-              {currentSection.key === "listening" &&
-              group.audioScript &&
-              showListeningTranscript[group.key] ? (
+              {group.audioScript && showListeningTranscript[group.key] ? (
                 <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
                   <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-400">
                     {t("ielts.sim.audioScript")}
@@ -1038,6 +1122,15 @@ export function SimulatorClient() {
                   />
                 ))}
               </div>
+
+              {!isCurrentSectionRevealed && !isLastGroup && (
+                <div className="mt-5 flex justify-end">
+                  <Button onClick={() => setShowListeningSectionConfirm(true)}>
+                    {t("ielts.sim.listeningNextSection")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </section>
             );
           })}
@@ -1254,14 +1347,16 @@ export function SimulatorClient() {
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        <Button onClick={handleCompleteSection}>
-          {activeSectionIndex === mock.sections.length - 1
-            ? t("ielts.sim.finishMock")
-            : currentSection.key === "reading" || currentSection.key === "listening"
-              ? t("ielts.sim.checkAndContinue")
-              : t("ielts.sim.continueNext")}
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+        {!(currentSection.key === "listening" && activeListeningGroupIndex < groupedQuestions.length - 1) && (
+          <Button onClick={handleCompleteSection}>
+            {activeSectionIndex === mock.sections.length - 1
+              ? t("ielts.sim.finishMock")
+              : currentSection.key === "reading" || currentSection.key === "listening"
+                ? t("ielts.sim.checkAndContinue")
+                : t("ielts.sim.continueNext")}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        )}
         <Button variant="secondary" onClick={examMode.askExit}>
           <RotateCcw className="h-4 w-4" />
           {t("ielts.sim.exitReconfigure")}
@@ -1280,6 +1375,15 @@ export function SimulatorClient() {
           void examMode.confirmExit();
           setIsTerminating(true);
         }}
+      />
+      <ExamViolationModal
+        open={showListeningSectionConfirm}
+        title={t("ielts.sim.listeningConfirmTitle")}
+        message={t("ielts.sim.listeningConfirmMessage", { n: activeListeningGroupIndex + 1 })}
+        cancelLabel={t("ielts.sim.listeningConfirmCancel")}
+        confirmLabel={t("ielts.sim.listeningConfirmConfirm")}
+        onCancel={() => setShowListeningSectionConfirm(false)}
+        onConfirm={handleAdvanceListeningGroup}
       />
       </div>
     </div>
