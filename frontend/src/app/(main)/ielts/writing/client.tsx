@@ -223,7 +223,7 @@ export function WritingPracticeClient() {
       <div className="space-y-6">
         <div className="grid gap-4 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] lg:grid-cols-5">
           <FilterSelect
-            label="Task type"
+            label={t("ielts.writing.taskType")}
             value={taskType}
             onChange={(value) => setTaskType(value as WritingTaskType)}
             options={[
@@ -232,46 +232,46 @@ export function WritingPracticeClient() {
             ]}
           />
           <FilterSelect
-            label="Mock type"
+            label={t("ielts.writing.mockType")}
             value={mockType}
             onChange={(value) =>
               setMockType(value as "all" | IELTSQuestion["mockType"])
             }
             options={[
-              { value: "all", label: "All" },
-              { value: "original", label: "Practice" },
-              { value: "cambridge_style", label: "Cambridge" },
-              { value: "predictions", label: "Predictions" },
+              { value: "all", label: t("ielts.writing.allOption") },
+              { value: "original", label: t("ielts.writing.practiceType") },
+              { value: "cambridge_style", label: t("ielts.writing.cambridgeType") },
+              { value: "predictions", label: t("ielts.writing.predictionsType") },
             ]}
           />
           <FilterSelect
-            label="Topic"
+            label={t("ielts.writing.topicLabel")}
             value={topic}
             onChange={setTopic}
             options={[
-              { value: "all", label: "All topics" },
+              { value: "all", label: t("ielts.writing.allTopics") },
               ...topics.map((item) => ({ value: item, label: item })),
             ]}
           />
           <FilterSelect
-            label="Difficulty"
+            label={t("ielts.writing.difficultyLabel")}
             value={difficulty}
             onChange={(value) =>
               setDifficulty(value as "all" | IELTSQuestion["difficulty"])
             }
             options={[
-              { value: "all", label: "All" },
-              { value: "easy", label: "Easy" },
-              { value: "medium", label: "Medium" },
-              { value: "hard", label: "Hard" },
+              { value: "all", label: t("ielts.writing.allOption") },
+              { value: "easy", label: t("ielts.writing.easyLabel") },
+              { value: "medium", label: t("ielts.writing.mediumLabel") },
+              { value: "hard", label: t("ielts.writing.hardLabel") },
             ]}
           />
           <FilterSelect
-            label="Band level"
+            label={t("ielts.writing.bandLevel")}
             value={bandTarget}
             onChange={setBandTarget}
             options={[
-              { value: "all", label: "All bands" },
+              { value: "all", label: t("ielts.writing.allBands") },
               ...bands.map((item) => ({ value: item, label: `Band ${item}` })),
             ]}
           />

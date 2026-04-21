@@ -90,8 +90,8 @@ export function IELTSDashboardClient() {
   const bandItems = useMemo(() => {
     if (!dashboard) return [];
     return [
-      { label: "Writing", value: dashboard.writingAvgBand },
-      { label: "Speaking", value: dashboard.speakingAvgBand },
+      { label: t("ielts.dashboard.writing"), value: dashboard.writingAvgBand },
+      { label: t("ielts.dashboard.speaking"), value: dashboard.speakingAvgBand },
     ];
   }, [dashboard]);
 

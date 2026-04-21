@@ -5,7 +5,10 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.searchParams.has("_rsc")) {
     return NextResponse.next();
   }
-  return NextResponse.next();
+  const response = NextResponse.next();
+  // Forward pathname so generateMetadata in layout can build a dynamic canonical URL.
+  response.headers.set("x-pathname", request.nextUrl.pathname);
+  return response;
 }
 
 export const config = {

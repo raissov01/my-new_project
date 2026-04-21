@@ -25,7 +25,7 @@ export default async function NewSetPage() {
 
       <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
-          Flashcard creation
+          {t("sets.flashcardCreation")}
         </p>
         <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">{t("newSet.title")}</h1>
         <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">

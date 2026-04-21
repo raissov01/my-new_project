@@ -128,6 +128,7 @@ export function IELTSStudyPlanClient({
   initialTaskStatuses: Record<string, string>;
 }) {
   const { user } = useAuth();
+  const { t } = useLocale();
   const [plan, setPlan] = useState<StudyPlan | null>(initialPlan as StudyPlan | null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -234,9 +235,9 @@ export function IELTSStudyPlanClient({
       {/* Plan header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[var(--text-primary)]">Your IELTS Roadmap</h2>
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.dashboard.yourRoadmap")}</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Generated {new Date(plan.createdAt).toLocaleDateString()} • {plan.examType === "academic" ? "Academic" : "General Training"}
+            {new Date(plan.createdAt).toLocaleDateString()} • {plan.examType === "academic" ? t("studyPlan.academic") : t("studyPlan.generalTraining")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -782,7 +783,7 @@ function WizardFlow({
         {step === 0 && (
           <div className="space-y-5">
             <div>
-              <label className="text-sm font-medium text-[var(--text-primary)]">Target band score</label>
+              <label className="text-sm font-medium text-[var(--text-primary)]">{t("studyPlan.targetBandScore")}</label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {BAND_OPTIONS.filter((b) => parseFloat(b) >= 5.0).map((band) => (
                   <button key={band} onClick={() => onChange({ targetBand: band })} className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm font-semibold transition-all ${data.targetBand === band ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"}`}>
@@ -792,15 +793,15 @@ function WizardFlow({
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-[var(--text-primary)]">Exam type</label>
+              <label className="text-sm font-medium text-[var(--text-primary)]">{t("studyPlan.examType")}</label>
               <div className="mt-2 flex gap-3">
                 {["academic", "general"].map((type) => (
                   <button key={type} onClick={() => onChange({ examType: type })} className={`flex-1 rounded-[var(--radius-lg)] border p-4 text-left transition-all ${data.examType === type ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--border)] hover:border-[var(--border-strong)]"}`}>
                     <p className={`text-sm font-semibold ${data.examType === type ? "text-[var(--primary)]" : "text-[var(--text-primary)]"}`}>
-                      {type === "academic" ? "Academic" : "General Training"}
+                      {type === "academic" ? t("studyPlan.academic") : t("studyPlan.generalTraining")}
                     </p>
                     <p className="mt-1 text-xs text-[var(--text-muted)]">
-                      {type === "academic" ? "For university admission" : "For immigration/work"}
+                      {type === "academic" ? t("studyPlan.academicDesc") : t("studyPlan.generalDesc")}
                     </p>
                   </button>
                 ))}
@@ -894,7 +895,7 @@ function WizardFlow({
             <div className="grid gap-3 sm:grid-cols-2">
               <ReviewItem label="Target" value={`Band ${data.targetBand}`} />
               <ReviewItem label="Current" value={`Band ${data.currentBand}`} />
-              <ReviewItem label="Exam type" value={data.examType === "academic" ? "Academic" : "General Training"} />
+              <ReviewItem label={t("studyPlan.examType")} value={data.examType === "academic" ? t("studyPlan.academic") : t("studyPlan.generalTraining")} />
               <ReviewItem label="Weekly hours" value={`${data.weeklyHours}h / week`} />
               <ReviewItem label="Exam date" value={data.examDate || "Not set"} />
               <ReviewItem label="Weak areas" value={data.weakSections.join(", ") || "None"} />
@@ -915,7 +916,7 @@ function WizardFlow({
 
         {step < wizardSteps.length - 1 ? (
           <Button onClick={onNext}>
-            Next <ArrowRight className="h-4 w-4" />
+            {t("studyPlan.next")} <ArrowRight className="h-4 w-4" />
           </Button>
         ) : isLoggedIn ? (
           <Button onClick={onGenerate} disabled={submitting}>

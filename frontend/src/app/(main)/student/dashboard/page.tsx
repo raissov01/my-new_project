@@ -138,7 +138,7 @@ export default async function StudentDashboardPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                Assigned workspace
+                {t("student.assignedWorkspace")}
               </p>
               <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
                 {t("student.assignedWork")}
@@ -191,7 +191,7 @@ export default async function StudentDashboardPage() {
           {/* Progress */}
           <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-              Personal performance
+              {t("student.personalPerformance")}
             </p>
             <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
               {t("student.progressTitle")}

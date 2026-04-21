@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { getServerLocale } from "@/server/i18n";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { ToastProvider } from "@/components/ui/toast";
@@ -18,50 +19,56 @@ const SITE_TITLE = "StudyWithRaissov — Premium IELTS Preparation Platform";
 const SITE_DESCRIPTION =
   "StudyWithRaissov — студенттер мен оқытушыларға арналған жан-жақты оқу экожүйесі. Флешкарталар, тесттер, челленджтер және тағы басқа.";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(APP_URL),
-  title: {
-    default: SITE_TITLE,
-    template: "%s | StudyWithRaissov",
-  },
-  description: SITE_DESCRIPTION,
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "StudyWithRaissov",
-  },
-  icons: {
-    icon: [
-      { url: "/brand-mark.svg", type: "image/svg+xml" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    shortcut: "/brand-mark.svg",
-    apple: "/icon-192.png",
-  },
-  alternates: {
-    canonical: APP_URL,
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true },
-  },
-  openGraph: {
-    type: "website",
-    siteName: "StudyWithRaissov",
-    title: SITE_TITLE,
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") ?? "/";
+  const canonical = pathname === "/" ? APP_URL : `${APP_URL}${pathname}`;
+
+  return {
+    metadataBase: new URL(APP_URL),
+    title: {
+      default: SITE_TITLE,
+      template: "%s | StudyWithRaissov",
+    },
     description: SITE_DESCRIPTION,
-    url: APP_URL,
-    locale: "kk_KZ",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-  },
-};
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "StudyWithRaissov",
+    },
+    icons: {
+      icon: [
+        { url: "/brand-mark.svg", type: "image/svg+xml" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      shortcut: "/brand-mark.svg",
+      apple: "/icon-192.png",
+    },
+    alternates: {
+      canonical,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true },
+    },
+    openGraph: {
+      type: "website",
+      siteName: "StudyWithRaissov",
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      url: canonical,
+      locale: "kk_KZ",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
