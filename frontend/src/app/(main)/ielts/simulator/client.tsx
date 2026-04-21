@@ -181,12 +181,12 @@ export function SimulatorClient() {
     {
       key: "predictions",
       title: t("ielts.sim.predictions"),
-      body: "Question-bank prediction sets built around recent IELTS-style themes. AI is used only to score your writing and speaking answers.",
+      body: t("ielts.sim.predictionsBody"),
     },
     {
       key: "cambridge_style",
       title: t("ielts.sim.cambridge"),
-      body: "Structured book-style sets covering Cambridge 10 to 20 with a stable full-test flow.",
+      body: t("ielts.sim.cambridgeBody"),
     },
   ];
 
@@ -661,14 +661,14 @@ export function SimulatorClient() {
           {mockType === "cambridge_style" ? (
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
               <label className="block text-sm font-medium text-[var(--text-primary)]">
-                Cambridge exam set
+                {t("ielts.sim.cambridgeSetLabel")}
               </label>
               <select
                 value={cambridgeExamSet}
                 onChange={(event) => setCambridgeExamSet(event.target.value)}
                 className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50"
               >
-                <option value="auto">Auto-pick best matched set</option>
+                <option value="auto">{t("ielts.sim.cambridgeSetAuto")}</option>
                 {cambridgeExamSets.map((item) => (
                   <option key={item} value={item}>
                     {formatExamSetLabel(item)}
@@ -676,20 +676,20 @@ export function SimulatorClient() {
                 ))}
               </select>
               <p className="mt-3 text-sm text-[var(--text-secondary)]">
-                Cambridge mode now pulls from a fixed book-style question bank instead of generated prompts.
+                {t("ielts.sim.cambridgeSetDesc")}
               </p>
             </div>
           ) : (
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)] p-5">
               <label className="block text-sm font-medium text-[var(--text-primary)]">
-                Predictions exam set
+                {t("ielts.sim.predictionsSetLabel")}
               </label>
               <select
                 value={predictionExamSet}
                 onChange={(event) => setPredictionExamSet(event.target.value)}
                 className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50"
               >
-                <option value="auto">Auto-pick latest prediction set</option>
+                <option value="auto">{t("ielts.sim.predictionsSetAuto")}</option>
                 {predictionExamSets.map((item) => (
                   <option key={item} value={item}>
                     {formatExamSetLabel(item)}
@@ -697,7 +697,7 @@ export function SimulatorClient() {
                 ))}
               </select>
               <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-                Predictions mode uses stored exam sets that follow current IELTS themes. AI is used only after you answer writing or speaking tasks.
+                {t("ielts.sim.predictionsSetDesc")}
               </p>
             </div>
           )}
@@ -723,7 +723,7 @@ export function SimulatorClient() {
 
           <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
             <label className="flex items-center justify-between gap-3 text-sm text-[var(--text-secondary)]">
-              <span>Strict exam mode (fullscreen, tab/leave monitoring)</span>
+              <span>{t("ielts.sim.strictMode")}</span>
               <button
                 type="button"
                 role="switch"
@@ -758,10 +758,10 @@ export function SimulatorClient() {
           <Loader2 className="h-8 w-8 animate-spin text-white" />
         </div>
         <h2 className="mt-6 text-xl font-semibold text-[var(--text-primary)]">
-          Preparing your mock exam
+          {t("ielts.sim.loadingTitle")}
         </h2>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">
-          Loading reading, listening, writing, and speaking sections from the IELTS question bank.
+          {t("ielts.sim.loadingBody")}
         </p>
       </div>
     );
@@ -773,7 +773,7 @@ export function SimulatorClient() {
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)]">
-              {mock.mockType === "cambridge_style" ? "Cambridge mock" : "Predictions mock"}
+              {mock.mockType === "cambridge_style" ? t("ielts.sim.cambridgeMock") : t("ielts.sim.predictionsMock")}
             </span>
             {mock.examSet ? (
               <span className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
@@ -782,55 +782,55 @@ export function SimulatorClient() {
             ) : null}
           </div>
           <h2 className="mt-4 text-2xl font-semibold text-[var(--text-primary)]">
-            Mock exam summary
+            {t("ielts.sim.resultTitle")}
           </h2>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-            You have completed the selected IELTS flow. Objective sections are checked instantly, while writing and speaking depend on the AI examiner evaluations you ran during the mock.
+            {t("ielts.sim.resultBody")}
           </p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           {resultSummary.reading ? (
             <ScoreCard
-              title="Reading"
+              title={t("ielts.simReading")}
               value={`Band ${rawScoreToBand(resultSummary.reading.correct, resultSummary.reading.total).toFixed(1)}`}
-              subtitle={`${resultSummary.reading.correct}/${resultSummary.reading.total} correct · ${resultSummary.reading.percent}%`}
+              subtitle={`${resultSummary.reading.correct}/${resultSummary.reading.total} ${t("ielts.sim.resultCorrect")} · ${resultSummary.reading.percent}%`}
               tone="text-blue-400"
             />
           ) : null}
           {resultSummary.listening ? (
             <ScoreCard
-              title="Listening"
+              title={t("ielts.simListening")}
               value={`Band ${rawScoreToBand(resultSummary.listening.correct, resultSummary.listening.total).toFixed(1)}`}
-              subtitle={`${resultSummary.listening.correct}/${resultSummary.listening.total} correct · ${resultSummary.listening.percent}%`}
+              subtitle={`${resultSummary.listening.correct}/${resultSummary.listening.total} ${t("ielts.sim.resultCorrect")} · ${resultSummary.listening.percent}%`}
               tone="text-cyan-400"
             />
           ) : null}
           <ScoreCard
-            title="Writing"
+            title={t("ielts.simWriting")}
             value={
               resultSummary.writingAverage !== null
                 ? `Band ${resultSummary.writingAverage.toFixed(1)}`
-                : "Pending"
+                : t("ielts.sim.pending")
             }
             subtitle={
               resultSummary.pendingWriting > 0
-                ? `${resultSummary.pendingWriting} task(s) still need AI evaluation`
-                : "All writing tasks evaluated"
+                ? t("ielts.sim.pendingEval", { count: resultSummary.pendingWriting })
+                : t("ielts.sim.writingAllDone")
             }
             tone="text-emerald-400"
           />
           <ScoreCard
-            title="Speaking"
+            title={t("ielts.simSpeaking")}
             value={
               resultSummary.speakingAverage !== null
                 ? `Band ${resultSummary.speakingAverage.toFixed(1)}`
-                : "Pending"
+                : t("ielts.sim.pending")
             }
             subtitle={
               resultSummary.pendingSpeaking > 0
-                ? `${resultSummary.pendingSpeaking} task(s) still need AI evaluation`
-                : "All speaking tasks evaluated"
+                ? t("ielts.sim.pendingEval", { count: resultSummary.pendingSpeaking })
+                : t("ielts.sim.speakingAllDone")
             }
             tone="text-violet-400"
           />
@@ -838,31 +838,47 @@ export function SimulatorClient() {
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
           <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-            What this mock already simulates
+            {t("ielts.sim.simulatesTitle")}
           </h3>
           <ul className="mt-4 space-y-2 text-sm leading-6 text-[var(--text-secondary)]">
-            <li>Structured Cambridge-style sets or prediction-based runs.</li>
-            <li>Reading passages with multiple IELTS question types.</li>
-            <li>Listening scripts with browser audio playback and answer checking.</li>
-            <li>Writing and speaking tasks scored with AI feedback on your answers only.</li>
+            <li>{t("ielts.sim.simulates1")}</li>
+            <li>{t("ielts.sim.simulates2")}</li>
+            <li>{t("ielts.sim.simulates3")}</li>
+            <li>{t("ielts.sim.simulates4")}</li>
           </ul>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button onClick={goToConfigure}>
+          <Button
+            onClick={() => {
+              const allRevealed: Record<string, boolean> = {};
+              for (const sec of mock.sections) allRevealed[sec.key] = true;
+              setRevealedSections(allRevealed);
+              setActiveSectionIndex(0);
+              setStage("exam");
+            }}
+          >
+            <BookOpen className="h-4 w-4" />
+            {t("ielts.sim.reviewAnswers")}
+          </Button>
+          <Button variant="secondary" onClick={handleStartMock}>
             <RotateCcw className="h-4 w-4" />
-            Configure another mock
+            {t("ielts.sim.retakeExam")}
+          </Button>
+          <Button variant="secondary" onClick={goToConfigure}>
+            <Target className="h-4 w-4" />
+            {t("ielts.sim.configureMock")}
           </Button>
           <Link href="/ielts/writing">
-            <Button variant="secondary">
+            <Button variant="outline">
               <PenLine className="h-4 w-4" />
-              Deep writing practice
+              {t("ielts.sim.deepWriting")}
             </Button>
           </Link>
           <Link href="/ielts/speaking">
-            <Button variant="secondary">
+            <Button variant="outline">
               <Mic className="h-4 w-4" />
-              Deep speaking practice
+              {t("ielts.sim.deepSpeaking")}
             </Button>
           </Link>
         </div>
@@ -880,14 +896,13 @@ export function SimulatorClient() {
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)]">
-            {mock.mockType === "cambridge_style" ? "Cambridge mock" : "Predictions mock"}
+            {mock.mockType === "cambridge_style" ? t("ielts.sim.cambridgeMock") : t("ielts.sim.predictionsMock")}
           </span>
           {mock.examSet ? (
             <span className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
               {formatExamSetLabel(mock.examSet)}
             </span>
           ) : null}
-          {/* band target badge removed */}
         </div>
 
         <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -901,7 +916,7 @@ export function SimulatorClient() {
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-right">
             <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-              Section timer
+              {t("ielts.sim.sectionTimer")}
             </p>
             <p className={`mt-1 text-2xl font-semibold ${timeLeft < 60 ? "text-red-400" : "text-[var(--text-primary)]"}`}>
               {formatTime(timeLeft)}
@@ -950,7 +965,7 @@ export function SimulatorClient() {
                   </h3>
                   {group.topic ? (
                     <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                      Topic: {group.topic}
+                      {t("ielts.sim.topic")}: {group.topic}
                     </p>
                   ) : null}
                 </div>
@@ -968,7 +983,7 @@ export function SimulatorClient() {
                         ) : (
                           <Play className="h-4 w-4" />
                         )}
-                        {playingGroupKey === group.key ? "Stop audio" : "Play audio"}
+                        {playingGroupKey === group.key ? t("ielts.sim.stopAudio") : t("ielts.sim.playAudio")}
                       </Button>
                     ) : null}
                     {isCurrentSectionRevealed ? (
@@ -983,7 +998,7 @@ export function SimulatorClient() {
                         }
                       >
                         <Volume2 className="h-4 w-4" />
-                        {showListeningTranscript[group.key] ? "Hide script" : "Show script"}
+                        {showListeningTranscript[group.key] ? t("ielts.sim.hideScript") : t("ielts.sim.showScript")}
                       </Button>
                     ) : null}
                   </div>
@@ -1003,7 +1018,7 @@ export function SimulatorClient() {
               showListeningTranscript[group.key] ? (
                 <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
                   <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-400">
-                    Audio script
+                    {t("ielts.sim.audioScript")}
                   </p>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
                     {group.audioScript}
@@ -1067,7 +1082,7 @@ export function SimulatorClient() {
 
                 <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm">
                   <span className="text-[var(--text-secondary)]">
-                    {wordCount} words
+                    {wordCount} {t("ielts.sim.words")}
                   </span>
                   <Button
                     size="sm"
@@ -1079,7 +1094,7 @@ export function SimulatorClient() {
                     ) : (
                       <Sparkles className="h-4 w-4" />
                     )}
-                    Get AI evaluation
+                    {t("ielts.sim.getAiEval")}
                   </Button>
                 </div>
 
@@ -1147,7 +1162,7 @@ export function SimulatorClient() {
                 {cuePoints.length > 0 ? (
                   <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                      Cue points
+                      {t("ielts.sim.cuePoints")}
                     </p>
                     <ul className="mt-3 space-y-1.5">
                       {cuePoints.map((item, index) => (
@@ -1201,7 +1216,7 @@ export function SimulatorClient() {
                     ) : (
                       <Sparkles className="h-4 w-4" />
                     )}
-                    Get AI evaluation
+                    {t("ielts.sim.getAiEval")}
                   </Button>
                 </div>
 
@@ -1241,24 +1256,24 @@ export function SimulatorClient() {
       <div className="flex flex-wrap gap-3">
         <Button onClick={handleCompleteSection}>
           {activeSectionIndex === mock.sections.length - 1
-            ? "Finish mock exam"
+            ? t("ielts.sim.finishMock")
             : currentSection.key === "reading" || currentSection.key === "listening"
-              ? "Check answers and continue"
-              : "Continue to next section"}
+              ? t("ielts.sim.checkAndContinue")
+              : t("ielts.sim.continueNext")}
           <ArrowRight className="h-4 w-4" />
         </Button>
         <Button variant="secondary" onClick={examMode.askExit}>
           <RotateCcw className="h-4 w-4" />
-          Exit and reconfigure
+          {t("ielts.sim.exitReconfigure")}
         </Button>
       </div>
 
       <ExamViolationModal
         open={examMode.showExitConfirm}
-        title="Terminate current exam attempt?"
-        message="Leaving the exam will terminate your attempt. Continue?"
-        cancelLabel="Stay in exam"
-        confirmLabel="Terminate and exit"
+        title={t("ielts.sim.terminateTitle")}
+        message={t("ielts.sim.terminateMessage")}
+        cancelLabel={t("ielts.sim.stayInExam")}
+        confirmLabel={t("ielts.sim.terminateExit")}
         confirmTone="danger"
         onCancel={examMode.cancelExit}
         onConfirm={() => {
@@ -1485,9 +1500,12 @@ function ObjectiveQuestionCard({
   revealed: boolean;
   onChange: (questionId: string, value: string) => void;
 }) {
+  const { t } = useLocale();
   const options = objectiveOptions(question);
   const isCorrect =
     revealed && normalizeAnswer(value) === normalizeAnswer(question.answer ?? "");
+  const qtypeKey = `ielts.qtype.${question.questionType}` as Parameters<typeof t>[0];
+  const qtypeLabel = t(qtypeKey) ?? question.questionType.replace(/_/g, " ").toUpperCase();
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
@@ -1496,7 +1514,7 @@ function ObjectiveQuestionCard({
           Q{index}
         </span>
         <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
-          {question.questionType.replace("_", " ")}
+          {qtypeLabel}
         </span>
         {revealed ? (
           <span
@@ -1506,7 +1524,7 @@ function ObjectiveQuestionCard({
                 : "border-red-500/20 bg-red-500/10 text-red-400"
             }`}
           >
-            {isCorrect ? "Correct" : "Check answer"}
+            {isCorrect ? t("ielts.sim.correctBadge") : t("ielts.sim.checkAnswer")}
           </span>
         ) : null}
       </div>
@@ -1550,7 +1568,7 @@ function ObjectiveQuestionCard({
       {revealed ? (
         <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-            Correct answer
+            {t("ielts.sim.correctAnswerLabel")}
           </p>
           <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">
             {question.answer}
