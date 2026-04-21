@@ -394,7 +394,7 @@ export default async function StudentDashboardPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                  Next action
+                  {t("student.nextAction")}
                 </p>
                 <h3 className="mt-1.5 text-lg font-bold tracking-[-0.03em] text-[var(--text-primary)]">
                   {t("dashboard.startStudying")}
