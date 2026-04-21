@@ -161,6 +161,7 @@ export function SetForm({
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [invitedUsers, setInvitedUsers] = useState(initialInvitedUsers);
   const [error, setError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
   const [importStage, setImportStage] = useState<ImportStage>("idle");
@@ -469,9 +470,15 @@ export function SetForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setTitleError(null);
+
+    if (!title.trim()) {
+      setTitleError(t("validation.required"));
+      return;
+    }
 
     if (title.trim().length < 3) {
-      setError(t("validation.titleTooShort"));
+      setTitleError(t("validation.titleTooShort"));
       return;
     }
 
@@ -503,7 +510,7 @@ export function SetForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6 sm:space-y-8">
       {importVariant === "cta" ? (
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] sm:rounded-[1.75rem] sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -538,7 +545,11 @@ export function SetForm({
             label={t("form.title")}
             placeholder={t("form.titlePlaceholder")}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (titleError) setTitleError(null);
+            }}
+            error={titleError ?? undefined}
             disabled={isPending}
           />
           <div className="w-full">
