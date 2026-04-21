@@ -73,7 +73,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       {/* Header */}
       <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-          Workspace
+          {t("settings.workspace")}
         </p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">
           {t("settings.title")}

@@ -12,10 +12,15 @@ import { requireRole } from "@/server/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default async function StudentClassesPage() {
+export default async function StudentClassesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ join_error?: string; join_status?: string }>;
+}) {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
   const access = await requireRole("student");
+  const params = await searchParams;
 
   if (access.redirectTo) {
     redirect(access.redirectTo);
@@ -90,20 +95,27 @@ export default async function StudentClassesPage() {
             {t("student.classesSubtitle")}
           </p>
 
-          <form
-            action={async (formData) => {
-              "use server";
-              await joinClassByCode(formData);
-            }}
-            className="mt-6 space-y-4"
-          >
-            <Input
-              name="join_code"
-              required
-              label={t("student.classCode")}
-              placeholder={t("student.classCodePlaceholder")}
-              className="uppercase tracking-[0.18em]"
-            />
+          <form action={joinClassByCode} className="mt-6 space-y-4">
+            <div>
+              <Input
+                name="join_code"
+                label={t("student.classCode")}
+                placeholder={t("student.classCodePlaceholder")}
+                className="uppercase tracking-[0.18em]"
+              />
+              {params.join_error && (
+                <p className="mt-1.5 text-sm text-[var(--danger)]">
+                  {params.join_error === "code-required"
+                    ? t("validation.required")
+                    : t("student.invalidClassCode")}
+                </p>
+              )}
+              {params.join_status === "joined" && (
+                <p className="mt-1.5 text-sm text-emerald-400">
+                  {t("student.joinedSuccess")}
+                </p>
+              )}
+            </div>
             <Button type="submit">{t("student.joinClass")}</Button>
           </form>
         </section>
