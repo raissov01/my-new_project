@@ -196,6 +196,8 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		MaterialNotes:      handler.NewMaterialNotes(gormDB),
 		EngSim:             handler.NewEngSim(gormDB, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.AIRequestTimeout),
 		Gamification:       handler.NewGamification(gormDB, emailSender),
+		Listening:          handler.NewListening(gormDB),
+		AITutor:            handler.NewAITutor(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),
 	}
 }

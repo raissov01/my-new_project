@@ -40,6 +40,8 @@ type Dependencies struct {
 	EngSim             *EngSimHandler
 	MaterialNotes      *MaterialNotesHandler
 	Gamification       *GamificationHandler
+	Listening          *ListeningHandler
+	AITutor            *AITutorHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -256,6 +258,21 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/chat/message", chatLimiter, wrapHTTP(deps.Chat.SendMessage))
 		internal.GET("/chat/history", wrapHTTP(deps.Chat.GetHistory))
 		internal.DELETE("/chat/history", wrapHTTP(deps.Chat.ClearHistory))
+
+		// Listening
+		internal.GET("/listening/clips", wrapHTTP(deps.Listening.ListClips))
+		internal.GET("/listening/clips/:id", wrapHTTP(deps.Listening.GetClip))
+		internal.POST("/listening/progress", wrapHTTP(deps.Listening.RecordProgress))
+		internal.GET("/listening/progress", wrapHTTP(deps.Listening.GetProgress))
+
+		// AI Tutor scenarios
+		tutorLimiter := middleware.NewRateLimiter(30, 1*time.Minute).LimitByUser()
+		internal.GET("/tutor/scenarios", wrapHTTP(deps.AITutor.ListScenarios))
+		internal.GET("/tutor/scenarios/:slug", wrapHTTP(deps.AITutor.GetScenario))
+		internal.POST("/tutor/conversations", wrapHTTP(deps.AITutor.StartConversation))
+		internal.POST("/tutor/conversations/:id/message", tutorLimiter, wrapHTTP(deps.AITutor.SendMessage))
+		internal.POST("/tutor/conversations/:id/grade", wrapHTTP(deps.AITutor.GradeConversation))
+		internal.GET("/tutor/history", wrapHTTP(deps.AITutor.GetHistory))
 
 		// IELTS admin question management
 		internal.POST("/ielts/admin/questions", wrapHTTP(deps.IELTSQuestionAdmin.CreateQuestion))
