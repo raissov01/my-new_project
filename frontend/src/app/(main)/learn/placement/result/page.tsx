@@ -124,7 +124,7 @@ export default async function PlacementResultPage() {
       <div className="mt-10 space-y-3">
         {/* Primary: General English Simulator */}
         <Link
-          href="/learn/map"
+          href={`/learn/map?level=${level}`}
           className="flex items-center gap-3 rounded-2xl border border-[var(--primary)] bg-[var(--primary-soft)] px-5 py-4 font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)]"
         >
           <GraduationCap className="h-5 w-5 text-[var(--primary)]" />
