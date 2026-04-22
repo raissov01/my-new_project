@@ -5,14 +5,19 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 
 // ── Types ──
 
+export type PlacementOption = {
+  id: string;
+  text: string;
+};
+
 export type PlacementQuestion = {
-  id: number;
-  level: string;
-  section: string;
-  question: string;
-  options: string[];
-  correct: number;
-  explanation: string;
+  id: string;
+  level: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+  category: "vocabulary" | "grammar";
+  prompt: string;
+  options: PlacementOption[];
+  correctOptionId: string;
+  explanation?: string;
 };
 
 export type Placement = {
@@ -22,6 +27,7 @@ export type Placement = {
   score: number;
   totalQuestions: number;
   correctAnswers: number;
+  detailedResults?: string;
   completedAt: string;
 };
 
@@ -165,11 +171,14 @@ export async function getPlacement() {
   }
 }
 
-export async function startPlacement() {
+export async function startPlacement(opts?: { retake?: boolean }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
+  const path = opts?.retake
+    ? "/api/v1/engsim/placement/start?reset=true"
+    : "/api/v1/engsim/placement/start";
   return fetchBackendJson<{ questions?: PlacementQuestion[]; alreadyDone?: boolean; placement?: Placement }>({
-    path: "/api/v1/engsim/placement/start",
+    path,
     userId: user.id,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -179,10 +188,13 @@ export async function startPlacement() {
 }
 
 export async function submitPlacement(data: {
-  answers: number[];
-  totalQuestions: number;
+  level: string;
+  vocabLevel: string;
+  grammarLevel: string;
   correctAnswers: number;
+  totalQuestions: number;
   levelScores: Record<string, number>;
+  totalAnswered: number;
 }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
