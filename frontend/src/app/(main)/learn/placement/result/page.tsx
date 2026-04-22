@@ -6,6 +6,7 @@ import {
   BookOpen,
   Brain,
   GraduationCap,
+  Layers,
   MessageCircle,
   RotateCcw,
 } from "lucide-react";
@@ -121,41 +122,42 @@ export default async function PlacementResultPage() {
 
       {/* CTA buttons */}
       <div className="mt-10 space-y-3">
+        {/* Primary: General English Simulator */}
         <Link
-          href={`/ielts/simulator`}
-          className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-4 font-semibold text-[var(--text-primary)] transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary-soft)]"
+          href="/learn/map"
+          className="flex items-center gap-3 rounded-2xl border border-[var(--primary)] bg-[var(--primary-soft)] px-5 py-4 font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)]"
         >
           <GraduationCap className="h-5 w-5 text-[var(--primary)]" />
           <div>
-            <p className="text-sm font-bold">Start IELTS Preparation</p>
+            <p className="text-sm font-bold">Start Learning</p>
             <p className="text-xs font-normal text-[var(--text-muted)]">
-              Mock exams tailored to your {level} level
+              General English course starting at {level} level
             </p>
           </div>
         </Link>
 
         <Link
-          href={`/sets`}
+          href="/sets"
           className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-4 font-semibold text-[var(--text-primary)] transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary-soft)]"
         >
-          <BookOpen className="h-5 w-5 text-blue-500" />
+          <Layers className="h-5 w-5 text-blue-500" />
           <div>
-            <p className="text-sm font-bold">Practice with Flashcards</p>
+            <p className="text-sm font-bold">Flashcard Sets</p>
             <p className="text-xs font-normal text-[var(--text-muted)]">
-              Expand vocabulary for {level} and beyond
+              Expand vocabulary at {level} level and beyond
             </p>
           </div>
         </Link>
 
         <Link
-          href={`/chat`}
+          href="/chat"
           className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-4 font-semibold text-[var(--text-primary)] transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary-soft)]"
         >
           <MessageCircle className="h-5 w-5 text-emerald-500" />
           <div>
-            <p className="text-sm font-bold">Chat with AI Tutor</p>
+            <p className="text-sm font-bold">AI Tutor</p>
             <p className="text-xs font-normal text-[var(--text-muted)]">
-              Ask questions, get explanations at {level} level
+              Practice speaking and writing at {level} level
             </p>
           </div>
         </Link>
