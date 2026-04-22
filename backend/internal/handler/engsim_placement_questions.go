@@ -1,6 +1,8 @@
 package handler
 
-// PlacementQuestion is a single placement test question.
+import "fmt"
+
+// PlacementQuestion is a single placement test question (internal format).
 type PlacementQuestion struct {
 	ID          int      `json:"id"`
 	Level       string   `json:"level"`
@@ -9,6 +11,50 @@ type PlacementQuestion struct {
 	Options     []string `json:"options"`
 	Correct     int      `json:"correct"` // 0-indexed
 	Explanation string   `json:"explanation"`
+}
+
+// PlacementOption is an answer choice with a stable string ID.
+type PlacementOption struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}
+
+// EnrichedPlacementQuestion is sent to the frontend. Options carry
+// stable string IDs so correctOptionId stays valid even after shuffling.
+type EnrichedPlacementQuestion struct {
+	ID              string            `json:"id"`
+	Level           string            `json:"level"`
+	Category        string            `json:"category"` // "vocabulary" | "grammar"
+	Prompt          string            `json:"prompt"`
+	Options         []PlacementOption `json:"options"`
+	CorrectOptionID string            `json:"correctOptionId"`
+	Explanation     string            `json:"explanation,omitempty"`
+}
+
+// getEnrichedPlacementQuestions converts the static bank to the enriched format.
+func getEnrichedPlacementQuestions() []EnrichedPlacementQuestion {
+	out := make([]EnrichedPlacementQuestion, len(staticPlacementQuestions))
+	for i, q := range staticPlacementQuestions {
+		opts := make([]PlacementOption, len(q.Options))
+		var correctID string
+		for j, text := range q.Options {
+			id := fmt.Sprintf("q%d-opt%d", q.ID, j)
+			opts[j] = PlacementOption{ID: id, Text: text}
+			if j == q.Correct {
+				correctID = id
+			}
+		}
+		out[i] = EnrichedPlacementQuestion{
+			ID:              fmt.Sprintf("%d", q.ID),
+			Level:           q.Level,
+			Category:        q.Section,
+			Prompt:          q.Question,
+			Options:         opts,
+			CorrectOptionID: correctID,
+			Explanation:     q.Explanation,
+		}
+	}
+	return out
 }
 
 // staticPlacementQuestions contains 60 curated, real English proficiency questions.

@@ -54,67 +54,91 @@ func (h *EngSimHandler) GetPlacement(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]any{"placement": p})
 }
 
-// StartPlacement returns 60 static placement test questions (instant, no AI call).
+// StartPlacement returns enriched placement test questions.
+// Pass ?reset=true to allow retaking even if a result already exists.
 func (h *EngSimHandler) StartPlacement(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
+	retake := r.URL.Query().Get("reset") == "true"
 
-	// Check if already done
-	var existing models.EngSimPlacement
-	if h.db.Where("user_id = ?", userID).First(&existing).Error == nil {
-		jsonOK(w, map[string]any{"placement": existing, "alreadyDone": true})
-		return
+	if !retake {
+		var existing models.EngSimPlacement
+		if h.db.Where("user_id = ?", userID).First(&existing).Error == nil {
+			jsonOK(w, map[string]any{"placement": existing, "alreadyDone": true})
+			return
+		}
 	}
 
-	// Return static questions — no AI call needed, instant response
-	jsonOK(w, map[string]any{"questions": staticPlacementQuestions})
+	jsonOK(w, map[string]any{"questions": getEnrichedPlacementQuestions()})
 }
 
-// SubmitPlacement processes placement test answers and assigns a level.
+// SubmitPlacement saves adaptive placement results.
+// The frontend sends the computed level directly; the backend falls back to
+// score-based calculation only when level is omitted (old clients).
 func (h *EngSimHandler) SubmitPlacement(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 
 	var req struct {
-		Answers        []int `json:"answers"`
-		TotalQuestions int   `json:"totalQuestions"`
-		CorrectAnswers int   `json:"correctAnswers"`
-		LevelScores    map[string]int `json:"levelScores"` // e.g. {"A1": 3, "A2": 2, "B1": 1, ...}
+		Level          string         `json:"level"`
+		VocabLevel     string         `json:"vocabLevel"`
+		GrammarLevel   string         `json:"grammarLevel"`
+		CorrectAnswers int            `json:"correctAnswers"`
+		TotalQuestions int            `json:"totalQuestions"`
+		TotalAnswered  int            `json:"totalAnswered"`
+		LevelScores    map[string]int `json:"levelScores"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonErr(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	// Determine level: highest level where user got >= 2/3 correct
-	levels := []string{"A1", "A2", "B1", "B2", "C1", "C2"}
-	assignedLevel := "A1"
-	for _, lvl := range levels {
-		score, ok := req.LevelScores[lvl]
-		if ok && score >= 2 {
-			assignedLevel = lvl
+	assignedLevel := req.Level
+	if assignedLevel == "" {
+		levels := []string{"A1", "A2", "B1", "B2", "C1", "C2"}
+		assignedLevel = "A1"
+		for _, lvl := range levels {
+			if score, ok := req.LevelScores[lvl]; ok && score >= 2 {
+				assignedLevel = lvl
+			}
 		}
 	}
 
-	detailedJSON, _ := json.Marshal(req.LevelScores)
+	vocabLevel := req.VocabLevel
+	if vocabLevel == "" {
+		vocabLevel = assignedLevel
+	}
+	grammarLevel := req.GrammarLevel
+	if grammarLevel == "" {
+		grammarLevel = assignedLevel
+	}
+
+	totalQ := req.TotalQuestions
+	if totalQ == 0 {
+		totalQ = req.TotalAnswered
+	}
+
+	detailed := map[string]any{
+		"vocabLevel":    vocabLevel,
+		"grammarLevel":  grammarLevel,
+		"levelScores":   req.LevelScores,
+		"totalAnswered": req.TotalAnswered,
+	}
+	detailedJSON, _ := json.Marshal(detailed)
 
 	placement := models.EngSimPlacement{
 		UserID:          userID,
 		Level:           assignedLevel,
-		Score:           req.CorrectAnswers * 100 / max(req.TotalQuestions, 1),
-		TotalQuestions:  req.TotalQuestions,
+		Score:           req.CorrectAnswers * 100 / max(totalQ, 1),
+		TotalQuestions:  totalQ,
 		CorrectAnswers:  req.CorrectAnswers,
 		DetailedResults: string(detailedJSON),
 		CompletedAt:     time.Now(),
 	}
 
 	if err := h.db.Create(&placement).Error; err != nil {
-		// Might already exist — update
 		h.db.Where("user_id = ?", userID).Updates(&placement)
 	}
 
-	// Initialize user progress
 	h.ensureUserProgress(userID, assignedLevel)
-
-	// Unlock first units for the user's level
 	h.unlockInitialUnits(userID, assignedLevel)
 
 	jsonOK(w, map[string]any{"placement": placement, "level": assignedLevel})
