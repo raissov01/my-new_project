@@ -1,0 +1,415 @@
+{
+  "id": "sample-mixed-a1",
+  "title": "Greetings & Basics",
+  "level": "A1",
+  "topic": "greetings",
+  "xpReward": 50,
+  "items": [
+    {
+      "type": "fill_blank",
+      "id": "fb-a1-1",
+      "level": "A1",
+      "prompt": "My name ___ Anna.",
+      "options": [
+        { "id": "fb-a1-1-opt-0", "text": "am" },
+        { "id": "fb-a1-1-opt-1", "text": "is" },
+        { "id": "fb-a1-1-opt-2", "text": "are" },
+        { "id": "fb-a1-1-opt-3", "text": "be" }
+      ],
+      "correctOptionId": "fb-a1-1-opt-1",
+      "explanation": "'Is' is used with 'my name' (third person singular)."
+    },
+    {
+      "type": "fill_blank",
+      "id": "fb-a1-2",
+      "level": "A1",
+      "prompt": "Hello! ___ are you?",
+      "options": [
+        { "id": "fb-a1-2-opt-0", "text": "What" },
+        { "id": "fb-a1-2-opt-1", "text": "Who" },
+        { "id": "fb-a1-2-opt-2", "text": "How" },
+        { "id": "fb-a1-2-opt-3", "text": "Where" }
+      ],
+      "correctOptionId": "fb-a1-2-opt-2",
+      "explanation": "'How are you?' is a common greeting in English."
+    },
+    {
+      "type": "fill_blank",
+      "id": "fb-a1-3",
+      "level": "A1",
+      "prompt": "I ___ from Kazakhstan.",
+      "options": [
+        { "id": "fb-a1-3-opt-0", "text": "is" },
+        { "id": "fb-a1-3-opt-1", "text": "am" },
+        { "id": "fb-a1-3-opt-2", "text": "are" },
+        { "id": "fb-a1-3-opt-3", "text": "be" }
+      ],
+      "correctOptionId": "fb-a1-3-opt-1",
+      "explanation": "'Am' is used with 'I'."
+    },
+    {
+      "type": "fill_blank",
+      "id": "fb-a1-4",
+      "level": "A1",
+      "prompt": "They ___ students.",
+      "options": [
+        { "id": "fb-a1-4-opt-0", "text": "is" },
+        { "id": "fb-a1-4-opt-1", "text": "am" },
+        { "id": "fb-a1-4-opt-2", "text": "are" },
+        { "id": "fb-a1-4-opt-3", "text": "be" }
+      ],
+      "correctOptionId": "fb-a1-4-opt-2"
+    },
+    {
+      "type": "fill_blank",
+      "id": "fb-a1-5",
+      "level": "A1",
+      "prompt": "Nice to ___ you!",
+      "options": [
+        { "id": "fb-a1-5-opt-0", "text": "see" },
+        { "id": "fb-a1-5-opt-1", "text": "meet" },
+        { "id": "fb-a1-5-opt-2", "text": "know" },
+        { "id": "fb-a1-5-opt-3", "text": "have" }
+      ],
+      "correctOptionId": "fb-a1-5-opt-1",
+      "explanation": "'Nice to meet you' is a common greeting when you first meet someone."
+    },
+    {
+      "type": "translate",
+      "id": "tr-a1-1",
+      "level": "A1",
+      "direction": "en_to_kk",
+      "source": "rabbit",
+      "acceptedAnswers": ["қоян", "коян"]
+    },
+    {
+      "type": "translate",
+      "id": "tr-a1-2",
+      "level": "A1",
+      "direction": "en_to_kk",
+      "source": "cat",
+      "acceptedAnswers": ["мысық", "мысык"]
+    },
+    {
+      "type": "translate",
+      "id": "tr-a1-3",
+      "level": "A1",
+      "direction": "en_to_kk",
+      "source": "dog",
+      "acceptedAnswers": ["ит", "иіт"]
+    },
+    {
+      "type": "translate",
+      "id": "tr-a1-4",
+      "level": "A1",
+      "direction": "kk_to_en",
+      "source": "сәлем",
+      "acceptedAnswers": ["hello", "hi", "hey"]
+    },
+    {
+      "type": "translate",
+      "id": "tr-a1-5",
+      "level": "A1",
+      "direction": "kk_to_en",
+      "source": "рақмет",
+      "acceptedAnswers": ["thank you", "thanks"]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a1-1",
+      "level": "A1",
+      "topic": "animals",
+      "pairs": [
+        { "left": "cat",   "right": "мысық" },
+        { "left": "dog",   "right": "ит" },
+        { "left": "bird",  "right": "құс" },
+        { "left": "fish",  "right": "балық" },
+        { "left": "horse", "right": "жылқы" }
+      ]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a1-2",
+      "level": "A1",
+      "topic": "family",
+      "pairs": [
+        { "left": "mother", "right": "анам" },
+        { "left": "father", "right": "әкем" },
+        { "left": "sister", "right": "апам" },
+        { "left": "brother","right": "ағам" },
+        { "left": "child",  "right": "бала" }
+      ]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a1-3",
+      "level": "A1",
+      "topic": "numbers",
+      "pairs": [
+        { "left": "one",   "right": "бір" },
+        { "left": "two",   "right": "екі" },
+        { "left": "three", "right": "үш" },
+        { "left": "four",  "right": "төрт" },
+        { "left": "five",  "right": "бес" }
+      ]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a1-4",
+      "level": "A1",
+      "topic": "food",
+      "pairs": [
+        { "left": "apple",  "right": "алма" },
+        { "left": "bread",  "right": "нан" },
+        { "left": "water",  "right": "су" },
+        { "left": "milk",   "right": "сүт" },
+        { "left": "egg",    "right": "жұмыртқа" }
+      ]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a1-5",
+      "level": "A1",
+      "topic": "colours",
+      "pairs": [
+        { "left": "red",    "right": "қызыл" },
+        { "left": "blue",   "right": "көк" },
+        { "left": "green",  "right": "жасыл" },
+        { "left": "yellow", "right": "сары" },
+        { "left": "white",  "right": "ақ" }
+      ]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a1-1",
+      "level": "A1",
+      "audioUrl": "/audio/lessons/a1/hello.mp3",
+      "acceptedAnswers": ["hello", "hi"],
+      "explanation": "TODO: generate via TTS pipeline"
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a1-2",
+      "level": "A1",
+      "audioUrl": "/audio/lessons/a1/good-morning.mp3",
+      "acceptedAnswers": ["good morning"]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a1-3",
+      "level": "A1",
+      "audioUrl": "/audio/lessons/a1/thank-you.mp3",
+      "acceptedAnswers": ["thank you", "thanks"]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a1-4",
+      "level": "A1",
+      "audioUrl": "/audio/lessons/a1/my-name-is.mp3",
+      "acceptedAnswers": ["my name is"]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a1-5",
+      "level": "A1",
+      "audioUrl": "/audio/lessons/a1/how-are-you.mp3",
+      "acceptedAnswers": ["how are you"]
+    },
+    {
+      "type": "image_select",
+      "id": "is-a1-1",
+      "level": "A1",
+      "prompt": "Choose: cat",
+      "options": [
+        { "id": "is-a1-1-opt-0", "imageUrl": "/images/lessons/a1/cat.jpg",   "alt": "cat" },
+        { "id": "is-a1-1-opt-1", "imageUrl": "/images/lessons/a1/dog.jpg",   "alt": "dog" },
+        { "id": "is-a1-1-opt-2", "imageUrl": "/images/lessons/a1/bird.jpg",  "alt": "bird" },
+        { "id": "is-a1-1-opt-3", "imageUrl": "/images/lessons/a1/fish.jpg",  "alt": "fish" }
+      ],
+      "correctOptionId": "is-a1-1-opt-0"
+    },
+    {
+      "type": "image_select",
+      "id": "is-a1-2",
+      "level": "A1",
+      "prompt": "Choose: apple",
+      "options": [
+        { "id": "is-a1-2-opt-0", "imageUrl": "/images/lessons/a1/banana.jpg","alt": "banana" },
+        { "id": "is-a1-2-opt-1", "imageUrl": "/images/lessons/a1/apple.jpg", "alt": "apple" },
+        { "id": "is-a1-2-opt-2", "imageUrl": "/images/lessons/a1/bread.jpg", "alt": "bread" },
+        { "id": "is-a1-2-opt-3", "imageUrl": "/images/lessons/a1/milk.jpg",  "alt": "milk" }
+      ],
+      "correctOptionId": "is-a1-2-opt-1"
+    },
+    {
+      "type": "image_select",
+      "id": "is-a1-3",
+      "level": "A1",
+      "prompt": "Choose: car",
+      "options": [
+        { "id": "is-a1-3-opt-0", "imageUrl": "/images/lessons/a1/car.jpg",   "alt": "car" },
+        { "id": "is-a1-3-opt-1", "imageUrl": "/images/lessons/a1/bus.jpg",   "alt": "bus" },
+        { "id": "is-a1-3-opt-2", "imageUrl": "/images/lessons/a1/train.jpg", "alt": "train" },
+        { "id": "is-a1-3-opt-3", "imageUrl": "/images/lessons/a1/bike.jpg",  "alt": "bike" }
+      ],
+      "correctOptionId": "is-a1-3-opt-0"
+    },
+    {
+      "type": "image_select",
+      "id": "is-a1-4",
+      "level": "A1",
+      "prompt": "Choose: sun",
+      "options": [
+        { "id": "is-a1-4-opt-0", "imageUrl": "/images/lessons/a1/moon.jpg",  "alt": "moon" },
+        { "id": "is-a1-4-opt-1", "imageUrl": "/images/lessons/a1/star.jpg",  "alt": "star" },
+        { "id": "is-a1-4-opt-2", "imageUrl": "/images/lessons/a1/sun.jpg",   "alt": "sun" },
+        { "id": "is-a1-4-opt-3", "imageUrl": "/images/lessons/a1/cloud.jpg", "alt": "cloud" }
+      ],
+      "correctOptionId": "is-a1-4-opt-2"
+    },
+    {
+      "type": "image_select",
+      "id": "is-a1-5",
+      "level": "A1",
+      "prompt": "Choose: house",
+      "options": [
+        { "id": "is-a1-5-opt-0", "imageUrl": "/images/lessons/a1/house.jpg", "alt": "house" },
+        { "id": "is-a1-5-opt-1", "imageUrl": "/images/lessons/a1/school.jpg","alt": "school" },
+        { "id": "is-a1-5-opt-2", "imageUrl": "/images/lessons/a1/shop.jpg",  "alt": "shop" },
+        { "id": "is-a1-5-opt-3", "imageUrl": "/images/lessons/a1/park.jpg",  "alt": "park" }
+      ],
+      "correctOptionId": "is-a1-5-opt-0"
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a1-1",
+      "level": "A1",
+      "prompt": "Build the sentence",
+      "tokens": ["yesterday", "I", "to", "school", "went"],
+      "correctOrder": [1, 4, 2, 3, 0],
+      "explanation": "Past simple: 'I went to school yesterday.'"
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a1-2",
+      "level": "A1",
+      "prompt": "Build the sentence",
+      "tokens": ["name", "My", "Anna", "is"],
+      "correctOrder": [1, 0, 3, 2]
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a1-3",
+      "level": "A1",
+      "prompt": "Build the sentence",
+      "tokens": ["like", "I", "cats"],
+      "correctOrder": [1, 0, 2]
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a1-4",
+      "level": "A1",
+      "prompt": "Build the sentence",
+      "tokens": ["old", "am", "ten", "I", "years"],
+      "correctOrder": [3, 1, 4, 2, 0]
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a1-5",
+      "level": "A1",
+      "prompt": "Build the sentence",
+      "tokens": ["is", "This", "book", "a", "my"],
+      "correctOrder": [1, 0, 4, 3, 2]
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a1-1",
+      "level": "A1",
+      "prompt": "Animal that says 'woof'",
+      "letters": ["d", "o", "g", "r", "b"],
+      "correctWord": "dog"
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a1-2",
+      "level": "A1",
+      "prompt": "Animal that says 'meow'",
+      "letters": ["c", "a", "t", "b", "s"],
+      "correctWord": "cat"
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a1-3",
+      "level": "A1",
+      "prompt": "Opposite of 'hot'",
+      "letters": ["c", "o", "l", "d", "h", "n"],
+      "correctWord": "cold"
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a1-4",
+      "level": "A1",
+      "prompt": "Colour of grass",
+      "letters": ["g", "r", "e", "n", "y", "o"],
+      "correctWord": "green"
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a1-5",
+      "level": "A1",
+      "prompt": "Where you sleep",
+      "letters": ["b", "e", "d", "r", "o", "m", "k"],
+      "correctWord": "bedroom"
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a1-1",
+      "level": "A1",
+      "sentence": "She don't like coffee.",
+      "tokens": ["She", "don't", "like", "coffee."],
+      "errorTokenIndex": 1,
+      "correction": "doesn't",
+      "explanation": "Third person singular (she/he/it) uses 'doesn't' in negation."
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a1-2",
+      "level": "A1",
+      "sentence": "I am a 10 years old.",
+      "tokens": ["I", "am", "a", "10", "years", "old."],
+      "errorTokenIndex": 2,
+      "correction": "",
+      "explanation": "No article needed: 'I am 10 years old.'"
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a1-3",
+      "level": "A1",
+      "sentence": "He have a dog.",
+      "tokens": ["He", "have", "a", "dog."],
+      "errorTokenIndex": 1,
+      "correction": "has",
+      "explanation": "Third person singular: 'He has a dog.'"
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a1-4",
+      "level": "A1",
+      "sentence": "They is my friends.",
+      "tokens": ["They", "is", "my", "friends."],
+      "errorTokenIndex": 1,
+      "correction": "are",
+      "explanation": "'They are' — plural subject takes 'are'."
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a1-5",
+      "level": "A1",
+      "sentence": "I go to school yesterday.",
+      "tokens": ["I", "go", "to", "school", "yesterday."],
+      "errorTokenIndex": 1,
+      "correction": "went",
+      "explanation": "'Yesterday' requires past tense: 'went'."
+    }
+  ]
+}

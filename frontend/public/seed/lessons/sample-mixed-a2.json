@@ -1,0 +1,412 @@
+{
+  "id": "sample-mixed-a2",
+  "title": "Daily Life & Routines",
+  "level": "A2",
+  "topic": "daily_life",
+  "xpReward": 60,
+  "items": [
+    {
+      "type": "fill_blank",
+      "id": "fb-a2-1",
+      "level": "A2",
+      "prompt": "She ___ to work every day by bus.",
+      "options": [
+        { "id": "fb-a2-1-opt-0", "text": "go" },
+        { "id": "fb-a2-1-opt-1", "text": "goes" },
+        { "id": "fb-a2-1-opt-2", "text": "going" },
+        { "id": "fb-a2-1-opt-3", "text": "gone" }
+      ],
+      "correctOptionId": "fb-a2-1-opt-1",
+      "explanation": "Third person singular (she) + present simple = 'goes'."
+    },
+    {
+      "type": "fill_blank",
+      "id": "fb-a2-2",
+      "level": "A2",
+      "prompt": "We ___ football last Saturday.",
+      "options": [
+        { "id": "fb-a2-2-opt-0", "text": "plays" },
+        { "id": "fb-a2-2-opt-1", "text": "play" },
+        { "id": "fb-a2-2-opt-2", "text": "played" },
+        { "id": "fb-a2-2-opt-3", "text": "playing" }
+      ],
+      "correctOptionId": "fb-a2-2-opt-2",
+      "explanation": "'Last Saturday' indicates past tense: 'played'."
+    },
+    {
+      "type": "fill_blank",
+      "id": "fb-a2-3",
+      "level": "A2",
+      "prompt": "There ___ a lot of people in the park.",
+      "options": [
+        { "id": "fb-a2-3-opt-0", "text": "is" },
+        { "id": "fb-a2-3-opt-1", "text": "are" },
+        { "id": "fb-a2-3-opt-2", "text": "was" },
+        { "id": "fb-a2-3-opt-3", "text": "has" }
+      ],
+      "correctOptionId": "fb-a2-3-opt-1"
+    },
+    {
+      "type": "fill_blank",
+      "id": "fb-a2-4",
+      "level": "A2",
+      "prompt": "I ___ already eaten breakfast.",
+      "options": [
+        { "id": "fb-a2-4-opt-0", "text": "have" },
+        { "id": "fb-a2-4-opt-1", "text": "has" },
+        { "id": "fb-a2-4-opt-2", "text": "had" },
+        { "id": "fb-a2-4-opt-3", "text": "am" }
+      ],
+      "correctOptionId": "fb-a2-4-opt-0",
+      "explanation": "Present perfect: 'I have already eaten.'"
+    },
+    {
+      "type": "fill_blank",
+      "id": "fb-a2-5",
+      "level": "A2",
+      "prompt": "Can you help me, ___?",
+      "options": [
+        { "id": "fb-a2-5-opt-0", "text": "please" },
+        { "id": "fb-a2-5-opt-1", "text": "thank" },
+        { "id": "fb-a2-5-opt-2", "text": "sorry" },
+        { "id": "fb-a2-5-opt-3", "text": "excuse" }
+      ],
+      "correctOptionId": "fb-a2-5-opt-0"
+    },
+    {
+      "type": "translate",
+      "id": "tr-a2-1",
+      "level": "A2",
+      "direction": "en_to_kk",
+      "source": "hospital",
+      "acceptedAnswers": ["аурухана", "аурухане"]
+    },
+    {
+      "type": "translate",
+      "id": "tr-a2-2",
+      "level": "A2",
+      "direction": "en_to_kk",
+      "source": "supermarket",
+      "acceptedAnswers": ["супермаркет", "азық-түлік дүкені", "дүкен"]
+    },
+    {
+      "type": "translate",
+      "id": "tr-a2-3",
+      "level": "A2",
+      "direction": "kk_to_en",
+      "source": "демалыс",
+      "acceptedAnswers": ["rest", "holiday", "vacation", "day off"]
+    },
+    {
+      "type": "translate",
+      "id": "tr-a2-4",
+      "level": "A2",
+      "direction": "en_to_kk",
+      "source": "umbrella",
+      "acceptedAnswers": ["қолшатыр"]
+    },
+    {
+      "type": "translate",
+      "id": "tr-a2-5",
+      "level": "A2",
+      "direction": "kk_to_en",
+      "source": "уақыт",
+      "acceptedAnswers": ["time"]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a2-1",
+      "level": "A2",
+      "topic": "places",
+      "pairs": [
+        { "left": "bank",      "right": "банк" },
+        { "left": "library",   "right": "кітапхана" },
+        { "left": "pharmacy",  "right": "дәріхана" },
+        { "left": "post office","right": "пошта" },
+        { "left": "hospital",  "right": "аурухана" }
+      ]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a2-2",
+      "level": "A2",
+      "topic": "transport",
+      "pairs": [
+        { "left": "train",     "right": "пойыз" },
+        { "left": "plane",     "right": "ұшақ" },
+        { "left": "bus",       "right": "автобус" },
+        { "left": "taxi",      "right": "такси" },
+        { "left": "bicycle",   "right": "велосипед" }
+      ]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a2-3",
+      "level": "A2",
+      "topic": "weather",
+      "pairs": [
+        { "left": "sunny",  "right": "күнді" },
+        { "left": "rainy",  "right": "жаңбырлы" },
+        { "left": "windy",  "right": "желді" },
+        { "left": "snowy",  "right": "қарлы" },
+        { "left": "cloudy", "right": "бұлтты" }
+      ]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a2-4",
+      "level": "A2",
+      "topic": "jobs",
+      "pairs": [
+        { "left": "doctor",  "right": "дәрігер" },
+        { "left": "teacher", "right": "мұғалім" },
+        { "left": "cook",    "right": "аспазшы" },
+        { "left": "driver",  "right": "жүргізуші" },
+        { "left": "nurse",   "right": "медбике" }
+      ]
+    },
+    {
+      "type": "match_pairs",
+      "id": "mp-a2-5",
+      "level": "A2",
+      "topic": "time",
+      "pairs": [
+        { "left": "morning",   "right": "таң" },
+        { "left": "afternoon", "right": "түстен кейін" },
+        { "left": "evening",   "right": "кеш" },
+        { "left": "night",     "right": "түн" },
+        { "left": "midnight",  "right": "түн жарымы" }
+      ]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a2-1",
+      "level": "A2",
+      "audioUrl": "/audio/lessons/a2/what-time-is-it.mp3",
+      "acceptedAnswers": ["what time is it"]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a2-2",
+      "level": "A2",
+      "audioUrl": "/audio/lessons/a2/excuse-me.mp3",
+      "acceptedAnswers": ["excuse me"]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a2-3",
+      "level": "A2",
+      "audioUrl": "/audio/lessons/a2/where-is-the-bank.mp3",
+      "acceptedAnswers": ["where is the bank"]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a2-4",
+      "level": "A2",
+      "audioUrl": "/audio/lessons/a2/i-would-like.mp3",
+      "acceptedAnswers": ["i would like", "i'd like"]
+    },
+    {
+      "type": "listen_type",
+      "id": "lt-a2-5",
+      "level": "A2",
+      "audioUrl": "/audio/lessons/a2/turn-left.mp3",
+      "acceptedAnswers": ["turn left"]
+    },
+    {
+      "type": "image_select",
+      "id": "is-a2-1",
+      "level": "A2",
+      "prompt": "Choose: hospital",
+      "options": [
+        { "id": "is-a2-1-opt-0", "imageUrl": "/images/lessons/a2/hospital.jpg","alt": "hospital" },
+        { "id": "is-a2-1-opt-1", "imageUrl": "/images/lessons/a2/school.jpg",  "alt": "school" },
+        { "id": "is-a2-1-opt-2", "imageUrl": "/images/lessons/a2/bank.jpg",    "alt": "bank" },
+        { "id": "is-a2-1-opt-3", "imageUrl": "/images/lessons/a2/library.jpg", "alt": "library" }
+      ],
+      "correctOptionId": "is-a2-1-opt-0"
+    },
+    {
+      "type": "image_select",
+      "id": "is-a2-2",
+      "level": "A2",
+      "prompt": "Choose: rainy",
+      "options": [
+        { "id": "is-a2-2-opt-0", "imageUrl": "/images/lessons/a2/sunny.jpg",  "alt": "sunny" },
+        { "id": "is-a2-2-opt-1", "imageUrl": "/images/lessons/a2/rainy.jpg",  "alt": "rainy" },
+        { "id": "is-a2-2-opt-2", "imageUrl": "/images/lessons/a2/snowy.jpg",  "alt": "snowy" },
+        { "id": "is-a2-2-opt-3", "imageUrl": "/images/lessons/a2/windy.jpg",  "alt": "windy" }
+      ],
+      "correctOptionId": "is-a2-2-opt-1"
+    },
+    {
+      "type": "image_select",
+      "id": "is-a2-3",
+      "level": "A2",
+      "prompt": "Choose: train",
+      "options": [
+        { "id": "is-a2-3-opt-0", "imageUrl": "/images/lessons/a2/bus.jpg",   "alt": "bus" },
+        { "id": "is-a2-3-opt-1", "imageUrl": "/images/lessons/a2/plane.jpg", "alt": "plane" },
+        { "id": "is-a2-3-opt-2", "imageUrl": "/images/lessons/a2/train.jpg", "alt": "train" },
+        { "id": "is-a2-3-opt-3", "imageUrl": "/images/lessons/a2/taxi.jpg",  "alt": "taxi" }
+      ],
+      "correctOptionId": "is-a2-3-opt-2"
+    },
+    {
+      "type": "image_select",
+      "id": "is-a2-4",
+      "level": "A2",
+      "prompt": "Choose: doctor",
+      "options": [
+        { "id": "is-a2-4-opt-0", "imageUrl": "/images/lessons/a2/doctor.jpg", "alt": "doctor" },
+        { "id": "is-a2-4-opt-1", "imageUrl": "/images/lessons/a2/teacher.jpg","alt": "teacher" },
+        { "id": "is-a2-4-opt-2", "imageUrl": "/images/lessons/a2/cook.jpg",   "alt": "cook" },
+        { "id": "is-a2-4-opt-3", "imageUrl": "/images/lessons/a2/driver.jpg", "alt": "driver" }
+      ],
+      "correctOptionId": "is-a2-4-opt-0"
+    },
+    {
+      "type": "image_select",
+      "id": "is-a2-5",
+      "level": "A2",
+      "prompt": "Choose: bicycle",
+      "options": [
+        { "id": "is-a2-5-opt-0", "imageUrl": "/images/lessons/a2/car.jpg",    "alt": "car" },
+        { "id": "is-a2-5-opt-1", "imageUrl": "/images/lessons/a2/bicycle.jpg","alt": "bicycle" },
+        { "id": "is-a2-5-opt-2", "imageUrl": "/images/lessons/a2/bus.jpg",    "alt": "bus" },
+        { "id": "is-a2-5-opt-3", "imageUrl": "/images/lessons/a2/truck.jpg",  "alt": "truck" }
+      ],
+      "correctOptionId": "is-a2-5-opt-1"
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a2-1",
+      "level": "A2",
+      "prompt": "Build the sentence",
+      "tokens": ["usually", "She", "at", "wakes", "7am", "up"],
+      "correctOrder": [1, 3, 5, 0, 2, 4]
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a2-2",
+      "level": "A2",
+      "prompt": "Build the sentence",
+      "tokens": ["watching", "I", "films", "enjoy"],
+      "correctOrder": [1, 3, 0, 2]
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a2-3",
+      "level": "A2",
+      "prompt": "Build the sentence",
+      "tokens": ["tomorrow", "It", "rain", "will"],
+      "correctOrder": [1, 3, 2, 0]
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a2-4",
+      "level": "A2",
+      "prompt": "Build the sentence",
+      "tokens": ["the", "Is", "open", "bank", "?"],
+      "correctOrder": [1, 0, 3, 2, 4]
+    },
+    {
+      "type": "sentence_reorder",
+      "id": "sr-a2-5",
+      "level": "A2",
+      "prompt": "Build the sentence",
+      "tokens": ["me", "Could", "help", "please", "you", "?"],
+      "correctOrder": [1, 4, 2, 0, 3, 5]
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a2-1",
+      "level": "A2",
+      "prompt": "Place you go when you are sick",
+      "letters": ["h", "o", "s", "p", "i", "t", "a", "l", "r"],
+      "correctWord": "hospital"
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a2-2",
+      "level": "A2",
+      "prompt": "You carry it when it rains",
+      "letters": ["u", "m", "b", "r", "e", "l", "a", "k"],
+      "correctWord": "umbrella"
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a2-3",
+      "level": "A2",
+      "prompt": "Where you buy food",
+      "letters": ["m", "a", "r", "k", "e", "t", "s", "n"],
+      "correctWord": "market"
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a2-4",
+      "level": "A2",
+      "prompt": "Opposite of 'early'",
+      "letters": ["l", "a", "t", "e", "s", "o"],
+      "correctWord": "late"
+    },
+    {
+      "type": "word_builder",
+      "id": "wb-a2-5",
+      "level": "A2",
+      "prompt": "When you travel you need this document",
+      "letters": ["p", "a", "s", "o", "r", "t", "e", "k"],
+      "correctWord": "passport"
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a2-1",
+      "level": "A2",
+      "sentence": "I have visited Paris last year.",
+      "tokens": ["I", "have", "visited", "Paris", "last", "year."],
+      "errorTokenIndex": 1,
+      "correction": "visited",
+      "explanation": "'Last year' requires simple past, not present perfect: 'I visited Paris last year.'"
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a2-2",
+      "level": "A2",
+      "sentence": "She is more taller than her brother.",
+      "tokens": ["She", "is", "more", "taller", "than", "her", "brother."],
+      "errorTokenIndex": 3,
+      "correction": "taller",
+      "explanation": "Don't use 'more' with -er comparatives: 'She is taller.'"
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a2-3",
+      "level": "A2",
+      "sentence": "Can you speak slowly, please?",
+      "tokens": ["Can", "you", "speak", "slowly", ",", "please?"],
+      "errorTokenIndex": 3,
+      "correction": "more slowly",
+      "explanation": "In a request to speak slower, 'more slowly' is natural."
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a2-4",
+      "level": "A2",
+      "sentence": "I didn't went to the party.",
+      "tokens": ["I", "didn't", "went", "to", "the", "party."],
+      "errorTokenIndex": 2,
+      "correction": "go",
+      "explanation": "'Didn't' already marks past tense; base form follows: 'didn't go'."
+    },
+    {
+      "type": "error_spot",
+      "id": "es-a2-5",
+      "level": "A2",
+      "sentence": "He works at a hospital since five years.",
+      "tokens": ["He", "works", "at", "a", "hospital", "since", "five", "years."],
+      "errorTokenIndex": 5,
+      "correction": "for",
+      "explanation": "'For' is used with duration: 'for five years'."
+    }
+  ]
+}
