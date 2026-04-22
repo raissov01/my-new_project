@@ -56,6 +56,17 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.EngSimUserProgress{},
 		&models.EngSimUnitProgress{},
 		&models.EngSimLessonProgress{},
+		// Gamification
+		&models.DailyActivity{},
+		&models.LeagueGroup{},
+		&models.LeagueMembership{},
+		&models.Friendship{},
+		&models.UserInviteCode{},
+		&models.Achievement{},
+		&models.UserAchievement{},
+		&models.LessonAttempt{},
+		&models.XPEvent{},
+		&models.DailyQuest{},
 	)
 	if err != nil {
 		return err
@@ -114,7 +125,15 @@ func AutoMigrate(db *gorm.DB) error {
 	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS match_pairs_snapshot JSONB`)
 	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS order_index_snapshot INT NOT NULL DEFAULT 0`)
 
-	// Mark all existing users (who registered before email verification was added)
+	// ── Gamification column additions (idempotent) ──────────────────────────
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_freezes_available INT NOT NULL DEFAULT 2`)
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_freezes_used_this_week INT NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS total_stars INT NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) NOT NULL DEFAULT 'UTC'`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_league_xp ON league_memberships(league_group_id, weekly_xp DESC)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_daily_quests_user_date ON daily_quests(user_id, quest_date)`)
+
+	// ── Mark all existing users (who registered before email verification was added)
 	// as verified so they are not locked out of their accounts.
 	result := db.Exec(`UPDATE users SET email_verified = true WHERE email_verified = false AND verification_token IS NULL`)
 	if result.Error != nil {
@@ -132,6 +151,10 @@ func AutoMigrate(db *gorm.DB) error {
 	}
 
 	if err := SeedEngSimCurriculum(db); err != nil {
+		return err
+	}
+
+	if err := SeedAchievements(db); err != nil {
 		return err
 	}
 

@@ -39,6 +39,7 @@ type Dependencies struct {
 	QuizAIGenerate     *QuizAIGenerateHandler
 	EngSim             *EngSimHandler
 	MaterialNotes      *MaterialNotesHandler
+	Gamification       *GamificationHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -231,6 +232,24 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/engsim/lessons/:lessonID/answer", wrapHTTP(deps.EngSim.SubmitAnswer))
 		internal.POST("/engsim/lessons/:lessonID/complete", wrapHTTP(deps.EngSim.CompleteLesson))
 		internal.POST("/engsim/speaking", simLimiter, wrapHTTP(deps.EngSim.SpeakingPractice))
+
+		// ── Gamification (streak, leagues, friends, achievements, quests) ──
+		internal.POST("/gamification/activity", wrapHTTP(deps.Gamification.RecordActivity))
+		internal.GET("/gamification/streak/calendar", wrapHTTP(deps.Gamification.GetStreakCalendar))
+		internal.GET("/gamification/league", wrapHTTP(deps.Gamification.GetLeague))
+		internal.GET("/gamification/friends", wrapHTTP(deps.Gamification.GetFriends))
+		internal.POST("/gamification/friends/request", wrapHTTP(deps.Gamification.SendFriendRequest))
+		internal.POST("/gamification/friends/accept", wrapHTTP(deps.Gamification.AcceptFriendRequest))
+		internal.GET("/gamification/friends/search", wrapHTTP(deps.Gamification.SearchUsers))
+		internal.GET("/gamification/achievements", wrapHTTP(deps.Gamification.GetAchievements))
+		internal.GET("/gamification/quests", wrapHTTP(deps.Gamification.GetDailyQuests))
+		internal.GET("/gamification/xp-event", wrapHTTP(deps.Gamification.GetXPEvent))
+		internal.GET("/gamification/social-proof", wrapHTTP(deps.Gamification.GetSocialProof))
+		// Cron endpoints (protected by same internal token)
+		internal.POST("/gamification/cron/streak-warning", wrapHTTP(deps.Gamification.CronStreakWarning))
+		internal.POST("/gamification/cron/comeback", wrapHTTP(deps.Gamification.CronComeback))
+		internal.POST("/gamification/cron/league-week", wrapHTTP(deps.Gamification.CronLeagueWeek))
+		internal.POST("/gamification/cron/weekend-xp", wrapHTTP(deps.Gamification.CronWeekendXP))
 
 		// AI tutor chat
 		chatLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()

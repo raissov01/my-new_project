@@ -17,11 +17,15 @@ type User struct {
 	VerificationTokenExpiry  *time.Time `json:"-"`
 	PasswordResetToken       *string    `gorm:"index" json:"-"`
 	PasswordResetTokenExpiry *time.Time `json:"-"`
-	StreakDays               int        `gorm:"not null;default:0" json:"streakDays"`
-	Points                   int        `gorm:"not null;default:0" json:"points"`
-	LastActiveDate           *string    `json:"lastActiveDate"`
-	CreatedAt                time.Time  `gorm:"autoCreateTime" json:"createdAt"`
-	UpdatedAt                time.Time  `gorm:"autoUpdateTime" json:"updatedAt"`
+	StreakDays                    int        `gorm:"not null;default:0" json:"streakDays"`
+	Points                       int        `gorm:"not null;default:0" json:"points"`
+	LastActiveDate               *string    `json:"lastActiveDate"`
+	StreakFreezesAvailable       int        `gorm:"not null;default:2" json:"streakFreezesAvailable"`
+	StreakFreezesUsedThisWeek    int        `gorm:"not null;default:0" json:"streakFreezesUsedThisWeek"`
+	TotalStars                   int        `gorm:"not null;default:0" json:"totalStars"`
+	Timezone                     string     `gorm:"not null;default:'UTC'" json:"timezone"`
+	CreatedAt                    time.Time  `gorm:"autoCreateTime" json:"createdAt"`
+	UpdatedAt                    time.Time  `gorm:"autoUpdateTime" json:"updatedAt"`
 }
 
 func (User) TableName() string {
