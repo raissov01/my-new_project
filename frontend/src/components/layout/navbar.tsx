@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { AvatarMenu } from "@/components/layout/avatar-menu";
 import { BrandLogo } from "@/components/layout";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
+import { StreakBadge } from "@/components/gamification/StreakBadge";
 
 
 export function Navbar() {
@@ -110,6 +111,9 @@ export function Navbar() {
                 </>
               ) : user ? (
                 <>
+                  {(user as { streakDays?: number }).streakDays !== undefined && (
+                    <StreakBadge streak={(user as { streakDays?: number }).streakDays ?? 0} />
+                  )}
                   <Link href="/sets/new">
                     <Button variant="outline" size="sm">
                       <Plus className="h-3.5 w-3.5" />
