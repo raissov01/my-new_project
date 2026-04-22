@@ -66,7 +66,8 @@ func New(cfg *config.Config) (*Server, error) {
 	handler.RegisterRoutes(router)
 
 	gameSvc := service.NewGamification(gormDB, email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom))
-	scheduler := cron.New(gameSvc)
+	newsSvc := service.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout)
+	scheduler := cron.New(gameSvc, newsSvc)
 	scheduler.Start()
 
 	httpServer := &http.Server{
@@ -199,6 +200,8 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Listening:          handler.NewListening(gormDB),
 		AITutor:            handler.NewAITutor(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
 		QuestionReview:     handler.NewQuestionReview(gormDB),
+		DailyNews:          handler.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
+		Mining:             handler.NewMining(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),
 	}
 }

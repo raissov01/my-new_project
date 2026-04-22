@@ -9,23 +9,25 @@ import (
 	"github.com/midoriya/flashlearn-backend/internal/service"
 )
 
-// Scheduler holds the gamification service and runs timed jobs.
+// Scheduler holds the gamification and daily-news services and runs timed jobs.
 type Scheduler struct {
-	svc  *service.GamificationService
-	stop chan struct{}
+	svc     *service.GamificationService
+	newsSvc *service.DailyNewsService
+	stop    chan struct{}
 }
 
-func New(svc *service.GamificationService) *Scheduler {
-	return &Scheduler{svc: svc, stop: make(chan struct{})}
+func New(svc *service.GamificationService, newsSvc *service.DailyNewsService) *Scheduler {
+	return &Scheduler{svc: svc, newsSvc: newsSvc, stop: make(chan struct{})}
 }
 
 // Start launches all background goroutines. Call Stop() to halt.
 func (s *Scheduler) Start() {
-	log.Println("cron: starting gamification scheduler")
+	log.Println("cron: starting scheduler")
 	go s.runDaily("streak-warning",  22, 0,  s.svc.SendStreakWarningBatch)
 	go s.runDaily("comeback-emails",  9, 0,  s.svc.SendComebackBatch)
 	go s.runWeekly("league-week", time.Sunday, 23, 59, func() { _ = s.svc.ProcessLeagueWeek() })
 	go s.runWeekly("weekend-xp",  time.Friday, 18,  0, func() { _ = s.svc.CreateWeekendXPEvent() })
+	go s.runDaily("daily-news",    6, 0, func() { _ = s.newsSvc.GenerateToday() })
 }
 
 // Stop signals all goroutines to exit cleanly.

@@ -43,6 +43,8 @@ type Dependencies struct {
 	Listening          *ListeningHandler
 	AITutor            *AITutorHandler
 	QuestionReview     *QuestionReviewHandler
+	DailyNews          *DailyNewsHandler
+	Mining             *MiningHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -274,6 +276,15 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/tutor/conversations/:id/message", tutorLimiter, wrapHTTP(deps.AITutor.SendMessage))
 		internal.POST("/tutor/conversations/:id/grade", wrapHTTP(deps.AITutor.GradeConversation))
 		internal.GET("/tutor/history", wrapHTTP(deps.AITutor.GetHistory))
+
+		// Sentence Mining
+		miningLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()
+		internal.POST("/mining/extract", miningLimiter, wrapHTTP(deps.Mining.Extract))
+
+		// Daily News
+		internal.GET("/news/today", wrapHTTP(deps.DailyNews.GetToday))
+		internal.GET("/news/recent", wrapHTTP(deps.DailyNews.GetRecent))
+		internal.POST("/news/cron/generate", wrapHTTP(deps.DailyNews.CronGenerate))
 
 		// Question bank review
 		internal.GET("/admin/review-questions", wrapHTTP(deps.QuestionReview.ListPending))
