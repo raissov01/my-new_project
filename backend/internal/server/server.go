@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/midoriya/flashlearn-backend/internal/config"
+	"github.com/midoriya/flashlearn-backend/internal/cron"
 	"github.com/midoriya/flashlearn-backend/internal/database"
 	"github.com/midoriya/flashlearn-backend/internal/email"
 	"github.com/midoriya/flashlearn-backend/internal/handler"
@@ -28,6 +29,7 @@ type Server struct {
 	db         *pgxpool.Pool
 	gormDB     *gorm.DB
 	httpServer *http.Server
+	scheduler  *cron.Scheduler
 }
 
 func New(cfg *config.Config) (*Server, error) {
@@ -63,6 +65,10 @@ func New(cfg *config.Config) (*Server, error) {
 	handler.SetDependencies(buildDependencies(cfg, pool, gormDB))
 	handler.RegisterRoutes(router)
 
+	gameSvc := service.NewGamification(gormDB, email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom))
+	scheduler := cron.New(gameSvc)
+	scheduler.Start()
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
 		Handler:      buildHTTPHandler(cfg, router),
@@ -76,11 +82,13 @@ func New(cfg *config.Config) (*Server, error) {
 		db:         pool,
 		gormDB:     gormDB,
 		httpServer: httpServer,
+		scheduler:  scheduler,
 	}, nil
 }
 
 func (s *Server) Run() error {
 	defer s.db.Close()
+	defer s.scheduler.Stop()
 	log.Println("database connected (pgx + GORM)")
 
 	errCh := make(chan error, 1)
