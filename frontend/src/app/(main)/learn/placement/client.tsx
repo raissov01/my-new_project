@@ -15,14 +15,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { startPlacement, submitPlacement, type PlacementQuestion } from "@/features/learn/api";
+import { calculateCEFR, CEFR_LEVELS, type CEFRLevel } from "@/features/learn/cefr";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 type Category = "vocabulary" | "grammar";
 type Phase = "intro" | "loading" | "testing" | "submitting";
 
-const LEVELS: readonly CEFRLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
+const LEVELS = CEFR_LEVELS;
 const TIMER_KEY = "placement_started_at_v2";
 const TIMER_SECS = 15 * 60;
 const MAX_PER_CATEGORY = 15;
@@ -53,20 +53,6 @@ function levelUp(l: CEFRLevel): CEFRLevel {
 }
 function levelDown(l: CEFRLevel): CEFRLevel {
   return LEVELS[Math.max(LEVELS.indexOf(l) - 1, 0)];
-}
-
-// scoreBasedLevel is a percentage-based CEFR fallback used only when
-// the adaptive engine hasn't produced a stable level yet.
-// 24/60 (40%) → A2, not C2.
-function scoreBasedLevel(correct: number, total: number): CEFRLevel {
-  if (total === 0) return "A2";
-  const pct = (correct / total) * 100;
-  if (pct < 20) return "A1";
-  if (pct < 35) return "A2";
-  if (pct < 50) return "B1";
-  if (pct < 70) return "B2";
-  if (pct < 85) return "C1";
-  return "C2";
 }
 
 function overallLevel(v: CEFRLevel, g: CEFRLevel): CEFRLevel {
@@ -169,10 +155,10 @@ export function PlacementClient({ retake = false }: { retake?: boolean }) {
     const grammarCorrect = state.grammar.history.filter((h) => h.correct).length;
     const vocabFinal =
       state.vocab.finalLevel ??
-      scoreBasedLevel(vocabCorrect, state.vocab.history.length);
+      calculateCEFR(vocabCorrect, state.vocab.history.length);
     const grammarFinal =
       state.grammar.finalLevel ??
-      scoreBasedLevel(grammarCorrect, state.grammar.history.length);
+      calculateCEFR(grammarCorrect, state.grammar.history.length);
     const overall = overallLevel(vocabFinal, grammarFinal);
 
     const allHistory = [...state.vocab.history, ...state.grammar.history];
