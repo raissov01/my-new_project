@@ -22,8 +22,8 @@ type ieltsQuestionPayload struct {
 	QuestionGroup string   `json:"questionGroup"`
 	Title         string   `json:"title"`
 	Prompt        string   `json:"prompt"`
-	Content       string   `json:"content,omitempty"`
-	AudioScript   string   `json:"audioScript,omitempty"`
+	Content       string   `json:"content"`
+	AudioScript   string   `json:"audioScript"`
 	Options       []string `json:"options,omitempty"`
 	Answer        string   `json:"answer,omitempty"`
 	Explanation   string   `json:"explanation,omitempty"`
