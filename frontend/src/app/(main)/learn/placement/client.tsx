@@ -55,18 +55,18 @@ function levelDown(l: CEFRLevel): CEFRLevel {
   return LEVELS[Math.max(LEVELS.indexOf(l) - 1, 0)];
 }
 
-function computeFinalLevel(history: HistoryEntry[]): CEFRLevel {
-  if (history.length === 0) return "A2";
-  // Weighted score: correct answers count double
-  const scores: Partial<Record<CEFRLevel, number>> = {};
-  for (const h of history) {
-    scores[h.level] = (scores[h.level] ?? 0) + (h.correct ? 2 : 1);
-  }
-  let best: CEFRLevel = "A1";
-  for (const lvl of LEVELS) {
-    if ((scores[lvl] ?? 0) > (scores[best] ?? 0)) best = lvl;
-  }
-  return best;
+// scoreBasedLevel is a percentage-based CEFR fallback used only when
+// the adaptive engine hasn't produced a stable level yet.
+// 24/60 (40%) → A2, not C2.
+function scoreBasedLevel(correct: number, total: number): CEFRLevel {
+  if (total === 0) return "A2";
+  const pct = (correct / total) * 100;
+  if (pct < 20) return "A1";
+  if (pct < 35) return "A2";
+  if (pct < 50) return "B1";
+  if (pct < 70) return "B2";
+  if (pct < 85) return "C1";
+  return "C2";
 }
 
 function overallLevel(v: CEFRLevel, g: CEFRLevel): CEFRLevel {
@@ -165,8 +165,14 @@ export function PlacementClient({ retake = false }: { retake?: boolean }) {
     setPhase("submitting");
 
     const state = adaptiveRef.current;
-    const vocabFinal = state.vocab.finalLevel ?? computeFinalLevel(state.vocab.history);
-    const grammarFinal = state.grammar.finalLevel ?? computeFinalLevel(state.grammar.history);
+    const vocabCorrect = state.vocab.history.filter((h) => h.correct).length;
+    const grammarCorrect = state.grammar.history.filter((h) => h.correct).length;
+    const vocabFinal =
+      state.vocab.finalLevel ??
+      scoreBasedLevel(vocabCorrect, state.vocab.history.length);
+    const grammarFinal =
+      state.grammar.finalLevel ??
+      scoreBasedLevel(grammarCorrect, state.grammar.history.length);
     const overall = overallLevel(vocabFinal, grammarFinal);
 
     const allHistory = [...state.vocab.history, ...state.grammar.history];
@@ -304,7 +310,9 @@ export function PlacementClient({ retake = false }: { retake?: boolean }) {
 
       const isDone = shouldStop(updated);
       updated.done = isDone;
-      updated.finalLevel = isDone ? computeFinalLevel(newHistory) : null;
+      // Use the adaptive engine's current stabilized level — NOT history-based weighting.
+      // history-based weighting gave wrong answers +1, causing 40% correct → C2.
+      updated.finalLevel = isDone ? updated.currentLevel : null;
 
       if (cat === "vocabulary") state.vocab = updated;
       else state.grammar = updated;
@@ -343,7 +351,7 @@ export function PlacementClient({ retake = false }: { retake?: boolean }) {
       } else {
         // No more questions for this category — mark done and continue
         updated.done = true;
-        updated.finalLevel = computeFinalLevel(newHistory);
+        updated.finalLevel = updated.currentLevel;
         if (cat === "vocabulary" && !state.grammar.done) {
           state.currentCategory = "grammar";
           const gq = pickQuestion(
