@@ -28,7 +28,7 @@ func readingOpts(items []string) *string {
 
 func buildReadingTest1() []models.IELTSQuestion {
 	const (
-		examSet  = "reading-test-1"
+		examSet  = "cambridge-17-test-1"
 		mockType = "cambridge_style"
 		topic    = "Environmental Science"
 		band     = "6.5"
@@ -165,7 +165,7 @@ Looking ahead, most credible energy scenarios project that renewables will suppl
 
 func buildReadingTest2() []models.IELTSQuestion {
 	const (
-		examSet  = "reading-test-2"
+		examSet  = "cambridge-17-test-2"
 		mockType = "cambridge_style"
 		topic    = "Technology & Society"
 		band     = "7.0"
@@ -304,7 +304,7 @@ Looking forward, the integration of AI into diagnostics will likely deepen as da
 
 func buildReadingTest3() []models.IELTSQuestion {
 	const (
-		examSet  = "reading-test-3"
+		examSet  = "cambridge-17-test-3"
 		mockType = "predictions"
 		topic    = "Education & Psychology"
 		band     = "6.5"

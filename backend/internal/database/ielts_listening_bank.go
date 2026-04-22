@@ -28,7 +28,7 @@ func listeningOpts(items []string) *string {
 
 func buildListeningTest1() []models.IELTSQuestion {
 	const (
-		examSet  = "listening-test-1"
+		examSet  = "cambridge-17-test-1"
 		mockType = "cambridge_style"
 		band     = "6.5"
 		diff     = "medium"
@@ -223,7 +223,7 @@ In our next session, we'll look at specific case studies of successful reef rest
 
 func buildListeningTest2() []models.IELTSQuestion {
 	const (
-		examSet  = "listening-test-2"
+		examSet  = "cambridge-17-test-2"
 		mockType = "cambridge_style"
 		band     = "7.0"
 		diff     = "hard"
@@ -413,7 +413,7 @@ In summary, sustainable urban planning requires integrated thinking across trans
 
 func buildListeningTest3() []models.IELTSQuestion {
 	const (
-		examSet  = "listening-test-3"
+		examSet  = "cambridge-17-test-3"
 		mockType = "predictions"
 		band     = "6.5"
 		diff     = "medium"
