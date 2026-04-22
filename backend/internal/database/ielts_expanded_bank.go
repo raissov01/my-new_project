@@ -53,7 +53,9 @@ type structuredExamBlueprint struct {
 }
 
 func buildExpandedIELTSQuestionSeed() []models.IELTSQuestion {
-	blueprints := append(buildExpandedCambridgeBlueprints(), buildExpandedPredictionBlueprints()...)
+	blueprints := buildExpandedCambridgeBlueprints()
+	blueprints = append(blueprints, buildCambridgeExtraTestBlueprints()...)
+	blueprints = append(blueprints, buildExpandedPredictionBlueprints()...)
 	questions := make([]models.IELTSQuestion, 0, len(blueprints)*11)
 
 	for _, blueprint := range blueprints {
