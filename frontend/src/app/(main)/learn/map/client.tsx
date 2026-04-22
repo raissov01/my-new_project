@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Heart, Star, Lock, Trophy, Zap, ChevronDown, ChevronUp, Mic,
@@ -57,13 +57,26 @@ function getDailyTasks(units: EngSimUnit[]): DailyTask[] {
 }
 
 export function MapClient({
-  units, progress, userLevel,
+  units, progress, userLevel, initialLevel,
 }: {
   units: EngSimUnit[];
   progress: UserProgress | null;
   userLevel: string;
+  initialLevel?: string;
 }) {
-  const [expandedUnit, setExpandedUnit] = useState<string | null>(null);
+  const firstMatchId = initialLevel
+    ? (units.find(u => u.level === initialLevel && u.isUnlocked) ?? units.find(u => u.level === initialLevel))?.id ?? null
+    : null;
+  const [expandedUnit, setExpandedUnit] = useState<string | null>(firstMatchId);
+
+  useEffect(() => {
+    if (!firstMatchId) return;
+    const timer = setTimeout(() => {
+      document.getElementById(`unit-${firstMatchId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [firstMatchId]);
+
   const hearts = progress?.hearts ?? 5;
   const totalXp = progress?.totalXp ?? 0;
   const streak = progress?.currentStreak ?? 0;
@@ -147,7 +160,7 @@ export function MapClient({
             const isComplete = unit.totalStars > 0 && unit.totalStars >= unit.maxStars;
 
             return (
-              <div key={unit.id} className="relative">
+              <div key={unit.id} id={`unit-${unit.id}`} className="relative">
                 {/* ── Unit bubble ── */}
                 <div
                   className={`relative z-10 mx-auto flex w-fit cursor-pointer flex-col items-center ${!unit.isUnlocked ? "opacity-40" : ""}`}
