@@ -12,6 +12,7 @@ import {
   type LessonExercisePayload,
   type LessonResult,
 } from "@/features/learn/api";
+import { recordDailyActivity } from "@/features/gamification/api";
 import { LessonItemRenderer } from "@/components/lesson/LessonItemRenderer";
 import { FeedbackToast } from "@/components/lesson/shared/FeedbackToast";
 import { useLessonProgress } from "@/hooks/useLessonProgress";
@@ -116,6 +117,8 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
       });
       setResult(res);
       setPhase("result");
+      // Fire-and-forget: update streak + league XP
+      recordDailyActivity(res.xpEarned, 1).catch(() => {});
     } catch {
       router.push("/learn/map");
     }

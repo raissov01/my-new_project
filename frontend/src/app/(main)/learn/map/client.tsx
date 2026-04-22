@@ -7,6 +7,10 @@ import {
   CalendarDays, Flame,
 } from "lucide-react";
 import type { EngSimUnit, UserProgress } from "@/features/learn/api";
+import type { XPEvent, DailyQuest } from "@/features/gamification/api";
+import { XPBoostBanner } from "@/components/gamification/XPBoostBanner";
+import { DailyQuestCard } from "@/components/gamification/DailyQuestCard";
+import { StreakBadge } from "@/components/gamification/StreakBadge";
 
 // ── Daily Tasks ──
 
@@ -57,12 +61,14 @@ function getDailyTasks(units: EngSimUnit[]): DailyTask[] {
 }
 
 export function MapClient({
-  units, progress, userLevel, initialLevel,
+  units, progress, userLevel, initialLevel, xpEvent, quests,
 }: {
   units: EngSimUnit[];
   progress: UserProgress | null;
   userLevel: string;
   initialLevel?: string;
+  xpEvent?: XPEvent | null;
+  quests?: DailyQuest[];
 }) {
   const firstMatchId = initialLevel
     ? (units.find(u => u.level === initialLevel && u.isUnlocked) ?? units.find(u => u.level === initialLevel))?.id ?? null
@@ -92,6 +98,7 @@ export function MapClient({
             ))}
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
+            <StreakBadge streak={streak} />
             <span className="flex items-center gap-1 text-sm font-bold text-orange-500 sm:text-base">
               <Zap className="h-5 w-5 fill-orange-500" /> {streak}
             </span>
@@ -120,6 +127,20 @@ export function MapClient({
           💬 AI Tutor
         </Link>
       </div>
+
+      {/* ── XP Boost Banner ── */}
+      {xpEvent && (
+        <div className="mb-3">
+          <XPBoostBanner event={xpEvent} />
+        </div>
+      )}
+
+      {/* ── Daily Quests ── */}
+      {quests && quests.length > 0 && (
+        <div className="mb-3">
+          <DailyQuestCard quests={quests} />
+        </div>
+      )}
 
       {/* ── Daily Tasks ── */}
       <div className="mb-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:p-4">
