@@ -67,6 +67,15 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.LessonAttempt{},
 		&models.XPEvent{},
 		&models.DailyQuest{},
+		// Listening
+		&models.ListeningClip{},
+		&models.ListeningQuestion{},
+		&models.UserListeningProgress{},
+		// AI Tutor
+		&models.AIScenario{},
+		&models.AIConversation{},
+		// Daily News
+		&models.DailyNews{},
 	)
 	if err != nil {
 		return err
@@ -155,6 +164,14 @@ func AutoMigrate(db *gorm.DB) error {
 	}
 
 	if err := SeedAchievements(db); err != nil {
+		return err
+	}
+
+	if err := SeedListeningClips(db); err != nil {
+		return err
+	}
+
+	if err := SeedAIScenarios(db); err != nil {
 		return err
 	}
 
