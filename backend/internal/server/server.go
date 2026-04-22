@@ -198,6 +198,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Gamification:       handler.NewGamification(gormDB, emailSender),
 		Listening:          handler.NewListening(gormDB),
 		AITutor:            handler.NewAITutor(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
+		QuestionReview:     handler.NewQuestionReview(gormDB),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),
 	}
 }

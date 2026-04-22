@@ -42,6 +42,7 @@ type Dependencies struct {
 	Gamification       *GamificationHandler
 	Listening          *ListeningHandler
 	AITutor            *AITutorHandler
+	QuestionReview     *QuestionReviewHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -273,6 +274,10 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/tutor/conversations/:id/message", tutorLimiter, wrapHTTP(deps.AITutor.SendMessage))
 		internal.POST("/tutor/conversations/:id/grade", wrapHTTP(deps.AITutor.GradeConversation))
 		internal.GET("/tutor/history", wrapHTTP(deps.AITutor.GetHistory))
+
+		// Question bank review
+		internal.GET("/admin/review-questions", wrapHTTP(deps.QuestionReview.ListPending))
+		internal.POST("/admin/review-questions/approve", wrapHTTP(deps.QuestionReview.ApproveBatch))
 
 		// IELTS admin question management
 		internal.POST("/ielts/admin/questions", wrapHTTP(deps.IELTSQuestionAdmin.CreateQuestion))
