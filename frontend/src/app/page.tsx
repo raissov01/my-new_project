@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { HeroFloatingPanels } from "@/components/hero-floating-panels";
+import { HeroRadarChart } from "@/components/hero-radar-chart";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getAppHomePath, getCurrentUser } from "@/server/auth";
@@ -277,9 +277,9 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* Hero Right — 3D Floating Panels */}
-            <div className="relative">
-              <HeroFloatingPanels />
+            {/* Hero Right — 3D Radar Chart */}
+            <div className="flex items-center justify-center lg:justify-end">
+              <HeroRadarChart />
             </div>
           </div>
         </section>

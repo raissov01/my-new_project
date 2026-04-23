@@ -1169,3 +1169,136 @@ a, button, input, textarea, select {
   letter-spacing: -0.04em;
   line-height: 1;
 }
+
+/* ── Hero Radar Chart ────────────────────────────────────────────────────── */
+
+.radar-outer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 36px;
+}
+
+/* Floating "Band 7.5" badge */
+.radar-band-badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, rgba(85,51,255,0.18) 0%, rgba(0,204,170,0.18) 100%);
+  border: 1px solid rgba(85, 51, 255, 0.38);
+  color: #a78bfa;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 5px 16px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow:
+    0 0 16px rgba(85, 51, 255, 0.22),
+    0 0 32px rgba(0, 204, 170, 0.10),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.radar-band-badge-dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5533ff, #00ccaa);
+  box-shadow: 0 0 6px rgba(85, 51, 255, 0.8);
+  flex-shrink: 0;
+}
+
+/* 3-D Y-axis rotation */
+@keyframes radarYRotate {
+  0%   { transform: perspective(750px) rotateX(18deg) rotateY(-10deg); }
+  50%  { transform: perspective(750px) rotateX(18deg) rotateY(10deg); }
+  100% { transform: perspective(750px) rotateX(18deg) rotateY(-10deg); }
+}
+
+.radar-spin-wrapper {
+  animation: radarYRotate 12s ease-in-out infinite;
+}
+
+.radar-outer:hover .radar-spin-wrapper {
+  animation-play-state: paused;
+}
+
+/* Slight scale on hover via inner wrapper (separate from rotation) */
+.radar-inner-scale {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.radar-outer:hover .radar-inner-scale {
+  transform: scale(1.05);
+}
+
+/* Dark glass panel behind the SVG */
+.radar-panel {
+  background: rgba(10, 10, 24, 0.93);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 22px;
+  padding: 18px 14px 14px;
+  box-shadow:
+    0 28px 56px rgba(0, 0, 0, 0.55),
+    0 0 50px rgba(85, 51, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Glow pulse on the student polygon */
+@keyframes radarGlowPulse {
+  0%, 55%, 100% {
+    filter: drop-shadow(0 0 4px rgba(85, 51, 255, 0.55))
+            drop-shadow(0 0 8px rgba(0, 204, 170, 0.25));
+  }
+  28% {
+    filter: drop-shadow(0 0 14px rgba(85, 51, 255, 0.95))
+            drop-shadow(0 0 28px rgba(0, 204, 170, 0.75));
+  }
+}
+.radar-stu-poly {
+  animation: radarGlowPulse 3s ease-in-out infinite;
+}
+
+/* Legend row */
+.radar-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.radar-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.52);
+  font-weight: 500;
+}
+
+.radar-legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.radar-legend-avg {
+  background: rgba(175, 175, 185, 0.45);
+  outline: 1.5px dashed rgba(180, 180, 190, 0.55);
+  outline-offset: 1px;
+}
+
+.radar-legend-stu {
+  background: linear-gradient(135deg, #5533ff, #00ccaa);
+  box-shadow: 0 0 7px rgba(85, 51, 255, 0.65);
+}
