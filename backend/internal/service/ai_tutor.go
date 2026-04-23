@@ -324,6 +324,12 @@ func (s *AITutorService) callOpenAI(ctx context.Context, system string, msgs []C
 
 // callClaude uses the DO-AI / OpenAI-compatible Chat Completions endpoint.
 func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []ChatMessage) (string, error) {
+	if s.claudeURL == "" {
+		return "", fmt.Errorf("claude: no API URL configured")
+	}
+	if s.claudeModel == "" {
+		return "", fmt.Errorf("claude: no model configured")
+	}
 	type oaMsg struct {
 		Role    string `json:"role"`
 		Content string `json:"content"`
