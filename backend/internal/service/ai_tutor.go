@@ -257,6 +257,9 @@ func (s *AITutorService) callLLM(ctx context.Context, system string, msgs []Chat
 		if err == nil {
 			return reply, nil
 		}
+		if s.claudeKey == "" {
+			return "", err
+		}
 	}
 	if s.claudeKey != "" {
 		return s.callClaude(ctx, system, msgs)
