@@ -1,8 +1,8 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
 import {
   Home,
   Plus,
@@ -10,8 +10,6 @@ import {
   X,
   Ghost,
   HelpCircle,
-  UserCircle2,
-  Settings,
   LibraryBig,
   BookMarked,
   MessageSquareText,
@@ -21,6 +19,7 @@ import {
   BotMessageSquare,
   Newspaper,
   Pickaxe,
+  ChevronDown,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -31,6 +30,161 @@ import { BrandLogo } from "@/components/layout";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { StreakBadge } from "@/components/gamification/StreakBadge";
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  exact?: boolean;
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function isActivePath(pathname: string, href: string, exact = false): boolean {
+  if (exact) return pathname === href;
+  if (href === "/dashboard") return pathname === "/dashboard";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+// ── Desktop primary nav link ──────────────────────────────────────────────────
+
+function PrimaryLink({ item, pathname }: { item: NavItem; pathname: string }) {
+  const active = isActivePath(pathname, item.href, item.exact);
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={`
+        relative flex h-14 items-center gap-1.5 px-3 text-sm font-medium
+        transition-colors duration-200
+        ${active
+          ? "text-white after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:rounded-full after:bg-[#5533ff] after:content-['']"
+          : "text-white/60 hover:text-white hover:bg-white/5 rounded-md"
+        }
+      `}
+    >
+      <item.icon className="h-4 w-4 shrink-0" />
+      {item.label}
+    </Link>
+  );
+}
+
+// ── Tools dropdown ────────────────────────────────────────────────────────────
+
+function ToolsDropdown({ items, pathname }: { items: NavItem[]; pathname: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAnyActive = items.some((i) => isActivePath(pathname, i.href, i.exact));
+
+  const scheduleClose = () => {
+    closeTimer.current = setTimeout(() => setOpen(false), 120);
+  };
+  const cancelClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  };
+
+  // click outside
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={() => { cancelClose(); setOpen(true); }}
+      onMouseLeave={scheduleClose}
+    >
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`
+          relative flex h-14 items-center gap-1 px-3 text-sm font-medium
+          transition-colors duration-200 select-none
+          ${isAnyActive
+            ? "text-white after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:rounded-full after:bg-[#5533ff] after:content-['']"
+            : "text-white/60 hover:text-white hover:bg-white/5 rounded-md"
+          }
+        `}
+      >
+        Құралдар
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {/* Dropdown panel */}
+      <div
+        className={`
+          absolute left-0 top-full z-50 mt-1 w-52 origin-top-left
+          rounded-xl border border-[#2a1a5e] bg-[#0f0f1e]
+          shadow-[0_8px_32px_rgba(85,51,255,0.15)]
+          transition-all duration-200
+          ${open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}
+        `}
+        onMouseEnter={cancelClose}
+        onMouseLeave={scheduleClose}
+      >
+        <div className="p-1.5">
+          {items.map((item) => {
+            const active = isActivePath(pathname, item.href, item.exact);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={`
+                  flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium
+                  transition-colors duration-200
+                  ${active
+                    ? "bg-[#5533ff]/20 text-white"
+                    : "text-white/60 hover:bg-white/5 hover:text-white"
+                  }
+                `}
+              >
+                <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-[#7c5cfc]" : ""}`} />
+                {item.label}
+                {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#5533ff]" />}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Drawer link ───────────────────────────────────────────────────────────────
+
+function DrawerLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick: () => void }) {
+  const active = isActivePath(pathname, item.href, item.exact);
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={`
+        flex min-h-[46px] items-center gap-3 rounded-xl px-4 py-2.5
+        text-sm font-medium transition-colors duration-200
+        ${active
+          ? "bg-[#5533ff]/20 text-white"
+          : "text-white/70 hover:bg-white/5 hover:text-white"
+        }
+      `}
+    >
+      <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-[#7c5cfc]" : "text-white/40"}`} />
+      {item.label}
+      {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#5533ff]" />}
+    </Link>
+  );
+}
+
+// ── Main Navbar ───────────────────────────────────────────────────────────────
 
 export function Navbar() {
   const { user, loading } = useAuth();
@@ -40,84 +194,106 @@ export function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const homeHref = user ? "/dashboard" : "/";
 
-  const userNavItems = user
+  // ── Nav item definitions ────────────────────────────────────────────────
+
+  const primaryItems: NavItem[] = user
     ? [
         { href: homeHref, label: t("nav.home"), icon: Home, exact: false },
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
-        { href: "/learn", label: t("nav.learn"), icon: Gamepad2, exact: false },
-        { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
-        { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks, exact: false },
-        { href: "/listen", label: t("nav.listen"), icon: Headphones, exact: false },
-        { href: "/tutor", label: t("nav.tutor"), icon: BotMessageSquare, exact: false },
-        { href: "/daily-news", label: t("nav.dailyNews"), icon: Newspaper, exact: false },
-        { href: "/mining", label: t("nav.mining"), icon: Pickaxe, exact: false },
-        { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
+        { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText, exact: false },
       ]
     : [
         { href: "/", label: t("nav.home"), icon: Home, exact: true },
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
-        { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks, exact: false },
-        { href: "/listen", label: t("nav.listen"), icon: Headphones, exact: false },
-        { href: "/daily-news", label: t("nav.dailyNews"), icon: Newspaper, exact: false },
-        { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
       ];
 
+  const toolsItems: NavItem[] = [
+    { href: "/learn", label: t("nav.learn"), icon: Gamepad2, exact: false },
+    { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks, exact: false },
+    { href: "/listen", label: t("nav.listen"), icon: Headphones, exact: false },
+    { href: "/tutor", label: t("nav.tutor"), icon: BotMessageSquare, exact: false },
+    { href: "/daily-news", label: t("nav.dailyNews"), icon: Newspaper, exact: false },
+    { href: "/mining", label: t("nav.mining"), icon: Pickaxe, exact: false },
+  ];
+
+  // All items for the mobile drawer (flat list with divider between groups)
+  const allDrawerItems = user
+    ? [...primaryItems, ...toolsItems, { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true }]
+    : [...primaryItems, { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true }];
+
+  // ── Body scroll lock ────────────────────────────────────────────────────
+
   useEffect(() => {
-    if (drawerOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
   useEffect(() => {
     if (!drawerOpen) return;
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setDrawerOpen(false);
-    }
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setDrawerOpen(false); };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
   }, [drawerOpen]);
 
   return (
     <>
-      <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg-surface)]">
+      {/* ── Nav bar ──────────────────────────────────────────────────────── */}
+      <nav
+        className="sticky top-0 z-40 border-b border-white/[0.06]"
+        style={{
+          background: "#0a0a18",
+          // force CSS vars so BrandLogo + any var(--text-*) renders white inside the dark nav
+          ["--text-primary" as string]: "#ffffff",
+          ["--text-secondary" as string]: "rgba(255,255,255,0.6)",
+        }}
+      >
         <div className="page-shell">
-          <div className="flex h-14 items-center justify-between gap-4">
-            {/* Left: logo + nav */}
-            <div className="flex min-w-0 items-center gap-6">
-              <Link href={homeHref} className="shrink-0">
-                <BrandLogo compact />
-              </Link>
+          <div className="flex h-14 items-center gap-1">
 
-              <div className="hidden items-center gap-0.5 xl:flex">
-                {userNavItems.map((item) => (
-                  <DesktopNavLink
-                    key={item.href}
-                    href={item.href}
-                    icon={item.icon}
-                    label={item.label}
-                    active={isActivePath(pathname, item.href, item.exact)}
-                  />
-                ))}
-              </div>
+            {/* Logo */}
+            <Link href={homeHref} className="mr-3 shrink-0">
+              <BrandLogo compact className="[&_p]:text-white" />
+            </Link>
 
-              {DEV_MODE && (
-                <span className="badge-accent text-[10px] uppercase tracking-[0.14em]">
-                  {t("nav.dev")}
-                </span>
-              )}
+            {/* Primary links — desktop */}
+            <div className="hidden items-center xl:flex">
+              {primaryItems.map((item) => (
+                <PrimaryLink key={item.href} item={item} pathname={pathname} />
+              ))}
+              {/* Tools dropdown — only for authenticated users */}
+              {user && <ToolsDropdown items={toolsItems} pathname={pathname} />}
             </div>
 
-            {/* Right: auth */}
-            <div className="hidden items-center gap-2 lg:flex">
+            {DEV_MODE && (
+              <span className="ml-2 hidden rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#7c5cfc] ring-1 ring-[#7c5cfc]/30 xl:inline">
+                Dev
+              </span>
+            )}
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Right side — desktop */}
+            <div className="hidden items-center gap-1 lg:flex">
+              {/* Guide link */}
+              <Link
+                href="/guide"
+                className={`flex h-14 items-center gap-1.5 px-3 text-sm font-medium transition-colors duration-200
+                  ${isActivePath(pathname, "/guide", true)
+                    ? "text-white"
+                    : "text-white/60 hover:text-white"
+                  }`}
+              >
+                <HelpCircle className="h-4 w-4" />
+                <span className="hidden xl:inline">{t("nav.guide")}</span>
+              </Link>
+
               {loading ? (
                 <>
-                  <div className="h-8 w-24 animate-pulse rounded-[var(--radius-md)] bg-[var(--bg-soft)]" />
-                  <div className="h-8 w-8 animate-pulse rounded-full bg-[var(--bg-soft)]" />
+                  <div className="h-8 w-24 animate-pulse rounded-lg bg-white/5" />
+                  <div className="h-8 w-8 animate-pulse rounded-full bg-white/5" />
                 </>
               ) : user ? (
                 <>
@@ -125,7 +301,11 @@ export function Navbar() {
                     <StreakBadge streak={(user as { streakDays?: number }).streakDays ?? 0} />
                   )}
                   <Link href="/sets/new">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+                    >
                       <Plus className="h-3.5 w-3.5" />
                       {t("nav.newSet")}
                     </Button>
@@ -137,7 +317,7 @@ export function Navbar() {
                   {!isGhost && (
                     <button
                       onClick={enableGhostMode}
-                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                      className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-white/50 transition-colors hover:bg-white/5 hover:text-white/80"
                     >
                       <Ghost className="h-4 w-4" />
                       {t("ghost.browseAsGuest")}
@@ -145,188 +325,157 @@ export function Navbar() {
                   )}
                   <Link
                     href="/login"
-                    className="rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                    className="rounded-lg px-3 py-1.5 text-sm text-white/60 transition-colors hover:text-white"
                   >
                     {t("nav.logIn")}
                   </Link>
                   <Link href="/signup">
-                    <Button size="sm">{t("nav.signUp")}</Button>
+                    <Button
+                      size="sm"
+                      className="bg-[#5533ff] text-white hover:bg-[#4422ee]"
+                    >
+                      {t("nav.signUp")}
+                    </Button>
                   </Link>
                 </>
               ) : null}
             </div>
 
             {/* Mobile hamburger */}
-            <div className="flex items-center lg:hidden">
-              <button
-                className="tap-target flex items-center justify-center rounded-[var(--radius-md)] p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] active:scale-95"
-                onClick={() => setDrawerOpen(true)}
-                aria-label={t("nav.toggleMenu")}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-            </div>
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/5 hover:text-white lg:hidden"
+              onClick={() => setDrawerOpen(true)}
+              aria-label={t("nav.toggleMenu")}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* Mobile drawer */}
-      {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/30 animate-fade-in"
+      {/* ── Mobile drawer ────────────────────────────────────────────────── */}
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300 lg:hidden
+          ${drawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        onClick={() => setDrawerOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* Panel */}
+      <div
+        className={`
+          fixed inset-y-0 right-0 z-50 flex w-full max-w-[min(20rem,90vw)] flex-col
+          border-l border-white/[0.06] lg:hidden
+          transition-transform duration-300 ease-out
+          ${drawerOpen ? "translate-x-0" : "translate-x-full"}
+        `}
+        style={{
+          background: "#0a0a18",
+          ["--text-primary" as string]: "#ffffff",
+          ["--text-secondary" as string]: "rgba(255,255,255,0.6)",
+        }}
+      >
+        {/* Drawer header */}
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.06] px-4">
+          <BrandLogo compact className="[&_p]:text-white" />
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/5 hover:text-white"
             onClick={() => setDrawerOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-[min(18rem,85vw)] animate-slide-in-drawer">
-            <div className="flex h-full w-full flex-col border-l border-[var(--border)] bg-[var(--bg-surface)]">
-              {/* Drawer header */}
-              <div className="flex h-14 items-center justify-between border-b border-[var(--border)] px-4">
-                <BrandLogo compact />
-                <button
-                  className="tap-target flex items-center justify-center rounded-[var(--radius-md)] p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] active:scale-95"
-                  onClick={() => setDrawerOpen(false)}
-                  aria-label={t("aria.closeMenu")}
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Drawer nav */}
-              <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
-                <div className="space-y-0.5">
-                  {userNavItems.map((item) => (
-                    <DrawerLink
-                      key={item.href}
-                      href={item.href}
-                      icon={item.icon}
-                      label={item.label}
-                      active={isActivePath(pathname, item.href, item.exact)}
-                      onClick={() => setDrawerOpen(false)}
-                    />
-                  ))}
-                  {user && (
-                    <>
-                      <DrawerLink
-                        href="/sets/new"
-                        icon={Plus}
-                        label={t("nav.newSet")}
-                        active={pathname === "/sets/new"}
-                        onClick={() => setDrawerOpen(false)}
-                      />
-                      <div className="my-2 h-px bg-[var(--border)]" />
-                      <DrawerLink
-                        href="/profile"
-                        icon={UserCircle2}
-                        label={t("nav.profile")}
-                        active={pathname === "/profile"}
-                        onClick={() => setDrawerOpen(false)}
-                      />
-                      <DrawerLink
-                        href="/settings"
-                        icon={Settings}
-                        label={t("nav.settings")}
-                        active={pathname === "/settings"}
-                        onClick={() => setDrawerOpen(false)}
-                      />
-                    </>
-                  )}
-                </div>
-
-                {!user && !DEV_MODE && (
-                  <div className="mt-4 space-y-2">
-                    {!isGhost && (
-                      <Button
-                        variant="ghost"
-                        className="w-full gap-2"
-                        onClick={() => { enableGhostMode(); setDrawerOpen(false); }}
-                      >
-                        <Ghost className="h-4 w-4" />
-                        {t("ghost.browseAsGuest")}
-                      </Button>
-                    )}
-                    <Link href="/login" onClick={() => setDrawerOpen(false)} className="block">
-                      <Button variant="outline" className="w-full">{t("nav.logIn")}</Button>
-                    </Link>
-                    <Link href="/signup" onClick={() => setDrawerOpen(false)} className="block">
-                      <Button className="w-full">{t("nav.signUp")}</Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {user && (
-                <div className="safe-bottom border-t border-[var(--border)] px-4 py-3">
-                  <AvatarMenu />
-                </div>
-              )}
-            </div>
-          </div>
+            aria-label={t("aria.closeMenu")}
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-      )}
+
+        {/* Drawer body */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+          {/* Primary group */}
+          <div className="space-y-0.5">
+            {primaryItems.map((item) => (
+              <DrawerLink
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                onClick={() => setDrawerOpen(false)}
+              />
+            ))}
+          </div>
+
+          {/* Tools group */}
+          {user && toolsItems.length > 0 && (
+            <>
+              <div className="my-3 flex items-center gap-2">
+                <div className="h-px flex-1 bg-white/[0.06]" />
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25">
+                  Құралдар
+                </span>
+                <div className="h-px flex-1 bg-white/[0.06]" />
+              </div>
+              <div className="space-y-0.5">
+                {toolsItems.map((item) => (
+                  <DrawerLink
+                    key={item.href}
+                    item={item}
+                    pathname={pathname}
+                    onClick={() => setDrawerOpen(false)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Bottom group */}
+          <div className="my-3 h-px bg-white/[0.06]" />
+          <div className="space-y-0.5">
+            <DrawerLink
+              item={{ href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true }}
+              pathname={pathname}
+              onClick={() => setDrawerOpen(false)}
+            />
+            {user && (
+              <DrawerLink
+                item={{ href: "/sets/new", label: t("nav.newSet"), icon: Plus, exact: true }}
+                pathname={pathname}
+                onClick={() => setDrawerOpen(false)}
+              />
+            )}
+          </div>
+
+          {/* Auth buttons for guests */}
+          {!user && !DEV_MODE && (
+            <div className="mt-4 space-y-2 px-1">
+              {!isGhost && (
+                <Button
+                  variant="ghost"
+                  className="w-full gap-2 text-white/60 hover:bg-white/5 hover:text-white"
+                  onClick={() => { enableGhostMode(); setDrawerOpen(false); }}
+                >
+                  <Ghost className="h-4 w-4" />
+                  {t("ghost.browseAsGuest")}
+                </Button>
+              )}
+              <Link href="/login" onClick={() => setDrawerOpen(false)} className="block">
+                <Button variant="outline" className="w-full border-white/10 text-white/80 hover:bg-white/5">
+                  {t("nav.logIn")}
+                </Button>
+              </Link>
+              <Link href="/signup" onClick={() => setDrawerOpen(false)} className="block">
+                <Button className="w-full bg-[#5533ff] hover:bg-[#4422ee] text-white">
+                  {t("nav.signUp")}
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Drawer footer — avatar */}
+        {user && (
+          <div className="safe-bottom shrink-0 border-t border-white/[0.06] px-4 py-3">
+            <AvatarMenu />
+          </div>
+        )}
+      </div>
     </>
-  );
-}
-
-function isActivePath(pathname: string, href: string, exact = false) {
-  if (exact) return pathname === href;
-  if (href === "/dashboard") return pathname === "/dashboard";
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function DesktopNavLink({
-  href,
-  icon: Icon,
-  label,
-  active,
-}: {
-  href: string;
-  icon: typeof Home;
-  label: string;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-colors ${
-        active
-          ? "bg-[var(--bg-soft)] text-[var(--text-primary)]"
-          : "text-[var(--text-secondary)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-      }`}
-    >
-      <Icon className={`h-4 w-4 ${active ? "text-[var(--primary)]" : ""}`} />
-      {label}
-    </Link>
-  );
-}
-
-function DrawerLink({
-  href,
-  icon: Icon,
-  label,
-  active,
-  onClick,
-}: {
-  href: string;
-  icon: typeof Home;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      aria-current={active ? "page" : undefined}
-      className={`flex min-h-[42px] items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-sm font-medium transition-colors ${
-        active
-          ? "bg-[var(--primary-soft)] text-[var(--primary)]"
-          : "text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
-      }`}
-    >
-      <Icon className={`h-4 w-4 shrink-0 ${active ? "text-[var(--primary)]" : "text-[var(--text-secondary)]"}`} />
-      {label}
-    </Link>
   );
 }
