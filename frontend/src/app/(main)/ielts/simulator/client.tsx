@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   Flag,
   Headphones,
+  Highlighter,
   Loader2,
   Mic,
   Pause,
@@ -809,6 +810,43 @@ export function SimulatorClient() {
           </p>
         </div>
 
+        {(() => {
+          const sectionBands: number[] = [];
+          if (resultSummary.reading) sectionBands.push(rawScoreToBand(resultSummary.reading.correct, resultSummary.reading.total));
+          if (resultSummary.listening) sectionBands.push(rawScoreToBand(resultSummary.listening.correct, resultSummary.listening.total));
+          if (resultSummary.writingAverage !== null) sectionBands.push(resultSummary.writingAverage);
+          if (resultSummary.speakingAverage !== null) sectionBands.push(resultSummary.speakingAverage);
+          const overall = sectionBands.length > 0 ? roundToHalf(sectionBands.reduce((a, b) => a + b, 0) / sectionBands.length) : null;
+          if (!overall) return null;
+          return (
+            <div className="rounded-2xl border border-[var(--primary)]/30 bg-gradient-to-br from-[var(--primary)]/10 to-[var(--primary)]/5 p-6 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+                {t("ielts.sim.overallBand")}
+              </p>
+              <p className="mt-3 text-6xl font-bold tracking-tight text-[var(--text-primary)]">
+                {overall.toFixed(1)}
+              </p>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                {t("ielts.sim.overallBandDesc", { n: sectionBands.length })}
+              </p>
+              <div className="mt-4 flex justify-center gap-2">
+                {[4, 5, 6, 7, 8, 9].map((b) => (
+                  <div
+                    key={b}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-all ${
+                      overall >= b
+                        ? "bg-[var(--primary)] text-white"
+                        : "border border-[var(--border)] text-[var(--text-muted)]"
+                    }`}
+                  >
+                    {b}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="grid gap-4 lg:grid-cols-2">
           {resultSummary.reading ? (
             <ScoreCard
@@ -981,217 +1019,35 @@ export function SimulatorClient() {
       )}
 
       {currentSection.key === "listening" && (
-        <div className="space-y-5">
-          {groupedQuestions.length > 1 && (
-            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
-              <span className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                {t("ielts.sim.listeningSectionLabel")}
-              </span>
-              <div className="flex gap-2">
-                {groupedQuestions.map((g, idx) => (
-                  <div
-                    key={g.key}
-                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-all ${
-                      isCurrentSectionRevealed || idx < activeListeningGroupIndex
-                        ? "bg-[var(--primary)] text-white"
-                        : idx === activeListeningGroupIndex
-                          ? "border-2 border-[var(--primary)] text-[var(--primary)]"
-                          : "border border-[var(--border)] text-[var(--text-muted)] opacity-40"
-                    }`}
-                  >
-                    {idx + 1}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(isCurrentSectionRevealed ? groupedQuestions : [groupedQuestions[activeListeningGroupIndex]].filter((g): g is QuestionGroup => Boolean(g))).map((group) => {
-            const groupIndex = groupedQuestions.indexOf(group);
-            const questionStartIndex = groupedQuestions
-              .slice(0, groupIndex)
-              .reduce((acc, g) => acc + g.questions.length, 0);
-            const isLastGroup = groupIndex === groupedQuestions.length - 1;
-            return (
-            <section
-              key={group.key}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                    {group.title}
-                  </h3>
-                  {group.topic ? (
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                      {t("ielts.sim.topic")}: {group.topic}
-                    </p>
-                  ) : null}
-                </div>
-
-                {group.audioScript ? (
-                  <div className="flex flex-wrap gap-2">
-                    {speechEnabled ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handlePlayListening(group)}
-                      >
-                        {playingGroupKey === group.key ? (
-                          <Pause className="h-4 w-4" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
-                        {playingGroupKey === group.key ? t("ielts.sim.stopAudio") : t("ielts.sim.playAudio")}
-                      </Button>
-                    ) : null}
-                    {isCurrentSectionRevealed ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() =>
-                          setShowListeningTranscript((prev) => ({
-                            ...prev,
-                            [group.key]: !prev[group.key],
-                          }))
-                        }
-                      >
-                        <Volume2 className="h-4 w-4" />
-                        {showListeningTranscript[group.key] ? t("ielts.sim.hideScript") : t("ielts.sim.showScript")}
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-
-              {group.content ? (
-                <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
-                    {group.content}
-                  </p>
-                </div>
-              ) : null}
-
-              {group.audioScript && showListeningTranscript[group.key] ? (
-                <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-400">
-                    {t("ielts.sim.audioScript")}
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
-                    {group.audioScript}
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="mt-5 space-y-4">
-                {group.questions.map((question, localIndex) => (
-                  <ObjectiveQuestionCard
-                    key={question.id}
-                    index={questionStartIndex + localIndex + 1}
-                    question={question}
-                    value={objectiveAnswers[question.id] ?? ""}
-                    revealed={isCurrentSectionRevealed}
-                    onChange={handleObjectiveAnswer}
-                  />
-                ))}
-              </div>
-
-              {!isCurrentSectionRevealed && !isLastGroup && (
-                <div className="mt-5 flex justify-end">
-                  <Button onClick={() => setShowListeningSectionConfirm(true)}>
-                    {t("ielts.sim.listeningNextSection")}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </section>
-            );
-          })}
-        </div>
+        <ListeningSplitPanel
+          groups={groupedQuestions}
+          objectiveAnswers={objectiveAnswers}
+          revealed={isCurrentSectionRevealed}
+          activeGroupIndex={activeListeningGroupIndex}
+          speechEnabled={speechEnabled}
+          playingGroupKey={playingGroupKey}
+          showTranscript={showListeningTranscript}
+          onPlayGroup={handlePlayListening}
+          onToggleTranscript={(key) =>
+            setShowListeningTranscript((prev) => ({ ...prev, [key]: !prev[key] }))
+          }
+          onNextSection={() => setShowListeningSectionConfirm(true)}
+          onAnswer={handleObjectiveAnswer}
+        />
       )}
 
       {currentSection.key === "writing" && (
-        <div className="space-y-5">
-          {currentSection.questions.map((question) => {
-            const result = writingResults[question.id];
-            const essay = writingResponses[question.id] ?? "";
-            const wordCount = essay.trim() ? essay.trim().split(/\s+/).length : 0;
-
-            return (
-              <section
-                key={question.id}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
-                    {question.questionType === "task1"
-                      ? t("ielts.writingTask1")
-                      : t("ielts.writingTask2")}
-                  </span>
-                  {question.topic ? (
-                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                      {question.topic}
-                    </span>
-                  ) : null}
-                  {question.bandTarget ? (
-                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                      Band {question.bandTarget}
-                    </span>
-                  ) : null}
-                </div>
-                <h3 className="mt-3 text-lg font-semibold text-[var(--text-primary)]">
-                  {question.title}
-                </h3>
-                <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                  {question.prompt}
-                </p>
-
-                <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm">
-                  <span className="text-[var(--text-secondary)]">
-                    {wordCount} {t("ielts.sim.words")}
-                  </span>
-                  <Button
-                    size="sm"
-                    onClick={() => handleEvaluateWriting(question)}
-                    disabled={evaluatingQuestionId === question.id}
-                  >
-                    {evaluatingQuestionId === question.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
-                    )}
-                    {t("ielts.sim.getAiEval")}
-                  </Button>
-                </div>
-
-                <textarea
-                  value={essay}
-                  onChange={(event) => {
-                    markUserInteraction();
-                    setWritingResponses((prev) => ({
-                      ...prev,
-                      [question.id]: event.target.value,
-                    }));
-                  }}
-                  rows={14}
-                  placeholder={t("ielts.wr.essayPlaceholder")}
-                  className="mt-4 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
-                />
-
-                {result ? (
-                  <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                    <p className="text-sm font-semibold text-emerald-400">
-                      Band {result.overallBand}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                      {result.feedback.bandExplanation || result.feedback.detailedFeedback}
-                    </p>
-                  </div>
-                ) : null}
-              </section>
-            );
-          })}
-        </div>
+        <WritingSplitPanel
+          questions={currentSection.questions}
+          writingResponses={writingResponses}
+          writingResults={writingResults}
+          evaluatingQuestionId={evaluatingQuestionId}
+          onResponse={(id, value) => {
+            markUserInteraction();
+            setWritingResponses((prev) => ({ ...prev, [id]: value }));
+          }}
+          onEvaluate={handleEvaluateWriting}
+        />
       )}
 
       {currentSection.key === "speaking" && (
@@ -1453,6 +1309,10 @@ function formatTime(totalSeconds: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+function roundToHalf(n: number): number {
+  return Math.round(n * 2) / 2;
+}
+
 function rawScoreToBand(correct: number, total: number): number {
   // Official IELTS Listening/Reading band scale (40-question sections)
   const scale: Record<number, number> = {
@@ -1685,6 +1545,13 @@ function ObjectiveQuestionCard({
   );
 }
 
+const HIGHLIGHT_COLORS = [
+  { label: "yellow", value: "rgba(250,204,21,0.35)" },
+  { label: "green", value: "rgba(74,222,128,0.35)" },
+  { label: "blue", value: "rgba(96,165,250,0.35)" },
+  { label: "pink", value: "rgba(244,114,182,0.35)" },
+];
+
 function ReadingSplitPanel({
   groups,
   objectiveAnswers,
@@ -1707,9 +1574,12 @@ function ReadingSplitPanel({
   const { t } = useLocale();
   const [activeIndex, setActiveIndex] = useState(0);
   const [splitPct, setSplitPct] = useState(52);
+  const [activeHighlightColor, setActiveHighlightColor] = useState<string | null>(null);
+  const [highlights, setHighlights] = useState<Record<string, HighlightMark[]>>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const passageRef = useRef<HTMLDivElement>(null);
 
   const questionOffsets = groups.map((_, gi) =>
     groups.slice(0, gi).reduce((acc, g) => acc + g.questions.length, 0)
@@ -1752,6 +1622,30 @@ function ReadingSplitPanel({
     }
   }, [groups]);
 
+  function handlePassageMouseUp() {
+    if (!activeHighlightColor || !passageRef.current) return;
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) return;
+    const range = selection.getRangeAt(0);
+    const passageEl = passageRef.current;
+    if (!passageEl.contains(range.commonAncestorContainer)) return;
+
+    const preRange = document.createRange();
+    preRange.setStart(passageEl, 0);
+    preRange.setEnd(range.startContainer, range.startOffset);
+    const start = preRange.toString().length;
+    const end = start + range.toString().length;
+    if (end <= start) return;
+
+    const key = group.key;
+    setHighlights((prev) => {
+      const existing = prev[key] ?? [];
+      const filtered = existing.filter((m) => m.end <= start || m.start >= end);
+      return { ...prev, [key]: [...filtered, { start, end, color: activeHighlightColor }] };
+    });
+    selection.removeAllRanges();
+  }
+
   const fontSizeClass = ["text-sm", "text-base", "text-lg"][passageFontSize];
 
   return (
@@ -1787,27 +1681,54 @@ function ReadingSplitPanel({
           })}
         </div>
 
-        {/* Font size controls */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-            {t("ielts.sim.fontSize")}
-          </span>
-          {([0, 1, 2] as const).map((n) => {
-            const labels = ["A−", "A", "A+"];
-            return (
+        {/* Font size + highlight controls */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Font size */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+              {t("ielts.sim.fontSize")}
+            </span>
+            {([0, 1, 2] as const).map((n) => {
+              const labels = ["A−", "A", "A+"];
+              return (
+                <button
+                  key={n}
+                  onClick={() => onSetFontSize(n)}
+                  className={`flex h-7 min-w-[28px] items-center justify-center rounded-lg border px-1.5 text-xs font-bold transition-colors ${
+                    passageFontSize === n
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+                  }`}
+                >
+                  {labels[n]}
+                </button>
+              );
+            })}
+          </div>
+          {/* Highlight tool */}
+          <div className="flex items-center gap-1">
+            <Highlighter className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+            {HIGHLIGHT_COLORS.map((c) => (
               <button
-                key={n}
-                onClick={() => onSetFontSize(n)}
-                className={`flex h-7 min-w-[28px] items-center justify-center rounded-lg border px-1.5 text-xs font-bold transition-colors ${
-                  passageFontSize === n
-                    ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
-                    : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+                key={c.label}
+                title={t("ielts.sim.highlightTool")}
+                onClick={() => setActiveHighlightColor((prev) => (prev === c.value ? null : c.value))}
+                className={`h-5 w-5 rounded-full border-2 transition-transform ${
+                  activeHighlightColor === c.value ? "scale-125 border-white" : "border-transparent hover:scale-110"
                 }`}
+                style={{ backgroundColor: c.value }}
+              />
+            ))}
+            {Object.values(highlights).some((arr) => arr.length > 0) && (
+              <button
+                title={t("ielts.sim.highlightClear")}
+                onClick={() => setHighlights({})}
+                className="ml-1 rounded border border-[var(--border)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)] hover:text-red-400"
               >
-                {labels[n]}
+                {t("ielts.sim.highlightClear")}
               </button>
-            );
-          })}
+            )}
+          </div>
         </div>
       </div>
 
@@ -1820,18 +1741,20 @@ function ReadingSplitPanel({
         {/* Left: passage text */}
         <div
           className="overflow-y-auto border-r border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4"
-          style={{ width: `${splitPct}%` }}
+          style={{ width: `${splitPct}%`, cursor: activeHighlightColor ? "text" : undefined }}
+          onMouseUp={handlePassageMouseUp}
         >
           <h3 className="text-base font-bold text-[var(--text-primary)]">{group.title}</h3>
           {group.topic ? (
             <p className="mt-1 text-xs text-[var(--text-muted)]">{group.topic}</p>
           ) : null}
           {group.content ? (
-            <p
+            <div
+              ref={passageRef}
               className={`mt-4 whitespace-pre-wrap leading-[1.9] text-[var(--text-secondary)] ${fontSizeClass}`}
             >
-              {group.content}
-            </p>
+              {applyHighlights(group.content, highlights[group.key] ?? [])}
+            </div>
           ) : (
             <p className="mt-4 text-sm italic text-[var(--text-muted)]">
               {t("ielts.sim.noPassageContent")}
@@ -1932,6 +1855,427 @@ function ReadingSplitPanel({
             </span>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Listening Split Panel ────────────────────────────────────────────────────
+
+type HighlightMark = { start: number; end: number; color: string };
+
+function applyHighlights(text: string, marks: HighlightMark[]) {
+  if (marks.length === 0) return <>{text}</>;
+  const sorted = [...marks].sort((a, b) => a.start - b.start);
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+  for (const m of sorted) {
+    if (m.start > cursor) parts.push(text.slice(cursor, m.start));
+    parts.push(
+      <mark key={`${m.start}-${m.end}`} style={{ backgroundColor: m.color, borderRadius: "2px" }}>
+        {text.slice(m.start, m.end)}
+      </mark>
+    );
+    cursor = m.end;
+  }
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <>{parts}</>;
+}
+
+function ListeningSplitPanel({
+  groups,
+  objectiveAnswers,
+  revealed,
+  activeGroupIndex,
+  speechEnabled,
+  playingGroupKey,
+  showTranscript,
+  onPlayGroup,
+  onToggleTranscript,
+  onNextSection,
+  onAnswer,
+}: {
+  groups: QuestionGroup[];
+  objectiveAnswers: Record<string, string>;
+  revealed: boolean;
+  activeGroupIndex: number;
+  speechEnabled: boolean;
+  playingGroupKey: string | null;
+  showTranscript: Record<string, boolean>;
+  onPlayGroup: (group: QuestionGroup) => void;
+  onToggleTranscript: (key: string) => void;
+  onNextSection: () => void;
+  onAnswer: (id: string, value: string) => void;
+}) {
+  const { t } = useLocale();
+  const [splitPct, setSplitPct] = useState(45);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const group = groups[activeGroupIndex] ?? groups[0];
+  const isPlaying = playingGroupKey === group?.key;
+  const globalOffset = groups
+    .slice(0, activeGroupIndex)
+    .reduce((acc, g) => acc + g.questions.length, 0);
+
+  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    const onMove = (ev: MouseEvent) => {
+      if (!isDragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+      setSplitPct(Math.min(65, Math.max(30, pct)));
+    };
+    const onUp = () => {
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, []);
+
+  if (!group) return null;
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Section tabs */}
+      <div className="flex flex-wrap gap-1.5">
+        {groups.map((g, gi) => {
+          const isLocked = gi > activeGroupIndex && !revealed;
+          const isDone = gi < activeGroupIndex || revealed;
+          const answeredCount = g.questions.filter((q) => (objectiveAnswers[q.id] ?? "") !== "").length;
+          return (
+            <div
+              key={g.key}
+              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                gi === activeGroupIndex
+                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : isLocked
+                    ? "border-[var(--border)] text-[var(--text-muted)] opacity-40 cursor-not-allowed"
+                    : "border-[var(--border)] text-[var(--text-secondary)]"
+              }`}
+            >
+              {t("ielts.sim.audioSection")} {gi + 1}
+              {isDone && !revealed && (
+                <span className="rounded-full bg-emerald-500/20 px-1.5 py-px text-[9px] font-semibold text-emerald-400">
+                  {answeredCount}/{g.questions.length}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Split panel */}
+      <div
+        ref={containerRef}
+        className="flex overflow-hidden rounded-2xl border border-[var(--border)]"
+        style={{ height: "calc(100vh - 360px)", minHeight: "440px" }}
+      >
+        {/* Left: audio player + context + transcript */}
+        <div
+          className="flex flex-col gap-4 overflow-y-auto border-r border-[var(--border)] bg-[var(--bg-surface)] px-5 py-5"
+          style={{ width: `${splitPct}%` }}
+        >
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+              {t("ielts.sim.audioSection")} {activeGroupIndex + 1}
+            </p>
+            <h3 className="mt-1 text-base font-bold text-[var(--text-primary)]">{group.title}</h3>
+            {group.topic ? (
+              <p className="mt-1 text-xs text-[var(--text-muted)]">{group.topic}</p>
+            ) : null}
+          </div>
+
+          {/* Audio controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            {speechEnabled && group.audioScript ? (
+              <Button
+                size="sm"
+                onClick={() => onPlayGroup(group)}
+                variant={isPlaying ? "secondary" : "primary"}
+              >
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                {isPlaying ? t("ielts.sim.stopAudio") : t("ielts.sim.playAudio")}
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-secondary)]">
+                <Volume2 className="h-4 w-4 text-[var(--text-muted)]" />
+                {t("ielts.sim.playAudio")}
+              </div>
+            )}
+            {group.audioScript ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onToggleTranscript(group.key)}
+              >
+                {showTranscript[group.key] ? t("ielts.sim.hideScript") : t("ielts.sim.showScript")}
+              </Button>
+            ) : null}
+          </div>
+
+          {/* Context / prompt */}
+          {group.prompt ? (
+            <p className="text-sm leading-[1.8] text-[var(--text-secondary)]">{group.prompt}</p>
+          ) : null}
+
+          {/* Transcript */}
+          {showTranscript[group.key] && group.audioScript ? (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                {t("ielts.sim.audioScript")}
+              </p>
+              <p className="whitespace-pre-wrap text-sm leading-[1.8] text-[var(--text-secondary)]">
+                {group.audioScript}
+              </p>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Resizable divider */}
+        <div
+          onMouseDown={handleDividerMouseDown}
+          className="group flex w-2 shrink-0 cursor-col-resize select-none items-center justify-center bg-[var(--border)] transition-colors hover:bg-[var(--primary)]/30"
+        >
+          <div className="h-10 w-0.5 rounded-full bg-[var(--text-muted)] opacity-40 transition-opacity group-hover:opacity-100" />
+        </div>
+
+        {/* Right: questions */}
+        <div
+          className="overflow-y-auto px-5 py-5"
+          style={{ width: `${100 - splitPct - 0.2}%` }}
+        >
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            {t("ielts.sim.questionsRange", {
+              from: globalOffset + 1,
+              to: globalOffset + group.questions.length,
+            })}
+          </p>
+          <div className="space-y-4">
+            {group.questions.map((q, li) => (
+              <ObjectiveQuestionCard
+                key={q.id}
+                index={globalOffset + li + 1}
+                question={q}
+                value={objectiveAnswers[q.id] ?? ""}
+                revealed={revealed}
+                onChange={onAnswer}
+              />
+            ))}
+          </div>
+
+          {/* Advance to next section button */}
+          {!revealed && activeGroupIndex < groups.length - 1 && (
+            <div className="mt-5">
+              <Button size="sm" onClick={onNextSection}>
+                {t("ielts.sim.listeningNextSection")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Writing Split Panel ──────────────────────────────────────────────────────
+
+function WritingSplitPanel({
+  questions,
+  writingResponses,
+  writingResults,
+  evaluatingQuestionId,
+  onResponse,
+  onEvaluate,
+}: {
+  questions: IELTSQuestion[];
+  writingResponses: Record<string, string>;
+  writingResults: Record<string, WritingResult>;
+  evaluatingQuestionId: string | null;
+  onResponse: (id: string, value: string) => void;
+  onEvaluate: (question: IELTSQuestion) => void;
+}) {
+  const { t } = useLocale();
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [splitPct, setSplitPct] = useState(42);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const question = questions[activeIdx] ?? questions[0];
+
+  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    const onMove = (ev: MouseEvent) => {
+      if (!isDragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+      setSplitPct(Math.min(60, Math.max(25, pct)));
+    };
+    const onUp = () => {
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, []);
+
+  if (!question) return null;
+
+  const essay = writingResponses[question.id] ?? "";
+  const wordCount = essay.trim() ? essay.trim().split(/\s+/).length : 0;
+  const result = writingResults[question.id];
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Task tabs */}
+      {questions.length > 1 && (
+        <div className="flex flex-wrap gap-1.5">
+          {questions.map((q, qi) => (
+            <button
+              key={q.id}
+              onClick={() => setActiveIdx(qi)}
+              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                activeIdx === qi
+                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+              }`}
+            >
+              {t("ielts.sim.writingTask")} {qi + 1}
+              {writingResults[q.id] ? (
+                <span className="rounded-full bg-emerald-500/20 px-1.5 py-px text-[9px] font-semibold text-emerald-400">
+                  Band {writingResults[q.id].overallBand}
+                </span>
+              ) : (writingResponses[q.id] ?? "").trim() ? (
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              ) : null}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Split panel */}
+      <div
+        ref={containerRef}
+        className="flex overflow-hidden rounded-2xl border border-[var(--border)]"
+        style={{ height: "calc(100vh - 320px)", minHeight: "460px" }}
+      >
+        {/* Left: task prompt */}
+        <div
+          className="flex flex-col gap-4 overflow-y-auto border-r border-[var(--border)] bg-[var(--bg-surface)] px-6 py-5"
+          style={{ width: `${splitPct}%` }}
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+              {question.questionType === "task1"
+                ? t("ielts.writingTask1")
+                : t("ielts.writingTask2")}
+            </span>
+            {question.topic ? (
+              <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                {question.topic}
+              </span>
+            ) : null}
+            {question.bandTarget ? (
+              <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                Band {question.bandTarget}
+              </span>
+            ) : null}
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+              {t("ielts.sim.writingPrompt")}
+            </p>
+            <h3 className="mt-2 text-base font-semibold text-[var(--text-primary)]">
+              {question.title}
+            </h3>
+            <p className="mt-3 text-sm leading-[1.85] text-[var(--text-secondary)]">
+              {question.prompt}
+            </p>
+          </div>
+
+          {/* Content / visual (e.g. chart description) */}
+          {question.content ? (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+              <p className="whitespace-pre-wrap text-sm leading-[1.8] text-[var(--text-secondary)]">
+                {question.content}
+              </p>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Resizable divider */}
+        <div
+          onMouseDown={handleDividerMouseDown}
+          className="group flex w-2 shrink-0 cursor-col-resize select-none items-center justify-center bg-[var(--border)] transition-colors hover:bg-[var(--primary)]/30"
+        >
+          <div className="h-10 w-0.5 rounded-full bg-[var(--text-muted)] opacity-40 transition-opacity group-hover:opacity-100" />
+        </div>
+
+        {/* Right: textarea + eval */}
+        <div
+          className="flex flex-col gap-3 overflow-y-auto px-5 py-5"
+          style={{ width: `${100 - splitPct - 0.2}%` }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm text-[var(--text-secondary)]">
+              {wordCount} {t("ielts.sim.words")}
+              {question.questionType === "task1" && (
+                <span className={`ml-2 text-xs font-medium ${wordCount >= 150 ? "text-emerald-400" : "text-amber-400"}`}>
+                  {wordCount >= 150 ? "✓ 150+" : `min 150`}
+                </span>
+              )}
+              {question.questionType === "task2" && (
+                <span className={`ml-2 text-xs font-medium ${wordCount >= 250 ? "text-emerald-400" : "text-amber-400"}`}>
+                  {wordCount >= 250 ? "✓ 250+" : `min 250`}
+                </span>
+              )}
+            </span>
+            <Button
+              size="sm"
+              onClick={() => onEvaluate(question)}
+              disabled={evaluatingQuestionId === question.id}
+            >
+              {evaluatingQuestionId === question.id ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {t("ielts.sim.getAiEval")}
+            </Button>
+          </div>
+
+          <textarea
+            value={essay}
+            onChange={(e) => onResponse(question.id, e.target.value)}
+            placeholder={t("ielts.wr.essayPlaceholder")}
+            className="flex-1 resize-none rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
+            style={{ minHeight: "260px" }}
+          />
+
+          {result ? (
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+              <p className="text-sm font-semibold text-emerald-400">Band {result.overallBand}</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                {result.feedback.bandExplanation || result.feedback.detailedFeedback}
+              </p>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
