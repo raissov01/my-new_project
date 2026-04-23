@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Pickaxe, Loader2, PlusCircle, CheckCircle2 } from "lucide-react";
+import { Pickaxe, Loader2, PlusCircle, CheckCircle2, ExternalLink } from "lucide-react";
 
 interface ExtractedWord {
   word: string;
@@ -37,30 +37,69 @@ const TOPIC_COLORS: Record<string, string> = {
   general: "bg-gray-50 text-gray-600",
 };
 
+async function saveWordsToSet(selectedWords: ExtractedWord[], level: string): Promise<string | null> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
+  const today = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  try {
+    const res = await fetch(`${apiUrl}/sets`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: `Mined words · ${level} · ${today}`,
+        description: "Vocabulary extracted via Sentence Mining",
+        cards: selectedWords.map((w) => ({ term: w.word, definition: w.definition })),
+        isPublic: false,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { setID?: string; id?: string };
+    return data.setID ?? data.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function MiningPage() {
   const [text, setText] = useState("");
   const [level, setLevel] = useState<string>("B1");
   const [words, setWords] = useState<ExtractedWord[]>([]);
   const [added, setAdded] = useState<Set<string>>(new Set());
+  const [savedSetId, setSavedSetId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
   const handleExtract = () => {
     if (text.trim().length < 20) { setError("Please paste at least 20 characters."); return; }
     setError("");
+    setSavedSetId(null);
     startTransition(async () => {
       const result = await extractWords(text, level);
       setWords(result);
+      setAdded(new Set());
     });
   };
 
-  const addToFlashcards = (word: ExtractedWord) => {
-    setAdded((prev) => new Set([...prev, word.word]));
-    // Could call createFlashcard server action here
+  const toggleWord = (word: ExtractedWord) => {
+    setAdded((prev) => {
+      const next = new Set(prev);
+      if (next.has(word.word)) next.delete(word.word);
+      else next.add(word.word);
+      return next;
+    });
+  };
+
+  const handleSaveToFlashcards = async () => {
+    const toSave = added.size > 0 ? words.filter((w) => added.has(w.word)) : words;
+    if (toSave.length === 0) return;
+    setSaving(true);
+    const setId = await saveWordsToSet(toSave, level);
+    setSaving(false);
+    if (setId) setSavedSetId(setId);
   };
 
   const addAll = () => {
-    words.forEach(addToFlashcards);
+    setAdded(new Set(words.map((w) => w.word)));
   };
 
   return (
@@ -118,23 +157,48 @@ export default function MiningPage() {
       {words.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <p className="font-semibold">Found {words.length} words</p>
-            <button
-              onClick={addAll}
-              disabled={words.every((w) => added.has(w.word))}
-              className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--primary)] px-3 py-1.5 text-sm text-[var(--primary)] hover:bg-[var(--primary-soft)] disabled:opacity-40 transition-colors"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Add all to flashcards
-            </button>
+            <p className="font-semibold">
+              Found {words.length} words
+              {added.size > 0 && <span className="ml-2 text-[var(--primary)]">· {added.size} selected</span>}
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {words.some((w) => !added.has(w.word)) && (
+                <button
+                  onClick={addAll}
+                  className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-soft)] transition-colors"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Select all
+                </button>
+              )}
+              <button
+                onClick={handleSaveToFlashcards}
+                disabled={saving || savedSetId !== null}
+                className="flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--primary)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {savedSetId ? "Saved!" : `Save ${added.size > 0 ? added.size : words.length} to flashcards`}
+              </button>
+            </div>
           </div>
+
+          {savedSetId && (
+            <a
+              href={`/sets/${savedSetId}`}
+              className="flex items-center gap-2 rounded-[var(--radius-md)] bg-green-50 border border-green-300 px-4 py-2.5 text-sm text-green-700 hover:bg-green-100 transition-colors"
+            >
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Flashcard set created — click to study
+              <ExternalLink className="h-3.5 w-3.5 ml-auto" />
+            </a>
+          )}
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {words.map((w) => {
               const isAdded = added.has(w.word);
               const topicCls = TOPIC_COLORS[w.topic?.toLowerCase()] ?? TOPIC_COLORS.general;
               return (
-                <div key={w.word} className={`rounded-[var(--radius-lg)] border p-4 space-y-2 transition-colors ${isAdded ? "border-green-400 bg-green-50" : "border-[var(--border)] bg-[var(--bg-surface)]"}`}>
+                <div key={w.word} className={`rounded-[var(--radius-lg)] border p-4 space-y-2 transition-colors ${isAdded ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--border)] bg-[var(--bg-surface)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-bold text-[var(--primary)]">{w.word}</p>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${topicCls}`}>{w.topic}</span>
@@ -142,7 +206,7 @@ export default function MiningPage() {
                   <p className="text-xs text-[var(--text-secondary)]">{w.definition}</p>
                   <p className="text-xs italic text-[var(--text-secondary)]">&ldquo;{w.example}&rdquo;</p>
                   <button
-                    onClick={() => addToFlashcards(w)}
+                    onClick={() => toggleWord(w)}
                     disabled={isAdded}
                     className={`flex w-full items-center justify-center gap-1 rounded-[var(--radius-md)] py-1.5 text-xs font-medium transition-colors ${
                       isAdded
@@ -150,7 +214,7 @@ export default function MiningPage() {
                         : "border border-[var(--border)] hover:bg-[var(--bg-soft)]"
                     }`}
                   >
-                    {isAdded ? <><CheckCircle2 className="h-3 w-3" /> Added</> : <><PlusCircle className="h-3 w-3" /> Add to flashcards</>}
+                    {isAdded ? <><CheckCircle2 className="h-3 w-3" /> Selected</> : <><PlusCircle className="h-3 w-3" /> Select</>}
                   </button>
                 </div>
               );

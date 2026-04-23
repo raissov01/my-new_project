@@ -62,6 +62,8 @@ func buildExpandedIELTSQuestionSeed() []models.IELTSQuestion {
 		questions = append(questions, buildQuestionsFromBlueprint(blueprint)...)
 	}
 
+	questions = append(questions, buildCambridgeExtendedReadingBank()...)
+
 	return questions
 }
 

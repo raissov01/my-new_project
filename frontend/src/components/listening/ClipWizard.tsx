@@ -74,7 +74,7 @@ export function ClipWizard({ clip, questions }: Props) {
       recordListeningProgress(clip.id, finalScore, true),
       recordDailyActivity(xpForClip, 0),
     ]);
-  }, [quizAnswers, blankAnswers, blanks, comprQuestions, clip.id]);
+  }, [quizAnswers, blankAnswers, blanks, comprQuestions, clip.id, xpForClip]);
 
   const next = () => {
     if (stage < 5) setStage((s) => (s + 1) as Stage);
