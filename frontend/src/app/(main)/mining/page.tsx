@@ -28,19 +28,18 @@ async function extractWords(text: string, level: string): Promise<ExtractedWord[
 }
 
 const TOPIC_COLORS: Record<string, string> = {
-  business: "bg-amber-50 text-amber-700",
-  technology: "bg-blue-50 text-blue-700",
-  environment: "bg-green-50 text-green-700",
-  health: "bg-red-50 text-red-700",
-  communication: "bg-purple-50 text-purple-700",
-  general: "bg-gray-50 text-gray-600",
+  business: "bg-amber-500/10 text-amber-500",
+  technology: "bg-blue-500/10 text-blue-400",
+  environment: "bg-green-500/10 text-green-500",
+  health: "bg-red-500/10 text-red-400",
+  communication: "bg-purple-500/10 text-purple-400",
+  general: "bg-[var(--bg-soft)] text-[var(--text-secondary)]",
 };
 
 async function saveWordsToSet(selectedWords: ExtractedWord[], level: string): Promise<string | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
   const today = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   try {
-    const res = await fetch(`${apiUrl}/sets`, {
+    const res = await fetch("/api/sets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
