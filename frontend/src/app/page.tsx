@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/layout";
 import { Button } from "@/components/ui/button";
+import { HeroFloatingPanels } from "@/components/hero-floating-panels";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getAppHomePath, getCurrentUser } from "@/server/auth";
@@ -276,56 +277,9 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* Hero Right — Liquid Glass Bento Panel */}
-            <div className="space-y-4">
-              <div className="bento-card-glass overflow-hidden">
-                <div className="border-b border-[var(--border)] px-5 py-4 sm:px-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--primary)]">
-                        {t("landing.platformMap")}
-                      </p>
-                      <h2
-                        className="mt-1.5 font-bold tracking-[-0.03em] text-[var(--text-primary)]"
-                        style={{ fontSize: "clamp(1.125rem, 2vw, 1.375rem)" }}
-                      >
-                        {t("landing.platformMapTitle")}
-                      </h2>
-                    </div>
-                    <span className="badge-primary shrink-0 text-[11px]">
-                      {t("landing.ecosystemMode")}
-                    </span>
-                  </div>
-                </div>
-                <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5">
-                  <SnapshotCard
-                    eyebrow={t("landing.studyEngine")}
-                    title={t("landing.studyEngineTitle")}
-                    points={[t("landing.studyEngineP1"), t("landing.studyEngineP2"), t("landing.studyEngineP3")]}
-                  />
-                  <SnapshotCard
-                    eyebrow={t("landing.teachingLayer")}
-                    title={t("landing.teachingLayerTitle")}
-                    points={[t("landing.teachingLayerP1"), t("landing.teachingLayerP2"), t("landing.teachingLayerP3")]}
-                  />
-                  <SnapshotCard
-                    eyebrow={t("landing.contentLayer")}
-                    title={t("landing.contentLayerTitle")}
-                    points={[t("landing.contentLayerP1"), t("landing.contentLayerP2"), t("landing.contentLayerP3")]}
-                  />
-                  <SnapshotCard
-                    eyebrow={t("landing.aiLayer")}
-                    title={t("landing.aiLayerTitle")}
-                    points={[t("landing.aiLayerP1"), t("landing.aiLayerP2"), t("landing.aiLayerP3")]}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <CompactSignal label={t("landing.compactClasses")} value={t("landing.compactClassesVal")} />
-                <CompactSignal label={t("landing.compactLibrary")} value={t("landing.compactLibraryVal")} />
-                <CompactSignal label={t("landing.compactAI")} value={t("landing.compactAIVal")} />
-              </div>
+            {/* Hero Right — 3D Floating Panels */}
+            <div className="relative">
+              <HeroFloatingPanels />
             </div>
           </div>
         </section>

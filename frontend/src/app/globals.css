@@ -731,6 +731,299 @@ a, button, input, textarea, select {
   .active\:scale-\[0\.98\]:active { transform: scale(0.98); }
 }
 
+/* ── Hero 3D Floating Panels ─────────────────────────────────────────────── */
+
+.hero-scene {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  perspective: 1100px;
+  perspective-origin: 50% 40%;
+  overflow: visible;
+}
+@media (min-width: 1024px) {
+  .hero-scene { height: 540px; }
+}
+
+/* Ambient glow blobs */
+.hero-scene-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero-scene-glow-purple {
+  top: 10%;
+  left: 5%;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%);
+}
+.hero-scene-glow-teal {
+  bottom: 15%;
+  right: 10%;
+  width: 170px;
+  height: 170px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.14) 0%, transparent 70%);
+}
+
+/* Float keyframes */
+@keyframes hero-float-1 {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-18px); }
+}
+@keyframes hero-float-2 {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-22px); }
+}
+@keyframes hero-float-3 {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+
+/* Panel wrapper: holds the float animation */
+.hero-fp-wrapper { position: absolute; }
+.hero-fp-w1 {
+  top: 4%;
+  left: 0%;
+  animation: hero-float-1 6s ease-in-out infinite;
+}
+.hero-fp-w2 {
+  top: 28%;
+  right: 0%;
+  animation: hero-float-2 8s ease-in-out infinite;
+  animation-delay: -2.5s;
+}
+.hero-fp-w3 {
+  bottom: 2%;
+  left: 14%;
+  animation: hero-float-3 7s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+/* Base panel: 3D rotation + parallax via CSS custom props */
+.hero-panel {
+  background: rgba(10, 10, 24, 0.94);
+  border-radius: 14px;
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    0 8px 16px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform-style: preserve-3d;
+  transform:
+    rotateX(var(--rx, 0deg))
+    rotateY(var(--ry, 0deg))
+    translateX(calc(var(--px, 0) * 1px))
+    translateY(calc(var(--py, 0) * 1px));
+  transition: transform 0.12s ease-out;
+  will-change: transform;
+  color: rgba(255, 255, 255, 0.9);
+  user-select: none;
+}
+
+/* Panel variants */
+.hero-panel-flashcard {
+  width: 216px;
+  height: 158px;
+  --rx: 7deg;
+  --ry: -10deg;
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(139, 92, 246, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  overflow: hidden;
+}
+.hero-panel-flashcard:hover {
+  box-shadow:
+    0 28px 56px rgba(0, 0, 0, 0.60),
+    0 0 50px rgba(139, 92, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.hero-panel-feedback {
+  width: 252px;
+  height: 172px;
+  --rx: -5deg;
+  --ry: 8deg;
+  border: 1px solid rgba(20, 184, 166, 0.28);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(20, 184, 166, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 18px 20px;
+}
+
+.hero-panel-results {
+  width: 230px;
+  height: 194px;
+  --rx: 4deg;
+  --ry: 3deg;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(99, 102, 241, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 18px 20px;
+}
+
+/* Shared panel chrome */
+.hero-panel-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  margin-bottom: 10px;
+}
+.hero-panel-hint {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.22);
+  margin-top: auto;
+}
+.hero-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.hero-dot-purple { background: #8b5cf6; box-shadow: 0 0 6px #8b5cf6; }
+.hero-dot-teal   { background: #14b8a6; box-shadow: 0 0 6px #14b8a6; }
+
+/* Flashcard internals */
+.hero-fc-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hero-fc-face {
+  position: absolute;
+  inset: 0;
+  padding: 18px 20px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.hero-fc-back { transform: rotateY(180deg); }
+.hero-fc-word {
+  font-size: 21px;
+  font-weight: 700;
+  color: #e2d9f3;
+  letter-spacing: -0.025em;
+  margin-bottom: 4px;
+}
+.hero-fc-phonetic {
+  font-size: 11px;
+  color: rgba(139, 92, 246, 0.75);
+  font-family: var(--font-mono, monospace);
+  margin-bottom: auto;
+}
+.hero-fc-def {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.5;
+  flex: 1;
+  margin-bottom: 8px;
+}
+.hero-fc-example {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.32);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* AI Feedback panel internals */
+.hero-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hero-score-badge {
+  background: rgba(20, 184, 166, 0.12);
+  border: 1px solid rgba(20, 184, 166, 0.3);
+  color: #14b8a6;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 7px;
+  padding: 2px 9px;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+.hero-feedback-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.62);
+  margin-bottom: 10px;
+}
+.hero-feedback-items { display: flex; flex-direction: column; gap: 5px; }
+.hero-feedback-item {
+  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero-feedback-good { color: rgba(16, 185, 129, 0.92); }
+.hero-feedback-tip  { color: rgba(251, 191, 36, 0.82); }
+
+/* Mock Test Results internals */
+.hero-band-score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.hero-band-num {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-band-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.32);
+  font-weight: 500;
+}
+.hero-skills { display: flex; flex-direction: column; gap: 7px; }
+.hero-skill-row { display: flex; align-items: center; gap: 8px; }
+.hero-skill-name {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.42);
+  width: 58px;
+  flex-shrink: 0;
+}
+.hero-skill-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.hero-skill-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #14b8a6);
+  border-radius: 2px;
+}
+.hero-skill-score {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.48);
+  font-weight: 600;
+  width: 24px;
+  text-align: right;
+}
+
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
