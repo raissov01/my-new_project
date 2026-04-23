@@ -177,7 +177,18 @@ export function AvatarMenu() {
 
       {/* Desktop dropdown */}
       {open && (
-        <div className="animate-fade-in-up absolute right-0 top-[calc(100%+0.75rem)] z-50 hidden w-[min(22rem,calc(100vw-2rem))] rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-[var(--shadow-lg)] lg:block">
+        <div
+          className="animate-fade-in-up absolute right-0 top-[calc(100%+0.75rem)] z-50 hidden w-[min(22rem,calc(100vw-2rem))] rounded-[var(--radius-xl)] border p-3 shadow-[0_8px_32px_rgba(85,51,255,0.15)] lg:block"
+          style={{
+            background: "#0f0f1e",
+            borderColor: "#2a1a5e",
+            ["--bg-elevated" as string]: "#0f0f1e",
+            ["--bg-soft" as string]: "rgba(255,255,255,0.05)",
+            ["--border" as string]: "rgba(255,255,255,0.08)",
+            ["--text-primary" as string]: "#ffffff",
+            ["--text-secondary" as string]: "rgba(255,255,255,0.5)",
+          }}
+        >
           {menuContent}
         </div>
       )}
@@ -186,14 +197,24 @@ export function AvatarMenu() {
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/30 animate-fade-in"
+            className="absolute inset-0 bg-black/50 animate-fade-in"
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
           <div className="absolute inset-x-0 bottom-0 animate-slide-up-sheet">
-            <div className="max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-[var(--radius-xl)] border-t border-[var(--border)] bg-[var(--bg-elevated)] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[var(--shadow-lg)]">
-              {/* Drag handle */}
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--border)]" />
+            <div
+              className="max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-[var(--radius-xl)] border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+              style={{
+                background: "#0f0f1e",
+                borderColor: "#2a1a5e",
+                ["--bg-elevated" as string]: "#0f0f1e",
+                ["--bg-soft" as string]: "rgba(255,255,255,0.05)",
+                ["--border" as string]: "rgba(255,255,255,0.08)",
+                ["--text-primary" as string]: "#ffffff",
+                ["--text-secondary" as string]: "rgba(255,255,255,0.5)",
+              }}
+            >
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/10" />
               {menuContent}
             </div>
           </div>
