@@ -185,6 +185,9 @@ func buildIELTSQuestionSeed() []models.IELTSQuestion {
 	// Full-length listening sections (3 tests × 4 sections × 10 questions = 120)
 	questions = append(questions, buildListeningTestBank()...)
 
+	// Cambridge IELTS 12-20 extended reading bank (OCR-extracted, 72 passages)
+	questions = append(questions, buildCambridgeExtendedReadingBank()...)
+
 	// Legacy question seed (writing, speaking, short reading/listening)
 	questions = append(questions, buildLegacyQuestionSeed()...)
 	return questions
