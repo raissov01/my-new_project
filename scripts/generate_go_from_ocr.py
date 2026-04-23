@@ -189,8 +189,8 @@ def generate_func(book: int, test: int, passages: list[dict]) -> str:
         for i, q in enumerate(qs):
             qt     = q.get('_qt', qtype)
             prompt = q['prompt'].replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ').strip()
-            # Try absolute Q number from OCR, then fall back to sequential offset
-            abs_qnum = q.get('number', pnum_offset + i + 1)
+            # Use position-based absolute Q number (always correct regardless of OCR noise)
+            abs_qnum = pnum_offset + i + 1
             ans = answer_keys.get(str(abs_qnum), q.get('answer', 'TODO'))
             if not ans or ans == '':
                 ans = 'TODO'
