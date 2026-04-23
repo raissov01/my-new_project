@@ -13,14 +13,16 @@ export function normalizeExercise(ex: Exercise, index: number): LessonItem {
         id: `${id}-opt-${i}`,
         text,
       }));
-      const correctIdx = opts.findIndex((o) => o.text === ex.data.correctWord);
+      const correctIdx = opts.findIndex(
+        (o) => o.text.trim().toLowerCase() === (ex.data.correctWord ?? "").trim().toLowerCase(),
+      );
       return {
         type: "fill_blank",
         id,
         level,
         prompt: ex.prompt,
         options: opts,
-        correctOptionId: opts[Math.max(0, correctIdx)]?.id ?? "",
+        correctOptionId: correctIdx >= 0 ? (opts[correctIdx]?.id ?? "") : (opts[0]?.id ?? ""),
       };
     }
 
@@ -73,10 +75,8 @@ export function normalizeExercise(ex: Exercise, index: number): LessonItem {
       const sentence = ex.data.sentence ?? "";
       const errorWord = ex.data.errorWord ?? "";
       const tokens = sentence.split(/\s+/);
-      const errorTokenIndex = Math.max(
-        0,
-        tokens.findIndex((t) => t.includes(errorWord)),
-      );
+      const foundIdx = tokens.findIndex((t) => t.toLowerCase().includes(errorWord.toLowerCase()));
+      const errorTokenIndex = foundIdx >= 0 ? foundIdx : 0;
       return {
         type: "error_spot",
         id,
