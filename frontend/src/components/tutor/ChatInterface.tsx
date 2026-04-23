@@ -19,6 +19,7 @@ export function ChatInterface({ scenario }: Props) {
   const [grading, setGrading] = useState(false);
   const [scores, setScores] = useState<GradeScores | null>(null);
   const [started, setStarted] = useState(false);
+  const [gradeError, setGradeError] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,15 +48,22 @@ export function ChatInterface({ scenario }: Props) {
 
     startTransition(async () => {
       const reply = await sendMessage(convId, text);
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      if (reply) {
+        setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      }
     });
   };
 
   const handleGrade = async () => {
     if (!convId) return;
     setGrading(true);
+    setGradeError(false);
     const result = await gradeConversation(convId);
-    setScores(result);
+    if (result) {
+      setScores(result);
+    } else {
+      setGradeError(true);
+    }
     setGrading(false);
   };
 
@@ -104,14 +112,19 @@ export function ChatInterface({ scenario }: Props) {
           <p className="text-xs text-[var(--text-secondary)]">{userMsgCount} / 15 exchanges</p>
         </div>
         {userMsgCount >= 3 && (
-          <button
-            onClick={handleGrade}
-            disabled={grading}
-            className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] hover:bg-[var(--primary-soft)] disabled:opacity-50 transition-colors"
-          >
-            {grading ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
-            Finish & grade
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            <button
+              onClick={handleGrade}
+              disabled={grading}
+              className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] hover:bg-[var(--primary-soft)] disabled:opacity-50 transition-colors"
+            >
+              {grading ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+              Finish & grade
+            </button>
+            {gradeError && (
+              <p className="text-xs text-red-500">Grading failed. Please try again.</p>
+            )}
+          </div>
         )}
       </div>
 

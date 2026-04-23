@@ -131,7 +131,9 @@ func (s *AITutorService) SendMessage(ctx context.Context, convID, userID, userTe
 		conv.CompletedAt = &now
 	}
 
-	s.db.Save(&conv)
+	if err := s.db.Save(&conv).Error; err != nil {
+		return "", fmt.Errorf("failed to save conversation: %w", err)
+	}
 	return reply, nil
 }
 
@@ -143,7 +145,9 @@ func (s *AITutorService) GradeConversation(ctx context.Context, convID, userID s
 	}
 
 	var sc models.AIScenario
-	s.db.First(&sc, "id = ?", conv.ScenarioID)
+	if err := s.db.First(&sc, "id = ?", conv.ScenarioID).Error; err != nil {
+		return nil, fmt.Errorf("scenario not found")
+	}
 
 	var msgs []ChatMessage
 	if conv.Messages != nil {
@@ -202,7 +206,9 @@ Student messages:
 	conv.Status = "completed"
 	now := time.Now()
 	conv.CompletedAt = &now
-	s.db.Save(&conv)
+	if err := s.db.Save(&conv).Error; err != nil {
+		return nil, fmt.Errorf("failed to save scores: %w", err)
+	}
 
 	return scores, nil
 }
