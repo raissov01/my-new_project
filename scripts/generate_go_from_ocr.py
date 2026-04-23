@@ -183,13 +183,18 @@ def generate_func(book: int, test: int, passages: list[dict]) -> str:
         lines.append(f'\t\t`{body}`,')
         lines.append(f'\t\tbt, sortBase, []cq{{')
 
-        for q in qs:
+        answer_keys = p.get('answer_keys', {})  # {str(abs_q_num): answer}
+        pnum_offset = {1: 0, 2: 13, 3: 26}.get(pnum, 0)
+
+        for i, q in enumerate(qs):
             qt     = q.get('_qt', qtype)
             prompt = q['prompt'].replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ').strip()
-            ans    = q.get('answer', 'TODO')
+            # Try absolute Q number from OCR, then fall back to sequential offset
+            abs_qnum = q.get('number', pnum_offset + i + 1)
+            ans = answer_keys.get(str(abs_qnum), q.get('answer', 'TODO'))
             if not ans or ans == '':
                 ans = 'TODO'
-            ans    = ans.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ').strip()
+            ans = ans.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ').strip()
             opts   = q.get('options', [])
             if opts:
                 opts_go = ', '.join(f'"{o.replace(chr(92), chr(92)*2).replace(chr(34), chr(92)+chr(34))}"' for o in opts[:4])
