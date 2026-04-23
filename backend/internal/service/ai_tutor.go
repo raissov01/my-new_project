@@ -235,9 +235,13 @@ func (s *AITutorService) ListHistory(userID string) ([]map[string]any, error) {
 			&slug, &title, &level, &cat, &icon); err2 != nil {
 			continue
 		}
+		var scoresObj map[string]any
+		if finalScores != nil {
+			_ = json.Unmarshal([]byte(*finalScores), &scoresObj)
+		}
 		results = append(results, map[string]any{
 			"id": id, "status": status, "startedAt": startedAt, "completedAt": completedAt,
-			"finalScores": finalScores,
+			"finalScores": scoresObj,
 			"scenario": map[string]any{
 				"slug": slug, "title": title, "level": level, "category": cat, "icon": icon,
 			},
@@ -317,7 +321,8 @@ func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []C
 	timeoutCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 	req, _ := http.NewRequestWithContext(timeoutCtx, "POST", s.claudeURL, bytes.NewReader(body))
-	req.Header.Set("Authorization", "Bearer "+s.claudeKey)
+	req.Header.Set("x-api-key", s.claudeKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -326,12 +331,13 @@ func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []C
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(resp.Body)
 	var result struct {
-		Choices []struct {
-			Message struct{ Content string } `json:"message"`
-		} `json:"choices"`
+		Content []struct {
+			Type string `json:"type"`
+			Text string `json:"text"`
+		} `json:"content"`
 	}
-	if err2 := json.Unmarshal(raw, &result); err2 != nil || len(result.Choices) == 0 {
-		return "", fmt.Errorf("claude: unexpected response")
+	if err2 := json.Unmarshal(raw, &result); err2 != nil || len(result.Content) == 0 {
+		return "", fmt.Errorf("claude: unexpected response: %s", string(raw))
 	}
-	return result.Choices[0].Message.Content, nil
+	return result.Content[0].Text, nil
 }
