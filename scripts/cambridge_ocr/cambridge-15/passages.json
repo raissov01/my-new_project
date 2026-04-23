@@ -20,6 +20,9 @@
           "6": "NOT GIVEN",
           "7": "TRUE",
           "8": "Arabs",
+          "9": "plague",
+          "10": "lime",
+          "11": "Run",
           "12": "Mauritius",
           "13": "tsunami"
         }
@@ -36,13 +39,14 @@
           "16": "E",
           "17": "G",
           "18": "D",
-          "19": "human",
-          "20": "car",
+          "19": "human error",
+          "20": "car-sharing",
           "21": "ownership",
           "22": "mileage",
           "23": "C",
           "24": "D",
-          "26": "A"
+          "25": "A",
+          "26": "E"
         }
       },
       {
@@ -55,12 +59,17 @@
           "27": "A",
           "28": "C",
           "29": "C",
+          "30": "D",
+          "31": "A",
           "32": "B",
+          "33": "E",
           "34": "A",
           "35": "D",
           "36": "E",
           "37": "B",
-          "39": "uncontacted"
+          "38": "expeditions",
+          "39": "uncontacted",
+          "40": "surface"
         }
       }
     ]
@@ -78,6 +87,9 @@
         "word_count": 935,
         "questions_raw": "Questions 1-6\nReading Passage 1 has seven paragraphs, A-G.\nWhich paragraph contains the following information?\nWrite the correct letter, A-G, in boxes 1-6 on your answer sheet.\n1 reference to an appealing way of using dance that the writer is not proposing\n2 an example of a contrast between past and present approaches to building\n3 mention of an objective of both dance and engineering\n4 reference to an unforeseen problem arising from ignoring the climate\n5 why some measures intended to help people are being reversed\n6 reference to how transport has an impact on human lives |\nQuestions 7-13\nComplete the summary below.\nChoose ONE WORD ONLY from the passage for each answer. |\nWrite your answers in boxes 7-13 on your answer sheet.\nGuard rails\nGuard rails were introduced on British roads to improve the 7 wscsccscsssssssssatanesennnen |\nof pedestrians, while ensuring that the MOVEMENt Of 8B ....mmmmemennnnnnennmmneennnes 1S\nnot disrupted. Pedestrians are led to access points, and encouraged to cross one\nD scssnscmrcpsnainnumemynemnmnite tie,\nAn unintended effect is to create psychological difficulties in crossing the road,\nParticularly for leSS 10 o.esomsnnunemannunene people. Another result is that some |\npeople cross the r0ad iN a 114 ....cnmnnnnnnnnnnnnane Way. The guard rails separate i\nV2 oococcrennnnnnnnunnninnee, aNd make it more difficult to introduce forms of transport\nthat AF 13 oo cenmmnentnennet # |\n|\n|\n>/0 p. 122 39\n\nTest 2",
         "answer_keys": {
+          "1": "B",
+          "2": "C",
+          "3": "F",
           "4": "D",
           "5": "E",
           "6": "A",
@@ -101,9 +113,11 @@
           "15": "A",
           "16": "D",
           "17": "A",
-          "18": "genetic",
-          "19": "heat",
+          "18": "genetic traits",
+          "19": "heat loss",
           "20": "ears",
+          "21": "fat",
+          "22": "emissions",
           "23": "B",
           "24": "C",
           "25": "A",
@@ -121,7 +135,9 @@
           "28": "A",
           "29": "B",
           "30": "B",
+          "31": "D",
           "32": "F",
+          "33": "H",
           "34": "C",
           "35": "D",
           "36": "E",
@@ -150,9 +166,12 @@
           "2": "FALSE",
           "3": "NOT GIVEN",
           "4": "TRUE",
-          "5": "resignation",
+          "5": "NOT GIVEN",
           "6": "FALSE",
           "7": "TRUE",
+          "8": "resignation",
+          "9": "materials",
+          "10": "miners",
           "11": "family",
           "12": "collectors",
           "13": "income"
@@ -176,7 +195,8 @@
           "22": "film",
           "23": "filter",
           "24": "waste",
-          "25": "performance"
+          "25": "performance",
+          "26": "servicing"
         }
       },
       {
@@ -190,7 +210,10 @@
           "28": "B",
           "29": "F",
           "30": "A",
+          "31": "E",
+          "32": "D",
           "33": "F",
+          "34": "B",
           "35": "C",
           "36": "G",
           "37": "B",
@@ -219,6 +242,9 @@
           "3": "drought",
           "4": "erosion",
           "5": "desert",
+          "6": "branches",
+          "7": "leaves and bark",
+          "8": "trunk",
           "9": "NOT GIVEN",
           "10": "FALSE",
           "11": "TRUE",
@@ -256,8 +282,13 @@
         "questions_raw": "Questions 27-31\nComplete the summary using the list of words, A—J, below.\nWrite the correct letter, A-J, in boxes 27-31 on your answer sheet.\nBig businesses\n\nMany big businesses today are prepared to harm people and the environment in\norder to make money, and they appear to HAVE NO 27 ose « LACK OF\n2B oorrcrecsctsetnetneinnentnenne DY governments and lack Of PUbMIC 29 ose CAN\nlead to environmental problems SUCH AS 30 ......ennnnnnnn OF the destruction of\n\nA funding B_ trees C rare species\n\nD moralstandards E_ control F involvement\n\nG _ flooding H_— overfishing I worker support\n90\n\nReading\nQuestions 32-34\nChoose the correct letter, A, B, C or D.\nWrite the correct letter in boxes 32-34 on your answer sheet. 4\n32 The main idea of the third paragraph is that environmental damage |\nA _ requires political action if it is to be stopped.\nB _ is the result of ignorance on the part of the public.\nC could be prevented by the action of ordinary people.\nD_ can only be stopped by educating business leaders. |\n33 In the fourth paragraph, the writer describes ways in which the public can\nA reduce their own individual impact on the environment.\nB learn more about the impact of business on the environment.\nC raise awareness of the effects of specific environmental disasters. |\nD _ influence the environmental policies of businesses and governments.\n34 What pressure was exerted by big business in the case of the disease BSE?\nA Meat packers stopped supplying hamburgers to fast-food chains. |\nBA fast-food company forced their meat suppliers to follow the law. |\nC Meat packers persuaded the government to reduce their expenses. |\nD_ A fast-food company encouraged the government to introduce legislation.\n|\n91",
         "answer_keys": {
           "27": "D",
+          "28": "E",
           "29": "F",
+          "30": "H",
+          "31": "B",
           "32": "C",
+          "33": "D",
+          "34": "B",
           "35": "YES",
           "36": "NOT GIVEN",
           "37": "NO",

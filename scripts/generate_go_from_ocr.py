@@ -167,9 +167,10 @@ def generate_func(book: int, test: int, passages: list[dict]) -> str:
         body   = escape_go(p.get('body', '').replace('\n', ' '))
 
         # Parse questions from OCR, fall back to template if too few
-        q_text = p.get('questions_raw', '')
-        qtype  = detect_qtype(q_text)
-        qs     = parse_questions(q_text)
+        q_text  = p.get('questions_raw', '')
+        qtype   = detect_qtype(q_text)
+        qs      = parse_questions(q_text)
+        max_qs  = {1: 13, 2: 13, 3: 14}.get(pnum, 14)
 
         if len(qs) < 5:
             # Use fallback template questions
@@ -177,6 +178,9 @@ def generate_func(book: int, test: int, passages: list[dict]) -> str:
             qs = [{'number': i+1, 'prompt': fb[1], 'answer': fb[2], 'options': [], '_qt': fb[0]}
                   for i, fb in enumerate(fallback)]
             qtype = 'mixed'
+        elif len(qs) > max_qs:
+            # Truncate OCR garbage beyond expected question count
+            qs = qs[:max_qs]
 
         lines.append(f'\t// ── Passage {pnum}: {title[:60]} ({diff}) ──')
         lines.append(f'\tall = append(all, expandReading(examSet, "{title}", "General", "{diff}", {pnum},')

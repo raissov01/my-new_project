@@ -20,6 +20,9 @@
           "6": "FALSE",
           "7": "TRUE",
           "8": "violent",
+          "9": "tool",
+          "10": "meat",
+          "11": "photographer",
           "12": "game",
           "13": "frustration"
         }
@@ -56,11 +59,16 @@
           "27": "B",
           "28": "D",
           "29": "C",
+          "30": "D",
+          "31": "G",
           "32": "E",
+          "33": "C",
           "34": "F",
           "35": "B",
           "36": "A",
+          "37": "C",
           "38": "A",
+          "39": "B",
           "40": "C"
         }
       }
@@ -79,6 +87,7 @@
         "word_count": 955,
         "questions_raw": "Questions 1-8\nDo the following statements agree with the information given in Reading Passage 1?\nIn boxes 1-8 on your answer sheet, write\nTRUE if the statement agrees with the information\nFALSE if the statement contradicts the information\nNOT GIVEN if there is no information on this\n1 Most geoglyphs in England are located in a particular area of the country.\n2 There are more geoglyphs in the shape of a horse than any other creature.\n3. Arecent dating of the Uffington White Horse indicates that people were mistaken\nabout its age.\n4 Historians have come to an agreement about the origins of the Long Man of\nWilmington.\n5 Geoglyphs were created by people placing white chalk on the hillside.\n6 Many geoglyphs in England are no longer visible.\n7 The shape of some geoglyphs has been altered over time.\n8 The fame of the Uffington White Horse is due to its size.\n40\n\nReading\nQuestions 9-13\nComplete the notes below.\nChoose ONE WORD ONLY from the passage for each answer.\nWrite your answers in boxes 9-13 on your answer sheet.\nThe Uffington White Horse\nThe location of the Uffington White Horse:\ne —adistance of 2.5 km from Uffington village\ne ~~ near an ancient road KNOWN AS the 9 oe esesssssssstnenetstnee\ne close to an ancient cemetery that has a number of burial mounds\nDating the Uffington White Horse:\ne first reference to White Horse Hill appears iN 10 oo. cccssmenenenenene OM\nthe 1070s\ne horses shown on coins from the period 100 BCE — 1 BCE are similar in\nappearance\ne according to analysis of the SUTTOUNCING 11 .......wurmnnne » the Horse is\nLate Bronze Age / Early Iron Age\nPossible reasons for creation of the Uffington White Horse:\ne —anemblem to indicate land ownership\ne formed part of an ancient ritual\ne was a representation of goddess Epona — associated with protection of horses\nAN V2 sccsccescmccesscassessesmenssaaty\ne —_was arepresentation of a Welsh goddess Called 13 ssc\n(na) 41\n\nTest 2",
         "answer_keys": {
+          "1": "TRUE",
           "2": "NOT GIVEN",
           "3": "TRUE",
           "4": "FALSE",
@@ -122,6 +131,7 @@
         "word_count": 760,
         "questions_raw": "Questions 27-30\nChoose the correct letter, A, B, C or D.\nWrite the correct letter in boxes 27-30 on your answer sheet.\n27 What point does the writer make in the first paragraph?\nA Wisdom appears to be unique to the human race.\nB_ Abasic assumption about wisdom may be wrong.\nC Concepts of wisdom may depend on the society we belong to.\nD There is still much to be discovered about the nature of wisdom.\n28 What does Igor Grossmann suggest about the ability to make wise decisions?\nA __Itcan vary greatly from one person to another.\nB Earlier research into it was based on unreliable data.\nC_ The importance of certain influences on it was underestimated.\nD_ Various branches of psychology define it according to their own criteria.\n29 According to the third paragraph, Grossmann claims that the level of wisdom an\nindividual shows\nA can be greater than they think it is.\nB will be different in different circumstances.\nC_ may be determined by particular aspects of their personality.\nD__ should develop over time as a result of their life experiences.\n30 What is described in the fifth paragraph?\nA __ adifficulty encountered when attempting to reason wisely\nB_anexample of the type of person who is likely to reason wisely\nC acontroversial view about the benefits of reasoning wisely\nD  arecommended strategy that can help people to reason wisely\n49\n\nTest 2\nQuestions 31-35\nComplete the summary using the list of words, A-J, below.\nWrite the correct letter, A—J, in boxes 31-35 on your answer sheet.\nThe characteristics of wise reasoning\n\nIgor Grossmann and colleagues have established four characteristics which enable us\nto make wise decisions. It is important to have a Certain degree OF 34 o...ncsemsmnnenenenenene\nregarding the extent of our knowledge, and to take into ACCOUNE 32 ....nmnnnrennnnnnennes\nwhich may not be the same as our own. We should also be able to take a broad\n33 vocsninsnisnnunnen OF any Situation. Another key characteristic is being aware of the\nlikelihood of alterations in the way that people relate to each other.\nGrossmann also believes that it is better to regard scenarios With 34. oscnuenennennenne +\nBy avoiding the first-person perspective, we foCUS MOTE ON 35 ....unnnnnnmmmnnnnnnnee AN ON\nother moral ideals, which in turn leads to wiser decision-making.\n\nA __ opinions B_ confidence Cc view\n\nD_ modesty E problems F objectivity\n\nG fairness H experiences | range\n\nJ reasons\n50",
         "answer_keys": {
+          "27": "B",
           "28": "C",
           "29": "B",
           "30": "D",
@@ -186,7 +196,7 @@
           "23": "B",
           "24": "C",
           "25": "A",
-          "26": "ee"
+          "26": "C"
         }
       },
       {
@@ -199,14 +209,17 @@
           "27": "NOT GIVEN",
           "28": "TRUE",
           "29": "TRUE",
+          "30": "NOT GIVEN",
+          "31": "FALSE",
           "32": "FALSE",
+          "33": "H",
           "34": "D",
           "35": "G",
           "36": "C",
           "37": "A",
           "38": "warm",
           "39": "summer",
-          "40": "mustard"
+          "40": "mustard plant"
         }
       }
     ]
@@ -232,7 +245,11 @@
           "6": "climbing",
           "7": "FALSE",
           "8": "NOT GIVEN",
-          "11": "gold"
+          "9": "FALSE",
+          "10": "TRUE",
+          "11": "gold",
+          "12": "architect",
+          "13": "harbour"
         }
       },
       {
@@ -249,6 +266,7 @@
           "18": "D",
           "19": "H",
           "20": "F",
+          "21": "B",
           "22": "C",
           "23": "YES",
           "24": "NO",
@@ -264,10 +282,13 @@
         "questions_raw": "Questions 33-35\nChoose the correct letter, A, B, C or D.\nWrite the correct letter in boxes 33-35 on your answer sheet.\n33 What is the writer doing in Section A?\n\nA __ providing a solution to a concern\n\nB justifying an opinion about an issue\n\nC highlighting the existence of a problem\n\nD_ explaining the reasons for a phenomenon\n34 According to Section C, why might some people be reluctant to accept Al?\n\nA They are afraid it will replace humans in decision-making jobs.\n\nB Its complexity makes them feel that they are at a disadvantage.\n\nC They would rather wait for the technology to be tested over a period of time.\n\nD_ Misunderstandings about how it works make it seem more challenging\n\nthan itis.\n\n35 What does the writer say about the media in Section C of the text?\n\nA __Itleads the public to be mistrustful of Al.\n\nB It devotes an excessive amount of attention to Al.\n\nC Its reports of incidents involving Al are often inaccurate.\n\nD It gives the impression that Al failures are due to designer error.\n\n93\n\nTest 4\nQuestions 36-40\nDo the following statements agree with the claims of the writer in Reading Passage 3?\nIn boxes 36—40 on your answer sheet, write\nYES if the statement agrees with the claims of the writer\nNO if the statement contradicts the claims of the writer\nNOT GIVEN _ if itis impossible to say what the writer thinks about this\n36 Subjective depictions of Al in sci-fi films make people change their opinions about\nautomation.\n37 Portrayals of Al in media and entertainment are likely to become more positive.\n38 Rejection of the possibilities of Al may have a negative effect on many people’s\nlives.\n39 Familiarity with Al has very little impact on people’s attitudes to the technology.\n40 Al applications which users are able to modify are more likely to gain consumer\napproval.\n94 >| p. 128",
         "answer_keys": {
           "27": "iii",
-          "28": "Ovi",
+          "28": "vi",
           "29": "ii",
           "30": "i",
-          "33": "CC",
+          "31": "vii",
+          "32": "v",
+          "33": "C",
+          "34": "B",
           "35": "A",
           "36": "NO",
           "37": "NOT GIVEN",
