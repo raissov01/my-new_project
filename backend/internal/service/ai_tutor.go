@@ -322,26 +322,32 @@ func (s *AITutorService) callOpenAI(ctx context.Context, system string, msgs []C
 	return result.Choices[0].Message.Content, nil
 }
 
+// callClaude uses the DO-AI / OpenAI-compatible Chat Completions endpoint.
 func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []ChatMessage) (string, error) {
-	type msg struct {
+	type oaMsg struct {
 		Role    string `json:"role"`
 		Content string `json:"content"`
 	}
-	var claudeMsgs []msg
+	var allMsgs []oaMsg
+	if system != "" {
+		allMsgs = append(allMsgs, oaMsg{Role: "system", Content: system})
+	}
 	for _, m := range msgs {
-		claudeMsgs = append(claudeMsgs, msg{Role: m.Role, Content: m.Content})
+		allMsgs = append(allMsgs, oaMsg{Role: m.Role, Content: m.Content})
 	}
 	body, _ := json.Marshal(map[string]any{
-		"model":      s.claudeModel,
-		"system":     system,
-		"messages":   claudeMsgs,
-		"max_tokens": 400,
+		"model":       s.claudeModel,
+		"messages":    allMsgs,
+		"max_tokens":  400,
+		"temperature": 0.8,
 	})
 	timeoutCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
-	req, _ := http.NewRequestWithContext(timeoutCtx, "POST", s.claudeURL, bytes.NewReader(body))
-	req.Header.Set("x-api-key", s.claudeKey)
-	req.Header.Set("anthropic-version", "2023-06-01")
+	req, err := http.NewRequestWithContext(timeoutCtx, "POST", s.claudeURL, bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("claude: build request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+s.claudeKey)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -353,13 +359,12 @@ func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []C
 		return "", fmt.Errorf("claude: status %d: %s", resp.StatusCode, string(raw))
 	}
 	var result struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
+		Choices []struct {
+			Message struct{ Content string } `json:"message"`
+		} `json:"choices"`
 	}
-	if err2 := json.Unmarshal(raw, &result); err2 != nil || len(result.Content) == 0 {
+	if err2 := json.Unmarshal(raw, &result); err2 != nil || len(result.Choices) == 0 {
 		return "", fmt.Errorf("claude: unexpected response: %s", string(raw))
 	}
-	return result.Content[0].Text, nil
+	return result.Choices[0].Message.Content, nil
 }
