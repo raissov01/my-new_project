@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { CheckCircle2, ChevronRight, Volume2 } from "lucide-react";
-import { AudioPlayer } from "./AudioPlayer";
+import { CheckCircle2, ChevronRight } from "lucide-react";
+import { AudioPlayer, SegmentReplay } from "./AudioPlayer";
 import { TranscriptViewer } from "./TranscriptViewer";
 import type { ListeningClip, ListeningQuestion, VocabItem } from "@/features/listening/api";
 import { recordListeningProgress } from "@/features/listening/api";
@@ -67,7 +67,8 @@ export function ClipWizard({ clip, questions }: Props) {
     blanks.forEach((b, i) => {
       if ((blankAnswers[i] ?? "").trim().toLowerCase() === b.toLowerCase()) pts += 10;
     });
-    const finalScore = Math.min(100, pts);
+    const maxPossible = comprQuestions.length * 20 + blanks.length * 10;
+    const finalScore = maxPossible > 0 ? Math.min(100, Math.round((pts / maxPossible) * 100)) : 100;
     setScore(finalScore);
     setCompleted(true);
     await Promise.all([
@@ -234,15 +235,12 @@ export function ClipWizard({ clip, questions }: Props) {
               <div key={q.id} className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--border)] p-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-sm">{qi + 1}. {q.prompt}</p>
-                  {q.timestampStart !== undefined && q.timestampEnd !== undefined && (
-                    <a
-                      href={`#audio`}
-                      className="shrink-0 flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--primary)] border border-[var(--primary)] hover:bg-[var(--primary-soft)]"
-                      onClick={(e) => { e.preventDefault(); }}
-                    >
-                      <Volume2 className="h-3 w-3" />
-                      Replay
-                    </a>
+                  {q.timestampStart != null && q.timestampEnd != null && (
+                    <SegmentReplay
+                      src={clip.audioUrl}
+                      start={q.timestampStart}
+                      end={q.timestampEnd}
+                    />
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">

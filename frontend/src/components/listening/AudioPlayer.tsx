@@ -22,6 +22,7 @@ export function AudioPlayer({ src, onTimeUpdate, onEnded, maxPlays }: Props) {
   const [abStart, setAbStart] = useState<number | null>(null);
   const [abEnd, setAbEnd] = useState<number | null>(null);
   const [settingAB, setSettingAB] = useState<"start" | "end" | null>(null);
+  const [audioError, setAudioError] = useState(false);
 
   const speed = SPEEDS[speedIdx];
 
@@ -38,13 +39,16 @@ export function AudioPlayer({ src, onTimeUpdate, onEnded, maxPlays }: Props) {
     };
     const handleEnded = () => { setPlaying(false); onEnded?.(); };
     const handleLoaded = () => setDuration(el.duration);
+    const handleError = () => setAudioError(true);
     el.addEventListener("timeupdate", handleTime);
     el.addEventListener("ended", handleEnded);
     el.addEventListener("loadedmetadata", handleLoaded);
+    el.addEventListener("error", handleError);
     return () => {
       el.removeEventListener("timeupdate", handleTime);
       el.removeEventListener("ended", handleEnded);
       el.removeEventListener("loadedmetadata", handleLoaded);
+      el.removeEventListener("error", handleError);
     };
   }, [onTimeUpdate, onEnded, abStart, abEnd]);
 
@@ -98,6 +102,14 @@ export function AudioPlayer({ src, onTimeUpdate, onEnded, maxPlays }: Props) {
   }, [togglePlay, duration]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  if (audioError) {
+    return (
+      <div className="rounded-[var(--radius-lg)] border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+        Audio file could not be loaded. Please try refreshing the page.
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-4 space-y-3">

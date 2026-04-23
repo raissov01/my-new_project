@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -817,7 +817,7 @@ export function SimulatorClient() {
           if (resultSummary.writingAverage !== null) sectionBands.push(resultSummary.writingAverage);
           if (resultSummary.speakingAverage !== null) sectionBands.push(resultSummary.speakingAverage);
           const overall = sectionBands.length > 0 ? roundToHalf(sectionBands.reduce((a, b) => a + b, 0) / sectionBands.length) : null;
-          if (!overall) return null;
+          if (overall === null) return null;
           return (
             <div className="rounded-2xl border border-[var(--primary)]/30 bg-gradient-to-br from-[var(--primary)]/10 to-[var(--primary)]/5 p-6 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
@@ -1545,6 +1545,26 @@ function ObjectiveQuestionCard({
   );
 }
 
+type HighlightMark = { start: number; end: number; color: string };
+
+function applyHighlights(text: string, marks: HighlightMark[]) {
+  if (marks.length === 0) return <>{text}</>;
+  const sorted = [...marks].sort((a, b) => a.start - b.start);
+  const parts: (string | React.ReactElement)[] = [];
+  let cursor = 0;
+  for (const m of sorted) {
+    if (m.start > cursor) parts.push(text.slice(cursor, m.start));
+    parts.push(
+      <mark key={`${m.start}-${m.end}`} style={{ backgroundColor: m.color, borderRadius: "2px" }}>
+        {text.slice(m.start, m.end)}
+      </mark>
+    );
+    cursor = m.end;
+  }
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <>{parts}</>;
+}
+
 const HIGHLIGHT_COLORS = [
   { label: "yellow", value: "rgba(250,204,21,0.35)" },
   { label: "green", value: "rgba(74,222,128,0.35)" },
@@ -1862,26 +1882,6 @@ function ReadingSplitPanel({
 
 // ─── Listening Split Panel ────────────────────────────────────────────────────
 
-type HighlightMark = { start: number; end: number; color: string };
-
-function applyHighlights(text: string, marks: HighlightMark[]) {
-  if (marks.length === 0) return <>{text}</>;
-  const sorted = [...marks].sort((a, b) => a.start - b.start);
-  const parts: React.ReactNode[] = [];
-  let cursor = 0;
-  for (const m of sorted) {
-    if (m.start > cursor) parts.push(text.slice(cursor, m.start));
-    parts.push(
-      <mark key={`${m.start}-${m.end}`} style={{ backgroundColor: m.color, borderRadius: "2px" }}>
-        {text.slice(m.start, m.end)}
-      </mark>
-    );
-    cursor = m.end;
-  }
-  if (cursor < text.length) parts.push(text.slice(cursor));
-  return <>{parts}</>;
-}
-
 function ListeningSplitPanel({
   groups,
   objectiveAnswers,
@@ -1953,11 +1953,13 @@ function ListeningSplitPanel({
           return (
             <div
               key={g.key}
+              role="status"
+              aria-current={gi === activeGroupIndex ? "step" : undefined}
               className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
                 gi === activeGroupIndex
                   ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
                   : isLocked
-                    ? "border-[var(--border)] text-[var(--text-muted)] opacity-40 cursor-not-allowed"
+                    ? "border-[var(--border)] text-[var(--text-muted)] opacity-40"
                     : "border-[var(--border)] text-[var(--text-secondary)]"
               }`}
             >
@@ -2228,7 +2230,7 @@ function WritingSplitPanel({
 
         {/* Right: textarea + eval */}
         <div
-          className="flex flex-col gap-3 overflow-y-auto px-5 py-5"
+          className="flex flex-col gap-3 px-5 py-5 overflow-hidden"
           style={{ width: `${100 - splitPct - 0.2}%` }}
         >
           <div className="flex items-center justify-between gap-3">
@@ -2263,8 +2265,8 @@ function WritingSplitPanel({
             value={essay}
             onChange={(e) => onResponse(question.id, e.target.value)}
             placeholder={t("ielts.wr.essayPlaceholder")}
-            className="flex-1 resize-none rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
-            style={{ minHeight: "260px" }}
+            className="resize-none rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/40"
+            style={{ flex: "1 1 0", minHeight: "220px", overflowY: "auto" }}
           />
 
           {result ? (

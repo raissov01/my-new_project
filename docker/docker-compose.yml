@@ -82,6 +82,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certs:/etc/letsencrypt/live/studywithraissov.com:ro
+      - ../frontend/public/audio:/usr/share/nginx/audio:ro
     depends_on:
       frontend:
         condition: service_healthy
