@@ -1,0 +1,40 @@
+Test 1
+READING PASSAGE 3
+You should spend about 20 minutes on Questions 27-40, which are based on Reading
+Passage 3 below.
+Artificial artists
+Can computers really create works of art?
+The Painting Fool is one of a growing number of computer programs which, so their
+makers claim, possess creative talents. Classical music by an artificial composer has
+had audiences enraptured, and even tricked them into believing a human was behind
+the score. Artworks painted by a robot have sold for thousands of dollars and been hung
+in prestigious galleries. And software has been built which creates art that could not
+have been imagined by the programmer.
+Human beings are the only species to perform sophisticated creative acts regularly.
+If we can break this process down into computer code, where does that leave human
+Creativity? ‘This is a question at the very core of humanity,’ says Geraint Wiggins, a
+computational creativity researcher at Goldsmiths, University of London. ‘It scares a lot
+of people. They are worried that it is taking something special away from what it means
+to be human.’
+To some extent, we are all familiar with computerised art. The question is: where does
+the work of the artist stop and the creativity of the computer begin? Consider one of the
+oldest machine artists, Aaron, a robot that has had paintings exhibited in London's Tate
+Modern and the San Francisco Museum of Modern Art. Aaron can Pick up a paintbrush
+and paint on canvas on its own. Impressive perhaps, but it is still little more than a tool to
+realise the programmer's own creative ideas.
+Simon Colton, the designer of the Painting Fool, is keen to make sure his creation
+doesn't attract the same criticism. Unlike earlier ‘artists’ such as Aaron, the Painting Fool
+only needs minimal direction and can come up with its own concepts by going online for
+material. The software runs its own web searches and trawls through social media sites.
+It is now beginning to display a kind of imagination too, creating pictures from scratch.
+One of its original works is a series of fuzzy landscapes, depicting trees and sky. While
+some might say they have a mechanical look, Colton argues that such reactions arise
+from people's double standards towards software-produced and human-produced
+art. After all, he says, consider that the Painting Fool painted the landscapes without
+referring to a photo. ‘If a child painted a new scene from its head, you'd say it has a
+certain level of imagination,’ he points out. ‘The same should be true of a machine.’
+Software bugs can also lead to unexpected results. Some of the Painting Fool's
+paintings of a chair came out in black and white, thanks to a technical glitch. This gives
+the work an eerie, ghostlike quality. Human artists like the renowned Ellsworth Kelly are
+lauded for limiting their colour palette — so why should computers be any different?
+24

@@ -1,0 +1,37 @@
+Reading |
+Researchers like Colton don't believe it is right to measure machine creativity directly
+to that of humans who ‘have had millennia to develop our skills’. Others, though, are
+fascinated by the prospect that a computer might create somethin a eri et and
+subtle as our best artists. So far, only one has come close. Cones David Cope
+invented a program called Experiments in Musical Intelligence, or EMI. Not only did
+EMI create compositions in Cope’s style, but also that of the most revered classical
+composers, including Bach, Chopin and Mozart. Audiences were moved to tears, and
+EMI even fooled classical music experts into thinking they were hearing genuine Bach.
+Not everyone was impressed however. Some, such as Wiggins, have blasted Cope’s
+work as pseudoscience, and condemned him for his deliberately vague explanation of
+how the software worked. Meanwhile, Douglas Hofstadter of Indiana University said
+EMI created replicas which still rely completely on the original artist's creative impulses.
+When audiences found out the truth they were often outraged with Cope, and one music
+lover even tried to punch him. Amid such controversy, Cope destroyed EMI's
+vital databases.
+But why did so many people love the music, yet recoil when they discovered how it
+was composed? A study by computer scientist David Moffat of Glasgow Caledonian
+University provides a clue. He asked both expert musicians and non-experts to assess
+six compositions. The participants weren't told beforehand whether the tunes were
+composed by humans or computers, but were asked to guess, and then rate how much
+they liked each one. People who thought the composer was a computer tended to dislike
+the piece more than those who believed it was human. This was true even among the
+experts, who might have been expected to be more objective in their analyses
+Where does this prejudice come from? Paul Bloom of Yale University has a suggestion:
+he reckons part of the pleasure we get from art stems from the creative process behind
+the work. This can give it an ‘irresistible essence’, says Bloom. Meanwhile, experiments
+by Justin Kruger of New York University have shown that people's enjoyment of an
+artwork increases if they think more time and effort was needed to create it. Similarly,
+Colton thinks that when people experience art, they wonder what the artist might have
+been thinking or what the artist is trying to tell them. It seems obvious, therefore, that
+with computers producing art, this speculation is cut short — there's nothing to explore
+But as technology becomes increasingly complex, finding those greater depths in
+computer art could become possible This is precisely why Colton asks the Painting
+Fool to tap into online social networks for its inspiration: hopefully this way it will choose
+themes that will already be meaningful to us.
+25
