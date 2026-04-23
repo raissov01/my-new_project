@@ -1,12 +1,51 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/models"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 	"gorm.io/gorm"
 )
+
+type scenarioResp struct {
+	ID               string   `json:"id"`
+	Slug             string   `json:"slug"`
+	Title            string   `json:"title"`
+	Description      string   `json:"description"`
+	Level            string   `json:"level"`
+	Category         string   `json:"category"`
+	Icon             string   `json:"icon"`
+	EstimatedMinutes int      `json:"estimatedMinutes"`
+	PersonaName      string   `json:"personaName"`
+	StudentGoal      string   `json:"studentGoal"`
+	SuccessCriteria  []string `json:"successCriteria"`
+	VocabFocus       []string `json:"vocabFocus"`
+}
+
+func toScenarioResp(sc models.AIScenario) scenarioResp {
+	r := scenarioResp{
+		ID:               sc.ID,
+		Slug:             sc.Slug,
+		Title:            sc.Title,
+		Description:      sc.Description,
+		Level:            sc.Level,
+		Category:         sc.Category,
+		Icon:             sc.Icon,
+		EstimatedMinutes: sc.EstimatedMinutes,
+		PersonaName:      sc.PersonaName,
+		StudentGoal:      sc.StudentGoal,
+	}
+	if sc.SuccessCriteria != nil {
+		_ = json.Unmarshal([]byte(*sc.SuccessCriteria), &r.SuccessCriteria)
+	}
+	if sc.VocabFocus != nil {
+		_ = json.Unmarshal([]byte(*sc.VocabFocus), &r.VocabFocus)
+	}
+	return r
+}
 
 // AITutorHandler serves the AI roleplay scenarios API.
 type AITutorHandler struct {
@@ -26,7 +65,11 @@ func (h *AITutorHandler) ListScenarios(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	jsonOK(w, map[string]any{"scenarios": scenarios})
+	resp := make([]scenarioResp, len(scenarios))
+	for i, sc := range scenarios {
+		resp[i] = toScenarioResp(sc)
+	}
+	jsonOK(w, map[string]any{"scenarios": resp})
 }
 
 // GET /tutor/scenarios/:slug
@@ -37,7 +80,7 @@ func (h *AITutorHandler) GetScenario(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, "scenario not found", http.StatusNotFound)
 		return
 	}
-	jsonOK(w, map[string]any{"scenario": sc})
+	jsonOK(w, map[string]any{"scenario": toScenarioResp(*sc)})
 }
 
 // POST /tutor/conversations — start a new conversation
