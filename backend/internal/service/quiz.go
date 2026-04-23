@@ -45,6 +45,7 @@ const (
 	QTypeDropdown       = "dropdown"
 	QTypeCategorization = "categorization"
 	QTypeLabeling       = "labeling"
+	QTypeComprehension  = "comprehension"
 )
 
 func (s *Quiz) GetOverview(ctx context.Context, userID string, filters repository.QuizListFilters) ([]model.QuizOverview, error) {
@@ -359,6 +360,31 @@ func (s *Quiz) validateAndNormalize(
 			out.OptionC = c
 			out.OptionD = d
 			out.CorrectOption = correct
+
+		case QTypeComprehension:
+			cd := q.ComprehensionData
+			if cd == nil {
+				return nil, fmt.Errorf("question %d: comprehension needs comprehensionData", i+1)
+			}
+			if strings.TrimSpace(cd.Passage) == "" {
+				return nil, fmt.Errorf("question %d: comprehension passage cannot be empty", i+1)
+			}
+			if len(cd.SubQuestions) < 1 {
+				return nil, fmt.Errorf("question %d: comprehension needs at least one sub-question", i+1)
+			}
+			for j, sq := range cd.SubQuestions {
+				if strings.TrimSpace(sq.Prompt) == "" {
+					return nil, fmt.Errorf("question %d sub-question %d: prompt cannot be empty", i+1, j+1)
+				}
+				if strings.TrimSpace(sq.Correct) == "" {
+					return nil, fmt.Errorf("question %d sub-question %d: correct answer cannot be empty", i+1, j+1)
+				}
+				// Assign stable ID if missing
+				if sq.ID == "" {
+					cd.SubQuestions[j].ID = fmt.Sprintf("sq%d", j)
+				}
+			}
+			out.ComprehensionData = cd
 
 		default:
 			return nil, fmt.Errorf("question %d: unsupported question type %q", i+1, qType)

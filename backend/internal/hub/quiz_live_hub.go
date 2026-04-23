@@ -91,8 +91,23 @@ type LiveQuestion struct {
 	HotspotZones []LiveHotspotZone `json:"hotspotZones,omitempty"`
 	// Labeling: zones sent without CorrectLabel; correct labels held server-side.
 	LabelingCorrect map[string]string `json:"-"` // zoneID→correctLabel, never sent
-	ImageURL        string            `json:"imageUrl,omitempty"`
-	TimeLimit       int               `json:"timeLimit"` // seconds
+	// Comprehension: passage + sub-questions sent to players; correct answers held server-side.
+	ComprehensionPassage      string                             `json:"comprehensionPassage,omitempty"`
+	ComprehensionSubQuestions []ComprehensionSubQuestion         `json:"comprehensionSubQuestions,omitempty"`
+	ComprehensionCorrect      map[string]string                  `json:"-"` // sqID→correct, never sent
+	ImageURL                  string                             `json:"imageUrl,omitempty"`
+	TimeLimit                 int                                `json:"timeLimit"` // seconds
+}
+
+// ComprehensionSubQuestion is the player-visible part of a sub-question (no correct answer).
+type ComprehensionSubQuestion struct {
+	ID      string `json:"id"`
+	Type    string `json:"type"`
+	Prompt  string `json:"prompt"`
+	OptionA string `json:"optionA,omitempty"`
+	OptionB string `json:"optionB,omitempty"`
+	OptionC string `json:"optionC,omitempty"`
+	OptionD string `json:"optionD,omitempty"`
 }
 
 // LiveHotspotZone is a clickable circle zone sent to quiz players.
@@ -422,6 +437,8 @@ func (r *Room) endQuestion(timedOut bool) {
 		evt.MatchPairs = pairs
 	case "labeling":
 		evt.LabelingCorrect = q.LabelingCorrect
+	case "comprehension":
+		evt.LabelingCorrect = q.ComprehensionCorrect // reuse field: sqID→correct answer
 	}
 	r.broadcast(OutMsg{Type: EvtQuestionEnded, Data: evt})
 
@@ -567,6 +584,8 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 		isCorrect = strings.EqualFold(req.Option, q.CorrectOption)
 	case "labeling":
 		isCorrect = liveLabelingCorrect(req.TextAns, q.LabelingCorrect)
+	case "comprehension":
+		isCorrect = liveComprehensionCorrect(req.TextAns, q.ComprehensionCorrect)
 	case "poll":
 		isCorrect = false // non-graded
 	default:
@@ -683,6 +702,28 @@ func liveMatchingCorrect(submitted map[string]string, correct map[string]string)
 	}
 	for left, right := range correct {
 		if got, ok := submitted[left]; !ok || got != right {
+			return false
+		}
+	}
+	return true
+}
+
+// liveComprehensionCorrect checks that the submitted JSON {"sqID":"answer"} map
+// matches every sub-question's correct answer (all-or-nothing for live games).
+func liveComprehensionCorrect(submittedJSON string, correct map[string]string) bool {
+	if submittedJSON == "" || len(correct) == 0 {
+		return false
+	}
+	var submitted map[string]string
+	if err := json.Unmarshal([]byte(submittedJSON), &submitted); err != nil {
+		return false
+	}
+	for sqID, want := range correct {
+		got, ok := submitted[sqID]
+		if !ok {
+			return false
+		}
+		if strings.ToLower(strings.TrimSpace(got)) != strings.ToLower(strings.TrimSpace(want)) {
 			return false
 		}
 	}

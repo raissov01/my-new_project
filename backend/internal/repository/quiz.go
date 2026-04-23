@@ -14,6 +14,83 @@ import (
 	"github.com/midoriya/flashlearn-backend/internal/model"
 )
 
+// encodeComprehensionData serializes ComprehensionData to a JSONB string pointer.
+func encodeComprehensionData(cd *model.ComprehensionData) *string {
+	if cd == nil {
+		return nil
+	}
+	buf, err := json.Marshal(cd)
+	if err != nil {
+		return nil
+	}
+	s := string(buf)
+	return &s
+}
+
+// decodeComprehensionData parses a JSONB string pointer back into ComprehensionData.
+func decodeComprehensionData(src *string) *model.ComprehensionData {
+	if src == nil || *src == "" {
+		return nil
+	}
+	var cd model.ComprehensionData
+	if err := json.Unmarshal([]byte(*src), &cd); err != nil {
+		return nil
+	}
+	return &cd
+}
+
+// comprehensionCorrect returns true only if every sub-question answer matches.
+// submitted is a JSON map {"sq0":"b","sq1":"t","sq2":"answer text"}.
+func comprehensionCorrect(submittedJSON string, cd *model.ComprehensionData) bool {
+	if submittedJSON == "" || cd == nil {
+		return false
+	}
+	var submitted map[string]string
+	if err := json.Unmarshal([]byte(submittedJSON), &submitted); err != nil {
+		return false
+	}
+	for _, sq := range cd.SubQuestions {
+		got, ok := submitted[sq.ID]
+		if !ok {
+			return false
+		}
+		want := strings.ToLower(strings.TrimSpace(sq.Correct))
+		got = strings.ToLower(strings.TrimSpace(got))
+		if sq.Type == "fill_blank" {
+			if got != want {
+				return false
+			}
+		} else {
+			if got != want {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// comprehensionScore returns the fraction of correct sub-question answers (0.0–1.0).
+func comprehensionScore(submittedJSON string, cd *model.ComprehensionData) float64 {
+	if submittedJSON == "" || cd == nil || len(cd.SubQuestions) == 0 {
+		return 0
+	}
+	var submitted map[string]string
+	if err := json.Unmarshal([]byte(submittedJSON), &submitted); err != nil {
+		return 0
+	}
+	correct := 0
+	for _, sq := range cd.SubQuestions {
+		got, ok := submitted[sq.ID]
+		if !ok {
+			continue
+		}
+		if strings.ToLower(strings.TrimSpace(got)) == strings.ToLower(strings.TrimSpace(sq.Correct)) {
+			correct++
+		}
+	}
+	return float64(correct) / float64(len(cd.SubQuestions))
+}
+
 // encodeMatchPairs serializes a MatchPair slice to a JSONB string pointer.
 // Returns nil for empty input so the column stores SQL NULL.
 func encodeMatchPairs(pairs []model.MatchPair) *string {
@@ -394,7 +471,8 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
-		       match_pairs, hotspot_zones, image_url, explanation, hint, order_index
+		       match_pairs, hotspot_zones, comprehension_data,
+		       image_url, explanation, hint, order_index
 		FROM public.quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -407,7 +485,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 	d.Questions = make([]model.QuizQuestionDTO, 0)
 	for qRows.Next() {
 		var q model.QuizQuestionDTO
-		var correct, blank, reorderJSON, matchPairsJSON, hotspotJSON, imageURL, explanation, hint *string
+		var correct, blank, reorderJSON, matchPairsJSON, hotspotJSON, comprJSON, imageURL, explanation, hint *string
 		if err := qRows.Scan(
 			&q.ID,
 			&q.QuestionText,
@@ -421,6 +499,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 			&reorderJSON,
 			&matchPairsJSON,
 			&hotspotJSON,
+			&comprJSON,
 			&imageURL,
 			&explanation,
 			&hint,
@@ -433,6 +512,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		q.ReorderItems = decodeStringArray(reorderJSON)
 		q.MatchPairs = decodeMatchPairs(matchPairsJSON)
 		q.HotspotZones = decodeHotspotZones(hotspotJSON)
+		q.ComprehensionData = decodeComprehensionData(comprJSON)
 		q.ImageURL = imageURL
 		q.Explanation = explanation
 		q.Hint = hint
@@ -515,6 +595,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 			encodeStringArray(q.ReorderItems),
 			encodeMatchPairs(q.MatchPairs),
 			encodeHotspotZones(q.HotspotZones),
+			encodeComprehensionData(q.ComprehensionData),
 			nullableString(q.ImageURL),
 			nullableString(q.Explanation),
 			nullableString(q.Hint),
@@ -540,6 +621,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 				"reorder_items",
 				"match_pairs",
 				"hotspot_zones",
+				"comprehension_data",
 				"image_url",
 				"explanation",
 				"hint",
@@ -667,27 +749,29 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 			nullableString(q.Explanation),      // $13
 			i,                                  // $14 (order_index)
 			nullableString(q.Hint),             // $15
-			encodeMatchPairs(q.MatchPairs),     // $16
-			encodeHotspotZones(q.HotspotZones), // $17
+			encodeMatchPairs(q.MatchPairs),          // $16
+			encodeHotspotZones(q.HotspotZones),      // $17
+			encodeComprehensionData(q.ComprehensionData), // $18
 		}
 		if _, ok := existingIDs[id]; ok {
 			if _, err := tx.Exec(ctx, `
 				UPDATE quiz_questions
-				SET question_text  = $3,
-				    question_type  = $4,
-				    option_a       = $5,
-				    option_b       = $6,
-				    option_c       = $7,
-				    option_d       = $8,
-				    correct_option = $9,
-				    blank_answer   = $10,
-				    reorder_items  = $11,
-				    image_url      = $12,
-				    explanation    = $13,
-				    order_index    = $14,
-				    hint           = $15,
-				    match_pairs    = $16,
-				    hotspot_zones  = $17
+				SET question_text      = $3,
+				    question_type      = $4,
+				    option_a           = $5,
+				    option_b           = $6,
+				    option_c           = $7,
+				    option_d           = $8,
+				    correct_option     = $9,
+				    blank_answer       = $10,
+				    reorder_items      = $11,
+				    image_url          = $12,
+				    explanation        = $13,
+				    order_index        = $14,
+				    hint               = $15,
+				    match_pairs        = $16,
+				    hotspot_zones      = $17,
+				    comprehension_data = $18
 				WHERE id = $1 AND quiz_id = $2
 			`, args...); err != nil {
 				return fmt.Errorf("update question %d: %w", i, err)
@@ -702,9 +786,10 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				quiz_id, question_text, question_type,
 				option_a, option_b, option_c, option_d,
 				correct_option, blank_answer, reorder_items,
-				image_url, explanation, order_index, hint, match_pairs, hotspot_zones, created_at
+				image_url, explanation, order_index, hint,
+				match_pairs, hotspot_zones, comprehension_data, created_at
 			)
-			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
+			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
 			RETURNING id
 		`, args...).Scan(&newID)
 		if err != nil {
@@ -808,12 +893,14 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 			quiz_id, question_text, question_type,
 			option_a, option_b, option_c, option_d,
 			correct_option, blank_answer, reorder_items,
-			match_pairs, hotspot_zones, image_url, explanation, order_index, hint, created_at
+			match_pairs, hotspot_zones, comprehension_data,
+			image_url, explanation, order_index, hint, created_at
 		)
 		SELECT $1, question_text, question_type,
 		       option_a, option_b, option_c, option_d,
 		       correct_option, blank_answer, reorder_items,
-		       match_pairs, hotspot_zones, image_url, explanation, order_index, hint, NOW()
+		       match_pairs, hotspot_zones, comprehension_data,
+		       image_url, explanation, order_index, hint, NOW()
 		FROM quiz_questions
 		WHERE quiz_id = $2
 		ORDER BY order_index, created_at
@@ -836,21 +923,22 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 
 // questionAnswerRow holds the canonical data needed for server-side grading.
 type questionAnswerRow struct {
-	ID            string
-	QuestionText  string
-	QuestionType  string
-	OptionA       string
-	OptionB       string
-	OptionC       string
-	OptionD       string
-	CorrectOption *string
-	BlankAnswer   *string
-	ReorderItems  []string
-	MatchPairs    []model.MatchPair
-	HotspotZones  []model.HotspotZone
-	ImageURL      *string
-	Explanation   *string
-	OrderIndex    int
+	ID                string
+	QuestionText      string
+	QuestionType      string
+	OptionA           string
+	OptionB           string
+	OptionC           string
+	OptionD           string
+	CorrectOption     *string
+	BlankAnswer       *string
+	ReorderItems      []string
+	MatchPairs        []model.MatchPair
+	HotspotZones      []model.HotspotZone
+	ComprehensionData *model.ComprehensionData
+	ImageURL          *string
+	Explanation       *string
+	OrderIndex        int
 }
 
 // SubmitAttempt grades the attempt on the server and persists the result.
@@ -879,7 +967,8 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
-		       match_pairs, hotspot_zones, image_url, explanation, order_index
+		       match_pairs, hotspot_zones, comprehension_data,
+		       image_url, explanation, order_index
 		FROM quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -893,18 +982,20 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 	order := make([]string, 0)
 	for rows.Next() {
 		var q questionAnswerRow
-		var reorderJSON, matchPairsJSON, hotspotJSON *string
+		var reorderJSON, matchPairsJSON, hotspotJSON, comprJSON *string
 		if err := rows.Scan(
 			&q.ID, &q.QuestionText, &q.QuestionType,
 			&q.OptionA, &q.OptionB, &q.OptionC, &q.OptionD,
 			&q.CorrectOption, &q.BlankAnswer, &reorderJSON,
-			&matchPairsJSON, &hotspotJSON, &q.ImageURL, &q.Explanation, &q.OrderIndex,
+			&matchPairsJSON, &hotspotJSON, &comprJSON,
+			&q.ImageURL, &q.Explanation, &q.OrderIndex,
 		); err != nil {
 			return nil, fmt.Errorf("scan question: %w", err)
 		}
 		q.ReorderItems = decodeStringArray(reorderJSON)
 		q.MatchPairs = decodeMatchPairs(matchPairsJSON)
 		q.HotspotZones = decodeHotspotZones(hotspotJSON)
+		q.ComprehensionData = decodeComprehensionData(comprJSON)
 		questions[q.ID] = q
 		order = append(order, q.ID)
 	}
@@ -1037,6 +1128,22 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 						score++
 					}
 				}
+			case "comprehension":
+				// TextAnswer is JSON map {"sq0":"b","sq1":"t","sq2":"word"}.
+				// Score partial: fraction of correct sub-questions added to score.
+				if a.TextAnswer != nil && *a.TextAnswer != "" {
+					t := strings.TrimSpace(*a.TextAnswer)
+					textAnswer = &t
+					frac := comprehensionScore(t, q.ComprehensionData)
+					if frac == 1.0 {
+						isCorrect = true
+						score++
+					} else if frac > 0 {
+						// Partial credit: add fractional point
+						score++ // still count as answered; percentage will reflect exact fraction below
+						isCorrect = comprehensionCorrect(t, q.ComprehensionData)
+					}
+				}
 			case "poll":
 				// Non-graded: record selection but never award a point.
 				if a.SelectedOption != nil {
@@ -1066,26 +1173,27 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		}
 
 		graded = append(graded, model.AttemptAnswerResult{
-			QuestionID:     q.ID,
-			QuestionText:   q.QuestionText,
-			QuestionType:   q.QuestionType,
-			OptionA:        q.OptionA,
-			OptionB:        q.OptionB,
-			OptionC:        q.OptionC,
-			OptionD:        q.OptionD,
-			SelectedOption: selected,
-			CorrectOption:  correctStr,
-			TextAnswer:     textAnswer,
-			BlankAnswer:    q.BlankAnswer,
-			OrderAnswer:    orderAnswer,
-			ReorderItems:   q.ReorderItems,
-			MatchPairs:     q.MatchPairs,
-			HotspotZones:   q.HotspotZones,
-			ImageURL:       q.ImageURL,
-			Explanation:    q.Explanation,
-			IsCorrect:      isCorrect,
-			TimeSpent:      timeSpent,
-			OrderIndex:     q.OrderIndex,
+			QuestionID:        q.ID,
+			QuestionText:      q.QuestionText,
+			QuestionType:      q.QuestionType,
+			OptionA:           q.OptionA,
+			OptionB:           q.OptionB,
+			OptionC:           q.OptionC,
+			OptionD:           q.OptionD,
+			SelectedOption:    selected,
+			CorrectOption:     correctStr,
+			TextAnswer:        textAnswer,
+			BlankAnswer:       q.BlankAnswer,
+			OrderAnswer:       orderAnswer,
+			ReorderItems:      q.ReorderItems,
+			MatchPairs:        q.MatchPairs,
+			HotspotZones:      q.HotspotZones,
+			ComprehensionData: q.ComprehensionData,
+			ImageURL:          q.ImageURL,
+			Explanation:       q.Explanation,
+			IsCorrect:         isCorrect,
+			TimeSpent:         timeSpent,
+			OrderIndex:        q.OrderIndex,
 		})
 	}
 
@@ -1247,6 +1355,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			COALESCE(aa.reorder_items_snapshot, qq.reorder_items),
 			COALESCE(aa.match_pairs_snapshot, qq.match_pairs),
 			qq.hotspot_zones,
+			qq.comprehension_data,
 			qq.image_url,
 			qq.explanation,
 			aa.is_correct,
@@ -1266,7 +1375,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 	for rows.Next() {
 		var a model.AttemptAnswerResult
 		var questionID *string
-		var orderAnswerJSON, reorderItemsJSON, matchPairsJSON, hotspotJSON *string
+		var orderAnswerJSON, reorderItemsJSON, matchPairsJSON, hotspotJSON, comprJSON *string
 		if err := rows.Scan(
 			&questionID,
 			&a.QuestionText,
@@ -1280,6 +1389,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			&reorderItemsJSON,
 			&matchPairsJSON,
 			&hotspotJSON,
+			&comprJSON,
 			&a.ImageURL,
 			&a.Explanation,
 			&a.IsCorrect,
@@ -1295,6 +1405,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 		a.ReorderItems = decodeStringArray(reorderItemsJSON)
 		a.MatchPairs = decodeMatchPairs(matchPairsJSON)
 		a.HotspotZones = decodeHotspotZones(hotspotJSON)
+		a.ComprehensionData = decodeComprehensionData(comprJSON)
 		res.Answers = append(res.Answers, a)
 	}
 

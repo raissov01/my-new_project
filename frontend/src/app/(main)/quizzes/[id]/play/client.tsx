@@ -22,6 +22,8 @@ import { AnswerAnimation } from "@/features/quizzes/components/answer-animation"
 import { usePowerUps, type PowerUpKey } from "@/features/quizzes/use-power-ups";
 import { PowerUpBar } from "@/features/quizzes/components/power-up-bar";
 import type {
+  ComprehensionData,
+  ComprehensionSubQuestion,
   HotspotZone,
   MatchPair,
   QuizDetail,
@@ -213,6 +215,8 @@ export function PlayQuizClient({
   const [hotspotSelected, setHotspotSelected] = useState<string | null>(null);
   // labelingDraft: zoneId → typed label; submitted as JSON via textAnswer.
   const [labelingDraft, setLabelingDraft] = useState<Record<string, string>>({});
+  // comprehensionDraft: subQuestionId → chosen answer string.
+  const [comprehensionDraft, setComprehensionDraft] = useState<Record<string, string>>({});
   // pollSelected / dropdownSelected reuse selectedLetter slot visually but kept separate for clarity.
   const [pollSelected, setPollSelected] = useState<string | null>(null);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
@@ -272,6 +276,7 @@ export function PlayQuizClient({
     }
     setHotspotSelected(null);
     setLabelingDraft({});
+    setComprehensionDraft({});
     setPollSelected(null);
     setBlankInput("");
     setMcqMultiSelected(new Set());
@@ -590,6 +595,23 @@ export function PlayQuizClient({
     [question.matchPairs, recordAnswer]
   );
 
+  const recordComprehension = useCallback(
+    (draft: Record<string, string>) => {
+      const cd = question.comprehensionData;
+      if (!cd || cd.subQuestions.length === 0) return;
+      const allAnswered = cd.subQuestions.every((sq) => (draft[sq.id] ?? "").trim() !== "");
+      if (!allAnswered) return;
+      const correct = cd.subQuestions.every((sq) => {
+        const given = (draft[sq.id] ?? "").trim().toLowerCase();
+        const expected = sq.correct.trim().toLowerCase();
+        return given === expected;
+      });
+      const textAnswer = JSON.stringify(draft);
+      recordAnswer({ selectedOption: null, textAnswer, orderAnswer: null }, correct);
+    },
+    [question.comprehensionData, recordAnswer]
+  );
+
   // Timeout handler: fires a "null" answer of the right shape for the
   // current question type so the backend still gets a row per question.
   const handleTimeout = useCallback(() => {
@@ -624,8 +646,11 @@ export function PlayQuizClient({
       case "categorization":
         recordCategorization(null);
         return;
+      case "comprehension":
+        recordAnswer({ selectedOption: null, textAnswer: null, orderAnswer: null }, false);
+        return;
     }
-  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot, recordPoll, recordDropdown, recordCategorization]);
+  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot, recordPoll, recordDropdown, recordCategorization, recordAnswer]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
   // Practice mode disables the timer entirely so students can dwell on
@@ -949,6 +974,16 @@ export function PlayQuizClient({
               revealed={revealed}
               lastCorrect={lastCorrect}
               onSubmit={() => recordCategorization(matchDraft)}
+            />
+          ) : questionType === "comprehension" ? (
+            <ComprehensionPlayBody
+              t={t}
+              cd={question.comprehensionData ?? { passage: "", subQuestions: [] }}
+              draft={comprehensionDraft}
+              onDraftChange={setComprehensionDraft}
+              revealed={revealed}
+              lastCorrect={lastCorrect}
+              onSubmit={() => recordComprehension(comprehensionDraft)}
             />
           ) : (
             <ReorderBody
@@ -1691,7 +1726,6 @@ function MatchingBody({
   draft,
   onDraftChange,
   revealed,
-  lastCorrect,
   onSubmit,
 }: {
   t: ReturnType<typeof createTranslator>;
@@ -1904,7 +1938,6 @@ function CategorizationPlayBody({
   draft,
   onDraftChange,
   revealed,
-  lastCorrect,
   onSubmit,
 }: {
   t: ReturnType<typeof createTranslator>;
@@ -1996,6 +2029,173 @@ function CategorizationPlayBody({
             disabled={!allSelected}
           >
             {t("quiz.matching.submitAll")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ComprehensionPlayBody({
+  t,
+  cd,
+  draft,
+  onDraftChange,
+  revealed,
+  onSubmit,
+}: {
+  t: ReturnType<typeof createTranslator>;
+  cd: ComprehensionData;
+  draft: Record<string, string>;
+  onDraftChange: (d: Record<string, string>) => void;
+  revealed: boolean;
+  lastCorrect: boolean | null;
+  onSubmit: () => void;
+}) {
+  const allAnswered = cd.subQuestions.every((sq) => (draft[sq.id] ?? "").trim() !== "");
+
+  return (
+    <div className="mt-4 space-y-4">
+      {cd.passage ? (
+        <div className="max-h-56 overflow-y-auto rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm leading-relaxed text-[var(--text-primary)]">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            {t("quiz.comprehension.passage")}
+          </p>
+          {cd.passage}
+        </div>
+      ) : null}
+
+      <div className="space-y-3">
+        {cd.subQuestions.map((sq: ComprehensionSubQuestion, idx: number) => {
+          const given = (draft[sq.id] ?? "").trim().toLowerCase();
+          const expected = sq.correct.trim().toLowerCase();
+          const isCorrect = given === expected;
+          const isWrong = revealed && given !== "" && !isCorrect;
+
+          return (
+            <div
+              key={sq.id}
+              className={`rounded-[var(--radius-md)] border p-3 transition-colors ${
+                revealed
+                  ? isCorrect
+                    ? "border-emerald-500/50 bg-emerald-500/8"
+                    : isWrong
+                      ? "border-red-500/40 bg-red-500/8"
+                      : "border-[var(--border)] bg-[var(--bg-surface)]"
+                  : "border-[var(--border)] bg-[var(--bg-surface)]"
+              }`}
+            >
+              <p className="mb-2 text-sm font-medium text-[var(--text-primary)]">
+                {idx + 1}. {sq.prompt}
+              </p>
+
+              {sq.type === "mcq" ? (
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {(["a", "b", "c", "d"] as const).map((letter) => {
+                    const optKey = `option${letter.toUpperCase()}` as "optionA" | "optionB" | "optionC" | "optionD";
+                    const optText = sq[optKey];
+                    if (!optText) return null;
+                    const sel = draft[sq.id] === letter;
+                    const isCorrectOpt = revealed && letter === sq.correct.toLowerCase();
+                    const isWrongSel = revealed && sel && letter !== sq.correct.toLowerCase();
+                    return (
+                      <button
+                        key={letter}
+                        type="button"
+                        disabled={revealed}
+                        onClick={() => onDraftChange({ ...draft, [sq.id]: letter })}
+                        className={`flex items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2 text-left text-sm transition-colors ${
+                          isCorrectOpt
+                            ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
+                            : isWrongSel
+                              ? "border-red-500 bg-red-500/15 text-red-300"
+                              : sel
+                                ? "border-[var(--primary)] bg-[var(--primary)]/15 text-[var(--primary)]"
+                                : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)]/50"
+                        }`}
+                      >
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold uppercase ${
+                          isCorrectOpt ? "border-emerald-500 bg-emerald-500 text-white" : isWrongSel ? "border-red-500 bg-red-500 text-white" : sel ? "border-[var(--primary)] bg-[var(--primary)] text-white" : "border-[var(--border)]"
+                        }`}>
+                          {letter}
+                        </span>
+                        {optText}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : sq.type === "true_false" ? (
+                <div className="flex gap-2">
+                  {(["t", "f"] as const).map((val) => {
+                    const sel = draft[sq.id] === val;
+                    const isCorrectOpt = revealed && val === sq.correct.toLowerCase();
+                    const isWrongSel = revealed && sel && val !== sq.correct.toLowerCase();
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        disabled={revealed}
+                        onClick={() => onDraftChange({ ...draft, [sq.id]: val })}
+                        className={`flex-1 rounded-[var(--radius-sm)] border py-2 text-sm font-medium transition-colors ${
+                          isCorrectOpt
+                            ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
+                            : isWrongSel
+                              ? "border-red-500 bg-red-500/15 text-red-300"
+                              : sel
+                                ? "border-[var(--primary)] bg-[var(--primary)]/15 text-[var(--primary)]"
+                                : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)]/50"
+                        }`}
+                      >
+                        {val === "t" ? "True" : "False"}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    value={draft[sq.id] ?? ""}
+                    onChange={(e) => onDraftChange({ ...draft, [sq.id]: e.target.value })}
+                    disabled={revealed}
+                    placeholder={t("quiz.comprehension.subQCorrect")}
+                    className={`flex-1 rounded-[var(--radius-sm)] border px-3 py-1.5 text-sm outline-none transition-colors ${
+                      revealed
+                        ? isCorrect
+                          ? "border-emerald-500 bg-emerald-500/8 text-emerald-300"
+                          : isWrong
+                            ? "border-red-500 bg-red-500/8 text-red-300"
+                            : "border-[var(--border)] text-[var(--text-muted)]"
+                        : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] focus:border-[var(--primary)]"
+                    }`}
+                  />
+                  {revealed ? (
+                    isCorrect ? (
+                      <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                    ) : isWrong ? (
+                      <X className="h-4 w-4 shrink-0 text-red-400" />
+                    ) : null
+                  ) : null}
+                </div>
+              )}
+
+              {revealed && !isCorrect && given !== "" ? (
+                <p className="mt-1.5 text-xs text-emerald-400">
+                  ✓ {sq.correct}
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      {!revealed && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={!allAnswered}
+          >
+            {t("quiz.comprehension.submitAll")}
           </Button>
         </div>
       )}

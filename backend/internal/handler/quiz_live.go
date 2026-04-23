@@ -338,6 +338,41 @@ func buildLiveQuiz(quiz *models.Quiz) *hub.LiveQuiz {
 				lq.MatchCorrect = correct
 			}
 		}
+		if q.ComprehensionData != nil && *q.ComprehensionData != "" {
+			type subQ struct {
+				ID      string `json:"id"`
+				Type    string `json:"type"`
+				Prompt  string `json:"prompt"`
+				OptionA string `json:"optionA,omitempty"`
+				OptionB string `json:"optionB,omitempty"`
+				OptionC string `json:"optionC,omitempty"`
+				OptionD string `json:"optionD,omitempty"`
+				Correct string `json:"correct"`
+			}
+			var cd struct {
+				Passage      string  `json:"passage"`
+				SubQuestions []subQ  `json:"subQuestions"`
+			}
+			if err := json.Unmarshal([]byte(*q.ComprehensionData), &cd); err == nil {
+				lq.ComprehensionPassage = cd.Passage
+				correct := make(map[string]string, len(cd.SubQuestions))
+				sqs := make([]hub.ComprehensionSubQuestion, len(cd.SubQuestions))
+				for k, sq := range cd.SubQuestions {
+					sqs[k] = hub.ComprehensionSubQuestion{
+						ID:      sq.ID,
+						Type:    sq.Type,
+						Prompt:  sq.Prompt,
+						OptionA: sq.OptionA,
+						OptionB: sq.OptionB,
+						OptionC: sq.OptionC,
+						OptionD: sq.OptionD,
+					}
+					correct[sq.ID] = sq.Correct
+				}
+				lq.ComprehensionSubQuestions = sqs
+				lq.ComprehensionCorrect = correct
+			}
+		}
 		if q.HotspotZones != nil && *q.HotspotZones != "" {
 			type zone struct {
 				ID           int     `json:"id"`

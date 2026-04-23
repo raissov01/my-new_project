@@ -45,8 +45,9 @@ type QuizQuestion struct {
 	BlankAnswer   *string `gorm:"type:text" json:"blankAnswer,omitempty"`
 	ReorderItems  *string `gorm:"type:jsonb" json:"reorderItems,omitempty"`
 	MatchPairs    *string `gorm:"type:jsonb" json:"matchPairs,omitempty"`
-	HotspotZones  *string `gorm:"type:jsonb" json:"hotspotZones,omitempty"`
-	ImageURL      *string `gorm:"type:text" json:"imageUrl,omitempty"`
+	HotspotZones       *string `gorm:"type:jsonb" json:"hotspotZones,omitempty"`
+	ComprehensionData  *string `gorm:"type:jsonb" json:"comprehensionData,omitempty"`
+	ImageURL           *string `gorm:"type:text" json:"imageUrl,omitempty"`
 	Explanation   *string `gorm:"type:text" json:"explanation,omitempty"`
 	Hint          *string `gorm:"type:text" json:"hint,omitempty"`
 
@@ -125,8 +126,9 @@ type QuizAttemptAnswer struct {
 	CorrectOptionSnapshot *string `gorm:"type:text" json:"-"`
 	BlankAnswerSnapshot   *string `gorm:"type:text" json:"-"`
 	ReorderItemsSnapshot  *string `gorm:"type:jsonb" json:"-"`
-	MatchPairsSnapshot    *string `gorm:"type:jsonb" json:"-"`
-	OrderIndexSnapshot    int     `gorm:"not null;default:0" json:"-"`
+	MatchPairsSnapshot           *string `gorm:"type:jsonb" json:"-"`
+	ComprehensionDataSnapshot    *string `gorm:"type:jsonb" json:"-"`
+	OrderIndexSnapshot           int     `gorm:"not null;default:0" json:"-"`
 
 	Attempt  QuizAttempt   `gorm:"foreignKey:AttemptID;constraint:OnDelete:CASCADE" json:"-"`
 	Question *QuizQuestion `gorm:"foreignKey:QuestionID;constraint:OnDelete:SET NULL" json:"-"`

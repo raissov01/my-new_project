@@ -1,5 +1,24 @@
 package model
 
+// ComprehensionSubQuestion is one sub-question inside a comprehension question.
+// Type is one of "mcq", "true_false", "fill_blank".
+type ComprehensionSubQuestion struct {
+	ID      string `json:"id"`               // e.g. "sq0", "sq1"
+	Type    string `json:"type"`             // "mcq" | "true_false" | "fill_blank"
+	Prompt  string `json:"prompt"`
+	OptionA string `json:"optionA,omitempty"`
+	OptionB string `json:"optionB,omitempty"`
+	OptionC string `json:"optionC,omitempty"`
+	OptionD string `json:"optionD,omitempty"`
+	Correct string `json:"correct"` // "a"-"d" | "t"/"f" | exact text
+}
+
+// ComprehensionData is the payload for a comprehension question.
+type ComprehensionData struct {
+	Passage      string                    `json:"passage"`
+	SubQuestions []ComprehensionSubQuestion `json:"subQuestions"`
+}
+
 // MatchPair is one left→right pair inside a matching question.
 type MatchPair struct {
 	Left  string `json:"left"`
@@ -42,10 +61,11 @@ type QuizQuestionInput struct {
 	BlankAnswer   string      `json:"blankAnswer,omitempty"`
 	ReorderItems  []string      `json:"reorderItems,omitempty"`
 	MatchPairs    []MatchPair   `json:"matchPairs,omitempty"`
-	HotspotZones  []HotspotZone `json:"hotspotZones,omitempty"`
-	ImageURL      string        `json:"imageUrl,omitempty"`
-	Explanation   string        `json:"explanation,omitempty"`
-	Hint          string        `json:"hint,omitempty"`
+	HotspotZones       []HotspotZone      `json:"hotspotZones,omitempty"`
+	ComprehensionData  *ComprehensionData `json:"comprehensionData,omitempty"`
+	ImageURL           string             `json:"imageUrl,omitempty"`
+	Explanation        string             `json:"explanation,omitempty"`
+	Hint               string             `json:"hint,omitempty"`
 }
 
 // CreateQuizRequest is the input for creating a quiz.
@@ -115,11 +135,12 @@ type QuizQuestionDTO struct {
 	BlankAnswer   *string     `json:"blankAnswer,omitempty"`
 	ReorderItems  []string      `json:"reorderItems,omitempty"`
 	MatchPairs    []MatchPair   `json:"matchPairs,omitempty"`
-	HotspotZones  []HotspotZone `json:"hotspotZones,omitempty"`
-	ImageURL      *string       `json:"imageUrl,omitempty"`
-	Explanation   *string       `json:"explanation,omitempty"`
-	Hint          *string       `json:"hint,omitempty"`
-	OrderIndex    int           `json:"orderIndex"`
+	HotspotZones      []HotspotZone      `json:"hotspotZones,omitempty"`
+	ComprehensionData *ComprehensionData `json:"comprehensionData,omitempty"`
+	ImageURL          *string            `json:"imageUrl,omitempty"`
+	Explanation       *string            `json:"explanation,omitempty"`
+	Hint              *string            `json:"hint,omitempty"`
+	OrderIndex        int                `json:"orderIndex"`
 }
 
 // QuizDetail is the full quiz response with questions.
@@ -185,10 +206,11 @@ type AttemptAnswerResult struct {
 	OrderAnswer    []string    `json:"orderAnswer,omitempty"`
 	ReorderItems   []string    `json:"reorderItems,omitempty"`
 	MatchPairs     []MatchPair   `json:"matchPairs,omitempty"`
-	HotspotZones   []HotspotZone `json:"hotspotZones,omitempty"`
-	ImageURL       *string       `json:"imageUrl,omitempty"`
-	Explanation    *string       `json:"explanation,omitempty"`
-	IsCorrect      bool          `json:"isCorrect"`
+	HotspotZones      []HotspotZone      `json:"hotspotZones,omitempty"`
+	ComprehensionData *ComprehensionData `json:"comprehensionData,omitempty"`
+	ImageURL          *string            `json:"imageUrl,omitempty"`
+	Explanation       *string            `json:"explanation,omitempty"`
+	IsCorrect         bool               `json:"isCorrect"`
 	TimeSpent      int           `json:"timeSpent"`
 	OrderIndex     int           `json:"orderIndex"`
 }

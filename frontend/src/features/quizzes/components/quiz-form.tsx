@@ -26,12 +26,16 @@ import {
   BarChart2,
   ChevronDown,
   Layers,
+  Tag,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useToast } from "@/components/ui/toast";
 import type {
+  ComprehensionData,
+  ComprehensionSubQuestion,
   CreateQuizInput,
   HotspotZone,
   MatchPair,
@@ -222,6 +226,21 @@ function applyTypeChange(
         reorderItems: [],
         matchPairs: [],
         hotspotZones: q.hotspotZones && q.hotspotZones.length > 0 ? q.hotspotZones : [],
+        comprehensionData: undefined,
+      };
+    case "comprehension":
+      return {
+        ...base,
+        optionA: "",
+        optionB: "",
+        optionC: "",
+        optionD: "",
+        correctOption: "",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
+        hotspotZones: [],
+        comprehensionData: q.comprehensionData ?? { passage: "", subQuestions: [] },
       };
   }
 }
@@ -660,6 +679,8 @@ const TYPE_OPTIONS: TypeOption[] = [
   { key: "poll", labelKey: "quiz.typePoll", icon: BarChart2 },
   { key: "dropdown", labelKey: "quiz.typeDropdown", icon: ChevronDown },
   { key: "categorization", labelKey: "quiz.typeCategorization", icon: Layers },
+  { key: "labeling", labelKey: "quiz.typeLabeling", icon: Tag },
+  { key: "comprehension", labelKey: "quiz.typeComprehension", icon: BookOpen },
 ];
 
 function QuestionEditor({
@@ -775,6 +796,8 @@ function QuestionEditor({
         <DropdownBody question={question} onChange={onChange} />
       ) : questionType === "categorization" ? (
         <CategorizationBody question={question} onChange={onChange} />
+      ) : questionType === "comprehension" ? (
+        <ComprehensionBody question={question} onChange={onChange} />
       ) : (
         <ReorderBody question={question} onChange={onChange} />
       )}
@@ -1629,6 +1652,188 @@ function CategorizationBody({
         <Plus className="h-3.5 w-3.5" />
         {t("quiz.categorization.addItem")}
       </button>
+    </div>
+  );
+}
+
+const SUB_Q_TYPES: Array<{ value: ComprehensionSubQuestion["type"]; label: string }> = [
+  { value: "mcq", label: "MCQ" },
+  { value: "true_false", label: "True/False" },
+  { value: "fill_blank", label: "Fill blank" },
+];
+
+function ComprehensionBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const cd: ComprehensionData = question.comprehensionData ?? { passage: "", subQuestions: [] };
+
+  const setPassage = (passage: string) => {
+    onChange({ comprehensionData: { ...cd, passage } });
+  };
+
+  const addSubQ = () => {
+    if (cd.subQuestions.length >= 10) return;
+    const newSq: ComprehensionSubQuestion = {
+      id: `sq${cd.subQuestions.length}`,
+      type: "mcq",
+      prompt: "",
+      optionA: "",
+      optionB: "",
+      optionC: "",
+      optionD: "",
+      correct: "a",
+    };
+    onChange({ comprehensionData: { ...cd, subQuestions: [...cd.subQuestions, newSq] } });
+  };
+
+  const updateSubQ = (idx: number, patch: Partial<ComprehensionSubQuestion>) => {
+    const next = cd.subQuestions.map((sq, i) => (i === idx ? { ...sq, ...patch } : sq));
+    onChange({ comprehensionData: { ...cd, subQuestions: next } });
+  };
+
+  const removeSubQ = (idx: number) => {
+    onChange({ comprehensionData: { ...cd, subQuestions: cd.subQuestions.filter((_, i) => i !== idx) } });
+  };
+
+  return (
+    <div className="mt-3 space-y-4">
+      <p className="text-[11px] text-[var(--text-muted)]">{t("quiz.comprehension.hint")}</p>
+      <div>
+        <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          {t("quiz.comprehension.passageLabel")}
+        </label>
+        <textarea
+          value={cd.passage}
+          onChange={(e) => setPassage(e.target.value)}
+          placeholder={t("quiz.comprehension.passagePlaceholder")}
+          rows={5}
+          className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+        />
+      </div>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            {t("quiz.comprehension.subQuestions")}
+          </span>
+          <button
+            type="button"
+            onClick={addSubQ}
+            disabled={cd.subQuestions.length >= 10}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-dashed border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-40"
+          >
+            <Plus className="h-3 w-3" />
+            {t("quiz.comprehension.addSubQuestion")}
+          </button>
+        </div>
+
+        {cd.subQuestions.length === 0 ? (
+          <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-4 text-center text-xs text-[var(--text-muted)]">
+            {t("quiz.comprehension.addSubQuestion")}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {cd.subQuestions.map((sq, idx) => (
+              <div
+                key={sq.id}
+                className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] p-3 space-y-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--primary)]/15 text-xs font-bold text-[var(--primary)]">
+                    {idx + 1}
+                  </span>
+                  <select
+                    value={sq.type}
+                    onChange={(e) => updateSubQ(idx, { type: e.target.value as ComprehensionSubQuestion["type"], correct: e.target.value === "true_false" ? "t" : "a" })}
+                    className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-base)] px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
+                  >
+                    {SUB_Q_TYPES.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeSubQ(idx)}
+                    className="ml-auto inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
+                    aria-label={t("quiz.removeQuestion")}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <input
+                  value={sq.prompt}
+                  onChange={(e) => updateSubQ(idx, { prompt: e.target.value })}
+                  placeholder={t("quiz.comprehension.subQPrompt")}
+                  className="w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+                />
+                {sq.type === "mcq" ? (
+                  <div className="grid gap-1.5 sm:grid-cols-2">
+                    {(["a", "b", "c", "d"] as const).map((letter, li) => {
+                      const field = (["optionA", "optionB", "optionC", "optionD"] as const)[li];
+                      const selected = sq.correct === letter;
+                      return (
+                        <div
+                          key={letter}
+                          className={`flex items-center gap-2 rounded-[var(--radius-sm)] border px-2 py-1.5 transition-colors ${
+                            selected ? "border-[var(--success)] bg-[var(--success)]/10" : "border-[var(--border)]"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => updateSubQ(idx, { correct: letter })}
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold uppercase transition-colors ${
+                              selected
+                                ? "border-[var(--success)] bg-[var(--success)] text-white"
+                                : "border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--primary)]"
+                            }`}
+                          >
+                            {letter}
+                          </button>
+                          <input
+                            value={sq[field] ?? ""}
+                            onChange={(e) => updateSubQ(idx, { [field]: e.target.value })}
+                            placeholder={t("quiz.optionPlaceholder")}
+                            className="min-w-0 flex-1 bg-transparent text-xs text-[var(--text-primary)] outline-none"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : sq.type === "true_false" ? (
+                  <div className="flex gap-2">
+                    {(["t", "f"] as const).map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => updateSubQ(idx, { correct: val })}
+                        className={`flex-1 rounded-[var(--radius-sm)] border py-1.5 text-xs font-medium transition-colors ${
+                          sq.correct === val
+                            ? "border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]"
+                            : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)]"
+                        }`}
+                      >
+                        {val === "t" ? "True" : "False"}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <input
+                    value={sq.correct}
+                    onChange={(e) => updateSubQ(idx, { correct: e.target.value })}
+                    placeholder={t("quiz.comprehension.subQCorrect")}
+                    className="w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

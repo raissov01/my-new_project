@@ -24,10 +24,26 @@ export type QuizOverview = {
   tags?: string[];
 };
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling" | "comprehension";
 
 export type MatchPair = { left: string; right: string };
 export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string; correctLabel?: string };
+
+export type ComprehensionSubQuestion = {
+  id: string;
+  type: "mcq" | "true_false" | "fill_blank";
+  prompt: string;
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
+  correct: string;
+};
+
+export type ComprehensionData = {
+  passage: string;
+  subQuestions: ComprehensionSubQuestion[];
+};
 
 export type QuizQuestionDTO = {
   id: string;
@@ -42,6 +58,7 @@ export type QuizQuestionDTO = {
   reorderItems?: string[] | null;
   matchPairs?: MatchPair[] | null;
   hotspotZones?: HotspotZone[] | null;
+  comprehensionData?: ComprehensionData | null;
   imageUrl?: string | null;
   explanation?: string | null;
   hint?: string | null;

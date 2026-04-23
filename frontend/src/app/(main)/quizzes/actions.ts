@@ -7,10 +7,25 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling" | "comprehension";
 
 export type MatchPair = { left: string; right: string };
 export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string; correctLabel?: string };
+
+export type ComprehensionSubQuestion = {
+  id: string;
+  type: "mcq" | "true_false" | "fill_blank";
+  prompt: string;
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
+  correct: string;
+};
+export type ComprehensionData = {
+  passage: string;
+  subQuestions: ComprehensionSubQuestion[];
+};
 
 export type QuizQuestionInput = {
   id?: string;
@@ -25,6 +40,7 @@ export type QuizQuestionInput = {
   reorderItems?: string[];
   matchPairs?: MatchPair[];
   hotspotZones?: HotspotZone[];
+  comprehensionData?: ComprehensionData;
   imageUrl?: string;
   explanation?: string;
   hint?: string;
@@ -76,6 +92,7 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
         reorderItems,
         matchPairs,
         hotspotZones,
+        comprehensionData: q.comprehensionData,
         imageUrl: (q.imageUrl ?? "").trim(),
         explanation: (q.explanation ?? "").trim(),
         hint: (q.hint ?? "").trim(),
@@ -91,7 +108,8 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
         q.blankAnswer ||
         (q.reorderItems && q.reorderItems.length > 0) ||
         (q.matchPairs && q.matchPairs.length > 0) ||
-        (q.hotspotZones && q.hotspotZones.length > 0)
+        (q.hotspotZones && q.hotspotZones.length > 0) ||
+        q.comprehensionData
     );
 }
 
