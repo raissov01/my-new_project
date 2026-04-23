@@ -13,9 +13,8 @@ interface ExtractedWord {
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 async function extractWords(text: string, level: string): Promise<ExtractedWord[]> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
   try {
-    const res = await fetch(`${apiUrl}/mining/extract`, {
+    const res = await fetch("/api/mining", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, level }),
