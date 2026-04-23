@@ -268,6 +268,13 @@ func (s *AITutorService) callLLM(ctx context.Context, system string, msgs []Chat
 }
 
 func (s *AITutorService) callOpenAI(ctx context.Context, system string, msgs []ChatMessage) (string, error) {
+	if s.openAIKey == "" {
+		return "", fmt.Errorf("openai: no API key configured")
+	}
+	model := s.openAIModel
+	if model == "" {
+		model = "gpt-4o-mini"
+	}
 	type oaMsg struct {
 		Role    string `json:"role"`
 		Content string `json:"content"`
@@ -277,7 +284,7 @@ func (s *AITutorService) callOpenAI(ctx context.Context, system string, msgs []C
 		oaMsgs = append(oaMsgs, oaMsg{Role: m.Role, Content: m.Content})
 	}
 	body, _ := json.Marshal(map[string]any{
-		"model":       s.openAIModel,
+		"model":       model,
 		"messages":    oaMsgs,
 		"max_tokens":  400,
 		"temperature": 0.8,
@@ -291,17 +298,20 @@ func (s *AITutorService) callOpenAI(ctx context.Context, system string, msgs []C
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("openai: request failed: %w", err)
 	}
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("openai: status %d: %s", resp.StatusCode, string(raw))
+	}
 	var result struct {
 		Choices []struct {
 			Message struct{ Content string } `json:"message"`
 		} `json:"choices"`
 	}
 	if err2 := json.Unmarshal(raw, &result); err2 != nil || len(result.Choices) == 0 {
-		return "", fmt.Errorf("openai: unexpected response")
+		return "", fmt.Errorf("openai: unexpected response: %s", string(raw))
 	}
 	return result.Choices[0].Message.Content, nil
 }
@@ -329,10 +339,13 @@ func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []C
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("claude: request failed: %w", err)
 	}
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("claude: status %d: %s", resp.StatusCode, string(raw))
+	}
 	var result struct {
 		Content []struct {
 			Type string `json:"type"`
