@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ScoreRadarDashboard from "@/components/dashboard/ScoreRadarDashboard";
 import {
   ArrowRight,
   BookOpen,
@@ -61,6 +62,9 @@ export default async function StudentDashboardPage() {
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
+      {/* IELTS Score Radar — hero element */}
+      <ScoreRadarDashboard />
+
       {/* Hero */}
       <section className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">
         <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-[var(--primary)] opacity-[0.06]" style={{ filter: "blur(60px)" }} />
