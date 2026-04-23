@@ -17,6 +17,10 @@ import {
   MessageSquareText,
   Gamepad2,
   ListChecks,
+  Headphones,
+  BotMessageSquare,
+  Newspaper,
+  Pickaxe,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -44,6 +48,10 @@ export function Navbar() {
         { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
         { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks, exact: false },
+        { href: "/listen", label: t("nav.listen"), icon: Headphones, exact: false },
+        { href: "/tutor", label: t("nav.tutor"), icon: BotMessageSquare, exact: false },
+        { href: "/daily-news", label: t("nav.dailyNews"), icon: Newspaper, exact: false },
+        { href: "/mining", label: t("nav.mining"), icon: Pickaxe, exact: false },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
       ]
     : [
@@ -51,6 +59,8 @@ export function Navbar() {
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
         { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks, exact: false },
+        { href: "/listen", label: t("nav.listen"), icon: Headphones, exact: false },
+        { href: "/daily-news", label: t("nav.dailyNews"), icon: Newspaper, exact: false },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle, exact: true },
       ];
 

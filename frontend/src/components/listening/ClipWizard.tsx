@@ -6,6 +6,7 @@ import { AudioPlayer } from "./AudioPlayer";
 import { TranscriptViewer } from "./TranscriptViewer";
 import type { ListeningClip, ListeningQuestion, VocabItem } from "@/features/listening/api";
 import { recordListeningProgress } from "@/features/listening/api";
+import { recordDailyActivity } from "@/features/gamification/api";
 
 interface Props {
   clip: ListeningClip;
@@ -69,7 +70,10 @@ export function ClipWizard({ clip, questions }: Props) {
     const finalScore = Math.min(100, pts);
     setScore(finalScore);
     setCompleted(true);
-    await recordListeningProgress(clip.id, finalScore, true);
+    await Promise.all([
+      recordListeningProgress(clip.id, finalScore, true),
+      recordDailyActivity(xpForClip, 0),
+    ]);
   }, [quizAnswers, blankAnswers, blanks, comprQuestions, clip.id]);
 
   const next = () => {

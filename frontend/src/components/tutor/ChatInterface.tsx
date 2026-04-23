@@ -5,6 +5,7 @@ import { Send, Loader2, CheckCircle2 } from "lucide-react";
 import { sendMessage, gradeConversation, startConversation } from "@/features/tutor/api";
 import type { AIScenario, ConversationMessage, GradeScores } from "@/features/tutor/api";
 import { GradeResults } from "./GradeResults";
+import { VoiceInput } from "./VoiceInput";
 
 interface Props {
   scenario: AIScenario;
@@ -140,12 +141,16 @@ export function ChatInterface({ scenario }: Props) {
       {/* Input */}
       <div className="border-t border-[var(--border)] p-3">
         <div className="flex items-center gap-2">
+          <VoiceInput
+            onTranscript={(text) => setInput((prev) => prev ? `${prev} ${text}` : text)}
+            disabled={isPending || userMsgCount >= 15}
+          />
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Type your message…"
+            placeholder="Type or speak your message…"
             disabled={isPending || userMsgCount >= 15}
             className="flex-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--primary)] disabled:opacity-50"
           />
