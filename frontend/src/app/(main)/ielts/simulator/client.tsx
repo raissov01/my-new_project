@@ -8,6 +8,7 @@ import {
   BookOpen,
   CheckCircle2,
   ClipboardCheck,
+  Flag,
   Headphones,
   Loader2,
   Mic,
@@ -21,7 +22,7 @@ import {
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
-import type { IELTSMockExam, IELTSMockSection, IELTSQuestion } from "@/features/ielts/api";
+import type { IELTSMockExam, IELTSQuestion } from "@/features/ielts/api";
 import { fetchIELTSMockExam, fetchIELTSQuestions } from "@/features/ielts/api";
 import { useAutosave } from "@/features/ielts/use-autosave";
 import { useExamMode } from "@/features/ielts/use-exam-mode";
@@ -57,7 +58,7 @@ export function SimulatorClient() {
   const [stage, setStage] = useState<Stage>("configure");
   const [mockType, setMockType] = useState<MockType>("predictions");
   const [section, setSection] = useState<Section>("full");
-  const [bandTarget, setBandTarget] = useState<BandTarget>("6.5");
+  const [bandTarget] = useState<BandTarget>("6.5");
   const [cambridgeExamSet, setCambridgeExamSet] = useState("auto");
   const [predictionExamSet, setPredictionExamSet] = useState("auto");
   const [cambridgeExamSets, setCambridgeExamSets] = useState<string[]>([]);
@@ -83,8 +84,19 @@ export function SimulatorClient() {
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptStartedAt, setAttemptStartedAt] = useState<number | null>(null);
   const [isTerminating, setIsTerminating] = useState(false);
+  const [passageFontSize, setPassageFontSize] = useState<0 | 1 | 2>(0);
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasUserInteractionRef = useRef(false);
+
+  const toggleFlag = useCallback((questionId: string) => {
+    setFlaggedQuestions((prev) => {
+      const next = new Set(prev);
+      if (next.has(questionId)) next.delete(questionId);
+      else next.add(questionId);
+      return next;
+    });
+  }, []);
 
   const goToConfigure = useCallback(() => {
     setStage("configure");
@@ -199,8 +211,6 @@ export function SimulatorClient() {
     { key: "writing", title: t("ielts.simWriting"), icon: PenLine, time: "60 min" },
     { key: "speaking", title: t("ielts.simSpeaking"), icon: Mic, time: "11-14 min" },
   ];
-
-  const bands: BandTarget[] = ["5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0"];
 
   const startSectionTimer = useCallback(
     (durationMinutes: number) => {
@@ -958,53 +968,16 @@ export function SimulatorClient() {
       </div>
 
       {currentSection.key === "reading" && (
-        <div className="space-y-5">
-          {groupedQuestions.map((group, groupIndex) => {
-            const questionStartIndex = groupedQuestions
-              .slice(0, groupIndex)
-              .reduce((acc, g) => acc + g.questions.length, 0);
-            return (
-            <section
-              key={group.key}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                    {group.title}
-                  </h3>
-                  {group.topic ? (
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                      {t("ielts.sim.topic")}: {group.topic}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-
-              {group.content ? (
-                <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
-                    {group.content}
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="mt-5 space-y-4">
-                {group.questions.map((question, localIndex) => (
-                  <ObjectiveQuestionCard
-                    key={question.id}
-                    index={questionStartIndex + localIndex + 1}
-                    question={question}
-                    value={objectiveAnswers[question.id] ?? ""}
-                    revealed={isCurrentSectionRevealed}
-                    onChange={handleObjectiveAnswer}
-                  />
-                ))}
-              </div>
-            </section>
-            );
-          })}
-        </div>
+        <ReadingSplitPanel
+          groups={groupedQuestions}
+          objectiveAnswers={objectiveAnswers}
+          flaggedQuestions={flaggedQuestions}
+          revealed={isCurrentSectionRevealed}
+          passageFontSize={passageFontSize}
+          onSetFontSize={setPassageFontSize}
+          onToggleFlag={toggleFlag}
+          onAnswer={handleObjectiveAnswer}
+        />
       )}
 
       {currentSection.key === "listening" && (
@@ -1596,12 +1569,16 @@ function ObjectiveQuestionCard({
   question,
   value,
   revealed,
+  flagged,
+  onToggleFlag,
   onChange,
 }: {
   index: number;
   question: IELTSQuestion;
   value: string;
   revealed: boolean;
+  flagged?: boolean;
+  onToggleFlag?: (id: string) => void;
   onChange: (questionId: string, value: string) => void;
 }) {
   const { t } = useLocale();
@@ -1612,7 +1589,13 @@ function ObjectiveQuestionCard({
   const qtypeLabel = t(qtypeKey) ?? question.questionType.replace(/_/g, " ").toUpperCase();
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+    <div
+      className={`rounded-2xl border p-4 ${
+        flagged && !revealed
+          ? "border-amber-500/30 bg-amber-500/5"
+          : "border-[var(--border)] bg-[var(--bg-surface)]"
+      }`}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
           Q{index}
@@ -1630,6 +1613,20 @@ function ObjectiveQuestionCard({
           >
             {isCorrect ? t("ielts.sim.correctBadge") : t("ielts.sim.checkAnswer")}
           </span>
+        ) : null}
+        {onToggleFlag && !revealed ? (
+          <button
+            type="button"
+            onClick={() => onToggleFlag(question.id)}
+            className={`ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              flagged
+                ? "border-amber-500/40 bg-amber-500/15 text-amber-400"
+                : "border-[var(--border)] text-[var(--text-muted)] hover:border-amber-500/40 hover:text-amber-400"
+            }`}
+          >
+            <Flag className="h-3 w-3" />
+            {flagged ? t("ielts.sim.unflag") : t("ielts.sim.flag")}
+          </button>
         ) : null}
       </div>
 
@@ -1684,6 +1681,258 @@ function ObjectiveQuestionCard({
           ) : null}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function ReadingSplitPanel({
+  groups,
+  objectiveAnswers,
+  flaggedQuestions,
+  revealed,
+  passageFontSize,
+  onSetFontSize,
+  onToggleFlag,
+  onAnswer,
+}: {
+  groups: QuestionGroup[];
+  objectiveAnswers: Record<string, string>;
+  flaggedQuestions: Set<string>;
+  revealed: boolean;
+  passageFontSize: 0 | 1 | 2;
+  onSetFontSize: (n: 0 | 1 | 2) => void;
+  onToggleFlag: (id: string) => void;
+  onAnswer: (id: string, value: string) => void;
+}) {
+  const { t } = useLocale();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [splitPct, setSplitPct] = useState(52);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const questionOffsets = groups.map((_, gi) =>
+    groups.slice(0, gi).reduce((acc, g) => acc + g.questions.length, 0)
+  );
+  const allQuestions = groups.flatMap((g) => g.questions);
+  const group = groups[activeIndex] ?? groups[0];
+
+  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const onMove = (ev: MouseEvent) => {
+      if (!isDragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+      setSplitPct(Math.min(70, Math.max(30, pct)));
+    };
+    const onUp = () => {
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, []);
+
+  const scrollToQuestion = useCallback((qid: string) => {
+    for (let gi = 0; gi < groups.length; gi++) {
+      if (groups[gi].questions.some((q) => q.id === qid)) {
+        setActiveIndex(gi);
+        setTimeout(() => {
+          questionRefs.current[qid]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }, 60);
+        return;
+      }
+    }
+  }, [groups]);
+
+  const fontSizeClass = ["text-sm", "text-base", "text-lg"][passageFontSize];
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Top toolbar: passage tabs + font size */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-1.5">
+          {groups.map((g, gi) => {
+            const start = questionOffsets[gi];
+            const end = start + g.questions.length;
+            const answeredCount = g.questions.filter((q) => (objectiveAnswers[q.id] ?? "") !== "").length;
+            return (
+              <button
+                key={g.key}
+                onClick={() => setActiveIndex(gi)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                  activeIndex === gi
+                    ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                    : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+                }`}
+              >
+                {t("ielts.sim.passageN", { n: gi + 1 })}
+                <span className="rounded-full border border-current/20 bg-current/10 px-1.5 py-px text-[9px] font-semibold">
+                  Q{start + 1}–{end}
+                </span>
+                {!revealed && answeredCount > 0 && (
+                  <span className="rounded-full bg-emerald-500/20 px-1.5 py-px text-[9px] font-semibold text-emerald-400">
+                    {answeredCount}/{g.questions.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Font size controls */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            {t("ielts.sim.fontSize")}
+          </span>
+          {([0, 1, 2] as const).map((n) => {
+            const labels = ["A−", "A", "A+"];
+            return (
+              <button
+                key={n}
+                onClick={() => onSetFontSize(n)}
+                className={`flex h-7 min-w-[28px] items-center justify-center rounded-lg border px-1.5 text-xs font-bold transition-colors ${
+                  passageFontSize === n
+                    ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                    : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+                }`}
+              >
+                {labels[n]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Split panel */}
+      <div
+        ref={containerRef}
+        className="flex overflow-hidden rounded-2xl border border-[var(--border)]"
+        style={{ height: "calc(100vh - 360px)", minHeight: "420px" }}
+      >
+        {/* Left: passage text */}
+        <div
+          className="overflow-y-auto border-r border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4"
+          style={{ width: `${splitPct}%` }}
+        >
+          <h3 className="text-base font-bold text-[var(--text-primary)]">{group.title}</h3>
+          {group.topic ? (
+            <p className="mt-1 text-xs text-[var(--text-muted)]">{group.topic}</p>
+          ) : null}
+          {group.content ? (
+            <p
+              className={`mt-4 whitespace-pre-wrap leading-[1.9] text-[var(--text-secondary)] ${fontSizeClass}`}
+            >
+              {group.content}
+            </p>
+          ) : (
+            <p className="mt-4 text-sm italic text-[var(--text-muted)]">
+              {t("ielts.sim.noPassageContent")}
+            </p>
+          )}
+        </div>
+
+        {/* Resizable divider */}
+        <div
+          onMouseDown={handleDividerMouseDown}
+          className="group flex w-2 shrink-0 cursor-col-resize select-none items-center justify-center bg-[var(--border)] transition-colors hover:bg-[var(--primary)]/30"
+        >
+          <div className="h-10 w-0.5 rounded-full bg-[var(--text-muted)] opacity-40 group-hover:opacity-100 transition-opacity" />
+        </div>
+
+        {/* Right: questions */}
+        <div
+          className="overflow-y-auto px-5 py-4"
+          style={{ width: `${100 - splitPct - 0.2}%` }}
+        >
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            {t("ielts.sim.questionsRange", {
+              from: questionOffsets[activeIndex] + 1,
+              to: questionOffsets[activeIndex] + group.questions.length,
+            })}
+          </p>
+          <div className="space-y-4">
+            {group.questions.map((q, li) => (
+              <div
+                key={q.id}
+                ref={(el) => {
+                  questionRefs.current[q.id] = el;
+                }}
+              >
+                <ObjectiveQuestionCard
+                  index={questionOffsets[activeIndex] + li + 1}
+                  question={q}
+                  value={objectiveAnswers[q.id] ?? ""}
+                  revealed={revealed}
+                  flagged={flaggedQuestions.has(q.id)}
+                  onToggleFlag={onToggleFlag}
+                  onChange={onAnswer}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Question navigator */}
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
+        <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+          {t("ielts.sim.questionNav")}
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {allQuestions.map((q, idx) => {
+            const answered = (objectiveAnswers[q.id] ?? "") !== "";
+            const flaggedQ = flaggedQuestions.has(q.id);
+            const correct = revealed && normalizeAnswer(objectiveAnswers[q.id] ?? "") === normalizeAnswer(q.answer ?? "");
+            const wrong = revealed && answered && !correct;
+            return (
+              <button
+                key={q.id}
+                onClick={() => scrollToQuestion(q.id)}
+                title={`Q${idx + 1}${flaggedQ ? " ⚑" : ""}`}
+                className={`flex h-7 w-7 items-center justify-center rounded text-[11px] font-semibold transition-colors ${
+                  revealed
+                    ? correct
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : wrong
+                        ? "bg-red-500/20 text-red-400"
+                        : "bg-[var(--bg-soft)] text-[var(--text-muted)]"
+                    : flaggedQ
+                      ? "bg-amber-500/25 text-amber-400"
+                      : answered
+                        ? "bg-[var(--primary-soft)] text-[var(--primary)]"
+                        : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-soft)]"
+                }`}
+              >
+                {idx + 1}
+              </button>
+            );
+          })}
+        </div>
+        {!revealed && (
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-[10px] text-[var(--text-muted)]">
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-[var(--primary-soft)]" />
+              {t("ielts.sim.answered")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-amber-500/25" />
+              {t("ielts.sim.flagged")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-[var(--bg-surface)] border border-[var(--border)]" />
+              {t("ielts.sim.unanswered")}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
