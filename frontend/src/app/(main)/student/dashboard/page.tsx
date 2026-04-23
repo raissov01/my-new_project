@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ScoreRadarDashboard from "@/components/dashboard/ScoreRadarDashboard";
+import { getIELTSScoreHistory } from "@/server/services/ielts-score-history";
 import {
   ArrowRight,
   BookOpen,
@@ -40,13 +41,14 @@ export default async function StudentDashboardPage() {
     redirect(access.redirectTo);
   }
 
-  const [summary, stats, quizAssignments, recentAttempts, recommendedQuizzes] =
+  const [summary, stats, quizAssignments, recentAttempts, recommendedQuizzes, scoreHistory] =
     await Promise.all([
       getStudentDashboardSummary(access.user?.id),
       getUserStats(),
       getStudentQuizAssignments(),
       getRecentQuizAttempts(),
       getRecommendedQuizzes(),
+      getIELTSScoreHistory(),
     ]);
 
   if (!summary) {
@@ -62,8 +64,8 @@ export default async function StudentDashboardPage() {
 
   return (
     <div className="page-shell py-5 sm:py-8 lg:py-10">
-      {/* IELTS Score Radar — hero element */}
-      <ScoreRadarDashboard />
+      {/* IELTS Score Radar — only shown when user has ≥2 completed full mock attempts */}
+      {scoreHistory.length >= 2 && <ScoreRadarDashboard scoreHistory={scoreHistory} />}
 
       {/* Hero */}
       <section className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">

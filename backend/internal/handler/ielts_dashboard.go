@@ -164,6 +164,103 @@ func (h *IELTSDashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// ── GetScoreHistory ────────────────────────────────────────────────────────
+//
+// GET /api/v1/ielts/dashboard/score-history
+// Returns up to 3 completed full-mock score entries (first, middle, latest).
+// Returns {"entries":[]} when the user has fewer than 2 valid attempts.
+
+type scoreHistoryEntry struct {
+	Label     string  `json:"label"`
+	Date      string  `json:"date"`
+	Reading   float64 `json:"reading"`
+	Writing   float64 `json:"writing"`
+	Listening float64 `json:"listening"`
+	Speaking  float64 `json:"speaking"`
+}
+
+type attemptBands struct {
+	ReadingBand   *float64 `json:"readingBand"`
+	WritingBand   *float64 `json:"writingBand"`
+	ListeningBand *float64 `json:"listeningBand"`
+	SpeakingBand  *float64 `json:"speakingBand"`
+}
+
+func (h *IELTSDashboardHandler) GetScoreHistory(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var attempts []models.IELTSAttempt
+	h.db.Where("user_id = ? AND status = 'completed' AND attempt_type = 'full_mock'", userID).
+		Order("completed_at ASC").
+		Find(&attempts)
+
+	type validEntry struct {
+		Reading   float64
+		Writing   float64
+		Listening float64
+		Speaking  float64
+		Date      time.Time
+	}
+
+	var valid []validEntry
+	for _, a := range attempts {
+		if a.Results == nil {
+			continue
+		}
+		var bands attemptBands
+		if err := json.Unmarshal([]byte(*a.Results), &bands); err != nil {
+			continue
+		}
+		if bands.ReadingBand == nil || bands.WritingBand == nil ||
+			bands.ListeningBand == nil || bands.SpeakingBand == nil {
+			continue
+		}
+		date := a.CreatedAt
+		if a.CompletedAt != nil {
+			date = *a.CompletedAt
+		}
+		valid = append(valid, validEntry{
+			Reading:   math.Round(*bands.ReadingBand*2) / 2,
+			Writing:   math.Round(*bands.WritingBand*2) / 2,
+			Listening: math.Round(*bands.ListeningBand*2) / 2,
+			Speaking:  math.Round(*bands.SpeakingBand*2) / 2,
+			Date:      date,
+		})
+	}
+
+	if len(valid) < 2 {
+		writeJSON(w, http.StatusOK, map[string]any{"entries": []any{}})
+		return
+	}
+
+	entries := make([]scoreHistoryEntry, 0, 3)
+
+	toEntry := func(v validEntry, label string) scoreHistoryEntry {
+		return scoreHistoryEntry{
+			Label:     label,
+			Date:      v.Date.Format("2006-01"),
+			Reading:   v.Reading,
+			Writing:   v.Writing,
+			Listening: v.Listening,
+			Speaking:  v.Speaking,
+		}
+	}
+
+	entries = append(entries, toEntry(valid[0], "1-ші әрекет"))
+
+	if len(valid) >= 3 {
+		entries = append(entries, toEntry(valid[len(valid)/2], "Өткен ай"))
+	}
+
+	entries = append(entries, toEntry(valid[len(valid)-1], "Қазір"))
+
+	writeJSON(w, http.StatusOK, map[string]any{"entries": entries})
+}
+
 // ── GetWeaknessAnalysis ────────────────────────────────────────────────────
 
 func (h *IELTSDashboardHandler) GetWeaknessAnalysis(w http.ResponseWriter, r *http.Request) {

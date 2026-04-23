@@ -12,14 +12,8 @@ export interface ScoreEntry {
 }
 
 interface Props {
-  scoreHistory?: ScoreEntry[];
+  scoreHistory: ScoreEntry[];
 }
-
-const DEFAULT_HISTORY: ScoreEntry[] = [
-  { label: "1-ші әрекет", date: "2024-09", reading: 5.0, writing: 4.5, listening: 5.5, speaking: 5.0 },
-  { label: "Өткен ай",    date: "2025-02", reading: 6.0, writing: 5.5, listening: 6.5, speaking: 6.0 },
-  { label: "Қазір",       date: "2025-03", reading: 7.0, writing: 6.5, listening: 7.5, speaking: 7.0 },
-];
 
 const AXES = ["Reading", "Writing", "Listening", "Speaking"] as const;
 type Axis = typeof AXES[number];
@@ -28,12 +22,14 @@ const AXIS_KEYS: Record<Axis, keyof ScoreEntry> = {
   Reading: "reading", Writing: "writing", Listening: "listening", Speaking: "speaking",
 };
 
-const SPARKLINES: Record<Axis, number[]> = {
-  Reading:   [5.0, 5.5, 5.5, 6.0, 7.0],
-  Writing:   [4.5, 5.0, 5.0, 5.5, 6.5],
-  Listening: [5.5, 6.0, 6.0, 6.5, 7.5],
-  Speaking:  [5.0, 5.5, 5.5, 6.0, 7.0],
-};
+function buildSparklines(history: ScoreEntry[]): Record<Axis, number[]> {
+  return {
+    Reading:   history.map((e) => e.reading),
+    Writing:   history.map((e) => e.writing),
+    Listening: history.map((e) => e.listening),
+    Speaking:  history.map((e) => e.speaking),
+  };
+}
 
 const MIN = 0;
 const MAX = 9;
@@ -69,7 +65,8 @@ function bandAvg(entry: ScoreEntry) {
   return ((entry.reading + entry.writing + entry.listening + entry.speaking) / 4).toFixed(1);
 }
 
-export default function ScoreRadarDashboard({ scoreHistory = DEFAULT_HISTORY }: Props) {
+export default function ScoreRadarDashboard({ scoreHistory }: Props) {
+  const sparklines = buildSparklines(scoreHistory);
   const [sliderIndex, setSliderIndex] = useState(scoreHistory.length - 1);
   const [animFrac, setAnimFrac] = useState(0);
   const [targetBand, setTargetBand] = useState(8.0);
@@ -378,7 +375,7 @@ export default function ScoreRadarDashboard({ scoreHistory = DEFAULT_HISTORY }: 
               const delta = +(curScore - firstScore).toFixed(1);
               const isWeak = curScore < 6.5;
               const isActive = activeAxis === ax;
-              const sparks = SPARKLINES[ax];
+              const sparks = sparklines[ax];
               const sparkMax = Math.max(...sparks);
               const sparkMin = Math.min(...sparks);
 

@@ -211,6 +211,7 @@ func RegisterRoutes(router *gin.Engine) {
 		// IELTS dashboard & analytics
 		internal.GET("/ielts/dashboard", wrapHTTP(deps.IELTSDashboard.GetDashboard))
 		internal.GET("/ielts/dashboard/weakness", wrapHTTP(deps.IELTSDashboard.GetWeaknessAnalysis))
+		internal.GET("/ielts/dashboard/score-history", wrapHTTP(deps.IELTSDashboard.GetScoreHistory))
 
 		// IELTS study plan
 		internal.POST("/ielts/study-plan", wrapHTTP(deps.IELTSStudyPlan.GeneratePlan))
