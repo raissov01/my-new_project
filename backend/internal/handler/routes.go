@@ -35,6 +35,7 @@ type Dependencies struct {
 	Chat               *ChatHandler
 	Files              *FilesHandler
 	QuizImage          *QuizImageHandler
+	QuizAudio          *QuizAudioHandler
 	QuizLive           *QuizLiveHandler
 	QuizAIGenerate     *QuizAIGenerateHandler
 	EngSim             *EngSimHandler
@@ -77,10 +78,11 @@ func RegisterRoutes(router *gin.Engine) {
 	// ── Public file serving (materials PDFs) ────────────────────────────
 	api.GET("/files/*filepath", wrapHTTP(deps.Files.Serve))
 
-	// ── Public quiz-question image serving ──────────────────────────────
+	// ── Public quiz-question image/audio serving ────────────────────────
 	// Upload is authenticated (see the internal group below); serving is
-	// public so anyone playing a public quiz can see the image.
+	// public so anyone playing a public quiz can see/hear the media.
 	api.GET("/quizzes/images/:name", wrapHTTP(deps.QuizImage.Serve))
+	api.GET("/quizzes/audio/:name", wrapHTTP(deps.QuizAudio.Serve))
 
 	// ── Live quiz WebSocket (public upgrade — auth handled inside hub) ───
 	api.GET("/live/:code/ws", wrapHTTP(deps.QuizLive.WebSocket))
@@ -163,6 +165,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/quizzes/:quizID/stats", wrapHTTP(deps.Quiz.GetQuestionStats))
 		internal.POST("/quizzes/:quizID/clone", wrapHTTP(deps.Quiz.CloneQuiz))
 		internal.POST("/quizzes/images", wrapHTTP(deps.QuizImage.Upload))
+		internal.POST("/quizzes/audio", wrapHTTP(deps.QuizAudio.Upload))
 
 			// Live quiz session management (host only — authentication required)
 			internal.POST("/quizzes/:quizID/live-sessions", wrapHTTP(deps.QuizLive.CreateSession))
@@ -231,6 +234,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/engsim/placement/start", wrapHTTP(deps.EngSim.StartPlacement))
 		internal.POST("/engsim/placement/submit", wrapHTTP(deps.EngSim.SubmitPlacement))
 		internal.GET("/engsim/map", wrapHTTP(deps.EngSim.GetMap))
+		internal.GET("/engsim/ielts-map", wrapHTTP(deps.EngSim.GetIELTSMap))
 		internal.GET("/engsim/progress", wrapHTTP(deps.EngSim.GetProgress))
 		internal.GET("/engsim/hearts", wrapHTTP(deps.EngSim.GetHearts))
 		simLimiter := middleware.NewRateLimiter(10, 1*time.Minute).LimitByUser()

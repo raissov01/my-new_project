@@ -8,11 +8,13 @@ import (
 	"time"
 
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/service"
 	"gorm.io/gorm"
 )
 
 type EngSimHandler struct {
 	db             *gorm.DB
+	gamSvc         *service.GamificationService
 	claudeKey      string
 	claudeModel    string
 	claudeFallback string
@@ -28,13 +30,13 @@ func NewEngSim(
 	openAIKey, openAIModel string,
 	timeout time.Duration,
 ) *EngSimHandler {
-	// Simulator needs fast responses for exercise generation.
 	simModel := openAIModel
 	if simModel == "gpt-5" || simModel == "o3" || simModel == "o4-mini" {
 		simModel = "gpt-4.1-mini"
 	}
 	return &EngSimHandler{
-		db: db, claudeKey: claudeKey, claudeModel: claudeModel,
+		db: db, gamSvc: service.NewGamification(db, nil),
+		claudeKey: claudeKey, claudeModel: claudeModel,
 		claudeFallback: claudeFallback, claudeURL: claudeURL,
 		openAIKey: openAIKey, openAIModel: simModel, timeout: timeout,
 	}
@@ -146,13 +148,22 @@ func (h *EngSimHandler) SubmitPlacement(w http.ResponseWriter, r *http.Request) 
 
 // ── Learning Map ───────────────────────────────────────────────────────
 
-// GetMap returns the full roadmap with units, lessons, and user progress.
+// GetMap returns the General English roadmap (course='GENERAL') with user progress.
 func (h *EngSimHandler) GetMap(w http.ResponseWriter, r *http.Request) {
+	h.getMapByCourse(w, r, "GENERAL")
+}
+
+// GetIELTSMap returns the IELTS roadmap (course='IELTS') with user progress.
+func (h *EngSimHandler) GetIELTSMap(w http.ResponseWriter, r *http.Request) {
+	h.getMapByCourse(w, r, "IELTS")
+}
+
+func (h *EngSimHandler) getMapByCourse(w http.ResponseWriter, r *http.Request, course string) {
 	userID := r.Header.Get("X-User-ID")
 
-	// Get all units ordered
+	// Get units for this course ordered by sort_order
 	var units []models.EngSimUnit
-	h.db.Order("sort_order ASC").Find(&units)
+	h.db.Where("course = ?", course).Order("sort_order ASC").Find(&units)
 
 	// Get all lessons
 	var lessons []models.EngSimLesson
@@ -452,6 +463,22 @@ func (h *EngSimHandler) CompleteLesson(w http.ResponseWriter, r *http.Request) {
 
 	// Check if next unit should unlock
 	h.tryUnlockNextUnit(userID, session.UnitID)
+
+	// BUG-LEARN-005: Update daily quest progress and league XP
+	h.gamSvc.UpdateQuestProgress(userID, "complete_3_lessons", 1)
+	h.gamSvc.UpdateQuestProgress(userID, "complete_5_lessons", 1)
+	if accuracy == 100 {
+		h.gamSvc.UpdateQuestProgress(userID, "perfect_lesson_1", 1)
+		// BUG-LEARN-011: Award gems for perfect lesson
+		h.db.Model(&models.EngSimUserProgress{}).
+			Where("user_id = ?", userID).
+			Update("gems", gorm.Expr("gems + 5"))
+	}
+	h.gamSvc.UpdateQuestProgress(userID, "earn_xp_50", totalXP)
+	h.gamSvc.UpdateQuestProgress(userID, "earn_xp_100", totalXP)
+	h.gamSvc.AddWeeklyXP(userID, totalXP)
+	// Record daily activity for streak (gamification system)
+	_ = h.gamSvc.RecordDailyActivity(userID, totalXP, 1)
 
 	jsonOK(w, map[string]any{
 		"stars":      stars,

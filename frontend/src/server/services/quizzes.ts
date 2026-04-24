@@ -24,7 +24,7 @@ export type QuizOverview = {
   tags?: string[];
 };
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling" | "comprehension";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling" | "comprehension" | "audio" | "video" | "drawing";
 
 export type MatchPair = { left: string; right: string };
 export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string; correctLabel?: string };
@@ -60,6 +60,8 @@ export type QuizQuestionDTO = {
   hotspotZones?: HotspotZone[] | null;
   comprehensionData?: ComprehensionData | null;
   imageUrl?: string | null;
+  audioUrl?: string | null;
+  videoUrl?: string | null;
   explanation?: string | null;
   hint?: string | null;
   orderIndex: number;
@@ -180,6 +182,8 @@ export type AttemptAnswerResult = {
   matchPairs?: MatchPair[] | null;
   hotspotZones?: HotspotZone[] | null;
   imageUrl?: string | null;
+  audioUrl?: string | null;
+  videoUrl?: string | null;
   explanation?: string | null;
   isCorrect: boolean;
   timeSpent: number;

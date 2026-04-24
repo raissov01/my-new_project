@@ -46,6 +46,9 @@ const (
 	QTypeCategorization = "categorization"
 	QTypeLabeling       = "labeling"
 	QTypeComprehension  = "comprehension"
+	QTypeAudio          = "audio"
+	QTypeVideo          = "video"
+	QTypeDrawing        = "drawing"
 )
 
 func (s *Quiz) GetOverview(ctx context.Context, userID string, filters repository.QuizListFilters) ([]model.QuizOverview, error) {
@@ -213,6 +216,8 @@ func (s *Quiz) validateAndNormalize(
 		correct := strings.ToLower(strings.TrimSpace(q.CorrectOption))
 		blank := strings.TrimSpace(q.BlankAnswer)
 		imageURL := strings.TrimSpace(q.ImageURL)
+		audioURL := strings.TrimSpace(q.AudioURL)
+		videoURL := strings.TrimSpace(q.VideoURL)
 		explanation := strings.TrimSpace(q.Explanation)
 
 		// Skip fully empty rows (helps Excel import tolerate trailing blanks).
@@ -230,6 +235,8 @@ func (s *Quiz) validateAndNormalize(
 			QuestionText: qt,
 			QuestionType: qType,
 			ImageURL:     imageURL,
+			AudioURL:     audioURL,
+			VideoURL:     videoURL,
 			Explanation:  explanation,
 		}
 
@@ -385,6 +392,35 @@ func (s *Quiz) validateAndNormalize(
 				}
 			}
 			out.ComprehensionData = cd
+
+		case QTypeAudio:
+			if a == "" || b == "" || c == "" || d == "" {
+				return nil, fmt.Errorf("question %d: all four options are required for audio", i+1)
+			}
+			if correct != "a" && correct != "b" && correct != "c" && correct != "d" {
+				return nil, fmt.Errorf("question %d: correct option must be a, b, c, or d", i+1)
+			}
+			out.OptionA = a
+			out.OptionB = b
+			out.OptionC = c
+			out.OptionD = d
+			out.CorrectOption = correct
+
+		case QTypeVideo:
+			if a == "" || b == "" || c == "" || d == "" {
+				return nil, fmt.Errorf("question %d: all four options are required for video", i+1)
+			}
+			if correct != "a" && correct != "b" && correct != "c" && correct != "d" {
+				return nil, fmt.Errorf("question %d: correct option must be a, b, c, or d", i+1)
+			}
+			out.OptionA = a
+			out.OptionB = b
+			out.OptionC = c
+			out.OptionD = d
+			out.CorrectOption = correct
+
+		case QTypeDrawing:
+			// Non-graded open-ended: no options or correct answer required.
 
 		default:
 			return nil, fmt.Errorf("question %d: unsupported question type %q", i+1, qType)

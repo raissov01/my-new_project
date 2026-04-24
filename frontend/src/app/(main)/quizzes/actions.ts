@@ -7,7 +7,7 @@ import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
-export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling" | "comprehension";
+export type QuizQuestionType = "mcq" | "mcq_multi" | "true_false" | "fill_blank" | "reorder" | "matching" | "hotspot" | "poll" | "dropdown" | "categorization" | "labeling" | "comprehension" | "audio" | "video" | "drawing";
 
 export type MatchPair = { left: string; right: string };
 export type HotspotZone = { id: number; x: number; y: number; r: number; label?: string; correctLabel?: string };
@@ -42,6 +42,8 @@ export type QuizQuestionInput = {
   hotspotZones?: HotspotZone[];
   comprehensionData?: ComprehensionData;
   imageUrl?: string;
+  audioUrl?: string;
+  videoUrl?: string;
   explanation?: string;
   hint?: string;
 };

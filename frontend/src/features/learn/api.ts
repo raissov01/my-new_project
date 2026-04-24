@@ -65,6 +65,7 @@ export type UserProgress = {
   totalXp: number;
   hearts: number;
   heartsRefillAt: string | null;
+  gems: number;
   currentStreak: number;
   longestStreak: number;
   lessonsCompleted: number;
@@ -212,6 +213,15 @@ export async function getMap() {
   if (!user) return { units: [] };
   return fetchBackendJson<{ units: EngSimUnit[] }>({
     path: "/api/v1/engsim/map",
+    userId: user.id,
+  });
+}
+
+export async function getIELTSMap() {
+  const user = await getCurrentUser();
+  if (!user) return { units: [] };
+  return fetchBackendJson<{ units: EngSimUnit[] }>({
+    path: "/api/v1/engsim/ielts-map",
     userId: user.id,
   });
 }

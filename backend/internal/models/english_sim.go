@@ -27,6 +27,8 @@ type EngSimUnit struct {
 	IELTSSkill  string    `gorm:"not null" json:"ieltsSkill"`
 	IconEmoji   string    `gorm:"not null;default:'📚'" json:"iconEmoji"`
 	Color       string    `gorm:"not null;default:'#6366f1'" json:"color"`
+	// BUG-LEARN-002: 'GENERAL' | 'IELTS' — filters which path shows this unit
+	Course      string    `gorm:"not null;default:'GENERAL'" json:"course"`
 	CreatedAt   time.Time `gorm:"autoCreateTime" json:"createdAt"`
 }
 
@@ -74,6 +76,7 @@ type EngSimUserProgress struct {
 	TotalXP          int        `gorm:"not null;default:0" json:"totalXp"`
 	Hearts           int        `gorm:"not null;default:5" json:"hearts"`
 	HeartsRefillAt   *time.Time `json:"heartsRefillAt"`
+	Gems             int        `gorm:"not null;default:0" json:"gems"`
 	CurrentStreak    int        `gorm:"not null;default:0" json:"currentStreak"`
 	LongestStreak    int        `gorm:"not null;default:0" json:"longestStreak"`
 	LastPracticeDate *string    `json:"lastPracticeDate"`

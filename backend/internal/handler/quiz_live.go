@@ -305,6 +305,12 @@ func buildLiveQuiz(quiz *models.Quiz) *hub.LiveQuiz {
 		if q.ImageURL != nil {
 			lq.ImageURL = *q.ImageURL
 		}
+		if q.AudioURL != nil {
+			lq.AudioURL = *q.AudioURL
+		}
+		if q.VideoURL != nil {
+			lq.VideoURL = *q.VideoURL
+		}
 		if q.ReorderItems != nil && *q.ReorderItems != "" {
 			var items []string
 			if err := json.Unmarshal([]byte(*q.ReorderItems), &items); err == nil {

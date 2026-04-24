@@ -48,6 +48,8 @@ type QuizQuestion struct {
 	HotspotZones       *string `gorm:"type:jsonb" json:"hotspotZones,omitempty"`
 	ComprehensionData  *string `gorm:"type:jsonb" json:"comprehensionData,omitempty"`
 	ImageURL           *string `gorm:"type:text" json:"imageUrl,omitempty"`
+	AudioURL           *string `gorm:"type:text" json:"audioUrl,omitempty"`
+	VideoURL           *string `gorm:"type:text" json:"videoUrl,omitempty"`
 	Explanation   *string `gorm:"type:text" json:"explanation,omitempty"`
 	Hint          *string `gorm:"type:text" json:"hint,omitempty"`
 

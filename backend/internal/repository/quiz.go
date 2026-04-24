@@ -472,7 +472,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
 		       match_pairs, hotspot_zones, comprehension_data,
-		       image_url, explanation, hint, order_index
+		       image_url, audio_url, video_url, explanation, hint, order_index
 		FROM public.quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -485,7 +485,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 	d.Questions = make([]model.QuizQuestionDTO, 0)
 	for qRows.Next() {
 		var q model.QuizQuestionDTO
-		var correct, blank, reorderJSON, matchPairsJSON, hotspotJSON, comprJSON, imageURL, explanation, hint *string
+		var correct, blank, reorderJSON, matchPairsJSON, hotspotJSON, comprJSON, imageURL, audioURL, videoURL, explanation, hint *string
 		if err := qRows.Scan(
 			&q.ID,
 			&q.QuestionText,
@@ -501,6 +501,8 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 			&hotspotJSON,
 			&comprJSON,
 			&imageURL,
+			&audioURL,
+			&videoURL,
 			&explanation,
 			&hint,
 			&q.OrderIndex,
@@ -514,6 +516,8 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		q.HotspotZones = decodeHotspotZones(hotspotJSON)
 		q.ComprehensionData = decodeComprehensionData(comprJSON)
 		q.ImageURL = imageURL
+		q.AudioURL = audioURL
+		q.VideoURL = videoURL
 		q.Explanation = explanation
 		q.Hint = hint
 
@@ -597,6 +601,8 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 			encodeHotspotZones(q.HotspotZones),
 			encodeComprehensionData(q.ComprehensionData),
 			nullableString(q.ImageURL),
+			nullableString(q.AudioURL),
+			nullableString(q.VideoURL),
 			nullableString(q.Explanation),
 			nullableString(q.Hint),
 			i,
@@ -623,6 +629,8 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 				"hotspot_zones",
 				"comprehension_data",
 				"image_url",
+				"audio_url",
+				"video_url",
 				"explanation",
 				"hint",
 				"order_index",
@@ -752,6 +760,8 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 			encodeMatchPairs(q.MatchPairs),          // $16
 			encodeHotspotZones(q.HotspotZones),      // $17
 			encodeComprehensionData(q.ComprehensionData), // $18
+			nullableString(q.AudioURL),              // $19
+			nullableString(q.VideoURL),              // $20
 		}
 		if _, ok := existingIDs[id]; ok {
 			if _, err := tx.Exec(ctx, `
@@ -771,7 +781,9 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				    hint               = $15,
 				    match_pairs        = $16,
 				    hotspot_zones      = $17,
-				    comprehension_data = $18
+				    comprehension_data = $18,
+				    audio_url          = $19,
+				    video_url          = $20
 				WHERE id = $1 AND quiz_id = $2
 			`, args...); err != nil {
 				return fmt.Errorf("update question %d: %w", i, err)
@@ -787,9 +799,9 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				option_a, option_b, option_c, option_d,
 				correct_option, blank_answer, reorder_items,
 				image_url, explanation, order_index, hint,
-				match_pairs, hotspot_zones, comprehension_data, created_at
+				match_pairs, hotspot_zones, comprehension_data, audio_url, video_url, created_at
 			)
-			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
+			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW())
 			RETURNING id
 		`, args...).Scan(&newID)
 		if err != nil {
@@ -894,13 +906,13 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 			option_a, option_b, option_c, option_d,
 			correct_option, blank_answer, reorder_items,
 			match_pairs, hotspot_zones, comprehension_data,
-			image_url, explanation, order_index, hint, created_at
+			image_url, audio_url, video_url, explanation, order_index, hint, created_at
 		)
 		SELECT $1, question_text, question_type,
 		       option_a, option_b, option_c, option_d,
 		       correct_option, blank_answer, reorder_items,
 		       match_pairs, hotspot_zones, comprehension_data,
-		       image_url, explanation, order_index, hint, NOW()
+		       image_url, audio_url, video_url, explanation, order_index, hint, NOW()
 		FROM quiz_questions
 		WHERE quiz_id = $2
 		ORDER BY order_index, created_at
@@ -937,6 +949,8 @@ type questionAnswerRow struct {
 	HotspotZones      []model.HotspotZone
 	ComprehensionData *model.ComprehensionData
 	ImageURL          *string
+	AudioURL          *string
+	VideoURL          *string
 	Explanation       *string
 	OrderIndex        int
 }
@@ -968,7 +982,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
 		       correct_option, blank_answer, reorder_items,
 		       match_pairs, hotspot_zones, comprehension_data,
-		       image_url, explanation, order_index
+		       image_url, audio_url, video_url, explanation, order_index
 		FROM quiz_questions
 		WHERE quiz_id = $1
 		ORDER BY order_index, created_at
@@ -988,7 +1002,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 			&q.OptionA, &q.OptionB, &q.OptionC, &q.OptionD,
 			&q.CorrectOption, &q.BlankAnswer, &reorderJSON,
 			&matchPairsJSON, &hotspotJSON, &comprJSON,
-			&q.ImageURL, &q.Explanation, &q.OrderIndex,
+			&q.ImageURL, &q.AudioURL, &q.VideoURL, &q.Explanation, &q.OrderIndex,
 		); err != nil {
 			return nil, fmt.Errorf("scan question: %w", err)
 		}
@@ -1152,6 +1166,12 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 						selected = &t
 					}
 				}
+			case "drawing":
+				// Non-graded: store the base64 drawing but never award a point.
+				if a.TextAnswer != nil && *a.TextAnswer != "" {
+					t := *a.TextAnswer
+					textAnswer = &t
+				}
 			default: // mcq
 				if a.SelectedOption != nil {
 					normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
@@ -1190,6 +1210,8 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 			HotspotZones:      q.HotspotZones,
 			ComprehensionData: q.ComprehensionData,
 			ImageURL:          q.ImageURL,
+			AudioURL:          q.AudioURL,
+			VideoURL:          q.VideoURL,
 			Explanation:       q.Explanation,
 			IsCorrect:         isCorrect,
 			TimeSpent:         timeSpent,
@@ -1197,10 +1219,11 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		})
 	}
 
-	// Poll questions are non-graded and excluded from the denominator.
+	// Poll and drawing questions are non-graded and excluded from the denominator.
 	gradableTotal := 0
 	for _, qid := range order {
-		if questions[qid].QuestionType != "poll" {
+		qt := questions[qid].QuestionType
+		if qt != "poll" && qt != "drawing" {
 			gradableTotal++
 		}
 	}
@@ -1357,6 +1380,8 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			qq.hotspot_zones,
 			qq.comprehension_data,
 			qq.image_url,
+			qq.audio_url,
+			qq.video_url,
 			qq.explanation,
 			aa.is_correct,
 			aa.time_spent,
@@ -1391,6 +1416,8 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			&hotspotJSON,
 			&comprJSON,
 			&a.ImageURL,
+			&a.AudioURL,
+			&a.VideoURL,
 			&a.Explanation,
 			&a.IsCorrect,
 			&a.TimeSpent,

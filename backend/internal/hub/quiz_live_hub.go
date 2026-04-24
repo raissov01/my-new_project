@@ -96,6 +96,8 @@ type LiveQuestion struct {
 	ComprehensionSubQuestions []ComprehensionSubQuestion         `json:"comprehensionSubQuestions,omitempty"`
 	ComprehensionCorrect      map[string]string                  `json:"-"` // sqID→correct, never sent
 	ImageURL                  string                             `json:"imageUrl,omitempty"`
+	AudioURL                  string                             `json:"audioUrl,omitempty"`
+	VideoURL                  string                             `json:"videoUrl,omitempty"`
 	TimeLimit                 int                                `json:"timeLimit"` // seconds
 }
 

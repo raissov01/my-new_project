@@ -28,6 +28,9 @@ import {
   Layers,
   Tag,
   BookOpen,
+  Music,
+  Video,
+  Paintbrush,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -241,6 +244,46 @@ function applyTypeChange(
         matchPairs: [],
         hotspotZones: [],
         comprehensionData: q.comprehensionData ?? { passage: "", subQuestions: [] },
+      };
+    case "audio":
+      return {
+        ...base,
+        optionA: q.optionA ?? "",
+        optionB: q.optionB ?? "",
+        optionC: q.optionC ?? "",
+        optionD: q.optionD ?? "",
+        correctOption: q.correctOption === "a" || q.correctOption === "b" || q.correctOption === "c" || q.correctOption === "d"
+          ? q.correctOption
+          : "a",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
+      };
+    case "video":
+      return {
+        ...base,
+        optionA: q.optionA ?? "",
+        optionB: q.optionB ?? "",
+        optionC: q.optionC ?? "",
+        optionD: q.optionD ?? "",
+        correctOption: q.correctOption === "a" || q.correctOption === "b" || q.correctOption === "c" || q.correctOption === "d"
+          ? q.correctOption
+          : "a",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
+      };
+    case "drawing":
+      return {
+        ...base,
+        optionA: "",
+        optionB: "",
+        optionC: "",
+        optionD: "",
+        correctOption: "",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
       };
   }
 }
@@ -681,6 +724,9 @@ const TYPE_OPTIONS: TypeOption[] = [
   { key: "categorization", labelKey: "quiz.typeCategorization", icon: Layers },
   { key: "labeling", labelKey: "quiz.typeLabeling", icon: Tag },
   { key: "comprehension", labelKey: "quiz.typeComprehension", icon: BookOpen },
+  { key: "audio", labelKey: "quiz.typeAudio", icon: Music },
+  { key: "video", labelKey: "quiz.typeVideo", icon: Video },
+  { key: "drawing", labelKey: "quiz.typeDrawing", icon: Paintbrush },
 ];
 
 function QuestionEditor({
@@ -798,6 +844,12 @@ function QuestionEditor({
         <CategorizationBody question={question} onChange={onChange} />
       ) : questionType === "comprehension" ? (
         <ComprehensionBody question={question} onChange={onChange} />
+      ) : questionType === "audio" ? (
+        <AudioBody question={question} onChange={onChange} />
+      ) : questionType === "video" ? (
+        <VideoBody question={question} onChange={onChange} />
+      ) : questionType === "drawing" ? (
+        <DrawingBody question={question} onChange={onChange} />
       ) : (
         <ReorderBody question={question} onChange={onChange} />
       )}
@@ -914,6 +966,231 @@ function QuestionExtras({
         rows={2}
         className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2 text-xs text-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--primary)]"
       />
+    </div>
+  );
+}
+
+function AudioBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const { toast } = useToast();
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const audioUrl = question.audioUrl ?? "";
+
+  const handleAudioFile = async (file: File) => {
+    if (!file) return;
+    if (!/^audio\/(mpeg|mp3|wav|ogg|webm|x-wav|wave|vorbis)$/i.test(file.type) && !/^video\/webm$/i.test(file.type)) {
+      toast("error", t("quiz.audio.badType"));
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      toast("error", t("quiz.audio.tooLarge"));
+      return;
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/quizzes/audio", { method: "POST", body: formData });
+      const data = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (!res.ok || !data?.url) {
+        toast("error", data?.error ?? t("quiz.audio.uploadFailed"));
+        return;
+      }
+      onChange({ audioUrl: data.url });
+    } catch {
+      toast("error", t("quiz.audio.uploadFailed"));
+    } finally {
+      setUploading(false);
+      if (audioInputRef.current) audioInputRef.current.value = "";
+    }
+  };
+
+  const options: Array<{ key: "a" | "b" | "c" | "d"; field: keyof QuizQuestionInput }> = [
+    { key: "a", field: "optionA" },
+    { key: "b", field: "optionB" },
+    { key: "c", field: "optionC" },
+    { key: "d", field: "optionD" },
+  ];
+
+  return (
+    <div className="mt-3 space-y-3">
+      {/* Audio URL input */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-[var(--text-secondary)]">{t("quiz.audio.urlLabel")}</label>
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={audioUrl}
+            onChange={(e) => onChange({ audioUrl: e.target.value })}
+            placeholder={t("quiz.audio.urlPlaceholder")}
+            className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-xs text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+          />
+          <button
+            type="button"
+            onClick={() => audioInputRef.current?.click()}
+            disabled={uploading}
+            className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-3 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Music className="h-3.5 w-3.5" />}
+            {t("quiz.audio.upload")}
+          </button>
+          <input
+            ref={audioInputRef}
+            type="file"
+            accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,video/webm"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleAudioFile(file);
+            }}
+          />
+        </div>
+        {audioUrl && (
+          <audio
+            src={audioUrl}
+            controls
+            className="mt-1 h-9 w-full"
+          />
+        )}
+      </div>
+
+      {/* MCQ answer options */}
+      {options.map(({ key, field }) => (
+        <div key={key} className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onChange({ correctOption: key })}
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
+              question.correctOption === key
+                ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+            }`}
+          >
+            {key.toUpperCase()}
+          </button>
+          <input
+            type="text"
+            value={(question[field] as string) ?? ""}
+            onChange={(e) => onChange({ [field]: e.target.value })}
+            placeholder={`${t("quiz.optionPlaceholder")} ${key.toUpperCase()}`}
+            className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DrawingBody({ question, onChange }: { question: QuestionEntry; onChange: (patch: Partial<QuizQuestionInput>) => void }) {
+  const { t } = useLocale();
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-4 py-4 text-center">
+        <Paintbrush className="mx-auto mb-2 h-8 w-8 text-[var(--text-muted)]" />
+        <p className="text-sm font-medium text-[var(--text-primary)]">{t("quiz.drawing.editorHint")}</p>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">{t("quiz.drawing.nonGraded")}</p>
+      </div>
+      <textarea
+        value={question.explanation ?? ""}
+        onChange={(e) => onChange({ explanation: e.target.value })}
+        placeholder={t("quiz.explanationPlaceholder")}
+        rows={2}
+        className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2 text-xs text-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--primary)]"
+      />
+    </div>
+  );
+}
+
+function toYouTubeEmbedURL(url: string): string | null {
+  try {
+    const u = new URL(url);
+    // youtube.com/watch?v=ID or youtu.be/ID
+    if (u.hostname === "youtu.be") return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
+    if (u.hostname.includes("youtube.com") && u.searchParams.has("v"))
+      return `https://www.youtube.com/embed/${u.searchParams.get("v")}`;
+    if (u.hostname.includes("youtube.com") && u.pathname.startsWith("/embed/"))
+      return url;
+  } catch {
+    // not a valid URL
+  }
+  return null;
+}
+
+function VideoBody({
+  question,
+  onChange,
+}: {
+  question: QuestionEntry;
+  onChange: (patch: Partial<QuizQuestionInput>) => void;
+}) {
+  const { t } = useLocale();
+  const videoUrl = question.videoUrl ?? "";
+  const embedURL = toYouTubeEmbedURL(videoUrl);
+  const isDirectVideo = videoUrl && !embedURL && /\.(mp4|webm|ogg)(\?|$)/i.test(videoUrl);
+
+  const options: Array<{ key: "a" | "b" | "c" | "d"; field: keyof QuizQuestionInput }> = [
+    { key: "a", field: "optionA" },
+    { key: "b", field: "optionB" },
+    { key: "c", field: "optionC" },
+    { key: "d", field: "optionD" },
+  ];
+
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-[var(--text-secondary)]">{t("quiz.video.urlLabel")}</label>
+        <input
+          type="url"
+          value={videoUrl}
+          onChange={(e) => onChange({ videoUrl: e.target.value })}
+          placeholder={t("quiz.video.urlPlaceholder")}
+          className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-xs text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+        />
+        {embedURL ? (
+          <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-black">
+            <iframe
+              src={embedURL}
+              className="aspect-video w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        ) : isDirectVideo ? (
+          <video src={videoUrl} controls className="mt-1 w-full rounded-[var(--radius-md)]" />
+        ) : videoUrl ? (
+          <p className="text-xs text-[var(--text-muted)]">{t("quiz.video.previewUnavailable")}</p>
+        ) : null}
+      </div>
+
+      {options.map(({ key, field }) => (
+        <div key={key} className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onChange({ correctOption: key })}
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
+              question.correctOption === key
+                ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+            }`}
+          >
+            {key.toUpperCase()}
+          </button>
+          <input
+            type="text"
+            value={(question[field] as string) ?? ""}
+            onChange={(e) => onChange({ [field]: e.target.value })}
+            placeholder={`${t("quiz.optionPlaceholder")} ${key.toUpperCase()}`}
+            className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--primary)]"
+          />
+        </div>
+      ))}
     </div>
   );
 }

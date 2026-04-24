@@ -163,6 +163,17 @@ func AutoMigrate(db *gorm.DB) error {
 		return err
 	}
 
+	// BUG-LEARN-002: Separate IELTS units from General English path.
+	// Mark the three legacy IELTS B1 units and move them to high sort_orders
+	// so General B1 slots (7-9) are free for new General English units.
+	db.Exec(`UPDATE eng_sim_units
+		SET course = 'IELTS', sort_order = sort_order + 100
+		WHERE title IN ('IELTS Reading Strategies', 'Writing Task 1 Intro', 'Cohesive Devices')
+		  AND sort_order < 100`)
+
+	// BUG-LEARN-011: Add gems column to eng_sim_user_progress if missing.
+	db.Exec(`ALTER TABLE eng_sim_user_progress ADD COLUMN IF NOT EXISTS gems INT NOT NULL DEFAULT 0`)
+
 	if err := SeedAchievements(db); err != nil {
 		return err
 	}

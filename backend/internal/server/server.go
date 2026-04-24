@@ -192,6 +192,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Chat:               handler.NewChat(chatRepo, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
 		Files:              handler.NewFiles("telegram-media"),
 		QuizImage:          handler.NewQuizImage("uploads/quiz-images", 5*1024*1024),
+		QuizAudio:          handler.NewQuizAudio("uploads/quiz-audio", 25*1024*1024),
 		QuizLive:           handler.NewQuizLive(gormDB),
 		QuizAIGenerate:     handler.NewQuizAIGenerate(service.NewQuizAIGenerate(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout)),
 		MaterialNotes:      handler.NewMaterialNotes(gormDB),

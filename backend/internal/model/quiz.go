@@ -64,6 +64,8 @@ type QuizQuestionInput struct {
 	HotspotZones       []HotspotZone      `json:"hotspotZones,omitempty"`
 	ComprehensionData  *ComprehensionData `json:"comprehensionData,omitempty"`
 	ImageURL           string             `json:"imageUrl,omitempty"`
+	AudioURL           string             `json:"audioUrl,omitempty"`
+	VideoURL           string             `json:"videoUrl,omitempty"`
 	Explanation        string             `json:"explanation,omitempty"`
 	Hint               string             `json:"hint,omitempty"`
 }
@@ -138,6 +140,8 @@ type QuizQuestionDTO struct {
 	HotspotZones      []HotspotZone      `json:"hotspotZones,omitempty"`
 	ComprehensionData *ComprehensionData `json:"comprehensionData,omitempty"`
 	ImageURL          *string            `json:"imageUrl,omitempty"`
+	AudioURL          *string            `json:"audioUrl,omitempty"`
+	VideoURL          *string            `json:"videoUrl,omitempty"`
 	Explanation       *string            `json:"explanation,omitempty"`
 	Hint              *string            `json:"hint,omitempty"`
 	OrderIndex        int                `json:"orderIndex"`
@@ -209,6 +213,8 @@ type AttemptAnswerResult struct {
 	HotspotZones      []HotspotZone      `json:"hotspotZones,omitempty"`
 	ComprehensionData *ComprehensionData `json:"comprehensionData,omitempty"`
 	ImageURL          *string            `json:"imageUrl,omitempty"`
+	AudioURL          *string            `json:"audioUrl,omitempty"`
+	VideoURL          *string            `json:"videoUrl,omitempty"`
 	Explanation       *string            `json:"explanation,omitempty"`
 	IsCorrect         bool               `json:"isCorrect"`
 	TimeSpent      int           `json:"timeSpent"`

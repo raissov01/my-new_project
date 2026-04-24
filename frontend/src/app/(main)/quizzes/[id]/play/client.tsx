@@ -209,6 +209,7 @@ export function PlayQuizClient({
     () => new Set()
   );
   const [blankInput, setBlankInput] = useState("");
+  const [drawnDataUrl, setDrawnDataUrl] = useState<string | null>(null);
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   // matchDraft: for matching/categorization, maps left item → selected right item ("" = unselected).
   const [matchDraft, setMatchDraft] = useState<Record<string, string>>({});
@@ -255,10 +256,10 @@ export function PlayQuizClient({
   useEffect(() => {
     const q = quiz.questions[currentIdx];
     const qt = q.questionType ?? "mcq";
-    if (qt === "mcq" || qt === "mcq_multi" || qt === "poll" || qt === "dropdown") {
+    if (qt === "mcq" || qt === "mcq_multi" || qt === "poll" || qt === "dropdown" || qt === "audio" || qt === "video") {
       const base = buildBaseOptions(q);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDisplayOptions(quiz.shuffleOptions && (qt === "mcq" || qt === "mcq_multi") ? shuffleOptions(base) : base);
+      setDisplayOptions(quiz.shuffleOptions && (qt === "mcq" || qt === "mcq_multi" || qt === "audio" || qt === "video") ? shuffleOptions(base) : base);
     }
     if (qt === "reorder") {
       const items = q.reorderItems ?? [];
@@ -279,6 +280,7 @@ export function PlayQuizClient({
     setComprehensionDraft({});
     setPollSelected(null);
     setBlankInput("");
+    setDrawnDataUrl(null);
     setMcqMultiSelected(new Set());
   }, [currentIdx, quiz.questions, quiz.shuffleOptions]);
 
@@ -612,6 +614,14 @@ export function PlayQuizClient({
     [question.comprehensionData, recordAnswer]
   );
 
+  const recordDrawing = useCallback(
+    (dataUrl: string | null) => {
+      // Drawing is non-graded — always treated as "correct" for UX (no red flash).
+      recordAnswer({ selectedOption: null, textAnswer: dataUrl, orderAnswer: null }, true);
+    },
+    [recordAnswer]
+  );
+
   // Timeout handler: fires a "null" answer of the right shape for the
   // current question type so the backend still gets a row per question.
   const handleTimeout = useCallback(() => {
@@ -649,8 +659,17 @@ export function PlayQuizClient({
       case "comprehension":
         recordAnswer({ selectedOption: null, textAnswer: null, orderAnswer: null }, false);
         return;
+      case "audio":
+        recordMcq(null);
+        return;
+      case "video":
+        recordMcq(null);
+        return;
+      case "drawing":
+        recordDrawing(null);
+        return;
     }
-  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot, recordPoll, recordDropdown, recordCategorization, recordAnswer]);
+  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot, recordPoll, recordDropdown, recordCategorization, recordDrawing, recordAnswer]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
   // Practice mode disables the timer entirely so students can dwell on
@@ -863,6 +882,16 @@ export function PlayQuizClient({
                 />
               </div>
             ) : null}
+            {question.audioUrl ? (
+              <div className="mt-3">
+                <audio src={question.audioUrl} controls className="h-10 w-full" />
+              </div>
+            ) : null}
+            {question.videoUrl ? (
+              <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-black">
+                <VideoEmbed url={question.videoUrl} />
+              </div>
+            ) : null}
             <h1 className="mt-3 break-words text-xl font-semibold leading-tight tracking-[-0.02em] text-[var(--text-primary)] sm:text-2xl md:text-3xl lg:text-4xl">
               {question.questionText}
             </h1>
@@ -985,6 +1014,25 @@ export function PlayQuizClient({
               lastCorrect={lastCorrect}
               onSubmit={() => recordComprehension(comprehensionDraft)}
             />
+          ) : questionType === "audio" || questionType === "video" ? (
+            <McqBody
+              displayOptions={displayOptions}
+              selectedLetter={selectedLetter as OptionLetter | null}
+              correctLetter={question.correctOption as OptionLetter | null | undefined}
+              hiddenLetters={powerUps.effects.hiddenLetters}
+              revealed={revealed}
+              onPick={recordMcq}
+            />
+          ) : questionType === "drawing" ? (
+            <DrawingPlayBody
+              t={t}
+              revealed={revealed}
+              submittedDrawing={drawnDataUrl}
+              onSubmit={(dataUrl) => {
+                setDrawnDataUrl(dataUrl);
+                recordDrawing(dataUrl);
+              }}
+            />
           ) : (
             <ReorderBody
               t={t}
@@ -1098,6 +1146,33 @@ export function PlayQuizClient({
       ) : null}
     </div>
   );
+}
+
+function toYouTubeEmbedURL(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
+    if (u.hostname.includes("youtube.com") && u.searchParams.has("v"))
+      return `https://www.youtube.com/embed/${u.searchParams.get("v")}`;
+    if (u.hostname.includes("youtube.com") && u.pathname.startsWith("/embed/"))
+      return url;
+  } catch { /* not a URL */ }
+  return null;
+}
+
+function VideoEmbed({ url }: { url: string }) {
+  const embed = toYouTubeEmbedURL(url);
+  if (embed) {
+    return (
+      <iframe
+        src={embed}
+        className="aspect-video w-full"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  }
+  return <video src={url} controls className="aspect-video w-full" />;
 }
 
 function McqBody({
@@ -2199,6 +2274,178 @@ function ComprehensionPlayBody({
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+const DRAW_COLORS = ["#111827", "#ef4444", "#3b82f6", "#22c55e", "#f59e0b", "#a855f7"];
+
+function DrawingPlayBody({
+  t,
+  revealed,
+  submittedDrawing,
+  onSubmit,
+}: {
+  t: (key: string) => string;
+  revealed: boolean;
+  submittedDrawing: string | null;
+  onSubmit: (dataUrl: string | null) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
+  const [color, setColor] = useState("#111827");
+  const [lineWidth, setLineWidth] = useState(4);
+  const [mode, setMode] = useState<"pen" | "eraser">("pen");
+  const [hasDrawn, setHasDrawn] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+  const getPos = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if ("touches" in e) {
+      const touch = e.touches[0];
+      if (!touch) return null;
+      return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+    }
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  };
+
+  const startDraw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (revealed) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    if (!pos) return;
+    isDrawingRef.current = true;
+    lastPosRef.current = pos;
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current || revealed) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    const last = lastPosRef.current;
+    if (!pos || !last) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!ctx) return;
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = mode === "eraser" ? "#ffffff" : color;
+    ctx.lineWidth = mode === "eraser" ? lineWidth * 4 : lineWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    lastPosRef.current = pos;
+    setHasDrawn(true);
+  };
+
+  const endDraw = () => { isDrawingRef.current = false; lastPosRef.current = null; };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!ctx || !canvas) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    setHasDrawn(false);
+  };
+
+  const handleSubmit = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) { onSubmit(null); return; }
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.65);
+    onSubmit(dataUrl);
+  };
+
+  if (revealed) {
+    return (
+      <div className="mt-4 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">{t("quiz.drawing.yourDrawing")}</p>
+        {submittedDrawing ? (
+          <img src={submittedDrawing} alt="" className="w-full rounded-[var(--radius-md)] border border-[var(--border)]" />
+        ) : (
+          <div className="flex h-24 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)]">
+            {t("quiz.drawing.noSubmission")}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-3">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1">
+          {DRAW_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => { setColor(c); setMode("pen"); }}
+              className={`h-7 w-7 rounded-full border-2 transition-transform ${mode === "pen" && color === c ? "scale-125 border-white shadow-md" : "border-transparent"}`}
+              style={{ backgroundColor: c }}
+            />
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {[2, 4, 8].map((w) => (
+            <button
+              key={w}
+              type="button"
+              onClick={() => setLineWidth(w)}
+              className={`flex h-7 w-7 items-center justify-center rounded-full border transition-colors ${lineWidth === w && mode === "pen" ? "border-[var(--primary)] bg-[var(--primary)]/10" : "border-[var(--border)]"}`}
+            >
+              <span className="rounded-full bg-current" style={{ width: w * 2, height: w * 2 }} />
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setMode(mode === "eraser" ? "pen" : "eraser")}
+          className={`rounded-[var(--radius-md)] border px-2.5 py-1 text-xs font-medium transition-colors ${mode === "eraser" ? "border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
+        >
+          {t("quiz.drawing.eraser")}
+        </button>
+        <button
+          type="button"
+          onClick={clearCanvas}
+          className="rounded-[var(--radius-md)] border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--danger)] hover:text-[var(--danger)]"
+        >
+          {t("quiz.drawing.clear")}
+        </button>
+      </div>
+
+      {/* Canvas */}
+      <canvas
+        ref={canvasRef}
+        width={720}
+        height={400}
+        className="w-full cursor-crosshair touch-none rounded-[var(--radius-md)] border border-[var(--border)] bg-white"
+        onMouseDown={startDraw}
+        onMouseMove={draw}
+        onMouseUp={endDraw}
+        onMouseLeave={endDraw}
+        onTouchStart={startDraw}
+        onTouchMove={draw}
+        onTouchEnd={endDraw}
+      />
+
+      <Button type="button" onClick={handleSubmit} disabled={!hasDrawn}>
+        {t("quiz.drawing.submit")}
+      </Button>
     </div>
   );
 }
