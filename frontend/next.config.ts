@@ -38,6 +38,17 @@ const nextConfig: NextConfig = {
     root: workspaceRoot,
   },
 
+  async redirects() {
+    return [
+      // Legacy/alias routes → canonical destinations
+      { source: "/ai-chat", destination: "/chat", permanent: true },
+      { source: "/ielts/quiz", destination: "/quizzes", permanent: true },
+      { source: "/ielts/quizzes", destination: "/quizzes", permanent: true },
+      { source: "/home", destination: "/", permanent: true },
+      { source: "/learn", destination: "/learn/map", permanent: false },
+    ];
+  },
+
   async headers() {
     return [
       {
