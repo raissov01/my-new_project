@@ -19,6 +19,9 @@ import { GuestIELTSCta } from "@/features/auth/components/guest-ielts-cta";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getIELTSScoreHistory } from "@/server/services/ielts-score-history";
+import { AIFeedbackSignal } from "@/components/ielts/AIFeedbackInfoModal";
+import { IELTSOnboardingModal } from "@/components/ielts/IELTSOnboardingModal";
+import { SkillScoreBar } from "@/components/ielts/SkillScoreBar";
 
 // BUG-014: descriptive SEO metadata
 export const metadata: Metadata = {
@@ -194,7 +197,8 @@ export default async function IELTSHubPage() {
                 body={t("ielts.signalModulesBody")}
                 accent="border-l-[var(--primary)]"
               />
-              <HubSignal
+              {/* BUG-009: clickable AI signal opens rubric modal */}
+              <AIFeedbackSignal
                 label={t("ielts.signalAI")}
                 value="AI"
                 body={t("ielts.signalAIBody")}
@@ -227,6 +231,8 @@ export default async function IELTSHubPage() {
             <ModuleCard key={mod.href} mod={mod} />
           ))}
         </div>
+        {/* BUG-008: last mock score summary */}
+        <SkillScoreBar scoreHistory={scoreHistory} />
       </section>
 
       {/* ── BUG-007: Band roadmap strip ───────────────────────────────────── */}
@@ -245,6 +251,9 @@ export default async function IELTSHubPage() {
       </section>
 
       <GuestIELTSCta />
+
+      {/* BUG-010: first-visit onboarding modal (client, checks localStorage) */}
+      <IELTSOnboardingModal />
     </div>
   );
 }
