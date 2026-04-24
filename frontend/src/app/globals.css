@@ -669,6 +669,12 @@ a, button, input, textarea, select {
 
 /* ── Focus ring ──────────────────────────────────────────────────────────── */
 
+*:focus-visible {
+  outline: 2px solid rgb(139, 92, 246);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .focus-ring:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--primary);

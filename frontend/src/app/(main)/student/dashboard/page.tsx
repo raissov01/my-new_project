@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ScoreRadarDashboard from "@/components/dashboard/ScoreRadarDashboard";
@@ -11,13 +12,13 @@ import {
   ListChecks,
   Play,
   RefreshCw,
-  Sparkles,
   Star,
   Target,
   Trophy,
   TrendingUp,
   Users,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { getUserStats } from "@/app/(main)/sets/progress-actions";
 import {
@@ -31,6 +32,9 @@ import {
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { requireRole } from "@/server/auth";
+import { JoinClassModal } from "@/components/dashboard/JoinClassModal";
+
+export const metadata: Metadata = { title: "Басты бет | StudyWithRaissov" };
 
 export default async function StudentDashboardPage() {
   const locale = await getServerLocale();
@@ -59,7 +63,7 @@ export default async function StudentDashboardPage() {
     (q) => q.status !== "completed"
   );
 
-  const firstName = access.profile?.username ?? t("student.dashboardTitle");
+  const firstName = access.profile?.full_name?.split(" ")[0] ?? access.profile?.username ?? t("student.dashboardTitle");
   const nextAssignment = summary.assignments[0] ?? null;
 
   return (
@@ -71,13 +75,9 @@ export default async function StudentDashboardPage() {
       <section className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">
         <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-[var(--primary)] opacity-[0.06]" style={{ filter: "blur(60px)" }} />
 
-        <div className="relative grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+        <div className="relative grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
           <div>
-            <div className="badge-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              {t("student.dashboardEyebrow")}
-            </div>
-            <h1 className="mt-4 max-w-[12ch] text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl lg:text-5xl">
+            <h1 className="max-w-[16ch] text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl lg:text-5xl">
               {t("dashboard.hello", { name: firstName })}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] sm:text-base">
@@ -85,46 +85,49 @@ export default async function StudentDashboardPage() {
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {nextAssignment ? (
+                <Link href={`/sets/${nextAssignment.setId}/study`}>
+                  <Button size="lg" className="w-full sm:w-auto">
+                    <Play className="h-4 w-4" />
+                    {t("nav.startStudy")}: {nextAssignment.setTitle}
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/learn/placement">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    <Target className="h-4 w-4" />
+                    Placement тест тапсыр
+                  </Button>
+                </Link>
+              )}
               <Link href="/ielts">
-                <Button size="lg" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   <GraduationCap className="h-4 w-4" />
                   {t("nav.ieltsPrep")}
-                </Button>
-              </Link>
-              <Link href="/student/classes">
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                  <Users className="h-4 w-4" />
-                  {t("student.openClasses")}
-                </Button>
-              </Link>
-              <Link href="/flashcards">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  <BookOpen className="h-4 w-4" />
-                  {t("nav.flashcards")}
                 </Button>
               </Link>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <HeroSignal
-              label={t("student.personalAccuracy")}
-              value={`${stats.accuracy}%`}
-              detail={t("student.progressBody")}
-              accent="border-l-[var(--primary)]"
-            />
+          <div className="flex flex-col gap-3">
             <HeroSignal
               label={t("stats.dailyStreak")}
               value={`${stats.streakDays}`}
               detail={stats.streakDays === 1 ? t("stats.dayInRow") : t("stats.daysInRow")}
               accent="border-l-[var(--accent)]"
             />
-            <HeroSignal
-              label={t("student.assignedSets")}
-              value={`${summary.assignments.length}`}
-              detail={t("student.assignedWorkDetail")}
-              accent="border-l-emerald-500"
-            />
+            <div className="rounded-[var(--radius-lg)] border border-[var(--border)] border-l-[3px] border-l-violet-500 bg-[var(--bg-soft)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Today&apos;s XP
+              </p>
+              <p className="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-[var(--text-primary)]">
+                {t("stats.level")} {stats.xpLevel}
+              </p>
+              <div className="progress-track mt-3">
+                <div className="progress-fill" style={{ width: `${stats.xpProgress}%` }} />
+              </div>
+              <p className="mt-1.5 text-xs text-[var(--text-muted)]">{stats.levelName}</p>
+            </div>
           </div>
         </div>
       </section>
@@ -139,7 +142,19 @@ export default async function StudentDashboardPage() {
 
       {/* Content grid */}
       <div className="mt-6 grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-        {/* Assigned work */}
+        {/* Assigned work — only show when student is in at least one class */}
+        {summary.classes.length === 0 ? (
+          <section className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[200px]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
+              <Users className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-base font-bold text-[var(--text-primary)]">{t("student.joinClass")}</p>
+              <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">{t("student.noAssignmentsBody")}</p>
+            </div>
+            <JoinClassModal />
+          </section>
+        ) : (
         <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -191,6 +206,7 @@ export default async function StudentDashboardPage() {
             )}
           </div>
         </section>
+        )}
 
         {/* Right column */}
         <section className="space-y-5">
@@ -411,14 +427,23 @@ export default async function StudentDashboardPage() {
               </div>
             </div>
 
-            {nextAssignment ? (
-              <Link href={`/sets/${nextAssignment.setId}/study`} className="relative mt-5 inline-flex">
-                <Button variant="secondary">
-                  {t("nav.startStudy")}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            ) : null}
+            <div className="relative mt-5 inline-flex">
+              {nextAssignment ? (
+                <Link href={`/sets/${nextAssignment.setId}/study`}>
+                  <Button variant="secondary">
+                    {t("nav.startStudy")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/learn/map">
+                  <Button variant="secondary">
+                    Симуляторды баста
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
+            </div>
           </section>
         </section>
       </div>
