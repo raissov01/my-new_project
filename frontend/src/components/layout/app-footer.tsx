@@ -64,7 +64,7 @@ export async function AppFooter() {
             links={[
               { href: "/login", label: t("landing.logIn") },
               { href: "/signup", label: t("landing.signUp") },
-              { href: "/quizzes", label: t("landing.footerGuestPreview") },
+              { href: "/ielts/demo", label: t("landing.footerGuestPreview") },
             ]}
           />
         </div>

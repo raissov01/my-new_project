@@ -192,16 +192,22 @@ export function Navbar() {
   const { isGhost, enableGhostMode } = useGhostMode();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const homeHref = user ? "/dashboard" : "/";
+  const userRole = (user as { user_metadata?: { role?: string } } | null)?.user_metadata?.role;
+  const homeHref = user
+    ? userRole === "teacher"
+      ? "/teacher/dashboard"
+      : "/student/dashboard"
+    : "/";
 
   // ── Nav item definitions ────────────────────────────────────────────────
 
   const primaryItems: NavItem[] = user
     ? [
         { href: homeHref, label: t("nav.home"), icon: Home, exact: false },
-        { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
+        { href: "/learn/map", label: t("nav.learn"), icon: Gamepad2, exact: false },
+        { href: "/listen", label: t("nav.listen"), icon: Headphones, exact: false },
+        { href: "/tutor", label: t("nav.tutor"), icon: BotMessageSquare, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
-        { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText, exact: false },
       ]
     : [
         { href: "/", label: t("nav.home"), icon: Home, exact: true },
@@ -210,10 +216,8 @@ export function Navbar() {
       ];
 
   const toolsItems: NavItem[] = [
-    { href: "/learn", label: t("nav.learn"), icon: Gamepad2, exact: false },
     { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks, exact: false },
-    { href: "/listen", label: t("nav.listen"), icon: Headphones, exact: false },
-    { href: "/tutor", label: t("nav.tutor"), icon: BotMessageSquare, exact: false },
+    { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText, exact: false },
     { href: "/daily-news", label: t("nav.dailyNews"), icon: Newspaper, exact: false },
     { href: "/mining", label: t("nav.mining"), icon: Pickaxe, exact: false },
   ];
@@ -277,6 +281,20 @@ export function Navbar() {
 
             {/* Right side — desktop */}
             <div className="hidden items-center gap-1 lg:flex">
+              {/* IELTS secondary link — authenticated only */}
+              {user && (
+                <Link
+                  href="/ielts"
+                  className={`flex h-14 items-center gap-1.5 px-3 text-sm font-medium transition-colors duration-200
+                    ${isActivePath(pathname, "/ielts", false)
+                      ? "text-white"
+                      : "text-white/60 hover:text-white"
+                    }`}
+                >
+                  <BookMarked className="h-4 w-4" />
+                  <span className="hidden xl:inline">{t("nav.ieltsPrep")}</span>
+                </Link>
+              )}
               {/* Guide link */}
               <Link
                 href="/guide"
@@ -300,16 +318,23 @@ export function Navbar() {
                   {(user as { streakDays?: number }).streakDays !== undefined && (
                     <StreakBadge streak={(user as { streakDays?: number }).streakDays ?? 0} />
                   )}
-                  <Link href="/sets/new">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      {t("nav.newSet")}
-                    </Button>
-                  </Link>
+                  {(() => {
+                    const isIelts = pathname.startsWith("/ielts");
+                    const ctaHref = isIelts ? "/ielts/simulator" : "/sets/new";
+                    const ctaLabel = isIelts ? t("nav.newMock") : t("nav.newSet");
+                    return (
+                      <Link href={ctaHref}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          {ctaLabel}
+                        </Button>
+                      </Link>
+                    );
+                  })()}
                   <AvatarMenu />
                 </>
               ) : !DEV_MODE ? (
