@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getCurrentUser } from "@/server/auth";
 import { getPlacement, getMap, getProgress } from "@/features/learn/api";
 import { getActiveXPEvent, getDailyQuests } from "@/features/gamification/api";
+import { getStudentQuizAssignments } from "@/server/services/classrooms";
 import { MapClient } from "./client";
 
 // BUG-LEARN-016: Correct page title
@@ -22,13 +23,17 @@ export default async function MapPage({
   const placement = await getPlacement();
   if (!placement) redirect("/learn/placement");
 
-  const [mapData, progress, params, xpEvent, quests] = await Promise.all([
+  const [mapData, progress, params, xpEvent, quests, assignments] = await Promise.all([
     getMap(),
     getProgress(),
     searchParams,
     getActiveXPEvent(),
     getDailyQuests(),
+    getStudentQuizAssignments(),
   ]);
+
+  // BUG-LEARN-009: Pass only pending (not_started / overdue) assignments
+  const pendingAssignments = assignments.filter(a => a.status !== "completed");
 
   return (
     <MapClient
@@ -38,6 +43,7 @@ export default async function MapPage({
       initialLevel={params.level}
       xpEvent={xpEvent}
       quests={quests}
+      assignments={pendingAssignments}
     />
   );
 }

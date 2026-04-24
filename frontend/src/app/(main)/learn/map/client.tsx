@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { EngSimUnit, UserProgress } from "@/features/learn/api";
 import type { XPEvent, DailyQuest } from "@/features/gamification/api";
+import type { StudentQuizAssignment } from "@/server/services/classrooms.types";
 import { XPBoostBanner } from "@/components/gamification/XPBoostBanner";
 import { StreakBadge } from "@/components/gamification/StreakBadge";
 
@@ -149,10 +150,68 @@ function OverallProgress({ units, userLevel }: { units: EngSimUnit[]; userLevel:
   );
 }
 
+// ── BUG-LEARN-014: Semantic unit icons keyed by ieltsSkill ───────────────────
+
+const SKILL_ICONS: Record<string, string> = {
+  vocabulary: "🔤",
+  grammar: "📝",
+  reading: "📖",
+  listening: "🎧",
+  speaking: "🎤",
+  writing: "✍️",
+  mixed: "🎯",
+};
+
+function unitIcon(unit: EngSimUnit): string {
+  return SKILL_ICONS[unit.ieltsSkill] ?? unit.iconEmoji;
+}
+
+// ── MapClient ─────────────────────────────────────────────────────────────────
+
+// ── BUG-LEARN-009: Teacher assignment banner ──────────────────────────────────
+
+function AssignmentBanner({ assignments }: { assignments: StudentQuizAssignment[] }) {
+  if (assignments.length === 0) return null;
+  const first = assignments[0];
+  const daysLeft = first.deadline
+    ? Math.max(0, Math.ceil((new Date(first.deadline).getTime() - Date.now()) / 86_400_000))
+    : null;
+
+  return (
+    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-400/40 bg-amber-400/8 px-4 py-3">
+      <span className="mt-0.5 text-xl">📌</span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-[var(--text-primary)]">
+          Мұғалімнен тапсырма
+        </p>
+        <p className="truncate text-xs text-[var(--text-secondary)]">
+          {first.quizTitle} · {first.groupName}
+          {daysLeft !== null && (
+            <span className={` · ${daysLeft <= 1 ? "text-red-500 font-semibold" : "text-[var(--text-muted)]"}`}>
+              {daysLeft === 0 ? "Бүгін дедлайн!" : `${daysLeft} күн қалды`}
+            </span>
+          )}
+        </p>
+        {assignments.length > 1 && (
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            +{assignments.length - 1} тапсырма тағы бар
+          </p>
+        )}
+      </div>
+      <Link
+        href={`/quizzes/${first.quizId}/play`}
+        className="shrink-0 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white active:scale-95"
+      >
+        Бастау →
+      </Link>
+    </div>
+  );
+}
+
 // ── MapClient ─────────────────────────────────────────────────────────────────
 
 export function MapClient({
-  units, progress, userLevel, initialLevel, xpEvent, quests,
+  units, progress, userLevel, initialLevel, xpEvent, quests, assignments,
 }: {
   units: EngSimUnit[];
   progress: UserProgress | null;
@@ -160,6 +219,7 @@ export function MapClient({
   initialLevel?: string;
   xpEvent?: XPEvent | null;
   quests?: DailyQuest[];
+  assignments?: StudentQuizAssignment[];
 }) {
   // BUG-LEARN-003: Scroll to user's level unit — use initialLevel (from URL) or userLevel fallback
   const targetLevel = initialLevel ?? userLevel;
@@ -316,6 +376,9 @@ export function MapClient({
       {/* ── BUG-LEARN-017: Overall Progress ── */}
       <OverallProgress units={units} userLevel={userLevel} />
 
+      {/* ── BUG-LEARN-009: Teacher Assignment Banner ── */}
+      <AssignmentBanner assignments={assignments ?? []} />
+
       {/* ── XP Boost Banner ── */}
       {xpEvent && (
         <div className="mb-3">
@@ -402,7 +465,7 @@ export function MapClient({
                     }`}
                     style={unit.isUnlocked && !isComplete ? { borderColor: unit.color } : {}}
                   >
-                    {unit.isUnlocked ? unit.iconEmoji : <Lock className="h-7 w-7 text-[var(--text-muted)]" />}
+                    {unit.isUnlocked ? unitIcon(unit) : <Lock className="h-7 w-7 text-[var(--text-muted)]" />}
                   </div>
 
                   {/* Stars */}

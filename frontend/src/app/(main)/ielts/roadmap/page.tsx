@@ -72,7 +72,10 @@ export default async function IELTSRoadmapPage() {
                     isComplete ? "bg-yellow-400/10" : "bg-[var(--bg-soft)]"
                   }`}
                 >
-                  {unit.isUnlocked ? unit.iconEmoji : <Lock className="h-5 w-5 text-[var(--text-muted)]" />}
+                  {unit.isUnlocked
+                    ? ({ vocabulary: "🔤", grammar: "📝", reading: "📖", listening: "🎧", speaking: "🎤", writing: "✍️" }[unit.ieltsSkill] ?? unit.iconEmoji)
+                    : <Lock className="h-5 w-5 text-[var(--text-muted)]" />
+                  }
                 </div>
 
                 {/* Info */}
