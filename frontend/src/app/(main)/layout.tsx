@@ -12,7 +12,7 @@ export default function MainLayout({
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
-      <div className="flex flex-1 flex-col lg:ml-[220px]">
+      <div className="flex flex-1 flex-col pt-[54px] lg:pt-0 lg:ml-[220px]">
         <GhostModeBanner />
         <main id="main-content" className="flex-1">
           {children}
