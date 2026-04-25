@@ -15,7 +15,7 @@ type WsMsg =
   | { type: "question"; data: QuestionEvt }
   | { type: "answer_accepted"; data: AnswerResult }
   | { type: "question_ended"; data: QuestionEndedEvt }
-  | { type: "game_ended"; data: { finalLeaderboard: LeaderEntry[] } }
+  | { type: "game_ended"; data: { finalLeaderboard: LeaderEntry[]; teamLeaderboard?: TeamScore[] } }
   | { type: "error"; data: { message: string } };
 
 type SessionState = {
@@ -60,6 +60,8 @@ type AnswerResult = {
   streak: number;
 };
 
+type TeamScore = { teamId: number; score: number };
+
 type QuestionEndedEvt = {
   questionIndex: number;
   correctOption?: string;
@@ -67,6 +69,7 @@ type QuestionEndedEvt = {
   correctOrder?: string[]; // for reorder reveal
   matchPairs?: MatchPair[]; // for matching reveal
   leaderboard: LeaderEntry[];
+  teamLeaderboard?: TeamScore[];
 };
 
 type LeaderEntry = { id: string; displayName: string; score: number; streak: number; rank: number };
@@ -85,14 +88,18 @@ function LiveGameInner() {
   const { code } = useParams<{ code: string }>();
   const searchParams = useSearchParams();
   const pid = searchParams.get("pid") ?? "";
+  const tidParam = searchParams.get("tid");
 
   const [phase, setPhase] = useState<Phase>("waiting");
+  const [myTeamId, setMyTeamId] = useState<number>(tidParam !== null ? Number(tidParam) : -1);
+  const [teamMode, setTeamMode] = useState(tidParam !== null && tidParam !== "-1");
   const [quizTitle, setQuizTitle] = useState("");
   const [totalQ, setTotalQ] = useState(0);
   const [currentQEvt, setCurrentQEvt] = useState<QuestionEvt | null>(null);
   const [answerResult, setAnswerResult] = useState<AnswerResult | null>(null);
   const [questionEnded, setQuestionEnded] = useState<QuestionEndedEvt | null>(null);
   const [finalLeaderboard, setFinalLeaderboard] = useState<LeaderEntry[]>([]);
+  const [teamLeaderboard, setTeamLeaderboard] = useState<TeamScore[]>([]);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -216,6 +223,10 @@ function LiveGameInner() {
       case "session_state":
         setQuizTitle(msg.data.quizTitle);
         setTotalQ(msg.data.totalQuestions);
+        if ((msg.data as { teamMode?: boolean }).teamMode) setTeamMode(true);
+        if ((msg.data as { myTeamId?: number }).myTeamId != null && (msg.data as { myTeamId?: number }).myTeamId! >= 0) {
+          setMyTeamId((msg.data as { myTeamId?: number }).myTeamId!);
+        }
         if (msg.data.status === "lobby" || msg.data.status === "active") {
           setPhase("waiting");
         }
@@ -262,16 +273,17 @@ function LiveGameInner() {
           (questionEndedRef.current?.leaderboard ?? []).map((e) => [e.id, e.rank])
         ));
         setQuestionEnded(msg.data);
+        if (msg.data.teamLeaderboard) setTeamLeaderboard(msg.data.teamLeaderboard);
         setPhase("revealed");
         break;
 
       case "game_ended":
         stopTimer();
-        // Snapshot last leaderboard ranks for the finished screen.
         setPrevLbRanks(new Map(
           (questionEndedRef.current?.leaderboard ?? []).map((e) => [e.id, e.rank])
         ));
         setFinalLeaderboard(msg.data.finalLeaderboard);
+        if (msg.data.teamLeaderboard) setTeamLeaderboard(msg.data.teamLeaderboard);
         setPhase("finished");
         break;
     }
@@ -370,6 +382,15 @@ function LiveGameInner() {
           </Link>
           <h3 style={{ flex: 1 }}>{quizTitle}</h3>
           <div className="flex items-center gap-3 text-sm">
+            {teamMode && myTeamId >= 0 && (
+              <span
+                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                style={{ backgroundColor: PLAYER_TEAM_COLORS[myTeamId] ?? "#888" }}
+                title={`Team ${myTeamId + 1}`}
+              >
+                {myTeamId + 1}
+              </span>
+            )}
             <span className="flex items-center gap-1 font-semibold text-amber-400">
               <Star className="h-4 w-4 fill-amber-400" />
               {score}
@@ -391,7 +412,7 @@ function LiveGameInner() {
 
       {/* Phases */}
       {phase === "waiting" && (
-        <WaitingScreen title={quizTitle} />
+        <WaitingScreen title={quizTitle} teamMode={teamMode} myTeamId={myTeamId} />
       )}
 
       {phase === "question" && currentQEvt && (
@@ -434,6 +455,8 @@ function LiveGameInner() {
           t={t}
           prevRanks={prevLbRanks}
           currentQuestion={currentQEvt?.question ?? null}
+          teamLeaderboard={teamMode ? teamLeaderboard : []}
+          myTeamId={myTeamId}
         />
       )}
 
@@ -443,6 +466,8 @@ function LiveGameInner() {
           pid={pid}
           t={t}
           prevRanks={prevLbRanks}
+          teamLeaderboard={teamMode ? teamLeaderboard : []}
+          myTeamId={myTeamId}
         />
       )}
     </div>
@@ -451,7 +476,10 @@ function LiveGameInner() {
 
 // ─── Sub-screens ──────────────────────────────────────────────
 
-function WaitingScreen({ title }: { title: string }) {
+const PLAYER_TEAM_COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#eab308"];
+const PLAYER_TEAM_BG = ["bg-red-500/10", "bg-blue-500/10", "bg-green-500/10", "bg-yellow-500/10"];
+
+function WaitingScreen({ title, teamMode, myTeamId }: { title: string; teamMode: boolean; myTeamId: number }) {
   const { t } = useLocale();
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
@@ -460,6 +488,20 @@ function WaitingScreen({ title }: { title: string }) {
       </div>
       <h2 className="text-xl font-semibold text-[var(--text-primary)]">{t("quiz.live.waitingStart")}</h2>
       <p className="text-sm text-[var(--text-secondary)]">{t("quiz.live.hostStartsSoon")}</p>
+      {teamMode && myTeamId >= 0 && (
+        <div className={`mt-2 flex items-center gap-2 rounded-full px-4 py-2 ${PLAYER_TEAM_BG[myTeamId] ?? "bg-[var(--bg-surface)]"}`}>
+          <span
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold text-white"
+            style={{ backgroundColor: PLAYER_TEAM_COLORS[myTeamId] ?? "#888" }}
+          >
+            {myTeamId + 1}
+          </span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            {t(`quiz.live.team${["Red","Blue","Green","Yellow"][myTeamId] ?? "Red"}`)}
+          </span>
+        </div>
+      )}
+      {title ? <p className="text-xs text-[var(--text-muted)]">{title}</p> : null}
     </div>
   );
 }
@@ -990,6 +1032,41 @@ function AnsweredScreen({ result, t }: { result: AnswerResult; t: (k: string) =>
   );
 }
 
+function PlayerTeamLeaderboard({ teams, myTeamId }: { teams: TeamScore[]; myTeamId: number }) {
+  if (teams.length === 0) return null;
+  const sorted = [...teams].sort((a, b) => b.score - a.score);
+  return (
+    <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+      <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        Team scores
+      </p>
+      <ul className="space-y-1.5">
+        {sorted.map((team, i) => {
+          const isMyTeam = team.teamId === myTeamId;
+          return (
+            <li
+              key={team.teamId}
+              className={`flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm ${isMyTeam ? "bg-[var(--primary)]/8" : ""}`}
+            >
+              <span className="w-4 shrink-0 text-center text-xs font-bold text-[var(--text-muted)]">{i + 1}</span>
+              <span
+                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                style={{ backgroundColor: PLAYER_TEAM_COLORS[team.teamId] ?? "#888" }}
+              >
+                {team.teamId + 1}
+              </span>
+              <span className={`flex-1 font-medium ${isMyTeam ? "text-[var(--primary)]" : "text-[var(--text-primary)]"}`}>
+                Team {team.teamId + 1}
+              </span>
+              <span className="font-semibold text-[var(--primary)] tabular-nums">{team.score}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function RevealedScreen({
   ended,
   result,
@@ -997,6 +1074,8 @@ function RevealedScreen({
   t,
   prevRanks,
   currentQuestion,
+  teamLeaderboard,
+  myTeamId,
 }: {
   ended: QuestionEndedEvt;
   result: AnswerResult | null;
@@ -1004,6 +1083,8 @@ function RevealedScreen({
   t: (k: string) => string;
   prevRanks: Map<string, number>;
   currentQuestion: LiveQuestion | null;
+  teamLeaderboard: TeamScore[];
+  myTeamId: number;
 }) {
   const isHotspot = currentQuestion?.questionType === "hotspot";
   // For hotspot, find zone label from current question
@@ -1058,6 +1139,8 @@ function RevealedScreen({
           ) : null}
         </div>
       )}
+
+      {teamLeaderboard.length > 0 && <PlayerTeamLeaderboard teams={teamLeaderboard} myTeamId={myTeamId} />}
 
       {/* Mini leaderboard top-5 with rank change badges */}
       <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
@@ -1143,11 +1226,15 @@ function FinishedScreen({
   pid,
   t,
   prevRanks,
+  teamLeaderboard,
+  myTeamId,
 }: {
   leaderboard: LeaderEntry[];
   pid: string;
   t: (k: string) => string;
   prevRanks: Map<string, number>;
+  teamLeaderboard: TeamScore[];
+  myTeamId: number;
 }) {
   const myEntry = leaderboard.find((e) => e.id === pid);
   const medals = ["🥇", "🥈", "🥉"];
@@ -1163,6 +1250,8 @@ function FinishedScreen({
           </p>
         ) : null}
       </div>
+
+      {teamLeaderboard.length > 0 && <PlayerTeamLeaderboard teams={teamLeaderboard} myTeamId={myTeamId} />}
 
       <div className="overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)]">
         <ul className="divide-y divide-[var(--border)]">

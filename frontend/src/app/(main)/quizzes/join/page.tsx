@@ -44,7 +44,8 @@ function JoinForm() {
         return;
       }
       // Redirect to live game page
-      router.push(`/quizzes/live/${trimmedCode}?pid=${data.participantId}`);
+      const tid = data.teamMode ? `&tid=${data.teamId}` : "";
+      router.push(`/quizzes/live/${trimmedCode}?pid=${data.participantId}${tid}`);
     } catch {
       setError("Network error, please try again");
       setLoading(false);

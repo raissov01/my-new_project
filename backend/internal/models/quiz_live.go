@@ -14,6 +14,8 @@ type QuizLiveSession struct {
 	Status          string     `gorm:"type:varchar(20);not null;default:'lobby'" json:"status"`       // lobby | active | finished
 	CurrentQuestion int        `gorm:"not null;default:0" json:"currentQuestion"`
 	AllowAnonymous  bool       `gorm:"not null;default:true" json:"allowAnonymous"`
+	TeamMode        bool       `gorm:"not null;default:false" json:"teamMode"`
+	TeamCount       int        `gorm:"not null;default:2" json:"teamCount"`
 	CreatedAt       time.Time  `gorm:"autoCreateTime" json:"createdAt"`
 	StartedAt       *time.Time `json:"startedAt,omitempty"`
 	FinishedAt      *time.Time `json:"finishedAt,omitempty"`
@@ -33,6 +35,7 @@ type QuizLiveParticipant struct {
 	DisplayName string     `gorm:"type:varchar(60);not null" json:"displayName"`
 	Score       int        `gorm:"not null;default:0" json:"score"`
 	Streak      int        `gorm:"not null;default:0" json:"streak"`
+	TeamID      int        `gorm:"not null;default:0" json:"teamId"`
 	JoinedAt    time.Time  `gorm:"autoCreateTime" json:"joinedAt"`
 	FinishedAt  *time.Time `json:"finishedAt,omitempty"`
 

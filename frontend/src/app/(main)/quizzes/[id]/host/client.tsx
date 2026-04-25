@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Copy, Eye, EyeOff, Play, SkipForward, Square, Users, Wifi, WifiOff, Trophy, BarChart3, CheckCircle } from "lucide-react";
+import { ArrowLeft, Copy, Eye, EyeOff, Play, SkipForward, Square, Users, Wifi, WifiOff, Trophy, BarChart3, CheckCircle, ShieldHalf } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
@@ -17,20 +17,24 @@ type WsMsg =
   | { type: "question"; data: QuestionEvt }
   | { type: "answer_stats"; data: AnswerStats }
   | { type: "question_ended"; data: QuestionEndedEvt }
-  | { type: "game_ended"; data: { finalLeaderboard: LeaderEntry[] } }
+  | { type: "game_ended"; data: { finalLeaderboard: LeaderEntry[]; teamLeaderboard?: TeamScore[] } }
   | { type: "error"; data: { message: string } };
 
-type Participant = { id: string; displayName: string; score: number; streak: number; rank: number };
-type LeaderEntry = { id: string; displayName: string; score: number; streak: number; rank: number };
+type Participant = { id: string; displayName: string; score: number; streak: number; rank: number; teamId: number };
+type LeaderEntry = { id: string; displayName: string; score: number; streak: number; rank: number; teamId: number };
+type TeamScore = { teamId: number; score: number };
 
 type SessionState = {
   status: string;
   mode: string;
+  teamMode: boolean;
+  teamCount: number;
   joinCode: string;
   quizTitle: string;
   totalQuestions: number;
   currentQuestion: number;
   participants: Participant[];
+  teamScores?: TeamScore[];
 };
 
 type QuestionEvt = {
@@ -61,6 +65,7 @@ type QuestionEndedEvt = {
   correctOption?: string;
   blankAnswer?: string;
   leaderboard: LeaderEntry[];
+  teamLeaderboard?: TeamScore[];
 };
 
 // ─── Host phases ──────────────────────────────────────────────
@@ -85,6 +90,8 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
   const [mode, setMode] = useState<"teacher_paced" | "self_paced">("teacher_paced");
   const [allowAnon, setAllowAnon] = useState(true);
   const [showLeaderboard, setShowLeaderboard] = useState(true);
+  const [teamMode, setTeamMode] = useState(false);
+  const [teamCount, setTeamCount] = useState<2 | 3 | 4>(2);
 
   // ── Session state ──
   const [phase, setPhase] = useState<Phase>("setup");
@@ -97,6 +104,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
   const [answerStats, setAnswerStats] = useState<AnswerStats | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>([]);
   const [finalLeaderboard, setFinalLeaderboard] = useState<LeaderEntry[]>([]);
+  const [teamLeaderboard, setTeamLeaderboard] = useState<TeamScore[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [copied, setCopied] = useState(false);
   const [wsStatus, setWsStatus] = useState<"disconnected" | "connected">("disconnected");
@@ -136,6 +144,8 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
         setParticipants(msg.data.participants ?? []);
         setTotalQ(msg.data.totalQuestions);
         setCurrentQ(msg.data.currentQuestion);
+        if (msg.data.teamMode) setTeamMode(true);
+        if (msg.data.teamScores) setTeamLeaderboard(msg.data.teamScores);
         if (msg.data.status === "lobby") setPhase("lobby");
         else if (msg.data.status === "active") setPhase("question");
         else if (msg.data.status === "finished") setPhase("finished");
@@ -173,10 +183,10 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
       case "question_ended":
         stopTimer();
         setLeaderboard((prev) => {
-          // Capture prev ranks before the new leaderboard lands.
           prevRanksRef.current = new Map(prev.map((e) => [e.id, e.rank]));
           return msg.data.leaderboard;
         });
+        if (msg.data.teamLeaderboard) setTeamLeaderboard(msg.data.teamLeaderboard);
         setCurrentQData(null);
         setPhase("result");
         break;
@@ -184,11 +194,11 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
       case "game_ended":
         stopTimer();
         setLeaderboard((prev) => {
-          // Capture final question's leaderboard ranks for the finished screen.
           prevRanksRef.current = new Map(prev.map((e) => [e.id, e.rank]));
-          return prev; // unchanged — just snapshotting ranks
+          return prev;
         });
         setFinalLeaderboard(msg.data.finalLeaderboard);
+        if (msg.data.teamLeaderboard) setTeamLeaderboard(msg.data.teamLeaderboard);
         setPhase("finished");
         break;
     }
@@ -225,7 +235,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
       const res = await fetch(`/api/quizzes/${quizId}/live-sessions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, allowAnonymous: allowAnon }),
+        body: JSON.stringify({ mode, allowAnonymous: allowAnon, teamMode, teamCount: teamMode ? teamCount : 0 }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -308,6 +318,54 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
           </div>
         </label>
 
+        {/* Team mode toggle */}
+        <label className="flex cursor-pointer items-start gap-3 rounded-[1.2rem] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+          <input
+            type="checkbox"
+            checked={teamMode}
+            onChange={(e) => setTeamMode(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-[var(--primary)]"
+          />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[var(--text-primary)]">{t("quiz.live.teamMode")}</p>
+            <p className="text-xs text-[var(--text-muted)]">{t("quiz.live.teamModeDesc")}</p>
+          </div>
+        </label>
+
+        {/* Team count picker */}
+        {teamMode && (
+          <div className="flex items-center gap-4 rounded-[1.2rem] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
+            <p className="text-sm font-medium text-[var(--text-primary)]">{t("quiz.live.teamCount")}</p>
+            <div className="flex gap-2">
+              {([2, 3, 4] as const).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setTeamCount(n)}
+                  className={`h-9 w-9 rounded-xl border text-sm font-bold transition-all ${
+                    teamCount === n
+                      ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                      : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:border-[var(--primary)]/50"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <div className="ml-auto flex gap-1.5">
+              {Array.from({ length: teamCount }, (_, i) => (
+                <span
+                  key={i}
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                  style={{ backgroundColor: TEAM_COLORS[i] }}
+                >
+                  {i + 1}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Hide leaderboard toggle */}
         <label className="flex cursor-pointer items-start gap-3 rounded-[1.2rem] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
           <input
@@ -382,8 +440,16 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
             {participants.map((p) => (
               <span
                 key={p.id}
-                className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1 text-sm text-[var(--text-primary)]"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1 text-sm text-[var(--text-primary)]"
               >
+                {teamMode && (
+                  <span
+                    className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
+                    style={{ backgroundColor: TEAM_COLORS[p.teamId] ?? "#888" }}
+                  >
+                    {p.teamId + 1}
+                  </span>
+                )}
                 {p.displayName}
               </span>
             ))}
@@ -499,8 +565,11 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
             <ConnectionBadge status={wsStatus} />
           </div>
         </div>
+        {teamMode && teamLeaderboard.length > 0 && (
+          <TeamLeaderboardPanel teams={teamLeaderboard} t={t} />
+        )}
         {showLeaderboard ? (
-          <LeaderboardTable entries={leaderboard} prevRanks={prevRanksRef.current} />
+          <LeaderboardTable entries={leaderboard} prevRanks={prevRanksRef.current} teamMode={teamMode} />
         ) : (
           <div className="flex min-h-[160px] items-center justify-center rounded-[1.5rem] border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)]">
             <EyeOff className="mr-2 h-4 w-4" />
@@ -544,8 +613,11 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
               : <><Eye className="h-3.5 w-3.5" />{t("quiz.live.showLeaderboardBtn")}</>}
           </button>
         </div>
+        {teamMode && teamLeaderboard.length > 0 && (
+          <TeamLeaderboardPanel teams={teamLeaderboard} t={t} />
+        )}
         {showLeaderboard ? (
-          <LeaderboardTable entries={finalLeaderboard} medal prevRanks={prevRanksRef.current} />
+          <LeaderboardTable entries={finalLeaderboard} medal prevRanks={prevRanksRef.current} teamMode={teamMode} />
         ) : (
           <div className="flex min-h-[160px] items-center justify-center rounded-[1.5rem] border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)]">
             <EyeOff className="mr-2 h-4 w-4" />
@@ -580,16 +652,49 @@ function ConnectionBadge({ status }: { status: "connected" | "disconnected" }) {
   );
 }
 
+const TEAM_COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#eab308"];
+const TEAM_NAMES_KEY = ["quiz.live.teamRed", "quiz.live.teamBlue", "quiz.live.teamGreen", "quiz.live.teamYellow"];
+
+function TeamLeaderboardPanel({ teams, t }: { teams: { teamId: number; score: number }[]; t: (k: string) => string }) {
+  return (
+    <div className="overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-5 py-3 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        <ShieldHalf className="h-3.5 w-3.5" />
+        {t("quiz.live.teamScores")}
+      </div>
+      <ul className="divide-y divide-[var(--border)]">
+        {teams.map((team, i) => (
+          <li key={team.teamId} className="flex items-center gap-3 px-5 py-3">
+            <span className="w-5 shrink-0 text-center text-xs font-bold text-[var(--text-muted)]">{i + 1}</span>
+            <span
+              className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+              style={{ backgroundColor: TEAM_COLORS[team.teamId] ?? "#888" }}
+            >
+              {team.teamId + 1}
+            </span>
+            <span className="flex-1 text-sm font-medium text-[var(--text-primary)]">
+              {t(TEAM_NAMES_KEY[team.teamId] ?? "quiz.live.teamRed")}
+            </span>
+            <span className="font-semibold text-[var(--primary)] tabular-nums">{team.score}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function LeaderboardTable({
   entries,
   medal,
   prevRanks,
   highlightId,
+  teamMode,
 }: {
-  entries: { id: string; displayName: string; score: number; streak: number; rank: number }[];
+  entries: { id: string; displayName: string; score: number; streak: number; rank: number; teamId: number }[];
   medal?: boolean;
   prevRanks?: Map<string, number>;
   highlightId?: string;
+  teamMode?: boolean;
 }) {
   const medals = ["🥇", "🥈", "🥉"];
   return (
@@ -612,7 +717,13 @@ function LeaderboardTable({
                 <span className="w-7 shrink-0 text-center text-sm font-bold text-[var(--text-muted)]">
                   {medal && i < 3 ? medals[i] : e.rank}
                 </span>
-                <span className={`flex-1 text-sm font-medium ${isHighlighted ? "text-[var(--primary)]" : "text-[var(--text-primary)]"}`}>
+                <span className={`flex-1 flex items-center gap-1.5 text-sm font-medium ${isHighlighted ? "text-[var(--primary)]" : "text-[var(--text-primary)]"}`}>
+                  {teamMode && (
+                    <span
+                      className="inline-flex h-3.5 w-3.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: TEAM_COLORS[e.teamId] ?? "#888" }}
+                    />
+                  )}
                   {e.displayName}
                 </span>
                 {delta !== null && delta !== 0 ? (

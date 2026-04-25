@@ -35,6 +35,8 @@ func NewQuizLive(db *gorm.DB) *QuizLiveHandler {
 type createSessionRequest struct {
 	Mode           string `json:"mode"` // teacher_paced | self_paced
 	AllowAnonymous bool   `json:"allowAnonymous"`
+	TeamMode       bool   `json:"teamMode"`
+	TeamCount      int    `json:"teamCount"` // 2–4; 0 or 1 → defaults to 2
 }
 
 type createSessionResponse struct {
@@ -65,6 +67,9 @@ func (h *QuizLiveHandler) CreateSession(w http.ResponseWriter, r *http.Request) 
 	}
 	if req.Mode == "" {
 		req.Mode = "teacher_paced"
+	}
+	if req.TeamMode && (req.TeamCount < 2 || req.TeamCount > 4) {
+		req.TeamCount = 2
 	}
 
 	// Verify quiz exists and user owns it (or it's public)
@@ -107,6 +112,8 @@ func (h *QuizLiveHandler) CreateSession(w http.ResponseWriter, r *http.Request) 
 		Mode:           req.Mode,
 		Status:         "lobby",
 		AllowAnonymous: req.AllowAnonymous,
+		TeamMode:       req.TeamMode,
+		TeamCount:      req.TeamCount,
 	}
 	if err := h.db.Create(&session).Error; err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to create session", err)
@@ -115,7 +122,7 @@ func (h *QuizLiveHandler) CreateSession(w http.ResponseWriter, r *http.Request) 
 
 	// Load quiz data into the hub room
 	liveQuiz := buildLiveQuiz(&quiz)
-	h.hub.CreateRoom(session.ID, code, req.Mode, liveQuiz)
+	h.hub.CreateRoom(session.ID, code, req.Mode, req.TeamMode, req.TeamCount, liveQuiz)
 
 	writeJSON(w, http.StatusCreated, createSessionResponse{
 		ID:        session.ID,
@@ -143,6 +150,8 @@ type joinSessionResponse struct {
 	QuizTitle     string `json:"quizTitle"`
 	Mode          string `json:"mode"`
 	TotalQ        int    `json:"totalQuestions"`
+	TeamMode      bool   `json:"teamMode"`
+	TeamID        int    `json:"teamId"` // -1 when not in team mode
 }
 
 func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +191,14 @@ func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 		name = name[:60]
 	}
 
+	// Assign team round-robin based on current participant count.
+	teamID := 0
+	if session.TeamMode && session.TeamCount >= 2 {
+		var count int64
+		h.db.Model(&models.QuizLiveParticipant{}).Where("session_id = ?", session.ID).Count(&count)
+		teamID = int(count) % session.TeamCount
+	}
+
 	// Create participant record
 	var uid *string
 	if userID != "" {
@@ -191,6 +208,7 @@ func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 		SessionID:   session.ID,
 		UserID:      uid,
 		DisplayName: name,
+		TeamID:      teamID,
 	}
 	if err := h.db.Create(&participant).Error; err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to join session", err)
@@ -210,7 +228,13 @@ func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		liveQuiz := buildLiveQuiz(&quiz)
-		h.hub.CreateRoom(session.ID, code, session.Mode, liveQuiz)
+		h.hub.CreateRoom(session.ID, code, session.Mode, session.TeamMode, session.TeamCount, liveQuiz)
+	}
+
+	// Return -1 when not in team mode so the frontend can safely ignore the field.
+	teamIDResp := -1
+	if session.TeamMode {
+		teamIDResp = teamID
 	}
 
 	writeJSON(w, http.StatusOK, joinSessionResponse{
@@ -220,6 +244,8 @@ func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 		QuizTitle:     quiz.Title,
 		Mode:          session.Mode,
 		TotalQ:        len(quiz.Questions),
+		TeamMode:      session.TeamMode,
+		TeamID:        teamIDResp,
 	})
 }
 

@@ -138,6 +138,7 @@ type Client struct {
 	isHost        bool
 	participantID string
 	displayName   string
+	teamID        int
 	room          *Room
 	send          chan []byte
 	ctx           context.Context
@@ -166,6 +167,13 @@ type ParticipantScore struct {
 	Score       int    `json:"score"`
 	Streak      int    `json:"streak"`
 	Rank        int    `json:"rank"`
+	TeamID      int    `json:"teamId"`
+}
+
+// TeamScore holds the aggregate score for one team.
+type TeamScore struct {
+	TeamID int `json:"teamId"`
+	Score  int `json:"score"`
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -182,6 +190,9 @@ type Room struct {
 	mode      string // teacher_paced | self_paced
 	status    string // lobby | active | finished
 
+	teamMode  bool
+	teamCount int
+
 	host    *Client
 	players map[string]*Client // participantID → client
 
@@ -190,15 +201,16 @@ type Room struct {
 	qDeadline time.Time
 	qTimer    *time.Timer
 
-	scores   map[string]int  // participantID → total score
-	streaks  map[string]int  // participantID → current streak
-	answered map[string]bool // participantID → answered current question
+	scores     map[string]int  // participantID → total score
+	streaks    map[string]int  // participantID → current streak
+	answered   map[string]bool // participantID → answered current question
+	teamScores map[int]int     // teamID → total score (team mode only)
 
 	// per-option answer counts for host stats display
 	optionCounts map[string]int // "a","b","c","d","t","f" → count
 }
 
-func newRoom(db *gorm.DB, hub *Hub, sessionID, joinCode, mode string, quiz *LiveQuiz) *Room {
+func newRoom(db *gorm.DB, hub *Hub, sessionID, joinCode, mode string, teamMode bool, teamCount int, quiz *LiveQuiz) *Room {
 	return &Room{
 		db:           db,
 		hub:          hub,
@@ -207,10 +219,13 @@ func newRoom(db *gorm.DB, hub *Hub, sessionID, joinCode, mode string, quiz *Live
 		quiz:         quiz,
 		mode:         mode,
 		status:       "lobby",
+		teamMode:     teamMode,
+		teamCount:    teamCount,
 		players:      make(map[string]*Client),
 		scores:       make(map[string]int),
 		streaks:      make(map[string]int),
 		answered:     make(map[string]bool),
+		teamScores:   make(map[int]int),
 		optionCounts: make(map[string]int),
 	}
 }
@@ -224,6 +239,7 @@ func (r *Room) leaderboard() []ParticipantScore {
 			DisplayName: c.displayName,
 			Score:       r.scores[pid],
 			Streak:      r.streaks[pid],
+			TeamID:      c.teamID,
 		})
 	}
 	// sort descending by score
@@ -237,6 +253,19 @@ func (r *Room) leaderboard() []ParticipantScore {
 	for i := range list {
 		list[i].Rank = i + 1
 	}
+	return list
+}
+
+// teamLeaderboard returns aggregate scores per team, sorted descending.
+func (r *Room) teamLeaderboard() []TeamScore {
+	if !r.teamMode || r.teamCount < 2 {
+		return nil
+	}
+	list := make([]TeamScore, r.teamCount)
+	for i := 0; i < r.teamCount; i++ {
+		list[i] = TeamScore{TeamID: i, Score: r.teamScores[i]}
+	}
+	sort.Slice(list, func(a, b int) bool { return list[a].Score > list[b].Score })
 	return list
 }
 
@@ -298,27 +327,36 @@ func (r *Room) sendSessionState(c *Client) {
 			DisplayName: p.displayName,
 			Score:       r.scores[pid],
 			Streak:      r.streaks[pid],
+			TeamID:      p.teamID,
 		})
 	}
 	type state struct {
 		Status         string             `json:"status"`
 		Mode           string             `json:"mode"`
+		TeamMode       bool               `json:"teamMode"`
+		TeamCount      int                `json:"teamCount"`
 		JoinCode       string             `json:"joinCode"`
 		QuizTitle      string             `json:"quizTitle"`
 		TotalQuestions int                `json:"totalQuestions"`
 		CurrentQ       int                `json:"currentQuestion"`
 		Participants   []ParticipantScore `json:"participants"`
+		TeamScores     []TeamScore        `json:"teamScores,omitempty"`
+		MyTeamID       int                `json:"myTeamId"`
 	}
 	c.sendMsg(OutMsg{
 		Type: EvtSessionState,
 		Data: state{
 			Status:         r.status,
 			Mode:           r.mode,
+			TeamMode:       r.teamMode,
+			TeamCount:      r.teamCount,
 			JoinCode:       r.joinCode,
 			QuizTitle:      r.quiz.Title,
 			TotalQuestions: len(r.quiz.Questions),
 			CurrentQ:       r.currentQ,
 			Participants:   parts,
+			TeamScores:     r.teamLeaderboard(),
+			MyTeamID:       c.teamID,
 		},
 	})
 }
@@ -415,14 +453,16 @@ func (r *Room) endQuestion(timedOut bool) {
 		QuestionIndex   int                `json:"questionIndex"`
 		CorrectOption   string             `json:"correctOption,omitempty"`
 		BlankAnswer     string             `json:"blankAnswer,omitempty"`
-		CorrectOrder    []string           `json:"correctOrder,omitempty"`  // for reorder reveal
-		MatchPairs      []MatchPair        `json:"matchPairs,omitempty"`    // for matching reveal
+		CorrectOrder    []string           `json:"correctOrder,omitempty"`    // for reorder reveal
+		MatchPairs      []MatchPair        `json:"matchPairs,omitempty"`      // for matching reveal
 		LabelingCorrect map[string]string  `json:"labelingCorrect,omitempty"` // for labeling reveal
 		Leaderboard     []ParticipantScore `json:"leaderboard"`
+		TeamLeaderboard []TeamScore        `json:"teamLeaderboard,omitempty"`
 	}
 	evt := endEvt{
-		QuestionIndex: r.currentQ,
-		Leaderboard:   lb,
+		QuestionIndex:   r.currentQ,
+		Leaderboard:     lb,
+		TeamLeaderboard: r.teamLeaderboard(),
 	}
 	switch q.QuestionType {
 	case "mcq", "true_false", "mcq_multi", "hotspot":
@@ -488,6 +528,7 @@ func (r *Room) endGame() {
 	lb := r.leaderboard()
 	r.broadcast(OutMsg{Type: EvtGameEnded, Data: map[string]any{
 		"finalLeaderboard": lb,
+		"teamLeaderboard":  r.teamLeaderboard(),
 	}})
 
 	// Remove room from hub after a cleanup delay
@@ -605,6 +646,9 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 		points = 100 + bonus
 		r.scores[c.participantID] += points
 		r.streaks[c.participantID]++
+		if r.teamMode {
+			r.teamScores[c.teamID] += points
+		}
 	} else {
 		r.streaks[c.participantID] = 0
 	}
@@ -813,8 +857,8 @@ func (h *Hub) GetRoom(code string) *Room {
 	return h.rooms[code]
 }
 
-func (h *Hub) CreateRoom(sessionID, code, mode string, quiz *LiveQuiz) *Room {
-	r := newRoom(h.db, h, sessionID, code, mode, quiz)
+func (h *Hub) CreateRoom(sessionID, code, mode string, teamMode bool, teamCount int, quiz *LiveQuiz) *Room {
+	r := newRoom(h.db, h, sessionID, code, mode, teamMode, teamCount, quiz)
 	h.mu.Lock()
 	h.rooms[code] = r
 	h.mu.Unlock()
@@ -893,6 +937,7 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		}
 		client.participantID = pid
 		client.displayName = part.DisplayName
+		client.teamID = part.TeamID
 
 		room.mu.Lock()
 		room.players[pid] = client
@@ -905,6 +950,7 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 			"participant": ParticipantScore{
 				ID:          pid,
 				DisplayName: part.DisplayName,
+				TeamID:      part.TeamID,
 			},
 			"count": func() int {
 				room.mu.Lock()
