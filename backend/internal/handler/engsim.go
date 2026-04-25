@@ -266,22 +266,29 @@ func (h *EngSimHandler) StartLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate exercises
+	// Generate exercises (use cache if available)
 	exerciseCount := 8
 	if lesson.LessonType == "boss" {
 		exerciseCount = 12
 	}
 
-	exerciseTypes := "fill_blank, grammar_choice, word_order, matching, error_correction, translation"
-	prompt := fmt.Sprintf(exerciseGenerationPrompt,
-		exerciseCount, unit.Level, unit.IELTSSkill,
-		unit.Title, lesson.Title, exerciseTypes, unit.Level,
-	)
-
-	result, err := h.callAI("", prompt)
-	if err != nil {
-		jsonErr(w, "Failed to generate exercises: "+err.Error(), http.StatusBadGateway)
-		return
+	var result string
+	if lesson.CachedExercises != nil && len(*lesson.CachedExercises) > 10 {
+		result = *lesson.CachedExercises
+	} else {
+		exerciseTypes := "fill_blank, grammar_choice, word_order, matching, error_correction, translation"
+		prompt := fmt.Sprintf(exerciseGenerationPrompt,
+			exerciseCount, unit.Level, unit.IELTSSkill,
+			unit.Title, lesson.Title, exerciseTypes, unit.Level,
+		)
+		var err error
+		result, err = h.callAI("", prompt)
+		if err != nil {
+			jsonErr(w, "Failed to generate exercises: "+err.Error(), http.StatusBadGateway)
+			return
+		}
+		// Save to cache for next time
+		h.db.Model(&lesson).Update("cached_exercises", result)
 	}
 
 	// Create session

@@ -36,12 +36,13 @@ func (EngSimUnit) TableName() string { return "eng_sim_units" }
 
 // EngSimLesson is a single lesson node within a unit.
 type EngSimLesson struct {
-	ID         string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	UnitID     string    `gorm:"type:uuid;not null;index" json:"unitId"`
-	SortOrder  int       `gorm:"not null;default:0" json:"sortOrder"`
-	Title      string    `gorm:"not null" json:"title"`
-	LessonType string    `gorm:"not null;default:'standard'" json:"lessonType"`
-	CreatedAt  time.Time `gorm:"autoCreateTime" json:"createdAt"`
+	ID               string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	UnitID           string    `gorm:"type:uuid;not null;index" json:"unitId"`
+	SortOrder        int       `gorm:"not null;default:0" json:"sortOrder"`
+	Title            string    `gorm:"not null" json:"title"`
+	LessonType       string    `gorm:"not null;default:'standard'" json:"lessonType"`
+	CachedExercises  *string   `gorm:"type:jsonb" json:"-"`
+	CreatedAt        time.Time `gorm:"autoCreateTime" json:"createdAt"`
 }
 
 func (EngSimLesson) TableName() string { return "eng_sim_lessons" }
