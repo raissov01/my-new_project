@@ -1,8 +1,30 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ── Design System: StudyWithRaissov — Clean Minimalist ─────────────────── */
 
 :root {
+  /* ── Landing Page Design Tokens (neo-brutal) ── */
+  --paper:       #FBF7F0;
+  --paper-2:     #F5EFE3;
+  --paper-3:     #EDE3D0;
+  --ink:         #1B1714;
+  --ink-soft:    #3D342C;
+  --ink-mute:    #7A6E63;
+  --line:        #E5DCC9;
+  --line-strong: #D4C7AE;
+  --terra:       #C2500A;
+  --terra-deep:  #8F3A05;
+  --terra-soft:  #F4D9C0;
+  --terra-tint:  #FBEEDC;
+  --blue:        #2563eb;
+  --blue-soft:   #DBE6FF;
+  --green:       #3F7D3F;
+  --green-soft:  #D9E8C9;
+  --yellow:      #E9B949;
+  --yellow-soft: #F9EBC2;
+
+  /* ── Existing Design System ── */
   /* Brand */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
