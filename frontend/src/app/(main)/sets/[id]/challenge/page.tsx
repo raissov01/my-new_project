@@ -29,36 +29,41 @@ export default async function ChallengePage({ params }: ChallengePageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link
-        href={`/sets/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("challenge.backToSet")}
-      </Link>
+    <div className="page-shell py-4 sm:py-6">
+      {/* nd-mock-shell header */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href={`/sets/${id}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} />
+            {t("challenge.backToSet")}
+          </Link>
+          <h3>{set.title}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)", fontSize: 12 }}>
+            {set.is_public ? t("challenge.publicChallenge") : t("challenge.privateChallenge")}
+          </span>
+        </div>
+      </div>
 
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
+      {/* Set info card */}
+      <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
+        <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ink-mute)", marginBottom: 8 }}>
           {set.is_public ? t("challenge.publicChallenge") : t("challenge.privateChallenge")}
         </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--text-primary)]">
+        <h1 style={{ fontSize: 24, fontWeight: 600, color: "var(--ink)", marginBottom: set.description ? 10 : 0 }}>
           {set.title}
         </h1>
         {set.description && (
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+          <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--ink-mute)", margin: 0 }}>
             {set.description}
           </p>
         )}
       </div>
 
-      <div className="mt-8">
-        <ChallengeClient
-          flashcards={flashcards}
-          setId={id}
-          rankingHref={`/sets/${id}/ranking`}
-        />
-      </div>
+      <ChallengeClient
+        flashcards={flashcards}
+        setId={id}
+        rankingHref={`/sets/${id}/ranking`}
+      />
     </div>
   );
 }

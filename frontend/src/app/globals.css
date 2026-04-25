@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "./app-dark.css";
 
 /* ── Design System: StudyWithRaissov — Clean Minimalist ─────────────────── */
 
@@ -127,6 +128,21 @@
 
   --surface-shadow: var(--shadow-sm);
   --surface-shadow-strong: var(--shadow-md);
+
+  /* nd- palette — warm dark */
+  --paper:        #1C1814;
+  --paper-2:      #252018;
+  --paper-3:      #2E281F;
+  --ink:          #EDE4D8;
+  --ink-soft:     #C9BBB0;
+  --ink-mute:     #877971;
+  --line:         rgba(255,255,255,0.09);
+  --line-strong:  rgba(255,255,255,0.14);
+  --terra-tint:   rgba(194,80,10,0.14);
+  --terra-soft:   rgba(194,80,10,0.22);
+  --green-soft:   rgba(63,125,63,0.20);
+  --yellow-soft:  rgba(233,185,73,0.16);
+  --blue-soft:    rgba(37,99,235,0.18);
 }
 
 @theme inline {

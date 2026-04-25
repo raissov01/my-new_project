@@ -1,0 +1,84 @@
+/* ── Dark Mode: nd- Design System Component Overrides ────────────────────── */
+/* Variables are in globals.css .dark{} block. This file handles hardcoded   */
+/* #fff backgrounds and color:#fff on var(--ink) backgrounds.                */
+
+/* 1. Fix color:#fff used on var(--ink) backgrounds (in dark --ink is light) */
+.dark .nd-btn-ink                       { color: var(--paper) }
+.dark .nd-auth-tabs a.active            { color: var(--paper) }
+.dark .nd-lib-pill.on                   { color: var(--paper) }
+.dark .nd-ai-mode.on                    { color: var(--paper) }
+.dark .nd-mock-qn                       { color: var(--paper) }
+.dark .nd-mock-pager button.cur         { color: var(--paper) }
+.dark .nd-ai-ava-user                   { color: var(--paper) }
+.dark .nd-ai-msg.user .nd-ai-bubble     { color: var(--paper); border-color: var(--ink) }
+
+/* 3. KPI cards */
+.dark .nd-kpi { background: var(--paper-2); border-color: var(--line-strong) }
+
+/* 4. nd-mock components */
+.dark .nd-mock-shell { background: var(--paper-2); box-shadow: 6px 6px 0 rgba(237,228,216,0.18) }
+.dark .nd-mock-opt   { background: var(--paper-3) }
+.dark .nd-mock-opt:hover { background: var(--paper-2); border-color: var(--ink-soft) }
+.dark .nd-mock-opt.on { background: var(--terra-tint) }
+.dark .nd-mock-pager button { background: var(--paper-3) }
+
+/* 5. Today plan card + card-hand + card */
+.dark .nd-today-card  { background: var(--paper-2); box-shadow: 5px 5px 0 rgba(237,228,216,0.15) }
+.dark .nd-card-hand   { background: var(--paper-2); box-shadow: 4px 4px 0 rgba(237,228,216,0.15) }
+.dark .nd-card        { background: var(--paper-2) }
+
+/* 6. Deck cards */
+.dark .nd-deck-card { background: var(--paper-2) }
+
+/* 7. Test cards */
+.dark .nd-test-card       { background: var(--paper-2); box-shadow: 4px 4px 0 rgba(237,228,216,0.18) }
+.dark .nd-test-card:hover { box-shadow: 6px 6px 0 rgba(237,228,216,0.18) }
+
+/* 8. Library components */
+.dark .nd-lib-pill      { background: var(--paper-2) }
+.dark .nd-lib-pill:hover { background: var(--paper-3) }
+.dark .nd-lib-card      { background: var(--paper-2) }
+.dark .nd-lib-card:hover { background: var(--paper-3) }
+
+/* 9. AI chat components */
+.dark .nd-ai-side                     { background: var(--paper-2) }
+.dark .nd-ai-history:hover            { background: var(--paper-3) }
+.dark .nd-ai-history.on               { background: var(--paper-3) }
+.dark .nd-ai-main                     { background: var(--paper-2) }
+.dark .nd-ai-bubble                   { background: var(--paper-3); border-color: var(--line-strong) }
+.dark .nd-ai-composer                 { background: var(--paper-2) }
+.dark .nd-ai-composer-box             { background: var(--paper-3); border-color: var(--line-strong) }
+.dark .nd-ai-composer-box:focus-within { border-color: var(--terra); background: var(--paper-2) }
+.dark .nd-ai-composer-box textarea    { color: var(--ink) }
+.dark .nd-ai-modes                    { background: var(--paper-3) }
+
+/* 10. Settings section */
+.dark .nd-settings-section { background: var(--paper-2) }
+
+/* 11. Planner calendar */
+.dark .nd-plan-cal               { background: var(--paper-2) }
+.dark .nd-plan-cal-grid > div    { background: var(--paper-2) }
+.dark .nd-cal-head               { background: var(--paper-3) }
+.dark .nd-cal-muted              { background: var(--paper) !important }
+.dark .nd-plan-task              { background: var(--paper-2) }
+
+/* 12. Badges */
+.dark .nd-badge-card        { background: var(--paper-2) }
+.dark .nd-badge-card.locked { background: var(--paper-3) }
+
+/* 13. Lesson layout */
+.dark .nd-lesson-main { background: var(--paper-2) }
+.dark .nd-lesson-toc a:hover { background: var(--paper-3) }
+.dark .nd-lesson-toc a.on    { background: var(--paper-3) }
+
+/* 14. Flashcard viewer */
+.dark .nd-fc-card { background: var(--paper-2); box-shadow: 8px 8px 0 rgba(237,228,216,0.15) }
+.dark .nd-fc-rate { background: var(--paper-2) }
+
+/* 15. Auth form side */
+.dark .nd-auth-form-side { background: var(--paper) }
+.dark .nd-auth-tabs { background: var(--paper-3) }
+
+/* 16. Feedback items */
+.dark .nd-feedback-item { background: var(--paper-3) }
+

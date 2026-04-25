@@ -32,32 +32,37 @@ export default async function EditSetPage({ params }: EditSetPageProps) {
   }));
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link
-        href={`/sets/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("set.backToSet")}
-      </Link>
+    <div className="page-shell py-4 sm:py-6">
+      {/* nd-mock-shell header */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href={`/sets/${id}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} />
+            {t("set.backToSet")}
+          </Link>
+          <h3>{t("set.editSet")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)", fontSize: 12 }}>
+            {set.title}
+          </span>
+        </div>
+      </div>
 
-      <div className="mt-6 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-sm">
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">{t("set.editSet")}</h1>
-        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+      {/* Header card */}
+      <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>{t("set.editSet")}</h1>
+        <p style={{ fontSize: 13, color: "var(--ink-mute)", margin: 0 }}>
           {t("set.editSetSubtitle")}
         </p>
       </div>
 
-      <div className="mt-8">
-        <EditSetClient
-          setId={id}
-          initialTitle={set.title}
-          initialDescription={set.description ?? ""}
-          initialCards={cards}
-          initialIsPublic={set.isPublic}
-          initialInvitedUsers=""
-        />
-      </div>
+      <EditSetClient
+        setId={id}
+        initialTitle={set.title}
+        initialDescription={set.description ?? ""}
+        initialCards={cards}
+        initialIsPublic={set.isPublic}
+        initialInvitedUsers=""
+      />
     </div>
   );
 }

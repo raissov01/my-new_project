@@ -43,19 +43,25 @@ export default async function StudyPage({
 
   if (allFlashcards.length === 0) {
     return (
-          <div className="mx-auto max-w-2xl px-4 py-10 text-center sm:px-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-          {set.title}
-        </h1>
-        <p className="mt-4 text-[var(--text-secondary)]">
-          {t("set.noFlashcards")}
-        </p>
-        <Link
-          href={`/sets/${id}/edit`}
-          className="mt-4 inline-block text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]"
-        >
-          {t("set.editSetLink")}
-        </Link>
+      <div className="page-shell py-4 sm:py-6">
+        <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+          <div className="nd-mock-bar">
+            <Link href={`/sets/${id}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+              <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} />
+              {t("set.backToSet")}
+            </Link>
+            <h3>{set.title}</h3>
+          </div>
+        </div>
+        <div style={{ border: "1px dashed var(--line)", borderRadius: 16, padding: "48px 24px", textAlign: "center" }}>
+          <p style={{ color: "var(--ink-mute)", marginBottom: 16 }}>{t("set.noFlashcards")}</p>
+          <Link
+            href={`/sets/${id}/edit`}
+            style={{ fontSize: 13, fontWeight: 500, color: "var(--terra)" }}
+          >
+            {t("set.editSetLink")}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -104,42 +110,47 @@ export default async function StudyPage({
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <Link
-        href={`/sets/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("set.backToSet")}
-      </Link>
+    <div className="page-shell py-4 sm:py-6">
+      {/* nd-mock-shell header */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href={`/sets/${id}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} />
+            {t("set.backToSet")}
+          </Link>
+          <h3>{t("set.studyLabel")}</h3>
+          {mode && (
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)", fontSize: 12 }}>
+              {studyLabel}
+            </span>
+          )}
+        </div>
+      </div>
 
-      <div className="mt-4 flex items-center gap-3">
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">
-          {set.title}
-        </h1>
+      {/* Session card */}
+      <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--ink)", marginBottom: 6 }}>{set.title}</h2>
         {mode && (
-          <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 text-xs font-medium text-[var(--primary)]">
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--ink-mute)" }}>
             {studyLabel}
           </span>
         )}
       </div>
 
-      <div className="mt-6">
-        <StudyClient
-          flashcards={flashcardsToStudy}
-          smartFlashcards={smartFlashcards}
-          smartSummary={smartSummary}
-          initialSmartMode={initialSmartMode}
-          smartToggleEnabled={smartToggleEnabled}
-          initialPomodoroSettings={pomodoroSettings}
-          setId={id}
-          initialMode={
-            view === "quiz" || view === "write" || view === "flashcard"
-              ? view
-              : "flashcard"
-          }
-        />
-      </div>
+      <StudyClient
+        flashcards={flashcardsToStudy}
+        smartFlashcards={smartFlashcards}
+        smartSummary={smartSummary}
+        initialSmartMode={initialSmartMode}
+        smartToggleEnabled={smartToggleEnabled}
+        initialPomodoroSettings={pomodoroSettings}
+        setId={id}
+        initialMode={
+          view === "quiz" || view === "write" || view === "flashcard"
+            ? view
+            : "flashcard"
+        }
+      />
     </div>
   );
 }
