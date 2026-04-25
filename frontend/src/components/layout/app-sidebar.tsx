@@ -12,6 +12,7 @@ import {
   CalendarDays,
   User,
   Crown,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -135,6 +136,7 @@ export function AppSidebar() {
   const accountItems: NavItem[] = user
     ? [
         { href: "/profile", label: t("nav.profile") || "Профиль", icon: User },
+        { href: "/settings", label: t("nav.settings") || "Баптаулар", icon: Settings },
         { href: "/upgrade", label: "Pro", icon: Crown },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle },
       ]
