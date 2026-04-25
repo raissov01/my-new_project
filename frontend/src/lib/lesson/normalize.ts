@@ -20,7 +20,9 @@ export function normalizeExercise(ex: Exercise, index: number): LessonItem {
         type: "fill_blank",
         id,
         level,
-        prompt: ex.prompt,
+        prompt: ex.data.sentence
+          ? `${ex.prompt}\n${ex.data.sentence}`
+          : ex.prompt,
         options: opts,
         correctOptionId: correctIdx >= 0 ? (opts[correctIdx]?.id ?? "") : (opts[0]?.id ?? ""),
       };

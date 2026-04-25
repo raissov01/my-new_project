@@ -39,11 +39,18 @@ export function FillBlank({ item, onAnswer }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [answered, handleSelect, item.options]);
 
+  const [instruction, sentence] = item.prompt.includes("\n")
+    ? item.prompt.split("\n")
+    : [item.prompt, null];
+
   return (
     <div>
-      <p className="mb-4 text-base text-[var(--text-secondary)]">
-        {item.prompt}
-      </p>
+      <p className="mb-2 text-sm text-[var(--text-secondary)]">{instruction}</p>
+      {sentence && (
+        <p className="mb-4 text-base font-medium text-[var(--text-primary)]">
+          {sentence}
+        </p>
+      )}
       <div className="grid grid-cols-2 gap-2">
         {item.options.map((opt, i) => {
           let cls =
