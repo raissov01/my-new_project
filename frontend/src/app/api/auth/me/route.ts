@@ -27,6 +27,7 @@ export async function GET() {
         username: profile?.username ?? user.user_metadata?.username ?? "",
         avatarUrl: profile?.avatar_url ?? null,
         role: profile?.role ?? user.user_metadata?.role ?? "student",
+        plan: user.plan ?? "free",
       },
     });
   } catch {

@@ -14,6 +14,7 @@ function hasAdminSessionCookie() {
 type AuthUser = {
   id: string;
   email?: string;
+  plan?: "free" | "pro";
   user_metadata?: Record<string, unknown>;
 };
 
@@ -25,6 +26,7 @@ type MeResponse = {
     username: string;
     avatarUrl: string | null;
     role: string;
+    plan: "free" | "pro";
   } | null;
 };
 
@@ -70,6 +72,7 @@ export function useAuth() {
           setUser({
             id: data.user.id,
             email: data.user.email,
+            plan: data.user.plan ?? "free",
             user_metadata: {
               full_name: data.user.fullName,
               username: data.user.username,

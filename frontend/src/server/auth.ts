@@ -26,11 +26,13 @@ type BackendUser = {
   points: number;
   lastActiveDate: string | null;
   createdAt: string;
+  plan: "free" | "pro";
 };
 
 type AppUser = {
   id: string;
   email?: string;
+  plan?: "free" | "pro";
   user_metadata?: {
     full_name?: string;
     username?: string;
@@ -73,6 +75,7 @@ const getCurrentBackendUserCached = cache(async (): Promise<BackendUser | null> 
       points: 0,
       lastActiveDate: null,
       createdAt: new Date(0).toISOString(),
+      plan: "free",
     };
   }
 
@@ -90,6 +93,7 @@ const getCurrentBackendUserCached = cache(async (): Promise<BackendUser | null> 
       points: 0,
       lastActiveDate: null,
       createdAt: new Date(0).toISOString(),
+      plan: "pro",
     };
   }
 
@@ -130,6 +134,7 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   return {
     id: user.id,
     email: user.email,
+    plan: user.plan ?? "free",
     user_metadata: {
       full_name: user.fullName,
       username: user.username,
