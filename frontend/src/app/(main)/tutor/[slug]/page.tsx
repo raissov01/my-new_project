@@ -16,17 +16,18 @@ export default async function TutorScenarioPage({
   if (!scenario) notFound();
 
   return (
-    <div className="page-shell py-8">
-      <Link href="/tutor" className="mb-6 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-        ← Scenario Library
-      </Link>
-
-      <div className="mb-6 space-y-1">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl" role="img">{scenario.icon ?? "💬"}</span>
-          <h1 className="text-xl font-bold">{scenario.title}</h1>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/tutor" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← Scenario Library
+          </Link>
+          <span style={{ fontSize: 20 }} role="img">{scenario.icon ?? "💬"}</span>
+          <h3 style={{ flex: 1 }}>{scenario.title}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)", textTransform: "capitalize" }}>
+            {scenario.category} · {scenario.level}
+          </span>
         </div>
-        <p className="text-sm text-[var(--text-secondary)] capitalize">{scenario.category} · {scenario.level}</p>
       </div>
 
       <ChatInterface scenario={scenario} />
