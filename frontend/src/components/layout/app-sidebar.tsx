@@ -18,6 +18,10 @@ import {
   HelpCircle,
   Gamepad2,
   TrendingUp,
+  ListChecks,
+  Newspaper,
+  Pickaxe,
+  MessageSquareText,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -96,16 +100,12 @@ export function AppSidebar() {
 
   // ── Nav groups ─────────────────────────────────────────────────────────────
 
-  const studyItems: NavItem[] = user
+  const mainItems: NavItem[] = user
     ? [
         { href: homeHref, label: t("nav.home"), icon: Home },
-        { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig },
-        { href: "/learn/map", label: t("nav.learn"), icon: Gamepad2 },
-        { href: "/listen", label: t("nav.listen"), icon: Headphones },
-        { href: "/tutor", label: t("nav.tutor"), icon: BotMessageSquare },
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked },
-        { href: "/ielts/dashboard", label: t("nav.progress") || "Прогресс", icon: TrendingUp },
-        { href: "/ielts/study-plan", label: t("ielts.studyPlanTitle") || "Жоспар", icon: CalendarDays },
+        { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig },
+        { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText },
       ]
     : [
         { href: "/", label: t("nav.home"), icon: Home, exact: true },
@@ -113,6 +113,24 @@ export function AppSidebar() {
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle },
       ];
+
+  const toolItems: NavItem[] = user
+    ? [
+        { href: "/learn/map", label: t("nav.learn"), icon: Gamepad2 },
+        { href: "/listen", label: t("nav.listen"), icon: Headphones },
+        { href: "/tutor", label: t("nav.tutor"), icon: BotMessageSquare },
+        { href: "/quizzes", label: t("nav.quizzes"), icon: ListChecks },
+        { href: "/daily-news", label: t("nav.dailyNews"), icon: Newspaper },
+        { href: "/mining", label: t("nav.mining"), icon: Pickaxe },
+      ]
+    : [];
+
+  const progressItems: NavItem[] = user
+    ? [
+        { href: "/ielts/dashboard", label: t("nav.progress"), icon: TrendingUp },
+        { href: "/ielts/study-plan", label: t("ielts.studyPlanTitle"), icon: CalendarDays },
+      ]
+    : [];
 
   const accountItems: NavItem[] = user
     ? [
@@ -145,30 +163,40 @@ export function AppSidebar() {
   const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => (
     <>
       <nav className="nd-sidebar-nav">
-        {/* Study group */}
+        {/* Main group */}
         <div className="nd-sidebar-group">
-          <span className="nd-sidebar-group-label">ОҚУ</span>
-          {studyItems.map((item) => (
-            <SidebarLink
-              key={item.href}
-              item={item}
-              pathname={pathname}
-              onClick={onLinkClick}
-            />
+          <span className="nd-sidebar-group-label">{t("nav.groupMain") || "НЕГІЗГІ"}</span>
+          {mainItems.map((item) => (
+            <SidebarLink key={item.href} item={item} pathname={pathname} onClick={onLinkClick} />
           ))}
         </div>
+
+        {/* Tools group — authenticated only */}
+        {user && toolItems.length > 0 && (
+          <div className="nd-sidebar-group">
+            <span className="nd-sidebar-group-label">{t("nav.groupTools") || "ҚҰРАЛДАР"}</span>
+            {toolItems.map((item) => (
+              <SidebarLink key={item.href} item={item} pathname={pathname} onClick={onLinkClick} />
+            ))}
+          </div>
+        )}
+
+        {/* Progress group — authenticated only */}
+        {user && progressItems.length > 0 && (
+          <div className="nd-sidebar-group">
+            <span className="nd-sidebar-group-label">{t("nav.groupProgress") || "ПРОГРЕСС"}</span>
+            {progressItems.map((item) => (
+              <SidebarLink key={item.href} item={item} pathname={pathname} onClick={onLinkClick} />
+            ))}
+          </div>
+        )}
 
         {/* Account group — authenticated only */}
         {user && accountItems.length > 0 && (
           <div className="nd-sidebar-group">
-            <span className="nd-sidebar-group-label">АККАУНТ</span>
+            <span className="nd-sidebar-group-label">{t("nav.groupAccount") || "АККАУНТ"}</span>
             {accountItems.map((item) => (
-              <SidebarLink
-                key={item.href}
-                item={item}
-                pathname={pathname}
-                onClick={onLinkClick}
-              />
+              <SidebarLink key={item.href} item={item} pathname={pathname} onClick={onLinkClick} />
             ))}
           </div>
         )}
