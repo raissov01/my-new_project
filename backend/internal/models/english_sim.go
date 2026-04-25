@@ -41,7 +41,8 @@ type EngSimLesson struct {
 	SortOrder        int       `gorm:"not null;default:0" json:"sortOrder"`
 	Title            string    `gorm:"not null" json:"title"`
 	LessonType       string    `gorm:"not null;default:'standard'" json:"lessonType"`
-	CachedExercises  *string   `gorm:"type:jsonb" json:"-"`
+	CachedExercisesKK *string  `gorm:"type:jsonb" json:"-"`
+	CachedExercisesRU *string  `gorm:"type:jsonb" json:"-"`
 	CreatedAt        time.Time `gorm:"autoCreateTime" json:"createdAt"`
 }
 

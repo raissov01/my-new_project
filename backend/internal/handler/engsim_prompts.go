@@ -90,7 +90,7 @@ Rules:
 - For word_order: 4-8 shuffled words, "correctSentence" is the answer
 - For matching: exactly 4 pairs (term + definition)
 - For error_correction: highlight the wrong word and provide correction + rule
-- For translation: provide source text in KAZAKH (not Russian), set sourceLang to "Kazakh", give 2-3 accepted English translations and a hint
+- For translation: source text MUST be in %s (use that language only), set sourceLang to that language name, give 2-3 accepted English translations and a hint
 - Make exercises practical and useful — real IELTS vocabulary and structures
 - NO filler, NO trivial questions — every exercise should teach something valuable
 - Return ONLY valid JSON, no markdown`

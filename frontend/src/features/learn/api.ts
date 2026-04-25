@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
+import { getServerLocale } from "@/server/i18n";
 
 // ── Types ──
 
@@ -243,12 +244,13 @@ export async function getProgress() {
 export async function startLesson(lessonId: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
+  const locale = await getServerLocale();
   return fetchBackendJson<{ session: LessonSession; exercises: LessonExercisePayload | Exercise[] | string }>({
     path: `/api/v1/engsim/lessons/${lessonId}/start`,
     userId: user.id,
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
+    body: JSON.stringify({ locale }),
     timeoutMs: 120_000,
   });
 }

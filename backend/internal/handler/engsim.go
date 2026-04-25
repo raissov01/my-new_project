@@ -248,6 +248,15 @@ func (h *EngSimHandler) StartLesson(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	lessonID := r.PathValue("lessonID")
 
+	var req struct {
+		Locale string `json:"locale"`
+	}
+	json.NewDecoder(r.Body).Decode(&req)
+	locale := req.Locale
+	if locale != "ru" {
+		locale = "kk"
+	}
+
 	// Get lesson + unit
 	var lesson models.EngSimLesson
 	if err := h.db.First(&lesson, "id = ?", lessonID).Error; err != nil {
@@ -266,20 +275,31 @@ func (h *EngSimHandler) StartLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate exercises (use cache if available)
+	// Generate exercises (use locale-aware cache if available)
 	exerciseCount := 8
 	if lesson.LessonType == "boss" {
 		exerciseCount = 12
 	}
 
-	var result string
-	if lesson.CachedExercises != nil && len(*lesson.CachedExercises) > 10 {
-		result = *lesson.CachedExercises
+	var cachedPtr *string
+	if locale == "ru" {
+		cachedPtr = lesson.CachedExercisesRU
 	} else {
+		cachedPtr = lesson.CachedExercisesKK
+	}
+
+	var result string
+	if cachedPtr != nil && len(*cachedPtr) > 10 {
+		result = *cachedPtr
+	} else {
+		nativeLang := "Kazakh"
+		if locale == "ru" {
+			nativeLang = "Russian"
+		}
 		exerciseTypes := "fill_blank, grammar_choice, word_order, matching, error_correction, translation"
 		prompt := fmt.Sprintf(exerciseGenerationPrompt,
 			exerciseCount, unit.Level, unit.IELTSSkill,
-			unit.Title, lesson.Title, exerciseTypes, unit.Level,
+			unit.Title, lesson.Title, exerciseTypes, unit.Level, nativeLang,
 		)
 		var err error
 		result, err = h.callAI("", prompt)
@@ -287,8 +307,12 @@ func (h *EngSimHandler) StartLesson(w http.ResponseWriter, r *http.Request) {
 			jsonErr(w, "Failed to generate exercises: "+err.Error(), http.StatusBadGateway)
 			return
 		}
-		// Save to cache for next time
-		h.db.Model(&lesson).Update("cached_exercises", result)
+		// Save to locale-specific cache
+		if locale == "ru" {
+			h.db.Model(&lesson).Update("cached_exercises_ru", result)
+		} else {
+			h.db.Model(&lesson).Update("cached_exercises_kk", result)
+		}
 	}
 
 	// Create session
