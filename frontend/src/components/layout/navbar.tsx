@@ -21,7 +21,10 @@ import {
   Pickaxe,
   ChevronDown,
   Crown,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useGhostMode } from "@/features/auth/hooks/use-ghost-mode";
@@ -191,6 +194,7 @@ export function Navbar() {
   const { user, loading } = useAuth();
   const { t } = useLocale();
   const { isGhost, enableGhostMode } = useGhostMode();
+  const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const userRole = (user as { user_metadata?: { role?: string } } | null)?.user_metadata?.role;
@@ -308,6 +312,17 @@ export function Navbar() {
                 <HelpCircle className="h-4 w-4" />
                 <span className="hidden xl:inline">{t("nav.guide")}</span>
               </Link>
+
+              {/* Theme toggle */}
+              {themeMounted && (
+                <button
+                  onClick={toggleTheme}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+                  aria-label={theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")}
+                >
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
+              )}
 
               {loading ? (
                 <>
@@ -476,6 +491,23 @@ export function Navbar() {
                 pathname={pathname}
                 onClick={() => setDrawerOpen(false)}
               />
+            )}
+            {/* Theme toggle row */}
+            {themeMounted && (
+              <button
+                onClick={toggleTheme}
+                className="flex min-h-[46px] w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4 shrink-0 text-white/40" />
+                ) : (
+                  <Moon className="h-4 w-4 shrink-0 text-white/40" />
+                )}
+                {t("nav.theme")}
+                <span className="ml-auto text-xs text-white/30">
+                  {theme === "dark" ? t("settings.dark") : t("settings.light")}
+                </span>
+              </button>
             )}
           </div>
 
