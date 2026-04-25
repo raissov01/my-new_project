@@ -20,6 +20,7 @@ import {
   Newspaper,
   Pickaxe,
   ChevronDown,
+  Crown,
 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -317,6 +318,17 @@ export function Navbar() {
                 <>
                   {(user as { streakDays?: number }).streakDays !== undefined && (
                     <StreakBadge streak={(user as { streakDays?: number }).streakDays ?? 0} />
+                  )}
+                  {(user as { plan?: string }).plan !== "pro" && (
+                    <Link href="/upgrade">
+                      <Button
+                        size="sm"
+                        className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold gap-1"
+                      >
+                        <Crown className="h-3.5 w-3.5" />
+                        Pro
+                      </Button>
+                    </Link>
                   )}
                   {(() => {
                     const isIelts = pathname.startsWith("/ielts");

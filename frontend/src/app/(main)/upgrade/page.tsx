@@ -3,6 +3,7 @@ import { Crown, CheckCircle2, Zap, BookOpen, Brain, Mic, Trophy } from "lucide-r
 import { getCurrentUser } from "@/server/auth";
 import { getBillingStatus } from "@/features/settings/api";
 import { Button } from "@/components/ui/button";
+import { PromoCheckout } from "./promo-checkout";
 
 const PRO_FEATURES = [
   { icon: BookOpen,  text: "Шексіз English Simulator сабақтары (барлық деңгейлер)" },
@@ -105,14 +106,7 @@ export default async function UpgradePage() {
                 ))}
               </ul>
               {billing?.checkoutURL ? (
-                <a
-                  href={billing.checkoutURL}
-                  className="lemonsqueezy-button inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-yellow-400 hover:bg-yellow-500 px-4 py-3 text-base font-bold text-yellow-900 transition-colors"
-                  rel="noopener noreferrer"
-                >
-                  <Crown className="h-4 w-4" />
-                  Pro-ға жазылу
-                </a>
+                <PromoCheckout baseCheckoutURL={billing.checkoutURL} />
               ) : (
                 <button
                   disabled
@@ -122,9 +116,6 @@ export default async function UpgradePage() {
                   Жақында...
                 </button>
               )}
-              <p className="text-center text-xs text-[var(--text-muted)] mt-3">
-                Kaspi Gold, Visa, Mastercard, Apple Pay, Google Pay
-              </p>
             </div>
           </div>
 
