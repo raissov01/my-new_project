@@ -1,23 +1,10 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" rx="64" fill="#0B1020"/>
-  <rect x="18" y="18" width="220" height="220" rx="54" fill="url(#panelGlow)" fill-opacity="0.18"/>
-  <path d="M157.589 66C177.338 66 192 77.277 192 94.719C192 112.366 178.979 121.578 159.743 125.818L127.783 132.886C114.481 135.844 107.142 140.598 107.142 149.193C107.142 158.917 115.609 165.759 128.744 165.759C143.662 165.759 154.231 159.429 158.347 148.833L186.188 157.372C178.32 179.105 157.984 192 129.757 192C95.7385 192 76 175.276 76 150.834C76 129.768 89.4136 117.085 116.217 111.136L147.281 104.28C159.355 101.629 164.746 97.4925 164.746 89.3057C164.746 80.5047 156.615 74.2413 144.596 74.2413C131.294 74.2413 121.119 80.059 116.778 90.0311L88.8814 81.499C96.7495 61.6933 115.486 50 141.888 50C147.47 50 152.706 50.5345 157.589 51.6034V66Z" fill="url(#letterGlow)"/>
-  <circle cx="182" cy="182" r="13" fill="url(#dotGlow)"/>
-  <circle cx="182" cy="182" r="4.5" fill="#F8FAFF"/>
-  <defs>
-    <linearGradient id="letterGlow" x1="86" y1="58" x2="192" y2="186" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#A855F7"/>
-      <stop offset="0.48" stop-color="#7C3AED"/>
-      <stop offset="1" stop-color="#38BDF8"/>
-    </linearGradient>
-    <radialGradient id="dotGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(182 182) rotate(90) scale(13)">
-      <stop stop-color="#C3F7FF"/>
-      <stop offset="1" stop-color="#3BB7FF"/>
-    </radialGradient>
-    <radialGradient id="panelGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(190 44) rotate(132.381) scale(222.597)">
-      <stop stop-color="#4F46E5"/>
-      <stop offset="0.5" stop-color="#7C3AED"/>
-      <stop offset="1" stop-color="#0B1020" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 120 120" fill="none">
+  <rect x="1" y="1" width="118" height="118" rx="20" fill="#FFFFFF" stroke="#E2DBD0"></rect>
+  <g transform="translate(60 62)">
+    <rect x="-34" y="-28" width="56" height="44" rx="5" fill="#F7F3ED" stroke="#18181b" stroke-width="1.5" transform="rotate(-8)"></rect>
+    <rect x="-30" y="-26" width="56" height="44" rx="5" fill="#FDFAF6" stroke="#18181b" stroke-width="1.5" transform="rotate(-2)"></rect>
+    <rect x="-28" y="-24" width="56" height="44" rx="5" fill="#FFFFFF" stroke="#18181b" stroke-width="2"></rect>
+    <text x="0" y="8" font-family="Georgia, serif" font-size="34" font-weight="700" text-anchor="middle" fill="#18181b">R</text>
+    <circle cx="20" cy="14" r="3" fill="#2563eb"></circle>
+  </g>
 </svg>
