@@ -24,6 +24,8 @@ type User struct {
 	StreakFreezesUsedThisWeek    int        `gorm:"not null;default:0" json:"streakFreezesUsedThisWeek"`
 	TotalStars                   int        `gorm:"not null;default:0" json:"totalStars"`
 	Timezone                     string     `gorm:"not null;default:'UTC'" json:"timezone"`
+	Plan                         string     `gorm:"not null;default:'free'" json:"plan"` // free | pro
+	LSCustomerID                 *int64     `gorm:"index" json:"-"`
 	CreatedAt                    time.Time  `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt                    time.Time  `gorm:"autoUpdateTime" json:"updatedAt"`
 }

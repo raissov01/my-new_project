@@ -14,6 +14,8 @@ import { PasswordChangeForm } from "@/features/settings/components/password-chan
 import { PreferencesPanel } from "@/features/settings/components/preferences-panel";
 import { DeleteAccountSection } from "@/features/settings/components/delete-account-section";
 import { RoleSection } from "@/features/settings/components/role-section";
+import { BillingSection } from "@/features/settings/components/billing-section";
+import { getBillingStatus } from "@/features/settings/api";
 import type { ProfileRole } from "@/lib/shared/types/database";
 
 interface SettingsPageProps {
@@ -45,10 +47,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     redirect("/login");
   }
 
-  const [{ error }, profile, pomodoro] = await Promise.all([
+  const [{ error }, profile, pomodoro, billing] = await Promise.all([
     searchParams,
     getCurrentProfile(user),
     getPomodoroPreferences(),
+    getBillingStatus(),
   ]);
 
   const feedback = getFeedbackMessage(t, error);
@@ -148,6 +151,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <RoleSection currentRole={(profile?.role as ProfileRole) ?? "student"} />
             </div>
           </section>
+
+          {/* Billing */}
+          <BillingSection billing={billing} />
 
           {/* Privacy */}
           <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">

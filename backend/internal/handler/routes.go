@@ -46,6 +46,7 @@ type Dependencies struct {
 	QuestionReview     *QuestionReviewHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
+	Billing            *BillingHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -74,6 +75,12 @@ func RegisterRoutes(router *gin.Engine) {
 	api.POST("/auth/change-verification-email", authLimiter, deps.Auth.ChangeVerificationEmail)
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
+
+	// ── Billing ──────────────────────────────────────────────────────────
+	// Webhook is public but signature-verified inside the handler.
+	api.POST("/billing/webhook", wrapHTTP(deps.Billing.Webhook))
+	// Status is internal-auth protected (Next.js server-to-server).
+	api.GET("/billing/status", middleware.InternalAuth(deps.InternalAPIToken), wrapHTTP(deps.Billing.Status))
 
 	// ── Public file serving (materials PDFs) ────────────────────────────
 	api.GET("/files/*filepath", wrapHTTP(deps.Files.Serve))

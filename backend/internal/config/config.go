@@ -39,6 +39,10 @@ type Config struct {
 	ResendAPIKey string
 	ResendFrom   string
 
+	// Lemon Squeezy billing
+	LemonSqueezyWebhookSecret string
+	LemonSqueezyCheckoutURL   string // base variant checkout URL from LS dashboard
+
 	// Telegram channel history importer (MTProto user session)
 	TelegramAppID         int
 	TelegramAppHash       string
@@ -75,6 +79,9 @@ func Load() (*Config, error) {
 
 		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
 		ResendFrom:   getEnv("RESEND_FROM", ""),
+
+		LemonSqueezyWebhookSecret: os.Getenv("LEMONSQUEEZY_WEBHOOK_SECRET"),
+		LemonSqueezyCheckoutURL:   os.Getenv("LEMONSQUEEZY_CHECKOUT_URL"),
 
 		TelegramAppID:         getEnvInt("TELEGRAM_APP_ID", 0),
 		TelegramAppHash:       os.Getenv("TELEGRAM_APP_HASH"),

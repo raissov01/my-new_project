@@ -203,6 +203,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		QuestionReview:     handler.NewQuestionReview(gormDB),
 		DailyNews:          handler.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		Mining:             handler.NewMining(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
+		Billing:            handler.NewBilling(gormDB, cfg.LemonSqueezyWebhookSecret, cfg.LemonSqueezyCheckoutURL),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),
 	}
 }

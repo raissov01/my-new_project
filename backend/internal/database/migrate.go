@@ -76,6 +76,8 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.AIConversation{},
 		// Daily News
 		&models.DailyNews{},
+		// Billing
+		&models.Subscription{},
 	)
 	if err != nil {
 		return err
@@ -133,6 +135,11 @@ func AutoMigrate(db *gorm.DB) error {
 	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS reorder_items_snapshot JSONB`)
 	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS match_pairs_snapshot JSONB`)
 	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS order_index_snapshot INT NOT NULL DEFAULT 0`)
+
+	// ── Billing column additions (idempotent) ───────────────────────────────
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(20) NOT NULL DEFAULT 'free'`)
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ls_customer_id BIGINT`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_ls_customer_id ON users(ls_customer_id) WHERE ls_customer_id IS NOT NULL`)
 
 	// ── Gamification column additions (idempotent) ──────────────────────────
 	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_freezes_available INT NOT NULL DEFAULT 2`)
