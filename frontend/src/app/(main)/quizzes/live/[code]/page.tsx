@@ -311,7 +311,7 @@ function LiveGameInner() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
+    <div className="page-shell py-4 sm:py-6">
       {/* Disconnected full-screen overlay */}
       {wsStatus === "disconnected" && phase !== "finished" ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-base)]/90 p-4 backdrop-blur-sm">
@@ -363,26 +363,29 @@ function LiveGameInner() {
       ) : null}
 
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">{quizTitle}</p>
-          {currentQEvt ? (
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t("quiz.live.question")} {currentQEvt.index + 1} / {totalQ}
-            </p>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="flex items-center gap-1 font-semibold text-amber-400">
-            <Star className="h-4 w-4 fill-amber-400" />
-            {score}
-          </span>
-          {streak > 1 ? (
-            <span className="flex items-center gap-1 font-semibold text-orange-400">
-              <Flame className="h-4 w-4 fill-orange-400" />
-              {streak}
+      <div className="nd-mock-shell" style={{ marginBottom: 20 }}>
+        <div className="nd-mock-bar">
+          <Link href="/quizzes/join" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← Back
+          </Link>
+          <h3 style={{ flex: 1 }}>{quizTitle}</h3>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="flex items-center gap-1 font-semibold text-amber-400">
+              <Star className="h-4 w-4 fill-amber-400" />
+              {score}
             </span>
-          ) : null}
+            {streak > 1 ? (
+              <span className="flex items-center gap-1 font-semibold text-orange-400">
+                <Flame className="h-4 w-4 fill-orange-400" />
+                {streak}
+              </span>
+            ) : null}
+            {currentQEvt ? (
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+                {t("quiz.live.question")} {currentQEvt.index + 1}/{totalQ}
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 

@@ -3,7 +3,7 @@
 import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Shuffle } from "lucide-react";
+import { Shuffle } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 
@@ -52,22 +52,20 @@ function JoinForm() {
   };
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
-      <Link
-        href="/quizzes"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("quiz.backToLibrary")}
-      </Link>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/quizzes" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← Back
+          </Link>
+          <h3 style={{ flex: 1 }}>{t("quiz.live.joinTitle")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+            {t("quiz.liveMode")}
+          </span>
+        </div>
+      </div>
 
-      <div className="mt-8 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <p className="text-xs font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
-          {t("quiz.liveMode")}
-        </p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-          {t("quiz.live.joinTitle")}
-        </h1>
+      <div style={{ maxWidth: 420, margin: "0 auto" }}>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">{t("quiz.live.joinSubtitle")}</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCurrentUser } from "@/server/auth";
 import { getLeague } from "@/features/gamification/api";
 import { LeagueLeaderboard } from "@/components/gamification/LeagueLeaderboard";
@@ -26,18 +27,27 @@ export default async function LeaguesPage() {
 
   if (!data?.group) {
     return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
-        <div className="text-center space-y-3">
-          <p className="text-4xl">🏟️</p>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Leagues</h1>
-          <p className="text-sm text-gray-500 max-w-xs">
-            Complete a lesson to join your first league and compete with other learners!
-          </p>
-          <a href="/learn/map" className="inline-block px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700">
-            Start a lesson →
-          </a>
+      <div className="page-shell py-4 sm:py-6">
+        <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+          <div className="nd-mock-bar">
+            <Link href="/student/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>← Back</Link>
+            <h3 style={{ flex: 1 }}>Лиги</h3>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>Leagues</span>
+          </div>
         </div>
-      </main>
+        <div className="flex items-center justify-center p-4">
+          <div className="text-center space-y-3">
+            <p className="text-4xl">🏟️</p>
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">Leagues</h1>
+            <p className="text-sm text-[var(--text-secondary)] max-w-xs">
+              Complete a lesson to join your first league and compete with other learners!
+            </p>
+            <a href="/learn/map" className="inline-block px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700">
+              Start a lesson →
+            </a>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -46,20 +56,28 @@ export default async function LeaguesPage() {
   const cfg = TIER_CONFIG[group.tier] ?? TIER_CONFIG.bronze;
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-8">
-      <div className="max-w-lg mx-auto space-y-5">
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/student/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>← Back</Link>
+          <h3 style={{ flex: 1 }}>Лиги</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>Leagues</span>
+        </div>
+      </div>
+
+      <div className="max-w-lg mx-auto space-y-5 px-4">
         {/* Hero */}
         <div className="text-center space-y-1">
           <span className="text-5xl">{cfg.icon}</span>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white capitalize">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] capitalize">
             {group.tier} League
           </h1>
           {myMember && (
-            <p className="text-sm text-gray-500">
-              Your rank: <strong className="text-gray-900 dark:text-white">#{myMember.rank}</strong> · {myMember.weeklyXp.toLocaleString()} XP this week
+            <p className="text-sm text-[var(--text-secondary)]">
+              Your rank: <strong className="text-[var(--text-primary)]">#{myMember.rank}</strong> · {myMember.weeklyXp.toLocaleString()} XP this week
             </p>
           )}
-          <p className="text-xs text-gray-400">{daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining</p>
+          <p className="text-xs text-[var(--text-muted)]">{daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining</p>
         </div>
 
         {/* Info */}
@@ -72,11 +90,11 @@ export default async function LeaguesPage() {
         <LeagueLeaderboard members={members} currentUserId={user.id} tier={group.tier} />
 
         {/* How it works */}
-        <details className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <summary className="px-4 py-3 font-medium text-sm cursor-pointer select-none text-gray-700 dark:text-gray-300">
+        <details className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+          <summary className="px-4 py-3 font-medium text-sm cursor-pointer select-none text-[var(--text-secondary)]">
             How leagues work
           </summary>
-          <div className="px-4 pb-4 text-sm text-gray-500 space-y-2">
+          <div className="px-4 pb-4 text-sm text-[var(--text-muted)] space-y-2">
             <p>• Every Monday you join a group of up to 30 learners at the same tier.</p>
             <p>• Each lesson you complete earns weekly XP — the more you practice, the higher you rank.</p>
             <p>• On Sunday night the week resets: top 7 move up a tier, bottom 5 drop down.</p>
@@ -84,6 +102,6 @@ export default async function LeaguesPage() {
           </div>
         </details>
       </div>
-    </main>
+    </div>
   );
 }

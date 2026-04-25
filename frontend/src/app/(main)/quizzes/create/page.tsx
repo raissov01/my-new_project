@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
@@ -15,30 +14,20 @@ export default async function CreateQuizPage() {
   const t = createTranslator(await getServerLocale());
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link
-        href="/quizzes"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("quiz.backToLibrary")}
-      </Link>
-
-      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
-          {t("quiz.createEyebrow")}
-        </p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
-          {t("quiz.createTitle")}
-        </h1>
-        <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
-          {t("quiz.createSubtitle")}
-        </p>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/quizzes" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← {t("quiz.backToLibrary")}
+          </Link>
+          <h3 style={{ flex: 1 }}>{t("quiz.createTitle")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+            {t("quiz.createEyebrow")}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-8">
-        <CreateQuizClient />
-      </div>
+      <CreateQuizClient />
     </div>
   );
 }

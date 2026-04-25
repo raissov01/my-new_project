@@ -60,7 +60,16 @@ export default async function PlacementResultPage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/learn" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>← Back</Link>
+          <h3 style={{ flex: 1 }}>Нәтиже</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>Placement Result</span>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-2xl px-4">
       {/* Overall badge */}
       <div className="text-center">
         <div
@@ -174,6 +183,7 @@ export default async function PlacementResultPage() {
             </p>
           </div>
         </Link>
+      </div>
       </div>
     </div>
   );

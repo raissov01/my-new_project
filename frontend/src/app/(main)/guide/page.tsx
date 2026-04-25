@@ -12,7 +12,6 @@ import {
   Trophy,
   User,
   Settings,
-  ArrowLeft,
   Sparkles,
   Target,
   Zap,
@@ -41,15 +40,20 @@ export default async function GuidePage() {
   const t = createTranslator(locale);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link
-        href={user ? "/dashboard" : "/"}
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("guide.backToDashboard")}
-      </Link>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href={user ? "/dashboard" : "/"} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← {t("guide.backToDashboard")}
+          </Link>
+          <h3 style={{ flex: 1 }}>{t("guide.title")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+            Нұсқаулық
+          </span>
+        </div>
+      </div>
 
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
       <div className="mt-6">
         <div className="flex items-center gap-3">
           <div className="rounded-2xl bg-[var(--primary-soft)] p-3 shadow-[var(--shadow-md)]">
@@ -271,6 +275,7 @@ export default async function GuidePage() {
             />
           )}
         </div>
+      </div>
       </div>
     </div>
   );

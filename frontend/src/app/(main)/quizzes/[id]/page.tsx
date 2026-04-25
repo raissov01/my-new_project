@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
-  ArrowLeft,
   BarChart2,
   Clock3,
   Globe2,
@@ -68,120 +67,118 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
   const stats = quiz.isAuthor ? await getQuizStats(id) : null;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link
-        href="/quizzes"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("quiz.backToLibrary")}
-      </Link>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/quizzes" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← {t("quiz.backToLibrary")}
+          </Link>
+          <h3 style={{ flex: 1 }}>{quiz.title}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+            {quiz.questionCount} {quiz.questionCount === 1 ? t("quiz.question") : t("quiz.questions")}
+          </span>
+        </div>
+      </div>
 
-      <section className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5">
-                <ListChecks className="h-3.5 w-3.5" />
-                {quiz.questionCount} {quiz.questionCount === 1 ? t("quiz.question") : t("quiz.questions")}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5">
-                <Clock3 className="h-3.5 w-3.5" />
-                {quiz.timePerQuestion}
-                {t("quiz.secondsShort")}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5">
-                {quiz.isPublic ? <Globe2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                {quiz.isPublic ? t("quiz.isPublic") : t("quiz.isPrivate")}
-              </span>
-            </div>
+      {/* KPI grid */}
+      <div className="nd-kpi-grid" style={{ marginBottom: 24 }}>
+        <div className="nd-kpi">
+          <span className="nd-kpi-label">{t("quiz.attempts")}</span>
+          <span className="nd-kpi-value">{quiz.attemptsCount}</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-label">{t("quiz.avgScore")}</span>
+          <span className="nd-kpi-value">{quiz.averagePercentage}%</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-label">
+            <Clock3 style={{ display: "inline", width: 13, height: 13, marginRight: 4 }} />
+            {t("quiz.secondsShort")}
+          </span>
+          <span className="nd-kpi-value">{quiz.timePerQuestion}s</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-label">
+            {quiz.isPublic ? (
+              <Globe2 style={{ display: "inline", width: 13, height: 13, marginRight: 4 }} />
+            ) : (
+              <Lock style={{ display: "inline", width: 13, height: 13, marginRight: 4 }} />
+            )}
+            Visibility
+          </span>
+          <span className="nd-kpi-value" style={{ fontSize: 14 }}>
+            {quiz.isPublic ? t("quiz.isPublic") : t("quiz.isPrivate")}
+          </span>
+        </div>
+      </div>
 
-            <h1 className="mt-5 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
-              {quiz.title}
-            </h1>
+      {/* Meta info */}
+      <div className="mb-4">
+        <p className="mt-1 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+          {quiz.description || t("quiz.noDescription")}
+        </p>
 
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-              {quiz.description || t("quiz.noDescription")}
-            </p>
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
+          {quiz.subject ? (
+            <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5">
+              {quiz.subject}
+            </span>
+          ) : null}
+          {quiz.authorName ? (
+            <span className="inline-flex items-center gap-1.5">
+              <UserRound className="h-4 w-4" />
+              {quiz.authorName}
+            </span>
+          ) : null}
+          <span>
+            {t("quiz.created")} {formatDate(quiz.createdAt, locale)}
+          </span>
+          {quiz.version != null && quiz.version > 1 ? (
+            <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 font-mono text-xs text-[var(--text-muted)]">
+              v{quiz.version}
+            </span>
+          ) : null}
+        </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
-              {quiz.subject ? (
-                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5">
-                  {quiz.subject}
-                </span>
-              ) : null}
-              {quiz.authorName ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <UserRound className="h-4 w-4" />
-                  {quiz.authorName}
-                </span>
-              ) : null}
-              <span>
-                {t("quiz.created")} {formatDate(quiz.createdAt, locale)}
-              </span>
-              {quiz.version != null && quiz.version > 1 ? (
-                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 font-mono text-xs text-[var(--text-muted)]">
-                  v{quiz.version}
-                </span>
-              ) : null}
-            </div>
+        {quiz.tags && quiz.tags.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {quiz.tags.map((tag) => (
+              <Link
+                key={tag}
+                href={`/quizzes?tag=${encodeURIComponent(tag)}`}
+                className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+              >
+                #{tag}
+              </Link>
+            ))}
+          </div>
+        ) : null}
 
-            {quiz.tags && quiz.tags.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {quiz.tags.map((tag) => (
-                  <Link
-                    key={tag}
-                    href={`/quizzes?tag=${encodeURIComponent(tag)}`}
-                    className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
-                  >
-                    #{tag}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={`/quizzes/${quiz.id}/play`}>
-                <Button size="lg">
-                  <Play className="h-4 w-4" />
-                  {t("quiz.startQuiz")}
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href={`/quizzes/${quiz.id}/play`}>
+            <Button size="lg">
+              <Play className="h-4 w-4" />
+              {t("quiz.startQuiz")}
+            </Button>
+          </Link>
+          {quiz.isAuthor ? (
+            <>
+              <Link href={`/quizzes/${quiz.id}/edit`}>
+                <Button variant="outline" size="lg">
+                  {t("quiz.edit")}
                 </Button>
               </Link>
-              {quiz.isAuthor ? (
-                <>
-                  <Link href={`/quizzes/${quiz.id}/edit`}>
-                    <Button variant="outline" size="lg">
-                      {t("quiz.edit")}
-                    </Button>
-                  </Link>
-                  <Link href={`/quizzes/${quiz.id}/host`}>
-                    <Button variant="outline" size="lg">
-                      <Radio className="h-4 w-4" />
-                      {t("quiz.hostLive")}
-                    </Button>
-                  </Link>
-                </>
-              ) : null}
-              <ShareQuizButton quizId={quiz.id} quizTitle={quiz.title} />
-            </div>
-          </div>
-
-          <div className="grid w-full gap-3 sm:grid-cols-3 lg:w-auto lg:min-w-[260px] lg:grid-cols-1">
-            <MetricCard
-              label={t("quiz.attempts")}
-              value={String(quiz.attemptsCount)}
-            />
-            <MetricCard
-              label={t("quiz.avgScore")}
-              value={`${quiz.averagePercentage}%`}
-            />
-            <MetricCard
-              label={quiz.isAuthor ? t("quiz.detailAuthorView") : t("quiz.detailPreview")}
-              value={quiz.isAuthor ? t("quiz.detailAnswersVisible") : t("quiz.detailAnswersHidden")}
-            />
-          </div>
+              <Link href={`/quizzes/${quiz.id}/host`}>
+                <Button variant="outline" size="lg">
+                  <Radio className="h-4 w-4" />
+                  {t("quiz.hostLive")}
+                </Button>
+              </Link>
+            </>
+          ) : null}
+          <ShareQuizButton quizId={quiz.id} quizTitle={quiz.title} />
         </div>
-      </section>
+      </div>
 
       <section className="mt-8">
         <div className="flex items-center justify-between gap-3">
@@ -283,19 +280,6 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
           )}
         </section>
       ) : null}
-    </div>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)]">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-        {value}
-      </p>
     </div>
   );
 }

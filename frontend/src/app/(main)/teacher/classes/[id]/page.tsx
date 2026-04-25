@@ -42,31 +42,22 @@ export default async function TeacherClassDetailPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link
-        href="/teacher/classes"
-        className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        {t("teacher.backToClasses")}
-      </Link>
-
-      <div className="mt-4 rounded-[2rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
-              {t("teacher.classroom")}
-            </p>
-            <h1 className="mt-3 text-4xl font-semibold text-[var(--text-primary)]">
-              {detail.group.name}
-            </h1>
-            <p className="mt-3 text-sm text-[var(--text-secondary)]">
-              {t("teacher.classCodeLabel", { code: detail.group.joinCode })}
-            </p>
-          </div>
-          <Link href="/teacher/challenges">
-            <Button variant="outline">{t("teacher.manageChallenges")}</Button>
-          </Link>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/teacher/classes" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>← {t("teacher.backToClasses")}</Link>
+          <h3 style={{ flex: 1 }}>{detail.group.name}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>{t("teacher.classroom")}</span>
         </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-4 px-1">
+        <p className="text-sm text-[var(--text-secondary)]">
+          {t("teacher.classCodeLabel", { code: detail.group.joinCode })}
+        </p>
+        <Link href="/teacher/challenges">
+          <Button variant="outline">{t("teacher.manageChallenges")}</Button>
+        </Link>
       </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
@@ -25,7 +26,19 @@ export default async function HostLivePage({ params }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href={`/quizzes/${id}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← Back
+          </Link>
+          <h3 style={{ flex: 1 }}>{quiz.title}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+            {t("quiz.hostLive")}
+          </span>
+        </div>
+      </div>
+
       <HostLiveClient
         quizId={id}
         quizTitle={quiz.title}

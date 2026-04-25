@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, BarChart3, Check, Clock, Users } from "lucide-react";
+import { BarChart3, Check, Clock, Users } from "lucide-react";
 import { getClassQuizTeacherStats } from "@/server/services/classrooms";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
@@ -37,25 +37,18 @@ export default async function ClassQuizStatsPage({ params }: StatsPageProps) {
       : 0;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link
-        href={`/teacher/classes/${encodeURIComponent(groupId)}`}
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {stats.groupName}
-      </Link>
-
-      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
-          <BarChart3 className="h-3.5 w-3.5 text-[var(--primary)]" />
-          {t("classroom.teacherStatsTitle")}
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href={`/teacher/classes/${encodeURIComponent(groupId)}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>← {stats.groupName}</Link>
+          <h3 style={{ flex: 1 }}>{stats.quizTitle}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>{t("classroom.teacherStatsTitle")}</span>
         </div>
-        <h1 className="mt-4 break-words text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
-          {stats.quizTitle}
-        </h1>
+      </div>
+
+      <div>
         {stats.deadline ? (
-          <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
+          <p className="mb-4 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
             <Clock className="h-3.5 w-3.5" />
             {t("classroom.deadlineValue", {
               value: new Date(stats.deadline).toLocaleString(locale),
@@ -63,7 +56,7 @@ export default async function ClassQuizStatsPage({ params }: StatsPageProps) {
           </p>
         ) : null}
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-3">
           <MetricCard
             icon={<Users className="h-4 w-4" />}
             label={t("classroom.teacherStatsCompletion")}

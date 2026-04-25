@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
-  ArrowLeft,
   Check,
   Dumbbell,
   RotateCw,
@@ -85,16 +84,40 @@ export default async function QuizResultsPage({
   const dashOffset = dashArray * (1 - percentage / 100);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <Link
-        href={`/quizzes/${encodeURIComponent(id)}`}
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("quiz.backToLibrary")}
-      </Link>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href={`/quizzes/${encodeURIComponent(id)}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← {t("quiz.backToLibrary")}
+          </Link>
+          <h3 style={{ flex: 1 }}>{t("quiz.results.title")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+            {grade}
+          </span>
+        </div>
+      </div>
 
-      <section className="mt-6 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-xl)] sm:p-8 lg:p-10">
+      {/* KPI grid */}
+      <div className="nd-kpi-grid" style={{ marginBottom: 24 }}>
+        <div className="nd-kpi">
+          <span className="nd-kpi-label">Score</span>
+          <span className="nd-kpi-value">{attempt.score}/{attempt.totalQuestions}</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-label">Percentage</span>
+          <span className="nd-kpi-value">{percentage}%</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-label">{t("quiz.results.totalTime")}</span>
+          <span className="nd-kpi-value">{formatDuration(attempt.timeSpent)}</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-label">{t("quiz.results.longestStreak")}</span>
+          <span className="nd-kpi-value">{maxStreak}</span>
+        </div>
+      </div>
+
+      <section className="mb-8 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-xl)] sm:p-8 lg:p-10">
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-[auto_1fr] lg:items-center">
           <div className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56">
             <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getCurrentUser } from "@/server/auth";
@@ -22,22 +23,20 @@ export default async function CreateQuizWithAIPage() {
   const t = createTranslator(await getServerLocale());
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
-          {t("quiz.ai.eyebrow")}
-        </p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-          {t("quiz.ai.pageTitle")}
-        </h1>
-        <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-          {t("quiz.ai.pageSubtitle")}
-        </p>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/quizzes" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← Back
+          </Link>
+          <h3 style={{ flex: 1 }}>{t("quiz.ai.pageTitle")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+            {t("quiz.ai.eyebrow")}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-8">
-        <CreateWithAIClient />
-      </div>
+      <CreateWithAIClient />
     </div>
   );
 }
