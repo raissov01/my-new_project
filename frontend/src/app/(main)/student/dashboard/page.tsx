@@ -50,8 +50,24 @@ export default async function StudentDashboardPage() {
     ? ((ieltsScores.listening + ieltsScores.reading + ieltsScores.writing + ieltsScores.speaking) / 4).toFixed(1)
     : "—";
 
-  // Weekly chart: 7 bars — last bar is highlighted
-  const chartHeights = [40, 65, 50, 80, 70, 95, 60];
+  // Weekly chart from real recentActivity (Mon–Sun)
+  const today = new Date();
+  const dow = today.getDay(); // 0=Sun
+  const mondayOffset = dow === 0 ? -6 : 1 - dow;
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() + mondayOffset);
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+  const activityMap = new Map(
+    (stats.recentActivity ?? []).map(({ date, count }: { date: string; count: number }) => [date.slice(0, 10), count])
+  );
+  const weekCounts = weekDates.map(date => activityMap.get(date) ?? 0);
+  const maxCount = Math.max(...weekCounts, 1);
+  const chartHeights = weekCounts.map(c => c === 0 ? 4 : Math.max(10, Math.round((c / maxCount) * 95)));
+  const todayIndex = dow === 0 ? 6 : dow - 1;
 
   // Today's plan from assignments (up to 4)
   const todayItems = summary.assignments.slice(0, 4);
@@ -190,7 +206,7 @@ export default async function StudentDashboardPage() {
           </div>
           <div className="nd-mini-chart">
             {chartHeights.map((h, i) => (
-              <div key={i} className={`bar ${i === 5 ? "hi" : ""}`} style={{ height: `${h}%` }} />
+              <div key={i} className={`bar ${i === todayIndex ? "hi" : ""}`} style={{ height: `${h}%` }} />
             ))}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, color: "var(--ink-mute)", letterSpacing: ".08em" }}>
