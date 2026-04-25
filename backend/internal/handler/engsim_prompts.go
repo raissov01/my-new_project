@@ -67,8 +67,8 @@ Return ONLY valid JSON:
       "type": "translation",
       "prompt": "Translate this phrase into English:",
       "data": {
-        "sourceText": "Значительный рост населения",
-        "sourceLang": "Russian",
+        "sourceText": "Халық санының айтарлықтай өсуі",
+        "sourceLang": "Kazakh",
         "acceptedAnswers": ["A significant increase in population", "A substantial growth in population", "Significant population growth"],
         "hint": "Think about IELTS Task 1 vocabulary"
       }
@@ -90,7 +90,7 @@ Rules:
 - For word_order: 4-8 shuffled words, "correctSentence" is the answer
 - For matching: exactly 4 pairs (term + definition)
 - For error_correction: highlight the wrong word and provide correction + rule
-- For translation: provide source in Russian, 2-3 accepted English translations, a hint
+- For translation: provide source text in KAZAKH (not Russian), set sourceLang to "Kazakh", give 2-3 accepted English translations and a hint
 - Make exercises practical and useful — real IELTS vocabulary and structures
 - NO filler, NO trivial questions — every exercise should teach something valuable
 - Return ONLY valid JSON, no markdown`
