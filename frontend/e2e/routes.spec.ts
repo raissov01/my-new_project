@@ -96,13 +96,23 @@ test.describe("Legacy redirect routes", () => {
   });
 });
 
-// ── 3. Auth-required routes — redirect to /login (not 404) ───────────────────
+// ── 3. Internal routes — must not 404 (some allow ghost access, some redirect) ─
 
-test.describe("Auth-required routes → /login (not 404)", () => {
-  const AUTH_ROUTES = [
+test.describe("Internal routes — never return 404", () => {
+  // Routes that STRICTLY redirect to /login when unauthenticated
+  const STRICT_AUTH_ROUTES = [
     "/dashboard",
     "/student/dashboard",
     "/teacher/dashboard",
+    "/sets/new",
+    "/profile",
+    "/settings",
+    "/student/classes",
+    "/teacher/classes",
+  ];
+
+  // Routes accessible in ghost/public mode — must render (not 404, not /login)
+  const GHOST_OK_ROUTES = [
     "/flashcards",
     "/chat",
     "/quizzes",
@@ -112,28 +122,30 @@ test.describe("Auth-required routes → /login (not 404)", () => {
     "/mining",
     "/leaderboard",
     "/sets",
-    "/sets/new",
-    "/profile",
-    "/settings",
     "/achievements",
     "/learn/map",
     "/ielts",
     "/ielts/simulator",
     "/ielts/materials",
     "/ielts/study-plan",
-    "/student/classes",
-    "/teacher/classes",
     "/friends",
     "/streak",
   ];
 
-  for (const route of AUTH_ROUTES) {
-    test(`GET ${route} → not 404 (redirects to login)`, async ({ page }) => {
+  for (const route of STRICT_AUTH_ROUTES) {
+    test(`GET ${route} → redirects to /login (not 404)`, async ({ page }) => {
       await page.goto(route, { waitUntil: "domcontentloaded" });
       const title = await page.title();
       expect(title, `${route} returned 404`).not.toMatch(/404|not found/i);
-      // Must redirect to /login, not crash with 404
-      expect(page.url()).toMatch(/\/login/);
+      expect(page.url(), `${route} should redirect to /login`).toMatch(/\/login/);
+    });
+  }
+
+  for (const route of GHOST_OK_ROUTES) {
+    test(`GET ${route} → renders (not 404)`, async ({ page }) => {
+      await page.goto(route, { waitUntil: "domcontentloaded" });
+      const title = await page.title();
+      expect(title, `${route} returned 404`).not.toMatch(/404|not found/i);
     });
   }
 });
