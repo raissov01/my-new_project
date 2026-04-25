@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/layout";
+import { AppSidebar } from "@/components/layout/app-sidebar";
 import { GhostModeBanner } from "@/components/layout/ghost-mode-banner";
 import { AppFooter } from "@/components/layout/app-footer";
 
@@ -10,11 +10,17 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative z-10 flex min-h-screen flex-col">
-      <Navbar />
-      <GhostModeBanner />
-      <main id="main-content" className="flex-1">{children}</main>
-      <AppFooter />
+    <div className="flex min-h-screen">
+      <AppSidebar />
+      <div className="flex flex-1 flex-col lg:ml-[220px]">
+        <GhostModeBanner />
+        <main id="main-content" className="flex-1">
+          {children}
+        </main>
+        <div className="hidden lg:block">
+          <AppFooter />
+        </div>
+      </div>
     </div>
   );
 }
