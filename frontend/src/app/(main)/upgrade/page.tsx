@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Crown, CheckCircle2, Zap, BookOpen, Brain, Mic, Trophy } from "lucide-react";
+import { Crown, CheckCircle2, Zap, BookOpen, Brain, Mic, Trophy, Gift } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { getBillingStatus } from "@/features/settings/api";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,12 @@ export default async function UpgradePage() {
               AI-мен оқудың толық күшін ашыңыз. IELTS дайындығы, ағылшын тілі,
               AI сабақтар — бәрі бір жазылымда.
             </p>
+
+            {/* Trial badge */}
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-5 py-2 text-sm font-semibold text-green-400">
+              <Gift className="h-4 w-4" />
+              7 күн тегін — картаңызды тіркеп, кез-келген уақытта бас тарта аласыз
+            </div>
           </div>
 
           {/* Plans */}
@@ -84,7 +90,7 @@ export default async function UpgradePage() {
             <div className="relative rounded-[var(--radius-2xl)] border-2 border-yellow-400 bg-[var(--bg-surface)] p-6 sm:p-8 shadow-[0_0_0_4px_rgba(234,179,8,0.1)]">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                 <span className="rounded-full bg-yellow-400 px-4 py-1 text-xs font-bold text-yellow-900">
-                  ЕҢ ТАНЫМАЛ
+                  7 КҮН ТЕГІН
                 </span>
               </div>
               <div className="mb-6">
@@ -95,7 +101,9 @@ export default async function UpgradePage() {
                   <span className="text-4xl font-extrabold text-[var(--text-primary)]">$9</span>
                   <span className="text-[var(--text-muted)] mb-1">/ай</span>
                 </div>
-                <p className="text-sm text-[var(--text-secondary)] mt-2">немесе $79/жыл (үнемдеу $29)</p>
+                <p className="text-sm text-green-400 mt-2 font-medium">
+                  Алғашқы 7 күн тегін, одан кейін $9/ай
+                </p>
               </div>
               <ul className="space-y-3 mb-8">
                 {PRO_FEATURES.map(({ icon: Icon, text }) => (
@@ -113,15 +121,31 @@ export default async function UpgradePage() {
                   className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-yellow-200 px-4 py-3 text-base font-bold text-yellow-600 cursor-not-allowed"
                 >
                   <Crown className="h-4 w-4" />
-                  Жақында...
+                  Жүктелуде...
                 </button>
               )}
             </div>
           </div>
 
-          {/* FAQ */}
-          <div className="mt-12 text-center text-sm text-[var(--text-muted)]">
-            <p>Сұрақтар бар ма? <a href="mailto:support@studywithraissov.kz" className="underline">support@studywithraissov.kz</a></p>
+          {/* Trial note */}
+          <p className="mt-6 text-center text-xs text-[var(--text-muted)]">
+            7 күндік тегін кезеңде картадан ақша алынбайды. Триал аяқталса автоматты жазылым басталады.
+            Кез-келген уақытта бас тарта аласыз.
+          </p>
+
+          {/* Support */}
+          <div className="mt-8 text-center text-sm text-[var(--text-muted)]">
+            <p>
+              Сұрақтар бар ма?{" "}
+              <a
+                href="https://t.me/raissov01"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-[var(--text-secondary)]"
+              >
+                Telegram: @raissov01
+              </a>
+            </p>
           </div>
         </div>
       </div>
