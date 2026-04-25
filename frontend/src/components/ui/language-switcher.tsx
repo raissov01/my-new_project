@@ -8,9 +8,24 @@ import { useLocale } from "@/components/providers/locale-provider";
 export function LanguageSwitcher({
   variant = "default",
 }: {
-  variant?: "default" | "menu";
+  variant?: "default" | "menu" | "navbar";
 }) {
   const { locale, setLocale, t } = useLocale();
+
+  if (variant === "navbar") {
+    const nextLocale = LOCALES[(LOCALES.indexOf(locale) + 1) % LOCALES.length];
+    return (
+      <button
+        type="button"
+        onClick={() => setLocale(nextLocale)}
+        aria-label={t("lang.label")}
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+        title={t("lang.label")}
+      >
+        {locale.toUpperCase()}
+      </button>
+    );
+  }
 
   if (variant === "menu") {
     return (

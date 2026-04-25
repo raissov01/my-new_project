@@ -23,9 +23,12 @@ import {
   Crown,
   Sun,
   Moon,
+  Bell,
+  Languages,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useLocale } from "@/components/providers/locale-provider";
+import { LOCALES } from "@/lib/shared/i18n";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useGhostMode } from "@/features/auth/hooks/use-ghost-mode";
 import { Button } from "@/components/ui/button";
@@ -33,6 +36,7 @@ import { AvatarMenu } from "@/components/layout/avatar-menu";
 import { BrandLogo } from "@/components/layout";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { StreakBadge } from "@/components/gamification/StreakBadge";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -192,7 +196,7 @@ function DrawerLink({ item, pathname, onClick }: { item: NavItem; pathname: stri
 
 export function Navbar() {
   const { user, loading } = useAuth();
-  const { t } = useLocale();
+  const { t, locale, setLocale } = useLocale();
   const { isGhost, enableGhostMode } = useGhostMode();
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
   const pathname = usePathname();
@@ -313,6 +317,9 @@ export function Navbar() {
                 <span className="hidden xl:inline">{t("nav.guide")}</span>
               </Link>
 
+              {/* Language switcher */}
+              <LanguageSwitcher variant="navbar" />
+
               {/* Theme toggle */}
               {themeMounted && (
                 <button
@@ -321,6 +328,16 @@ export function Navbar() {
                   aria-label={theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")}
                 >
                   {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
+              )}
+
+              {/* Notification bell */}
+              {user && (
+                <button
+                  className="relative flex h-9 w-9 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+                  aria-label={t("nav.notifications")}
+                >
+                  <Bell className="h-4 w-4" />
                 </button>
               )}
 
@@ -492,6 +509,27 @@ export function Navbar() {
                 onClick={() => setDrawerOpen(false)}
               />
             )}
+            {/* Language switcher row */}
+            <div className="flex min-h-[46px] items-center gap-3 rounded-xl px-4 py-2.5">
+              <Languages className="h-4 w-4 shrink-0 text-white/40" />
+              <span className="text-sm font-medium text-white/70">{t("lang.label")}</span>
+              <div className="ml-auto flex gap-1">
+                {LOCALES.map((code) => (
+                  <button
+                    key={code}
+                    onClick={() => setLocale(code)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-colors ${
+                      locale === code
+                        ? "bg-[#5533ff] text-white"
+                        : "text-white/40 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    {code.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Theme toggle row */}
             {themeMounted && (
               <button
