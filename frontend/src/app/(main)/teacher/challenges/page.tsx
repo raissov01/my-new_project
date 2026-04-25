@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Trophy, Sparkles } from "lucide-react";
 import { createClassChallenge } from "@/app/(main)/classes/challenges/actions";
 import {
   getAvailableSetsForClassChallenges,
@@ -28,17 +27,52 @@ export default async function TeacherChallengesPage() {
     getMyClassChallenges(access.user?.id),
   ]);
 
+  const ownedChallenges = challenges.filter((challenge) => challenge.isOwner);
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.2fr]">
-        <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)]">
-          <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
-            {t("teacher.challengesEyebrow")}
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+    <div className="page-shell py-4 sm:py-6">
+      {/* Header */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <h3 style={{ margin: 0 }}>{t("teacher.challengesTitle")}</h3>
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono',monospace",
+              color: "var(--ink-mute)",
+            }}
+          >
+            {ownedChallenges.length} {t("teacher.activeChallenges")}
+          </span>
+          <Link href="/teacher/classes" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            {t("teacher.openClasses")}
+          </Link>
+        </div>
+      </div>
+
+      {/* Two-column layout */}
+      <div
+        className="xl:grid-cols-2"
+        style={{
+          display: "grid",
+          gap: 20,
+          gridTemplateColumns: "1fr",
+          alignItems: "start",
+        }}
+      >
+        {/* Left: Create Challenge Form */}
+        <div
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--line)",
+            borderRadius: 18,
+            padding: "20px 24px",
+            marginBottom: 0,
+          }}
+        >
+          <h3 style={{ margin: "0 0 4px", color: "var(--ink)", fontSize: 18, fontWeight: 600 }}>
             {t("teacher.challengesTitle")}
-          </h1>
-          <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
+          </h3>
+          <p style={{ margin: "0 0 20px", color: "var(--ink-mute)", fontSize: 13.5, lineHeight: 1.6 }}>
             {t("teacher.challengesSubtitle")}
           </p>
 
@@ -47,7 +81,7 @@ export default async function TeacherChallengesPage() {
               "use server";
               await createClassChallenge(formData);
             }}
-            className="mt-6 space-y-4"
+            style={{ display: "flex", flexDirection: "column", gap: 12 }}
           >
             <Input
               name="title"
@@ -57,7 +91,16 @@ export default async function TeacherChallengesPage() {
             <select
               name="group_id"
               required
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] outline-none focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-soft)]"
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                border: "1px solid var(--line)",
+                background: "var(--paper-2)",
+                padding: "10px 14px",
+                fontSize: 14,
+                color: "var(--ink)",
+                outline: "none",
+              }}
             >
               <option value="">{t("teacher.selectClass")}</option>
               {groups.map((group) => (
@@ -69,7 +112,16 @@ export default async function TeacherChallengesPage() {
             <select
               name="set_id"
               required
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] outline-none focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-soft)]"
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                border: "1px solid var(--line)",
+                background: "var(--paper-2)",
+                padding: "10px 14px",
+                fontSize: 14,
+                color: "var(--ink)",
+                outline: "none",
+              }}
             >
               <option value="">{t("teacher.selectSet")}</option>
               {sets.map((set) => (
@@ -81,79 +133,96 @@ export default async function TeacherChallengesPage() {
             <input
               name="deadline"
               type="datetime-local"
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] outline-none focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-soft)]"
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                border: "1px solid var(--line)",
+                background: "var(--paper-2)",
+                padding: "10px 14px",
+                fontSize: 14,
+                color: "var(--ink)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
             />
             <Button type="submit">{t("teacher.createChallenge")}</Button>
           </form>
-        </section>
+        </div>
 
-        <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-[var(--primary)]" />
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                {t("teacher.activeChallenges")}
-                </h2>
-              </div>
-              <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                {t("teacher.activeChallengesBody")}
-              </p>
-            </div>
-            <Link href="/teacher/classes">
-              <Button variant="outline">{t("teacher.openClasses")}</Button>
-            </Link>
-          </div>
+        {/* Right: Active Challenges list */}
+        <div
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--line)",
+            borderRadius: 18,
+            padding: "20px 24px",
+            marginBottom: 0,
+          }}
+        >
+          <h3 style={{ margin: "0 0 4px", color: "var(--ink)", fontSize: 18, fontWeight: 600 }}>
+            {t("teacher.activeChallenges")}
+          </h3>
+          <p style={{ margin: "0 0 16px", color: "var(--ink-mute)", fontSize: 13.5, lineHeight: 1.6 }}>
+            {t("teacher.activeChallengesBody")}
+          </p>
 
-          <div className="mt-6 grid gap-4">
-            {challenges.filter((challenge) => challenge.isOwner).length > 0 ? (
-              challenges
-                .filter((challenge) => challenge.isOwner)
-                .map((challenge) => (
-                  <div
-                    key={challenge.id}
-                    className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
-                          {challenge.title}
-                        </h3>
-                        <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                          {challenge.groupName} · {challenge.setTitle}
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                          {challenge.deadline
-                            ? t("teacher.deadlineLabel", {
-                                value: new Date(challenge.deadline).toLocaleString(),
-                              })
-                            : t("teacher.noDeadline")}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-3">
-                        <Link href={`/classes/challenges/${challenge.id}`}>
-                          <Button variant="outline">{t("teacher.openChallenge")}</Button>
-                        </Link>
-                        <Link href={`/classes/challenges/${challenge.id}/ranking`}>
-                          <Button>{t("teacher.viewRanking")}</Button>
-                        </Link>
-                      </div>
+          {ownedChallenges.length > 0 ? (
+            ownedChallenges.map((challenge) => (
+              <div
+                key={challenge.id}
+                style={{
+                  background: "var(--paper-2)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 14,
+                  padding: "14px 18px",
+                  marginBottom: 10,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: "var(--ink)", fontSize: 15 }}>
+                      {challenge.title}
+                    </div>
+                    <div style={{ color: "var(--ink-mute)", fontSize: 13, marginTop: 3 }}>
+                      {challenge.groupName} &middot; {challenge.setTitle}
+                    </div>
+                    <div style={{ color: "var(--ink-mute)", fontSize: 13, marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
+                      {challenge.deadline
+                        ? t("teacher.deadlineLabel", {
+                            value: new Date(challenge.deadline).toLocaleString(),
+                          })
+                        : t("teacher.noDeadline")}
                     </div>
                   </div>
-                ))
-            ) : (
-              <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10">
-                <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
-                <p className="text-lg font-semibold text-[var(--text-primary)]">
-                  {t("teacher.noChallengesTitle")}
-                </p>
-                <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                  {t("teacher.noChallengesBody")}
-                </p>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <Link href={`/classes/challenges/${challenge.id}`}>
+                      <Button variant="outline" size="sm">{t("teacher.openChallenge")}</Button>
+                    </Link>
+                    <Link href={`/classes/challenges/${challenge.id}/ranking`}>
+                      <Button size="sm">{t("teacher.viewRanking")}</Button>
+                    </Link>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-        </section>
+            ))
+          ) : (
+            <div
+              style={{
+                border: "1px dashed var(--line)",
+                borderRadius: 14,
+                padding: "40px 20px",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ fontWeight: 600, color: "var(--ink)", fontSize: 15, margin: "0 0 6px" }}>
+                {t("teacher.noChallengesTitle")}
+              </p>
+              <p style={{ color: "var(--ink-mute)", fontSize: 13, margin: 0 }}>
+                {t("teacher.noChallengesBody")}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

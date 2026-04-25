@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, Sparkles } from "lucide-react";
 import { requireRole } from "@/server/auth";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
@@ -24,87 +23,153 @@ export default async function TeacherClassesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.2fr]">
-        <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)]">
-          <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
-            {t("teacher.classesEyebrow")}
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+    <div className="page-shell py-4 sm:py-6">
+      {/* Header */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <h3 style={{ margin: 0 }}>{t("teacher.classesTitle")}</h3>
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono',monospace",
+              color: "var(--ink-mute)",
+            }}
+          >
+            {summary.groups.length} {t("teacher.yourClasses")}
+          </span>
+          <Link href="/teacher/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            {t("teacher.backToTeacherDashboard")}
+          </Link>
+        </div>
+      </div>
+
+      {/* Two-column layout */}
+      <div
+        className="xl:grid-cols-2"
+        style={{
+          display: "grid",
+          gap: 20,
+          gridTemplateColumns: "1fr",
+          alignItems: "start",
+        }}
+      >
+        {/* Left: Create Class Form */}
+        <div
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--line)",
+            borderRadius: 18,
+            padding: "20px 24px",
+            marginBottom: 0,
+          }}
+        >
+          <h3 style={{ margin: "0 0 4px", color: "var(--ink)", fontSize: 18, fontWeight: 600 }}>
             {t("teacher.classesTitle")}
-          </h1>
-          <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
+          </h3>
+          <p style={{ margin: "0 0 20px", color: "var(--ink-mute)", fontSize: 13.5, lineHeight: 1.6 }}>
             {t("teacher.classesSubtitle")}
           </p>
-
           <CreateClassForm />
-        </section>
+        </div>
 
-        <section className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-sm)]">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-[var(--primary)]" />
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                {t("teacher.yourClasses")}
-                </h2>
+        {/* Right: Classes list */}
+        <div
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--line)",
+            borderRadius: 18,
+            padding: "20px 24px",
+            marginBottom: 0,
+          }}
+        >
+          <h3 style={{ margin: "0 0 4px", color: "var(--ink)", fontSize: 18, fontWeight: 600 }}>
+            {t("teacher.yourClasses")}
+          </h3>
+          <p style={{ margin: "0 0 16px", color: "var(--ink-mute)", fontSize: 13.5, lineHeight: 1.6 }}>
+            {t("teacher.yourClassesBody")}
+          </p>
+
+          {summary.groups.length > 0 ? (
+            summary.groups.map((group) => (
+              <div
+                key={group.id}
+                style={{
+                  background: "var(--paper-2)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 14,
+                  padding: "14px 18px",
+                  marginBottom: 10,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "var(--ink)", fontSize: 15 }}>{group.name}</div>
+                    <div style={{ color: "var(--ink-mute)", fontSize: 13, marginTop: 3, fontFamily: "'JetBrains Mono',monospace" }}>
+                      {t("teacher.classCodeLabel", { code: group.joinCode })}
+                    </div>
+                  </div>
+                  <Link href={`/teacher/classes/${group.id}`}>
+                    <Button variant="outline" size="sm">{t("teacher.openClass")}</Button>
+                  </Link>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+                  <span
+                    style={{
+                      background: "var(--paper-2)",
+                      border: "1px solid var(--line)",
+                      borderRadius: 8,
+                      padding: "6px 12px",
+                      fontSize: 13,
+                      color: "var(--ink-mute)",
+                    }}
+                  >
+                    {t("teacher.studentsCount", { count: group.membersCount })}
+                  </span>
+                  <span
+                    style={{
+                      background: "var(--paper-2)",
+                      border: "1px solid var(--line)",
+                      borderRadius: 8,
+                      padding: "6px 12px",
+                      fontSize: 13,
+                      color: "var(--ink-mute)",
+                    }}
+                  >
+                    {t("teacher.assignmentsCount", { count: group.assignmentsCount })}
+                  </span>
+                  <span
+                    style={{
+                      background: "var(--paper-2)",
+                      border: "1px solid var(--line)",
+                      borderRadius: 8,
+                      padding: "6px 12px",
+                      fontSize: 13,
+                      color: "var(--ink-mute)",
+                    }}
+                  >
+                    {t("teacher.challengesCount", { count: group.challengesCount })}
+                  </span>
+                </div>
               </div>
-              <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                {t("teacher.yourClassesBody")}
+            ))
+          ) : (
+            <div
+              style={{
+                border: "1px dashed var(--line)",
+                borderRadius: 14,
+                padding: "40px 20px",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ fontWeight: 600, color: "var(--ink)", fontSize: 15, margin: "0 0 6px" }}>
+                {t("teacher.noClassesTitle")}
+              </p>
+              <p style={{ color: "var(--ink-mute)", fontSize: 13, margin: 0 }}>
+                {t("teacher.noClassesBody")}
               </p>
             </div>
-            <Link href="/teacher/dashboard">
-              <Button variant="outline">{t("teacher.backToTeacherDashboard")}</Button>
-            </Link>
-          </div>
-
-          <div className="mt-6 grid gap-4">
-            {summary.groups.length > 0 ? (
-              summary.groups.map((group) => (
-                <div
-                  key={group.id}
-                  className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                        {group.name}
-                      </h3>
-                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                        {t("teacher.classCodeLabel", { code: group.joinCode })}
-                      </p>
-                    </div>
-                    <Link href={`/teacher/classes/${group.id}`}>
-                      <Button variant="outline">{t("teacher.openClass")}</Button>
-                    </Link>
-                  </div>
-
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
-                      {t("teacher.studentsCount", { count: group.membersCount })}
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
-                      {t("teacher.assignmentsCount", { count: group.assignmentsCount })}
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-secondary)]">
-                      {t("teacher.challengesCount", { count: group.challengesCount })}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-5 py-10">
-                <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
-                <p className="text-lg font-semibold text-[var(--text-primary)]">
-                  {t("teacher.noClassesTitle")}
-                </p>
-                <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                  {t("teacher.noClassesBody")}
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
+          )}
+        </div>
       </div>
     </div>
   );

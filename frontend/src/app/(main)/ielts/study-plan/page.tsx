@@ -1,9 +1,7 @@
+import Link from "next/link";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { IELTSStudyPlanClient } from "./client";
 
@@ -11,9 +9,6 @@ export default async function IELTSStudyPlanPage() {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
 
-  // Load data server-side to avoid calling Server Actions from useEffect,
-  // which can trigger "An error occurred in the Server Components render"
-  // in React 19 / Next.js 16 when the action throws (e.g. unauthenticated).
   let initialPlan: Record<string, unknown> | null = null;
   const initialTaskStatuses: Record<string, string> = {};
 
@@ -49,28 +44,23 @@ export default async function IELTSStudyPlanPage() {
   }
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <Breadcrumbs
-        baseUrl={APP_URL}
-        items={[
-          { label: t("ielts.hubTitle"), href: "/ielts" },
-          { label: t("ielts.studyPlanTitle") },
-        ]}
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/ielts" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← {t("ielts.hubTitle")}
+          </Link>
+          <h3>{t("ielts.studyPlanTitle")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+            {t("ielts.studyPlanSubtitle")}
+          </span>
+        </div>
+      </div>
+
+      <IELTSStudyPlanClient
+        initialPlan={initialPlan}
+        initialTaskStatuses={initialTaskStatuses}
       />
-      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-          {t("ielts.studyPlanTitle")}
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--text-secondary)]">
-          {t("ielts.studyPlanSubtitle")}
-        </p>
-      </div>
-      <div className="mt-8">
-        <IELTSStudyPlanClient
-          initialPlan={initialPlan}
-          initialTaskStatuses={initialTaskStatuses}
-        />
-      </div>
     </div>
   );
 }

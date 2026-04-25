@@ -11,24 +11,33 @@ export default async function FriendsPage() {
   if (!user) redirect("/login");
 
   const data = await getFriends();
+  const friendCount = data?.friends?.length ?? 0;
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-8">
-      <div className="max-w-lg mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Friends</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {data?.friends?.length ?? 0} friend{(data?.friends?.length ?? 0) !== 1 ? "s" : ""}
-          </p>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <h3>Friends</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
+            {friendCount} {friendCount === 1 ? "friend" : "friends"}
+          </span>
         </div>
-
-        {data?.inviteCode && <InviteCodeCard code={data.inviteCode} />}
-
-        <FriendList
-          friends={data?.friends ?? []}
-          pendingRequests={data?.pendingRequests ?? []}
-        />
       </div>
-    </main>
+
+      <div style={{ maxWidth: 520, margin: "0 auto", display: "flex", flexDirection: "column", gap: 18 }}>
+        {data?.inviteCode && (
+          <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px" }}>
+            <InviteCodeCard code={data.inviteCode} />
+          </div>
+        )}
+
+        <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px" }}>
+          <FriendList
+            friends={data?.friends ?? []}
+            pendingRequests={data?.pendingRequests ?? []}
+          />
+        </div>
+      </div>
+    </div>
   );
 }

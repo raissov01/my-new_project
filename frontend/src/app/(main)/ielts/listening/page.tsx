@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Headphones, Clock, CheckCircle2, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
@@ -27,118 +25,150 @@ const TIPS = [
   "Орфографияны тексеріңіз — қате жазылған жауап есептелмейді.",
 ];
 
+// Indigo accent (kept as inline hex per design instructions)
+const INDIGO = "#6366f1";
+const INDIGO_TINT = "rgba(99,102,241,0.10)";
+
 export default async function IELTSListeningPage() {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <Breadcrumbs
-        baseUrl={APP_URL}
-        items={[
-          { label: t("ielts.hubTitle"), href: "/ielts" },
-          { label: t("ielts.listeningTitle") },
-        ]}
-      />
-
-      {/* Header */}
-      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500">
-            <Headphones className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-              {t("ielts.listeningTitle")}
-            </h1>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Cambridge аудио бөлімдері бойынша жаттығыңыз
-            </p>
-          </div>
-        </div>
-
-        {/* Quick stats */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-1.5 text-sm text-[var(--text-secondary)]">
-            <Clock className="h-4 w-4 text-indigo-500" />
-            10 мин мини-жаттығу
-          </div>
-          <div className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-1.5 text-sm text-[var(--text-secondary)]">
-            <Headphones className="h-4 w-4 text-indigo-500" />
-            1 Section · 10 сұрақ
-          </div>
-          <div className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-1.5 text-sm text-[var(--text-secondary)]">
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            Автоматты бағалау
-          </div>
+    <div className="page-shell py-4 sm:py-6">
+      {/* Header bar */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/ielts" className="nd-btn-soft">
+            ← {t("ielts.hubTitle")}
+          </Link>
+          <h3>{t("ielts.listeningTitle")}</h3>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
+            <Clock size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+            10 мин
+          </span>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
+            <Headphones size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+            10 сұрақ
+          </span>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
+            <CheckCircle2 size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+            Автобағалау
+          </span>
         </div>
       </div>
 
-      {/* Practice options grid */}
-      <section className="mt-8">
-        <h2 className="mb-4 text-xl font-bold tracking-[-0.02em] text-[var(--text-primary)]">
+      {/* Section cards */}
+      <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
           Секция таңдаңыз
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        </p>
+        <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))" }}>
           {SECTION_TYPES.map((sec) => (
             <Link
               key={sec.key}
               href={`/ielts/simulator?section=listening&focus=${sec.key}`}
-              className="group"
+              style={{ textDecoration: "none" }}
             >
-              <div className="flex h-full flex-col rounded-[var(--radius-xl)] border border-[var(--border)] border-l-[3px] border-l-transparent bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:border-l-indigo-500 hover:shadow-[var(--shadow-lg)]">
-                <p className="font-bold text-[var(--text-primary)] group-hover:text-[var(--primary)]">
-                  {sec.label}
-                </p>
-                <p className="mt-2 flex-1 text-sm text-[var(--text-secondary)]">{sec.desc}</p>
-                <div className="mt-4 flex items-center gap-1 text-xs font-medium text-[var(--text-muted)] group-hover:text-[var(--primary)]">
-                  Бастау <ArrowRight className="h-3 w-3" />
+              <div
+                style={{
+                  background: "var(--paper)",
+                  border: "1.5px solid var(--line)",
+                  borderRadius: 14,
+                  padding: "18px 20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  cursor: "pointer",
+                  transition: "border-color .15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = INDIGO)}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
+              >
+                <p style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)" }}>{sec.label}</p>
+                <p style={{ fontSize: 13, color: "var(--ink-mute)", flex: 1 }}>{sec.desc}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: INDIGO, fontWeight: 600, marginTop: 4 }}>
+                  Бастау <ArrowRight size={12} />
                 </div>
               </div>
             </Link>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* Full section practice */}
-      <section className="mt-8 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Full Listening section CTA */}
+      <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
           <div>
-            <h2 className="text-lg font-bold text-[var(--text-primary)]">
+            <p style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)", marginBottom: 4 }}>
               Толық Listening бөлімі
-            </h2>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            </p>
+            <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>
               4 section · 40 сұрақ · 40 минут · нақты IELTS форматы
             </p>
           </div>
-          <Link href="/ielts/simulator?section=listening" className="shrink-0">
-            <Button>
-              <Headphones className="h-4 w-4" />
-              Толық жаттығу
-            </Button>
+          <Link
+            href="/ielts/simulator?section=listening"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: INDIGO,
+              color: "#fff",
+              borderRadius: 10,
+              padding: "10px 20px",
+              fontWeight: 700,
+              fontSize: 13,
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
+          >
+            <Headphones size={15} />
+            Толық жаттығу
           </Link>
         </div>
-      </section>
+      </div>
 
       {/* Tips */}
-      <section className="mt-8">
-        <h2 className="mb-4 text-xl font-bold tracking-[-0.02em] text-[var(--text-primary)]">
+      <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
           Listening кеңестері
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        </p>
+        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
           {TIPS.map((tip, i) => (
             <div
               key={i}
-              className="flex gap-3 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-4"
+              style={{
+                background: "var(--paper-2)",
+                border: "1px solid var(--line)",
+                borderRadius: 12,
+                padding: "12px 16px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 12,
+              }}
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 text-xs font-bold text-indigo-500">
+              <div
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  background: INDIGO_TINT,
+                  color: INDIGO,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
                 {i + 1}
-              </span>
-              <p className="text-sm leading-6 text-[var(--text-secondary)]">{tip}</p>
+              </div>
+              <p style={{ fontSize: 13, color: "var(--ink-mute)", lineHeight: 1.6 }}>{tip}</p>
             </div>
           ))}
         </div>
-      </section>
+      </div>
     </div>
   );
 }

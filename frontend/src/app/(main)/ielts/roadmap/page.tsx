@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentUser } from "@/server/auth";
 import { getPlacement, getIELTSMap, getProgress } from "@/features/learn/api";
-import { Lock, Star, Trophy, ChevronRight } from "lucide-react";
+import { Lock, Star, Trophy } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "IELTS Roadmap | StudyWithRaissov",
@@ -24,124 +24,231 @@ export default async function IELTSRoadmapPage() {
   const userLevel = placement?.level ?? "A1";
 
   return (
-    <div className="mx-auto max-w-lg px-3 py-6 sm:px-4">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="mb-1 flex items-center gap-2 text-xs text-[var(--text-muted)]">
-          <Link href="/ielts" className="hover:text-[var(--text-primary)]">IELTS</Link>
-          <ChevronRight className="h-3 w-3" />
-          <span>Roadmap</span>
-        </div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">IELTS Roadmap</h1>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Targeted IELTS skill units — Reading, Writing, Listening, Speaking.
-        </p>
-        <div className="mt-3 flex items-center gap-3 text-xs text-[var(--text-muted)]">
-          <span>Your level: <strong className="text-[var(--text-primary)]">{userLevel}</strong></span>
-          <span>·</span>
-          <span>{progress?.lessonsCompleted ?? 0} lessons done</span>
-          <span>·</span>
-          <Link href="/learn/map" className="font-semibold text-[var(--primary)] hover:underline">
-            General English →
+    <div className="page-shell py-4 sm:py-6">
+      {/* Header bar */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/ielts" className="nd-btn-soft">
+            ← IELTS
           </Link>
+          <h3>IELTS Roadmap</h3>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
+            Level: {userLevel}
+          </span>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
+            {progress?.lessonsCompleted ?? 0} lessons done
+          </span>
         </div>
       </div>
 
+      {/* Empty state */}
       {units.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-soft)] py-12 text-center">
-          <p className="text-sm text-[var(--text-muted)]">IELTS units are being loaded…</p>
+        <div
+          style={{
+            background: "var(--paper)",
+            border: "1px dashed var(--line)",
+            borderRadius: 18,
+            padding: "48px 24px",
+            textAlign: "center",
+            marginBottom: 18,
+          }}
+        >
+          <p style={{ fontSize: 14, color: "var(--ink-mute)" }}>IELTS units are being loaded…</p>
         </div>
       )}
 
-      <div className="space-y-3">
+      {/* Units */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {units.map((unit) => {
           const starsPercent = unit.maxStars > 0 ? Math.round((unit.totalStars / unit.maxStars) * 100) : 0;
           const isComplete = unit.totalStars > 0 && unit.totalStars >= unit.maxStars;
 
+          const iconMap: Record<string, string> = {
+            vocabulary: "🔤",
+            grammar: "📝",
+            reading: "📖",
+            listening: "🎧",
+            speaking: "🎤",
+            writing: "✍️",
+          };
+
           return (
             <div
               key={unit.id}
-              className={`rounded-2xl border bg-[var(--bg-elevated)] p-4 transition-all ${
-                unit.isUnlocked ? "border-[var(--border)]" : "border-[var(--border)] opacity-50"
-              }`}
+              style={{
+                background: "var(--paper)",
+                border: "1px solid var(--line)",
+                borderRadius: 18,
+                padding: "20px 24px",
+                opacity: unit.isUnlocked ? 1 : 0.5,
+              }}
             >
-              <div className="flex items-start gap-3">
-                {/* Icon */}
+              {/* Unit header */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                {/* Emoji / lock icon */}
                 <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl ${
-                    isComplete ? "bg-yellow-400/10" : "bg-[var(--bg-soft)]"
-                  }`}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    background: isComplete ? "rgba(250,204,21,0.12)" : "var(--paper-2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                    flexShrink: 0,
+                  }}
                 >
                   {unit.isUnlocked
-                    ? ({ vocabulary: "🔤", grammar: "📝", reading: "📖", listening: "🎧", speaking: "🎤", writing: "✍️" }[unit.ieltsSkill] ?? unit.iconEmoji)
-                    : <Lock className="h-5 w-5 text-[var(--text-muted)]" />
+                    ? (iconMap[unit.ieltsSkill] ?? unit.iconEmoji)
+                    : <Lock size={20} color="var(--ink-mute)" />
                   }
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">{unit.title}</h3>
-                    <span className="rounded-full bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-muted)]">
+                {/* Title + level + progress */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", margin: 0 }}>
+                      {unit.title}
+                    </h3>
+                    <span
+                      style={{
+                        background: "var(--paper-2)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 20,
+                        padding: "2px 10px",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "var(--ink-mute)",
+                        fontFamily: "JetBrains Mono, monospace",
+                      }}
+                    >
                       {unit.level}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-[var(--text-secondary)] line-clamp-2">{unit.description}</p>
+                  <p style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 4, marginBottom: 0 }}>
+                    {unit.description}
+                  </p>
 
                   {unit.isUnlocked && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3].map((s) => (
-                          <Star key={s} className={`h-3.5 w-3.5 ${starsPercent >= s * 33 ? "fill-yellow-400 text-yellow-400" : "text-[var(--text-muted)] opacity-30"}`} />
+                    <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                      {/* Stars */}
+                      <div style={{ display: "flex", gap: 2 }}>
+                        {[33, 66, 100].map((threshold) => (
+                          <Star
+                            key={threshold}
+                            size={14}
+                            fill={starsPercent >= threshold ? "var(--yellow)" : "none"}
+                            color={starsPercent >= threshold ? "var(--yellow)" : "var(--ink-mute)"}
+                            style={{ opacity: starsPercent >= threshold ? 1 : 0.35 }}
+                          />
                         ))}
                       </div>
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--bg-soft)]">
+                      {/* Progress bar */}
+                      <div style={{ height: 6, borderRadius: 3, background: "var(--line)", flex: 1 }}>
                         <div
-                          className="h-full rounded-full bg-[var(--primary)] transition-all"
-                          style={{ width: `${starsPercent}%` }}
+                          style={{
+                            height: "100%",
+                            borderRadius: 3,
+                            background: "var(--terra)",
+                            width: starsPercent + "%",
+                            transition: "width .3s",
+                          }}
                         />
                       </div>
-                      <span className="text-[10px] text-[var(--text-muted)]">
-                        {unit.lessons?.filter(l => l.isCompleted).length ?? 0}/{unit.lessons?.length ?? 0}
+                      <span style={{ fontSize: 11, color: "var(--ink-mute)", fontFamily: "JetBrains Mono, monospace", flexShrink: 0 }}>
+                        {unit.lessons?.filter((l: { isCompleted: boolean }) => l.isCompleted).length ?? 0}/{unit.lessons?.length ?? 0}
                       </span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Lessons list */}
+              {/* Lesson list */}
               {unit.isUnlocked && (
-                <div className="mt-3 space-y-1.5">
-                  {(unit.lessons ?? []).map((lesson, li) => {
+                <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {(unit.lessons ?? []).map((lesson: {
+                    id: string | number;
+                    lessonType: string;
+                    title: string;
+                    isCompleted: boolean;
+                    bestStars?: number;
+                  }, li: number) => {
                     const isBoss = lesson.lessonType === "boss";
                     const prevCompleted = li === 0 || (unit.lessons[li - 1]?.bestStars ?? 0) > 0;
 
                     return (
                       <div
                         key={lesson.id}
-                        className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2"
+                        style={{
+                          background: "var(--paper-2)",
+                          border: "1px solid var(--line)",
+                          borderRadius: 12,
+                          padding: "10px 14px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
                       >
-                        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                          lesson.isCompleted
-                            ? "bg-emerald-500/15 text-emerald-500"
-                            : isBoss
-                              ? "bg-amber-500/15 text-amber-500"
-                              : "bg-[var(--bg-soft)] text-[var(--text-muted)]"
-                        }`}>
-                          {isBoss ? <Trophy className="h-4 w-4" /> : `${li + 1}`}
+                        {/* Lesson number / boss badge */}
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 10,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            flexShrink: 0,
+                            background: lesson.isCompleted
+                              ? "rgba(34,197,94,0.12)"
+                              : isBoss
+                                ? "rgba(245,158,11,0.12)"
+                                : "var(--line)",
+                            color: lesson.isCompleted
+                              ? "#16a34a"
+                              : isBoss
+                                ? "#d97706"
+                                : "var(--ink-mute)",
+                          }}
+                        >
+                          {isBoss ? <Trophy size={15} /> : li + 1}
                         </div>
-                        <span className="flex-1 truncate text-xs font-medium text-[var(--text-primary)]">
+
+                        <span
+                          style={{
+                            flex: 1,
+                            fontSize: 13,
+                            fontWeight: 500,
+                            color: "var(--ink)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {lesson.title}
                         </span>
+
                         {prevCompleted ? (
                           <Link
                             href={`/learn/lessons/${lesson.id}`}
-                            className="shrink-0 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-bold text-white active:scale-95"
+                            style={{
+                              background: "var(--terra)",
+                              color: "#fff",
+                              borderRadius: 8,
+                              padding: "6px 14px",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              textDecoration: "none",
+                              flexShrink: 0,
+                            }}
                           >
                             {lesson.isCompleted ? "Retry" : "Play"}
                           </Link>
                         ) : (
-                          <Lock className="h-4 w-4 text-[var(--text-muted)]" />
+                          <Lock size={15} color="var(--ink-mute)" />
                         )}
                       </div>
                     );
@@ -153,14 +260,34 @@ export default async function IELTSRoadmapPage() {
         })}
       </div>
 
-      {/* Link back to general English */}
-      <div className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 text-center">
-        <p className="text-sm text-[var(--text-secondary)]">
+      {/* Footer link */}
+      <div
+        style={{
+          background: "var(--paper)",
+          border: "1px solid var(--line)",
+          borderRadius: 18,
+          padding: "20px 24px",
+          marginTop: 18,
+          textAlign: "center",
+        }}
+      >
+        <p style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 12 }}>
           Looking for General English practice?
         </p>
         <Link
           href="/learn/map"
-          className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-bold text-white transition-transform active:scale-95"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: "var(--terra)",
+            color: "#fff",
+            borderRadius: 10,
+            padding: "10px 22px",
+            fontWeight: 700,
+            fontSize: 13,
+            textDecoration: "none",
+          }}
         >
           Go to General English →
         </Link>

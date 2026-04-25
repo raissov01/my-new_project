@@ -21,35 +21,36 @@ export default async function StudentChallengesPage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
-          {t("student.challengesEyebrow")}
-        </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-5xl">
-          {t("student.challengesTitle")}
-        </h1>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--text-secondary)]">
-          {t("student.challengesSubtitle")}
-        </p>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <h3>{t("student.challengesTitle")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
+            {t("student.challengesEyebrow")}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-8 grid gap-4">
+      <p style={{ color: "var(--ink-mute)", fontSize: 13, lineHeight: 1.7, marginBottom: 20, maxWidth: 620 }}>
+        {t("student.challengesSubtitle")}
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {challenges.length > 0 ? (
           challenges.map((challenge) => (
             <div
               key={challenge.id}
-              className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)]"
+              style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px" }}
             >
-              <div className="flex flex-wrap items-start justify-between gap-4">
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
                 <div>
-                  <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>
                     {challenge.title}
                   </h2>
-                  <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                  <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--ink-mute)" }}>
                     {challenge.groupName} · {challenge.setTitle}
                   </p>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--ink-mute)" }}>
                     {challenge.deadline
                       ? t("student.deadlineLabel", {
                           value: new Date(challenge.deadline).toLocaleString(),
@@ -57,7 +58,7 @@ export default async function StudentChallengesPage() {
                       : t("student.noDeadline")}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                   <Link href={`/classes/challenges/${challenge.id}`}>
                     <Button>{challenge.joined ? t("student.openChallenge") : t("student.joinChallenge")}</Button>
                   </Link>
@@ -69,12 +70,22 @@ export default async function StudentChallengesPage() {
             </div>
           ))
         ) : (
-          <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-10 shadow-[var(--shadow-sm)]">
-            <Sparkles className="h-5 w-5 text-[var(--text-muted)]" />
-            <p className="text-lg font-semibold text-[var(--text-primary)]">
+          <div style={{
+            background: "var(--paper)",
+            border: "1px dashed var(--line)",
+            borderRadius: 18,
+            padding: "40px 24px",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 10,
+          }}>
+            <Sparkles style={{ width: 22, height: 22, color: "var(--ink-mute)" }} />
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>
               {t("student.noChallengesTitle")}
             </p>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            <p style={{ margin: 0, fontSize: 13, color: "var(--ink-mute)" }}>
               {t("student.noChallengesBody")}
             </p>
           </div>

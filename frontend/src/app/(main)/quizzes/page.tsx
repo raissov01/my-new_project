@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ListChecks, Plus, Search, SlidersHorizontal, Sparkles, Target } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, Sparkles, Target } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
@@ -43,138 +43,228 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
     : 0;
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <section className="relative z-0 overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)] sm:p-8">
-        <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
-              <ListChecks className="h-3.5 w-3.5 text-[var(--text-muted)]" />
-              {t("quiz.navLabel")}
-            </div>
-            <h1 className="mt-4 max-w-[12ch] text-3xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] sm:text-4xl md:text-5xl">
-              {t("quiz.libraryTitle")}
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-              {user
-                ? t("quiz.librarySubtitleAuth")
-                : t("quiz.librarySubtitleGuest")}
-            </p>
-
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              {user ? (
-                <>
-                  <Link href="/quizzes/create">
-                    <Button size="lg" className="w-full sm:w-auto">
-                      <Plus className="h-4 w-4" />
-                      {t("quiz.createNew")}
-                    </Button>
-                  </Link>
-                  <Link href="/quizzes/create-with-ai">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                      <Sparkles className="h-4 w-4" />
-                      {t("quiz.ai.navLabel")}
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <AuthRequiredPrompt
-                  triggerLabel={t("quiz.createNew")}
-                  title={t("guest.authRequiredTitle")}
-                  description={t("quiz.guestCreatePrompt")}
-                  signupLabel={t("guest.signUpToContinue")}
-                  loginLabel={t("guest.logInToUnlock")}
-                  cancelLabel={t("set.cancel")}
-                  icon={<Plus className="h-4 w-4" />}
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            <LibrarySignal
-              label={t("quiz.signalTotal")}
-              value={quizzes.length}
-              body={t("quiz.signalTotalBody")}
-            />
-            <LibrarySignal
-              label={t("quiz.signalMine")}
-              value={ownedCount}
-              body={t("quiz.signalMineBody")}
-            />
-            <LibrarySignal
-              label={t("quiz.signalPublic")}
-              value={quizzes.filter((quiz) => quiz.isPublic).length}
-              body={t("quiz.signalPublicBody")}
-            />
-          </div>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <h3>{t("quiz.libraryTitle")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
+            {quizzes.length} {quizzes.length === 1 ? t("quiz.quiz") : t("quiz.quizzes")}
+          </span>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
+            {t("quiz.navLabel")}
+          </span>
         </div>
-      </section>
+      </div>
 
-      <form className="mt-6">
-        <section className="relative z-0 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
-          <div className="grid gap-4 lg:grid-cols-[1.5fr_0.7fr_0.7fr_auto]">
-            <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4">
-              <Search className="h-4 w-4 text-[var(--text-muted)]" />
-              <input
-                type="search"
-                name="q"
-                defaultValue={q}
-                placeholder={t("quiz.searchPlaceholder")}
-                className="h-12 w-full bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
-              />
-            </label>
+      <div className="nd-kpi-grid" style={{ marginBottom: 24 }}>
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">{t("quiz.signalTotal")}</span>
+          <strong className="nd-kpi-val">{quizzes.length}</strong>
+          <span className="nd-kpi-sub">{t("quiz.signalTotalBody")}</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">{t("quiz.signalMine")}</span>
+          <strong className="nd-kpi-val">{ownedCount}</strong>
+          <span className="nd-kpi-sub">{t("quiz.signalMineBody")}</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">{t("quiz.signalPublic")}</span>
+          <strong className="nd-kpi-val">{quizzes.filter((quiz) => quiz.isPublic).length}</strong>
+          <span className="nd-kpi-sub">{t("quiz.signalPublicBody")}</span>
+        </div>
+      </div>
 
-            <label className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4">
-              <span className="mb-1 block pt-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                {t("quiz.filterSubject")}
-              </span>
-              <input
-                type="text"
-                name="subject"
-                defaultValue={subject}
-                placeholder={t("quiz.filterSubjectPlaceholder")}
-                className="h-8 w-full bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
-              />
-            </label>
+      <div style={{ marginBottom: 18, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        {user ? (
+          <>
+            <Link href="/quizzes/create">
+              <Button size="lg">
+                <Plus className="h-4 w-4" />
+                {t("quiz.createNew")}
+              </Button>
+            </Link>
+            <Link href="/quizzes/create-with-ai">
+              <Button size="lg" variant="outline">
+                <Sparkles className="h-4 w-4" />
+                {t("quiz.ai.navLabel")}
+              </Button>
+            </Link>
+          </>
+        ) : (
+          <AuthRequiredPrompt
+            triggerLabel={t("quiz.createNew")}
+            title={t("guest.authRequiredTitle")}
+            description={t("quiz.guestCreatePrompt")}
+            signupLabel={t("guest.signUpToContinue")}
+            loginLabel={t("guest.logInToUnlock")}
+            cancelLabel={t("set.cancel")}
+            icon={<Plus className="h-4 w-4" />}
+          />
+        )}
+      </div>
 
-            <label className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4">
-              <span className="mb-1 block pt-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                {t("quiz.sort")}
-              </span>
-              <select
-                name="sort"
-                defaultValue={sort}
-                className="h-8 w-full bg-transparent text-sm text-[var(--text-primary)] outline-none"
-              >
-                <option value="newest">{t("quiz.sortNewest")}</option>
-                <option value="played">{t("quiz.sortPlayed")}</option>
-                <option value="rated">{t("quiz.sortRated")}</option>
-              </select>
-            </label>
+      <form>
+        <div
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--line)",
+            borderRadius: 16,
+            padding: "14px 16px",
+            marginBottom: 18,
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <label
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "var(--paper-2)",
+              border: "1.5px solid var(--line)",
+              borderRadius: 12,
+              padding: "0 12px",
+              minWidth: 200,
+            }}
+          >
+            <Search style={{ width: 16, height: 16, color: "var(--ink-mute)", flexShrink: 0 }} />
+            <input
+              type="search"
+              name="q"
+              defaultValue={q}
+              placeholder={t("quiz.searchPlaceholder")}
+              style={{
+                height: 44,
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                fontSize: 14,
+                color: "var(--ink)",
+              }}
+            />
+          </label>
 
-            <Button type="submit" variant="outline" className="h-12">
-              <SlidersHorizontal className="h-4 w-4" />
-              {t("quiz.apply")}
-            </Button>
-          </div>
-        </section>
+          <label
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              background: "var(--paper-2)",
+              border: "1.5px solid var(--line)",
+              borderRadius: 12,
+              padding: "6px 12px",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono',monospace",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: ".1em",
+                color: "var(--ink-mute)",
+              }}
+            >
+              {t("quiz.filterSubject")}
+            </span>
+            <input
+              type="text"
+              name="subject"
+              defaultValue={subject}
+              placeholder={t("quiz.filterSubjectPlaceholder")}
+              style={{
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                fontSize: 14,
+                color: "var(--ink)",
+                width: 140,
+              }}
+            />
+          </label>
+
+          <label
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              background: "var(--paper-2)",
+              border: "1.5px solid var(--line)",
+              borderRadius: 12,
+              padding: "6px 12px",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono',monospace",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: ".1em",
+                color: "var(--ink-mute)",
+              }}
+            >
+              {t("quiz.sort")}
+            </span>
+            <select
+              name="sort"
+              defaultValue={sort}
+              style={{
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                fontSize: 14,
+                color: "var(--ink)",
+              }}
+            >
+              <option value="newest">{t("quiz.sortNewest")}</option>
+              <option value="played">{t("quiz.sortPlayed")}</option>
+              <option value="rated">{t("quiz.sortRated")}</option>
+            </select>
+          </label>
+
+          <Button type="submit" variant="outline" style={{ height: 44 }}>
+            <SlidersHorizontal className="h-4 w-4" />
+            {t("quiz.apply")}
+          </Button>
+        </div>
       </form>
 
-      <section className="relative z-0 mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-[var(--text-primary)]">
-            {quizzes.length}{" "}
-            {quizzes.length === 1 ? t("quiz.quiz") : t("quiz.quizzes")}
-          </p>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            {q ? t("quiz.searchMatched").replace("{q}", q) : t("quiz.browseHint")}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 18,
+          flexWrap: "wrap",
+          gap: 8,
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <p style={{ fontSize: 13, color: "var(--ink-mute)", fontFamily: "'JetBrains Mono',monospace" }}>
+            {quizzes.length} {quizzes.length === 1 ? t("quiz.quiz") : t("quiz.quizzes")}
+            {q ? ` — ${t("quiz.searchMatched").replace("{q}", q)}` : ""}
           </p>
           {tag ? (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/40 bg-[var(--primary)]/10 px-3 py-1 text-xs font-medium text-[var(--primary)]">
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                borderRadius: 20,
+                border: "1px solid var(--line)",
+                padding: "2px 10px",
+                fontSize: 12,
+                color: "var(--ink-mute)",
+                background: "var(--paper-2)",
+              }}
+            >
               #{tag}
               <Link
                 href="/quizzes"
-                className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-[var(--primary)]/20"
+                style={{ marginLeft: 4, color: "var(--ink-mute)", textDecoration: "none" }}
                 aria-label={t("quiz.tagClear")}
               >
                 ×
@@ -182,19 +272,45 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
             </div>
           ) : null}
         </div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]">
-          <Sparkles className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "var(--ink-mute)" }}>
           {user ? t("quiz.liveMode") : t("quiz.previewMode")}
-        </div>
-      </section>
+        </span>
+      </div>
 
       {!user ? (
-        <EmptyState
-          title={t("quiz.guestEmptyTitle")}
-          body={t("quiz.guestEmptyBody")}
-        />
+        <div
+          style={{
+            border: "1px dashed var(--line)",
+            borderRadius: 18,
+            padding: "64px 24px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              margin: "0 auto 20px",
+              width: 56,
+              height: 56,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 16,
+              border: "1px solid var(--line)",
+              background: "var(--paper-2)",
+              color: "var(--ink-mute)",
+            }}
+          >
+            <Target style={{ width: 20, height: 20 }} />
+          </div>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 12 }}>
+            {t("quiz.guestEmptyTitle")}
+          </h2>
+          <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
+            {t("quiz.guestEmptyBody")}
+          </p>
+        </div>
       ) : quizzes.length > 0 ? (
-        <div className="relative z-[60] mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
           {quizzes.map((quiz) => (
             <QuizCard
               key={quiz.id}
@@ -205,47 +321,38 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
           ))}
         </div>
       ) : (
-        <EmptyState
-          title={t("quiz.emptyTitle")}
-          body={t("quiz.emptyBody")}
-        />
+        <div
+          style={{
+            border: "1px dashed var(--line)",
+            borderRadius: 18,
+            padding: "64px 24px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              margin: "0 auto 20px",
+              width: 56,
+              height: 56,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 16,
+              border: "1px solid var(--line)",
+              background: "var(--paper-2)",
+              color: "var(--ink-mute)",
+            }}
+          >
+            <Target style={{ width: 20, height: 20 }} />
+          </div>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 12 }}>
+            {t("quiz.emptyTitle")}
+          </h2>
+          <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
+            {t("quiz.emptyBody")}
+          </p>
+        </div>
       )}
-    </div>
-  );
-}
-
-function LibrarySignal({
-  label,
-  value,
-  body,
-}: {
-  label: string;
-  value: number;
-  body: string;
-}) {
-  return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-      <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--text-muted)]">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-        {value}
-      </p>
-      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{body}</p>
-    </div>
-  );
-}
-
-function EmptyState({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-soft)] px-6 py-16 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-muted)]">
-        <Target className="h-5 w-5" />
-      </div>
-      <h2 className="mt-5 text-xl font-semibold text-[var(--text-primary)]">{title}</h2>
-      <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">
-        {body}
-      </p>
     </div>
   );
 }

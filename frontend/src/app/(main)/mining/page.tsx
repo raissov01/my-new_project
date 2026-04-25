@@ -27,13 +27,13 @@ async function extractWords(text: string, level: string): Promise<ExtractedWord[
   }
 }
 
-const TOPIC_COLORS: Record<string, string> = {
-  business: "bg-amber-500/10 text-amber-500",
-  technology: "bg-blue-500/10 text-blue-400",
-  environment: "bg-green-500/10 text-green-500",
-  health: "bg-red-500/10 text-red-400",
-  communication: "bg-purple-500/10 text-purple-400",
-  general: "bg-[var(--bg-soft)] text-[var(--text-secondary)]",
+const TOPIC_COLORS: Record<string, { bg: string; color: string }> = {
+  business:      { bg: "rgba(245,158,11,0.10)", color: "#d97706" },
+  technology:    { bg: "rgba(59,130,246,0.10)",  color: "#3b82f6" },
+  environment:   { bg: "rgba(34,197,94,0.10)",   color: "var(--green)" },
+  health:        { bg: "rgba(239,68,68,0.10)",    color: "#ef4444" },
+  communication: { bg: "rgba(139,92,246,0.10)",  color: "#8b5cf6" },
+  general:       { bg: "var(--paper-2)",          color: "var(--ink-mute)" },
 };
 
 async function saveWordsToSet(selectedWords: ExtractedWord[], level: string): Promise<string | null> {
@@ -56,6 +56,8 @@ async function saveWordsToSet(selectedWords: ExtractedWord[], level: string): Pr
     return null;
   }
 }
+
+const monoStyle: React.CSSProperties = { fontFamily: "'JetBrains Mono',monospace" };
 
 export default function MiningPage() {
   const [text, setText] = useState("");
@@ -101,80 +103,136 @@ export default function MiningPage() {
   };
 
   return (
-    <div className="page-shell py-8 space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Pickaxe className="h-8 w-8 text-[var(--primary)]" />
-        <div>
-          <h1 className="text-2xl font-bold">Sentence Mining</h1>
-          <p className="text-sm text-[var(--text-secondary)]">Paste any English text — AI extracts vocabulary for your level</p>
+    <div className="page-shell py-4 sm:py-6">
+      {/* ─── nd-mock-shell header ─── */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Pickaxe style={{ width: 16, height: 16, color: "var(--ink-mute)" }} />
+          <h3>Sentence Mining</h3>
+          <span style={monoStyle}>AI vocabulary extractor</span>
         </div>
       </div>
 
-      {/* Input */}
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-medium">Your level:</p>
+      {/* ─── Input section ─── */}
+      <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
+        {/* Section label */}
+        <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 12 }}>
+          YOUR LEVEL
+        </p>
+
+        {/* Level pills */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
           {LEVELS.map((lv) => (
             <button
               key={lv}
               onClick={() => setLevel(lv)}
-              className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
-                level === lv ? "bg-[var(--primary)] text-white" : "bg-[var(--bg-soft)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]"
-              }`}
+              className={level === lv ? "nd-lib-pill on" : "nd-lib-pill"}
             >
               {lv}
             </button>
           ))}
         </div>
 
+        {/* Textarea */}
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Paste any English article, email, or text here (up to 5,000 characters)…"
           rows={8}
           maxLength={5000}
-          className="w-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-sm outline-none focus:border-[var(--primary)] resize-y"
+          style={{
+            width: "100%",
+            borderRadius: 12,
+            border: "1px solid var(--line)",
+            background: "var(--paper-2)",
+            padding: "12px 14px",
+            fontSize: 14,
+            color: "var(--ink)",
+            outline: "none",
+            resize: "vertical",
+            boxSizing: "border-box",
+            fontFamily: "inherit",
+          }}
         />
 
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs text-[var(--text-secondary)]">{text.length} / 5,000 characters</p>
-          {error && <p className="text-xs text-red-500">{error}</p>}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+          <p style={{ ...monoStyle, fontSize: 11, color: "var(--ink-mute)" }}>{text.length} / 5,000</p>
+          {error && <p style={{ fontSize: 12, color: "var(--terra)" }}>{error}</p>}
           <button
             onClick={handleExtract}
             disabled={isPending || text.trim().length < 20}
-            className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 10,
+              background: "var(--ink)",
+              color: "#fff",
+              border: "none",
+              padding: "10px 20px",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: isPending || text.trim().length < 20 ? "not-allowed" : "pointer",
+              opacity: isPending || text.trim().length < 20 ? 0.45 : 1,
+            }}
           >
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pickaxe className="h-4 w-4" />}
+            {isPending ? <Loader2 style={{ width: 15, height: 15 }} className="animate-spin" /> : <Pickaxe style={{ width: 15, height: 15 }} />}
             Extract vocabulary
           </button>
         </div>
       </div>
 
-      {/* Results */}
+      {/* ─── Results ─── */}
       {words.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <p className="font-semibold">
+        <div>
+          {/* Results header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
               Found {words.length} words
-              {added.size > 0 && <span className="ml-2 text-[var(--primary)]">· {added.size} selected</span>}
+              {added.size > 0 && (
+                <span style={{ ...monoStyle, marginLeft: 10, fontSize: 12, color: "var(--terra)" }}>· {added.size} selected</span>
+              )}
             </p>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               {words.some((w) => !added.has(w.word)) && (
                 <button
                   onClick={addAll}
-                  className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-soft)] transition-colors"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    borderRadius: 10,
+                    border: "1px solid var(--line)",
+                    background: "var(--paper)",
+                    padding: "7px 14px",
+                    fontSize: 13,
+                    color: "var(--ink-mute)",
+                    cursor: "pointer",
+                  }}
                 >
-                  <PlusCircle className="h-4 w-4" />
+                  <PlusCircle style={{ width: 14, height: 14 }} />
                   Select all
                 </button>
               )}
               <button
                 onClick={handleSaveToFlashcards}
                 disabled={saving || savedSetId !== null}
-                className="flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--primary)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  borderRadius: 10,
+                  background: savedSetId ? "var(--green)" : "var(--terra)",
+                  color: "#fff",
+                  border: "none",
+                  padding: "7px 14px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: saving || savedSetId !== null ? "not-allowed" : "pointer",
+                  opacity: saving ? 0.5 : 1,
+                }}
               >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {saving ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <CheckCircle2 style={{ width: 14, height: 14 }} />}
                 {savedSetId ? "Saved!" : `Save ${added.size > 0 ? added.size : words.length} to flashcards`}
               </button>
             </div>
@@ -183,36 +241,83 @@ export default function MiningPage() {
           {savedSetId && (
             <a
               href={`/sets/${savedSetId}`}
-              className="flex items-center gap-2 rounded-[var(--radius-md)] bg-green-50 border border-green-300 px-4 py-2.5 text-sm text-green-700 hover:bg-green-100 transition-colors"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(34,197,94,0.08)",
+                border: "1px solid var(--green)",
+                borderRadius: 12,
+                padding: "12px 16px",
+                fontSize: 13,
+                color: "var(--green)",
+                textDecoration: "none",
+                marginBottom: 16,
+              }}
             >
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <CheckCircle2 style={{ width: 15, height: 15, flexShrink: 0 }} />
               Flashcard set created — click to study
-              <ExternalLink className="h-3.5 w-3.5 ml-auto" />
+              <ExternalLink style={{ width: 13, height: 13, marginLeft: "auto" }} />
             </a>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Word cards grid */}
+          <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))" }}>
             {words.map((w) => {
               const isAdded = added.has(w.word);
-              const topicCls = TOPIC_COLORS[w.topic?.toLowerCase()] ?? TOPIC_COLORS.general;
+              const topicKey = w.topic?.toLowerCase() ?? "general";
+              const topicColor = TOPIC_COLORS[topicKey] ?? TOPIC_COLORS.general;
               return (
-                <div key={w.word} className={`rounded-[var(--radius-lg)] border p-4 space-y-2 transition-colors ${isAdded ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--border)] bg-[var(--bg-surface)]"}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-bold text-[var(--primary)]">{w.word}</p>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${topicCls}`}>{w.topic}</span>
+                <div
+                  key={w.word}
+                  style={{
+                    background: "var(--paper-2)",
+                    border: isAdded ? "1.5px solid var(--terra)" : "1px solid var(--line)",
+                    borderRadius: 14,
+                    padding: "14px 18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                    <p style={{ fontWeight: 800, fontSize: 15, color: "var(--terra)", margin: 0 }}>{w.word}</p>
+                    <span
+                      style={{
+                        borderRadius: 99,
+                        padding: "3px 9px",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        textTransform: "capitalize",
+                        background: topicColor.bg,
+                        color: topicColor.color,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {w.topic}
+                    </span>
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)]">{w.definition}</p>
-                  <p className="text-xs italic text-[var(--text-secondary)]">&ldquo;{w.example}&rdquo;</p>
+                  <p style={{ fontSize: 12, color: "var(--ink-mute)", margin: 0, lineHeight: 1.5 }}>{w.definition}</p>
+                  <p style={{ fontSize: 12, fontStyle: "italic", color: "var(--ink-mute)", margin: 0 }}>&ldquo;{w.example}&rdquo;</p>
                   <button
                     onClick={() => toggleWord(w)}
-                    disabled={isAdded}
-                    className={`flex w-full items-center justify-center gap-1 rounded-[var(--radius-md)] py-1.5 text-xs font-medium transition-colors ${
-                      isAdded
-                        ? "bg-green-100 text-green-700 cursor-default"
-                        : "border border-[var(--border)] hover:bg-[var(--bg-soft)]"
-                    }`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      borderRadius: 10,
+                      border: isAdded ? "none" : "1px solid var(--line)",
+                      background: isAdded ? "rgba(34,197,94,0.10)" : "transparent",
+                      color: isAdded ? "var(--green)" : "var(--ink-mute)",
+                      padding: "7px 0",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: isAdded ? "default" : "pointer",
+                      width: "100%",
+                    }}
                   >
-                    {isAdded ? <><CheckCircle2 className="h-3 w-3" /> Selected</> : <><PlusCircle className="h-3 w-3" /> Select</>}
+                    {isAdded ? <><CheckCircle2 style={{ width: 12, height: 12 }} /> Selected</> : <><PlusCircle style={{ width: 12, height: 12 }} /> Select</>}
                   </button>
                 </div>
               );

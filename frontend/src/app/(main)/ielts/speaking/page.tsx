@@ -1,46 +1,33 @@
 import { Mic, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SpeakingPracticeClient } from "./client";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
 
 export default async function IELTSSpeakingPage() {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <Breadcrumbs
-        baseUrl={APP_URL}
-        items={[
-          { label: t("ielts.hubTitle"), href: "/ielts" },
-          { label: t("ielts.speakingTitle") },
-        ]}
-      />
-
-      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--bg-surface)] text-[var(--text-primary)]">
-            <Mic className="h-6 w-6" />
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/ielts" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← {t("ielts.hubTitle")}
+          </Link>
+          <h3>{t("ielts.speakingTitle")}</h3>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: "rgba(139,92,246,.1)", border: "1px solid rgba(139,92,246,.2)", fontSize: 11.5, fontWeight: 600, color: "#8b5cf6", fontFamily: "'JetBrains Mono',monospace" }}>
+            <Sparkles style={{ width: 12, height: 12 }} />
+            {t("ielts.aiPoweredFeedback")}
+          </span>
+          <div style={{ fontSize: 13, color: "var(--ink-mute)", display: "flex", alignItems: "center", gap: 6 }}>
+            <Mic style={{ width: 14, height: 14 }} />
+            {t("ielts.speakingSubtitle")}
           </div>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-              {t("ielts.speakingTitle")}
-            </h1>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("ielts.speakingSubtitle")}</p>
-          </div>
-        </div>
-        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-3.5 py-2 text-xs font-medium text-violet-400">
-          <Sparkles className="h-3.5 w-3.5" />
-          {t("ielts.aiPoweredFeedback")}
         </div>
       </div>
 
-      <div className="mt-8">
-        <SpeakingPracticeClient />
-      </div>
+      <SpeakingPracticeClient />
     </div>
   );
 }

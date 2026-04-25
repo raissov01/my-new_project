@@ -15,41 +15,51 @@ export default async function IELTSTipsPage() {
   ];
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <Link href="/ielts" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-        <ArrowLeft className="h-4 w-4" />
-        {t("ielts.backToHub")}
-      </Link>
-
-      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--bg-surface)] text-[var(--text-primary)]">
-            <Lightbulb className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-              {t("ielts.tipsTitle")}
-            </h1>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("ielts.tipsSubtitle")}</p>
-          </div>
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/ielts" className="nd-btn-soft" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <ArrowLeft style={{ width: 14, height: 14 }} />
+            {t("ielts.backToHub")}
+          </Link>
+          <h3 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <Lightbulb style={{ width: 16, height: 16 }} />
+            {t("ielts.tipsTitle")}
+          </h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
+            {t("ielts.tipsSubtitle")}
+          </span>
         </div>
       </div>
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-2">
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))" }}>
         {sections.map((section) => {
           const Icon = section.icon;
           return (
-            <div key={section.title} className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-soft)] text-[var(--primary)]">
-                  <Icon className="h-5 w-5" />
+            <div
+              key={section.title}
+              style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 0 }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: "var(--paper-2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--ink)",
+                  flexShrink: 0,
+                }}>
+                  <Icon style={{ width: 18, height: 18 }} />
                 </div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{section.title}</h3>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>{section.title}</h3>
               </div>
-              <ul className="mt-4 space-y-3">
+              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
                 {section.tips.map((tip) => (
-                  <li key={tip} className="flex items-start gap-2.5 text-sm leading-6 text-[var(--text-secondary)]">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                  <li key={tip} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, lineHeight: 1.6, color: "var(--ink-mute)" }}>
+                    <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, marginTop: 2, color: "var(--green)" }} />
                     <span>{tip}</span>
                   </li>
                 ))}

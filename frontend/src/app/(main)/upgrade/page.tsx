@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { Crown, CheckCircle2, Zap, BookOpen, Brain, Mic, Trophy, Gift, Sparkles } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { getBillingStatus } from "@/features/settings/api";
-import { Button } from "@/components/ui/button";
 import { PromoCheckout } from "./promo-checkout";
 
 const PRO_FEATURES = [
@@ -22,6 +21,8 @@ const FREE_FEATURES = [
   "Leaderboard, achievements",
 ];
 
+const monoStyle: React.CSSProperties = { fontFamily: "'JetBrains Mono',monospace" };
+
 export default async function UpgradePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -39,151 +40,274 @@ export default async function UpgradePage() {
     <>
       <script src="https://assets.lemonsqueezy.com/lemon.js" defer />
 
-      <div className="page-shell py-10 sm:py-16">
-        <div className="mx-auto max-w-5xl">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 rounded-full bg-yellow-100 px-4 py-1.5 text-sm font-semibold text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 mb-4">
-              <Crown className="h-4 w-4" />
-              StudyWithRaissov Pro
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] mb-4">
-              Шексіз оқу мүмкіндігі
-            </h1>
-            <p className="text-lg text-[var(--text-secondary)] max-w-xl mx-auto">
-              AI-мен оқудың толық күшін ашыңыз. IELTS дайындығы, ағылшын тілі,
-              AI сабақтар — бәрі бір жазылымда.
-            </p>
+      <div className="page-shell py-4 sm:py-6">
+        {/* ─── nd-mock-shell header ─── */}
+        <div className="nd-mock-shell" style={{ marginBottom: 32 }}>
+          <div className="nd-mock-bar">
+            <Crown style={{ width: 16, height: 16, color: "var(--yellow)" }} />
+            <h3>StudyWithRaissov Pro</h3>
+            <span style={monoStyle}>Upgrade</span>
           </div>
+        </div>
 
-          {/* 3 cards */}
-          <div className="grid gap-5 sm:grid-cols-3 items-stretch">
+        {/* ─── Intro ─── */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.03em", marginBottom: 12 }}>
+            Шексіз оқу мүмкіндігі
+          </h1>
+          <p style={{ fontSize: 15, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
+            AI-мен оқудың толық күшін ашыңыз. IELTS дайындығы, ағылшын тілі,
+            AI сабақтар — бәрі бір жазылымда.
+          </p>
+        </div>
 
-            {/* ── FREE ── */}
-            <div className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
-              <div className="mb-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Free</p>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-[var(--text-primary)]">$0</span>
-                  <span className="text-[var(--text-muted)] mb-1">/ай</span>
-                </div>
-                <p className="text-sm text-[var(--text-secondary)] mt-2">Мәңгілік тегін</p>
+        {/* ─── 3-column pricing grid ─── */}
+        <div style={{ display: "grid", gap: 20, gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", alignItems: "start" }}>
+
+          {/* ── FREE ── */}
+          <div
+            style={{
+              border: "1.5px solid var(--line)",
+              borderRadius: 18,
+              padding: 24,
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+              background: "var(--paper)",
+            }}
+          >
+            <div>
+              <p style={{ ...monoStyle, fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 10 }}>FREE</p>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 4, marginBottom: 6 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "var(--ink)", lineHeight: 1 }}>$0</span>
+                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>/ай</span>
               </div>
-              <ul className="space-y-2.5 mb-8 flex-1">
-                {FREE_FEATURES.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                    <CheckCircle2 className="h-4 w-4 text-[var(--text-muted)] shrink-0 mt-0.5" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Button variant="outline" className="w-full" disabled>
-                Ағымдағы жоспар
-              </Button>
+              <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>Мәңгілік тегін</p>
             </div>
 
-            {/* ── 7-DAY TRIAL ── */}
-            <div className="flex flex-col relative rounded-2xl border-2 border-green-500 bg-[var(--bg-surface)] p-6 shadow-[0_0_0_4px_rgba(34,197,94,0.1)]">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                <span className="rounded-full bg-green-500 px-4 py-1 text-xs font-bold text-white whitespace-nowrap">
-                  7 КҮН ТЕГІН TRIAL
-                </span>
-              </div>
+            <ul style={{ display: "flex", flexDirection: "column", gap: 10, listStyle: "none", padding: 0, margin: 0 }}>
+              {FREE_FEATURES.map((f) => (
+                <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-mute)" }}>
+                  <CheckCircle2 style={{ width: 15, height: 15, color: "var(--ink-mute)", flexShrink: 0, marginTop: 1 }} />
+                  {f}
+                </li>
+              ))}
+            </ul>
 
-              <div className="mb-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-green-500 mb-3 flex items-center gap-1.5">
-                  <Gift className="h-4 w-4" /> Тегін сынап көр
-                </p>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-[var(--text-primary)]">₸0</span>
-                  <span className="text-[var(--text-muted)] mb-1">/7 күн</span>
-                </div>
-                <p className="text-sm text-green-400 mt-2 font-medium">
-                  Одан кейін автоматты ₸2,000/ай
-                </p>
-              </div>
-
-              <ul className="space-y-2.5 mb-8 flex-1">
-                {PRO_FEATURES.map(({ icon: Icon, text }) => (
-                  <li key={text} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                    <Icon className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                    {text}
-                  </li>
-                ))}
-              </ul>
-
-              {trialCheckoutURL ? (
-                <div className="space-y-2">
-                  <a
-                    href={trialCheckoutURL}
-                    className="lemonsqueezy-button inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-500 hover:bg-green-600 px-4 py-3 text-base font-bold text-white transition-colors"
-                    rel="noopener noreferrer"
-                  >
-                    <Gift className="h-4 w-4" />
-                    7 күн тегін бастау
-                  </a>
-                  <p className="text-center text-xs text-[var(--text-muted)]">
-                    Картаңыз тіркеледі. 7 күннен кейін $9/ай алынады.
-                    Кез-келген уақытта бас тарта аласыз.
-                  </p>
-                </div>
-              ) : (
-                <button disabled className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-200 px-4 py-3 text-base font-bold text-green-700 cursor-not-allowed">
-                  <Gift className="h-4 w-4" /> Жүктелуде...
-                </button>
-              )}
-            </div>
-
-            {/* ── PRO ── */}
-            <div className="flex flex-col relative rounded-2xl border-2 border-yellow-400 bg-[var(--bg-surface)] p-6 shadow-[0_0_0_4px_rgba(234,179,8,0.1)]">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                <span className="rounded-full bg-yellow-400 px-4 py-1 text-xs font-bold text-yellow-900 whitespace-nowrap">
-                  ЕҢ ТАНЫМАЛ
-                </span>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-yellow-500 mb-3 flex items-center gap-1.5">
-                  <Crown className="h-4 w-4" /> Pro
-                </p>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-[var(--text-primary)]">$9</span>
-                  <span className="text-[var(--text-muted)] mb-1">/ай</span>
-                </div>
-                <p className="text-sm text-[var(--text-secondary)] mt-2">немесе $79/жыл (үнемдеу $29)</p>
-              </div>
-
-              <ul className="space-y-2.5 mb-8 flex-1">
-                {PRO_FEATURES.map(({ icon: Icon, text }) => (
-                  <li key={text} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                    <Icon className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
-                    {text}
-                  </li>
-                ))}
-              </ul>
-
-              {checkoutURL ? (
-                <PromoCheckout baseCheckoutURL={checkoutURL} />
-              ) : (
-                <button disabled className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-yellow-200 px-4 py-3 text-base font-bold text-yellow-600 cursor-not-allowed">
-                  <Crown className="h-4 w-4" /> Жүктелуде...
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Support */}
-          <div className="mt-10 text-center text-sm text-[var(--text-muted)]">
-            Сұрақтар бар ма?{" "}
-            <a
-              href="https://t.me/raissov01"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-[var(--text-secondary)]"
+            <button
+              disabled
+              style={{
+                borderRadius: 12,
+                border: "1.5px solid var(--line)",
+                background: "transparent",
+                padding: "10px 0",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--ink-mute)",
+                cursor: "not-allowed",
+                opacity: 0.6,
+                width: "100%",
+              }}
             >
-              Telegram: @raissov01
-            </a>
+              Ағымдағы жоспар
+            </button>
           </div>
+
+          {/* ── 7-DAY TRIAL ── */}
+          <div
+            style={{
+              border: "2px solid var(--green)",
+              borderRadius: 18,
+              padding: 24,
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+              background: "var(--paper)",
+              position: "relative",
+            }}
+          >
+            {/* Badge */}
+            <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)" }}>
+              <span
+                style={{
+                  borderRadius: 99,
+                  background: "var(--green)",
+                  padding: "4px 14px",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: "#fff",
+                  whiteSpace: "nowrap",
+                  ...monoStyle,
+                }}
+              >
+                7 КҮН ТЕГІН TRIAL
+              </span>
+            </div>
+
+            <div>
+              <p style={{ ...monoStyle, fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--green)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                <Gift style={{ width: 13, height: 13 }} /> ТЕГІН СЫНАП КӨР
+              </p>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 4, marginBottom: 6 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "var(--ink)", lineHeight: 1 }}>₸0</span>
+                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>/7 күн</span>
+              </div>
+              <p style={{ fontSize: 13, color: "var(--green)", fontWeight: 600 }}>
+                Одан кейін автоматты ₸2,000/ай
+              </p>
+            </div>
+
+            <ul style={{ display: "flex", flexDirection: "column", gap: 10, listStyle: "none", padding: 0, margin: 0 }}>
+              {PRO_FEATURES.map(({ icon: Icon, text }) => (
+                <li key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-mute)" }}>
+                  <Icon style={{ width: 15, height: 15, color: "var(--green)", flexShrink: 0, marginTop: 1 }} />
+                  {text}
+                </li>
+              ))}
+            </ul>
+
+            {trialCheckoutURL ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <a
+                  href={trialCheckoutURL}
+                  className="lemonsqueezy-button"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    borderRadius: 12,
+                    background: "var(--green)",
+                    color: "#fff",
+                    padding: "12px 0",
+                    fontSize: 14,
+                    fontWeight: 800,
+                    textDecoration: "none",
+                    width: "100%",
+                  }}
+                >
+                  <Gift style={{ width: 15, height: 15 }} />
+                  7 күн тегін бастау
+                </a>
+                <p style={{ textAlign: "center", fontSize: 11, color: "var(--ink-mute)" }}>
+                  Картаңыз тіркеледі. 7 күннен кейін $9/ай алынады.
+                  Кез-келген уақытта бас тарта аласыз.
+                </p>
+              </div>
+            ) : (
+              <button
+                disabled
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  borderRadius: 12,
+                  background: "rgba(34,197,94,0.15)",
+                  color: "var(--green)",
+                  border: "none",
+                  padding: "12px 0",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: "not-allowed",
+                  width: "100%",
+                }}
+              >
+                <Gift style={{ width: 15, height: 15 }} /> Жүктелуде...
+              </button>
+            )}
+          </div>
+
+          {/* ── PRO ── */}
+          <div
+            style={{
+              border: "2px solid var(--yellow)",
+              borderRadius: 18,
+              padding: 24,
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+              background: "var(--paper)",
+              position: "relative",
+            }}
+          >
+            {/* Badge */}
+            <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)" }}>
+              <span
+                style={{
+                  borderRadius: 99,
+                  background: "var(--yellow)",
+                  padding: "4px 14px",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: "#7c5a00",
+                  whiteSpace: "nowrap",
+                  ...monoStyle,
+                }}
+              >
+                ЕҢ ТАНЫМАЛ
+              </span>
+            </div>
+
+            <div>
+              <p style={{ ...monoStyle, fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--yellow)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                <Crown style={{ width: 13, height: 13 }} /> PRO
+              </p>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 4, marginBottom: 6 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "var(--ink)", lineHeight: 1 }}>$9</span>
+                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>/ай</span>
+              </div>
+              <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>немесе $79/жыл (үнемдеу $29)</p>
+            </div>
+
+            <ul style={{ display: "flex", flexDirection: "column", gap: 10, listStyle: "none", padding: 0, margin: 0 }}>
+              {PRO_FEATURES.map(({ icon: Icon, text }) => (
+                <li key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-mute)" }}>
+                  <Icon style={{ width: 15, height: 15, color: "var(--yellow)", flexShrink: 0, marginTop: 1 }} />
+                  {text}
+                </li>
+              ))}
+            </ul>
+
+            {checkoutURL ? (
+              <PromoCheckout baseCheckoutURL={checkoutURL} />
+            ) : (
+              <button
+                disabled
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  borderRadius: 12,
+                  background: "rgba(234,179,8,0.15)",
+                  color: "var(--yellow)",
+                  border: "none",
+                  padding: "12px 0",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: "not-allowed",
+                  width: "100%",
+                }}
+              >
+                <Crown style={{ width: 15, height: 15 }} /> Жүктелуде...
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ─── Support ─── */}
+        <div style={{ marginTop: 36, textAlign: "center", fontSize: 13, color: "var(--ink-mute)" }}>
+          Сұрақтар бар ма?{" "}
+          <a
+            href="https://t.me/raissov01"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--ink-mute)", textDecoration: "underline" }}
+          >
+            Telegram: @raissov01
+          </a>
         </div>
       </div>
     </>

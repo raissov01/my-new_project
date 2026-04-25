@@ -27,36 +27,44 @@ export default async function StreakPage() {
     : calendar;
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-8">
-      <div className="max-w-lg mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-1">
-          <div className="flex justify-center">
+    <div className="page-shell py-4 sm:py-6">
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <h3>My Streak</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
+            {streak}-day current · {longest}-day best
+          </span>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 520, margin: "0 auto", display: "flex", flexDirection: "column", gap: 18 }}>
+        {/* Badge */}
+        <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", textAlign: "center" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
             <StreakBadge streak={streak} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p style={{ color: "var(--ink)", fontWeight: 700, fontSize: 22, margin: 0 }}>
             {streak}-Day Streak
-          </h1>
-          <p className="text-sm text-gray-500">
-            Longest streak: {longest} days
           </p>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 text-center border border-gray-200 dark:border-gray-700">
-            <p className="text-3xl font-bold text-orange-500">{streak}</p>
-            <p className="text-xs text-gray-500 mt-1">Current streak</p>
+        {/* KPI stats */}
+        <div className="nd-kpi-grid">
+          <div className="nd-kpi">
+            <span className="nd-kpi-lbl">Current Streak</span>
+            <strong className="nd-kpi-val" style={{ color: "var(--terra)" }}>{streak}</strong>
+            <span className="nd-kpi-sub">days</span>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 text-center border border-gray-200 dark:border-gray-700">
-            <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">{longest}</p>
-            <p className="text-xs text-gray-500 mt-1">Best streak</p>
+          <div className="nd-kpi">
+            <span className="nd-kpi-lbl">Best Streak</span>
+            <strong className="nd-kpi-val">{longest}</strong>
+            <span className="nd-kpi-sub">days</span>
           </div>
         </div>
 
         {/* Calendar */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-700">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4">Last 30 days</h2>
+        <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px" }}>
+          <p style={{ fontWeight: 600, color: "var(--ink)", marginBottom: 16, marginTop: 0 }}>Last 30 days</p>
           <StreakCalendar
             calendar={calWithPad}
             freezesAvailable={2}
@@ -65,16 +73,24 @@ export default async function StreakPage() {
 
         {/* CTA */}
         {streak === 0 && (
-          <div className="text-center">
+          <div style={{ textAlign: "center" }}>
             <a
               href="/learn/map"
-              className="inline-block px-6 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
+              style={{
+                display: "inline-block",
+                padding: "12px 24px",
+                borderRadius: 12,
+                background: "var(--terra)",
+                color: "#fff",
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
             >
-              Start today's lesson →
+              Start today&apos;s lesson →
             </a>
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

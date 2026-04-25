@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowLeft, BookOpen, BookOpenText, ClipboardCheck, Download, Headphones, Lightbulb, MessageSquare, Mic, PenLine, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cookies } from "next/headers";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
@@ -18,13 +17,13 @@ type TopGroup = {
 };
 
 const categoryMeta = {
-  reading: { icon: BookOpen, tone: "from-blue-500/18 to-indigo-500/10" },
-  listening: { icon: Headphones, tone: "from-cyan-500/18 to-sky-500/10" },
-  writing: { icon: PenLine, tone: "from-emerald-500/18 to-teal-500/10" },
-  speaking: { icon: Mic, tone: "from-violet-500/18 to-fuchsia-500/10" },
-  vocabulary: { icon: BookOpen, tone: "from-orange-500/18 to-amber-500/10" },
-  grammar: { icon: BookOpen, tone: "from-rose-500/18 to-pink-500/10" },
-  general: { icon: BookOpen, tone: "from-slate-500/18 to-zinc-500/10" },
+  reading: { icon: BookOpen },
+  listening: { icon: Headphones },
+  writing: { icon: PenLine },
+  speaking: { icon: Mic },
+  vocabulary: { icon: BookOpen },
+  grammar: { icon: BookOpen },
+  general: { icon: BookOpen },
 } as const;
 
 const categoryOrder = ["writing", "speaking", "reading", "listening", "vocabulary", "grammar", "general"] as const;
@@ -45,10 +44,10 @@ export default async function IELTSMaterialsPage() {
   const feedbackPrompts = allMaterials.filter((m) => m.type === "feedback_prompt");
 
   const topGroups: TopGroup[] = [
-    { key: "materials", label: t("ielts.matGroupMaterials"), icon: BookOpenText, tone: "from-indigo-500/18 to-blue-500/10", types: ["book", "lesson", "practice"] },
-    { key: "tips", label: t("ielts.matGroupTips"), icon: Lightbulb, tone: "from-amber-500/18 to-orange-500/10", types: ["tip"] },
-    { key: "mock_tests", label: t("ielts.matGroupMockTests"), icon: ClipboardCheck, tone: "from-emerald-500/18 to-teal-500/10", types: ["mock_test"] },
-    { key: "feedback_prompts", label: t("ielts.matGroupFeedback"), icon: MessageSquare, tone: "from-violet-500/18 to-fuchsia-500/10", types: ["feedback_prompt"] },
+    { key: "materials", label: t("ielts.matGroupMaterials"), icon: BookOpenText, tone: "", types: ["book", "lesson", "practice"] },
+    { key: "tips", label: t("ielts.matGroupTips"), icon: Lightbulb, tone: "", types: ["tip"] },
+    { key: "mock_tests", label: t("ielts.matGroupMockTests"), icon: ClipboardCheck, tone: "", types: ["mock_test"] },
+    { key: "feedback_prompts", label: t("ielts.matGroupFeedback"), icon: MessageSquare, tone: "", types: ["feedback_prompt"] },
   ];
 
   const groupedItems: Record<string, IELTSMaterial[]> = {
@@ -58,54 +57,76 @@ export default async function IELTSMaterialsPage() {
     feedback_prompts: feedbackPrompts,
   };
 
+  const monoStyle: React.CSSProperties = { fontFamily: "'JetBrains Mono',monospace" };
+
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <div className="flex items-center justify-between gap-4">
-        <Link href="/ielts" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-          <ArrowLeft className="h-4 w-4" />
-          {t("ielts.backToHub")}
-        </Link>
-        {isAdmin && (
-          <Link href="/ielts/admin">
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4" />
-              {t("admin.manageBtn")}
-            </Button>
+    <div className="page-shell py-4 sm:py-6">
+      {/* ─── nd-mock-shell header ─── */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/ielts" className="nd-btn-soft">
+            <ArrowLeft style={{ width: 14, height: 14 }} />
+            {t("ielts.backToHub")}
           </Link>
-        )}
+          <h3>{t("ielts.materialsTitle")}</h3>
+          <span style={monoStyle}>{allMaterials.length} materials</span>
+          {isAdmin && (
+            <Link href="/ielts/admin" className="nd-btn-soft" style={{ marginLeft: "auto" }}>
+              <Settings style={{ width: 14, height: 14 }} />
+              {t("admin.manageBtn")}
+            </Link>
+          )}
+        </div>
       </div>
 
-      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-          {t("ielts.materialsTitle")}
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">{t("ielts.materialsSubtitle")}</p>
-
-        {/* ─── Quick stats ─── */}
-        <div className="mt-5 flex flex-wrap gap-3">
-          {topGroups.map((g) => {
-            const count = groupedItems[g.key]?.length ?? 0;
-            if (count === 0) return null;
-            const Icon = g.icon;
-            return (
-              <a key={g.key} href={`#${g.key}`} className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3.5 py-2 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-                <Icon className="h-3.5 w-3.5" />
-                {g.label}
-                <span className="rounded-full bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-muted)]">{count}</span>
-              </a>
-            );
-          })}
-        </div>
+      {/* ─── Category pill nav ─── */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
+        {topGroups.map((g) => {
+          const count = groupedItems[g.key]?.length ?? 0;
+          if (count === 0) return null;
+          const Icon = g.icon;
+          return (
+            <a
+              key={g.key}
+              href={`#${g.key}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "5px 12px",
+                borderRadius: 99,
+                background: "var(--paper-2)",
+                border: "1px solid var(--line)",
+                fontSize: 12.5,
+                fontWeight: 600,
+                color: "var(--ink-mute)",
+                textDecoration: "none",
+              }}
+            >
+              <Icon style={{ width: 13, height: 13 }} />
+              {g.label}
+              <span style={{ ...monoStyle, fontSize: 10, fontWeight: 700, opacity: 0.7 }}>{count}</span>
+            </a>
+          );
+        })}
       </div>
 
       {allMaterials.length === 0 ? (
-        <div className="mt-8 rounded-[var(--radius-2xl)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-16 text-center">
-          <BookOpenText className="mx-auto h-8 w-8 text-[var(--text-muted)]" />
-          <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">{t("admin.emptyTitle")}</h2>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">{t("admin.emptyPublicBody")}</p>
+        <div
+          style={{
+            background: "var(--paper)",
+            border: "1px dashed var(--line)",
+            borderRadius: 18,
+            padding: "64px 24px",
+            textAlign: "center",
+          }}
+        >
+          <BookOpenText style={{ width: 32, height: 32, color: "var(--ink-mute)", margin: "0 auto 16px" }} />
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 8 }}>{t("admin.emptyTitle")}</h2>
+          <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>{t("admin.emptyPublicBody")}</p>
         </div>
       ) : (
-        <div className="mt-8 space-y-12">
+        <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
           {topGroups.map((group) => {
             const items = groupedItems[group.key] ?? [];
             if (items.length === 0) return null;
@@ -122,20 +143,30 @@ export default async function IELTSMaterialsPage() {
             return (
               <section key={group.key} id={group.key}>
                 {/* ─── Group header ─── */}
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--bg-surface)]`}>
-                    <GroupIcon className="h-5 w-5 text-[var(--text-primary)]" />
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 12,
+                      background: "var(--paper-2)",
+                      border: "1px solid var(--line)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <GroupIcon style={{ width: 18, height: 18, color: "var(--ink)" }} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                      {group.label}
-                    </h2>
-                    <p className="text-xs text-[var(--text-muted)]">{items.length} items</p>
+                    <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", margin: 0 }}>{group.label}</h2>
+                    <p style={{ ...monoStyle, fontSize: 11, color: "var(--ink-mute)", margin: 0 }}>{items.length} items</p>
                   </div>
                 </div>
 
                 {/* ─── Category sub-sections ─── */}
-                <div className="mt-5 space-y-6">
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                   {Array.from(byCategory.entries()).map(([cat, catItems]) => {
                     const meta = categoryMeta[cat as keyof typeof categoryMeta];
                     const CatIcon = meta?.icon ?? BookOpen;
@@ -143,53 +174,115 @@ export default async function IELTSMaterialsPage() {
 
                     return (
                       <div key={cat}>
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
-                            <CatIcon className="h-3.5 w-3.5" />
+                        {/* Category pill */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "5px 12px",
+                              borderRadius: 99,
+                              background: "var(--paper-2)",
+                              border: "1px solid var(--line)",
+                              fontSize: 12.5,
+                              fontWeight: 600,
+                              color: "var(--ink-mute)",
+                            }}
+                          >
+                            <CatIcon style={{ width: 13, height: 13 }} />
                             {catLabel}
                           </span>
-                          <span className="text-xs text-[var(--text-muted)]">({catItems.length})</span>
+                          <span style={{ ...monoStyle, fontSize: 11, color: "var(--ink-mute)" }}>({catItems.length})</span>
                         </div>
-                        <div className="mt-3 grid gap-4 lg:grid-cols-2">
+
+                        {/* 2-col item card grid */}
+                        <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))" }}>
                           {catItems.map((material) => (
                             <article
                               key={material.id}
-                              className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)]"
+                              style={{
+                                background: "var(--paper-2)",
+                                border: "1px solid var(--line)",
+                                borderRadius: 14,
+                                padding: "14px 18px",
+                              }}
                             >
-                              <div className="flex items-start justify-between gap-2">
-                                <h3 className="text-base font-semibold text-[var(--text-primary)] sm:text-lg">
+                              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                                <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", margin: 0 }}>
                                   {material.title}
                                 </h3>
                                 {material.difficulty && material.difficulty !== "all" && (
-                                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
-                                    material.difficulty === "beginner" ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" :
-                                    material.difficulty === "intermediate" ? "text-blue-500 bg-blue-500/10 border-blue-500/20" :
-                                    "text-orange-500 bg-orange-500/10 border-orange-500/20"
-                                  }`}>
+                                  <span
+                                    style={{
+                                      borderRadius: 99,
+                                      padding: "3px 8px",
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      fontFamily: "'JetBrains Mono',monospace",
+                                      flexShrink: 0,
+                                      background:
+                                        material.difficulty === "beginner"
+                                          ? "rgba(34,197,94,0.12)"
+                                          : material.difficulty === "intermediate"
+                                          ? "rgba(59,130,246,0.12)"
+                                          : "rgba(249,115,22,0.12)",
+                                      color:
+                                        material.difficulty === "beginner"
+                                          ? "var(--green)"
+                                          : material.difficulty === "intermediate"
+                                          ? "#3b82f6"
+                                          : "var(--terra)",
+                                    }}
+                                  >
                                     {material.difficulty}
                                   </span>
                                 )}
                               </div>
                               {material.description && (
-                                <p className="mt-1.5 text-xs leading-5 text-[var(--text-muted)]">
+                                <p style={{ fontSize: 12, color: "var(--ink-mute)", lineHeight: 1.6, margin: "0 0 10px" }}>
                                   {material.description}
                                 </p>
                               )}
                               {material.filePath && (
-                                <div className="mt-3 flex items-center gap-2">
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
                                   <Link
                                     href={`/ielts/materials/${material.id}`}
-                                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-4 py-1.5 text-xs font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/15 active:scale-95"
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 6,
+                                      padding: "6px 14px",
+                                      borderRadius: 99,
+                                      background: "var(--paper)",
+                                      border: "1px solid var(--line)",
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                      color: "var(--ink)",
+                                      textDecoration: "none",
+                                    }}
                                   >
-                                    <BookOpen className="h-3.5 w-3.5" />
+                                    <BookOpen style={{ width: 13, height: 13 }} />
                                     Read
                                   </Link>
                                   <a
                                     href={`${filesBaseUrl}/api/v1/files/${encodeURI(material.filePath)}?download=1`}
                                     download
-                                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] active:scale-95"
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 6,
+                                      padding: "6px 14px",
+                                      borderRadius: 99,
+                                      background: "transparent",
+                                      border: "1px solid var(--line)",
+                                      fontSize: 12,
+                                      fontWeight: 500,
+                                      color: "var(--ink-mute)",
+                                      textDecoration: "none",
+                                    }}
                                   >
-                                    <Download className="h-3.5 w-3.5" />
+                                    <Download style={{ width: 13, height: 13 }} />
                                     Download
                                   </a>
                                 </div>
