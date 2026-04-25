@@ -57,15 +57,12 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
   const isDisabled = isPending || !!socialPending;
 
   return (
-    <div className="animate-scale-in rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-xl)] sm:p-8">
-      <div className="mb-6 text-center sm:mb-8">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
-          <GoogleIcon className="h-5 w-5" />
-        </div>
-        <h1 className="mt-4 text-2xl font-bold tracking-[-0.03em] text-[var(--text-primary)] sm:mt-5 sm:text-3xl">
+    <div>
+      <div className="mb-6">
+        <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em", margin: "0 0 6px", color: "var(--ink)" }}>
           {t("auth.welcomeBack")}
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+        </h2>
+        <p style={{ fontSize: 14.5, color: "var(--ink-mute)", margin: 0 }}>
           {t("auth.logInContinue")}
         </p>
       </div>

@@ -1,42 +1,32 @@
-import { ClipboardCheck } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SimulatorClient } from "./client";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
+import Link from "next/link";
 
 export default async function IELTSSimulatorPage() {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <Breadcrumbs
-        baseUrl={APP_URL}
-        items={[
-          { label: t("ielts.hubTitle"), href: "/ielts" },
-          { label: t("ielts.simulatorTitle") },
-        ]}
-      />
-
-      <div className="mt-6 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--bg-surface)] text-[var(--text-primary)]">
-            <ClipboardCheck className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-              {t("ielts.simulatorTitle")}
-            </h1>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("ielts.simulatorSubtitle")}</p>
+    <div className="page-shell py-4 sm:py-6">
+      {/* MockExam header bar */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Link href="/ielts" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            ← {t("ielts.hubTitle")}
+          </Link>
+          <h3>{t("ielts.simulatorTitle")}</h3>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: "var(--paper-2)", border: "1px solid var(--line)", fontSize: 11.5, fontWeight: 600, color: "var(--ink-soft)", fontFamily: "'JetBrains Mono',monospace" }}>
+            L · R · W · S
+          </span>
+          <div className="nd-mock-timer">
+            <span className="nd-mock-pulse" />
+            {t("ielts.simulatorSubtitle")}
           </div>
         </div>
       </div>
 
-      <div className="mt-8">
-        <SimulatorClient />
-      </div>
+      <SimulatorClient />
     </div>
   );
 }

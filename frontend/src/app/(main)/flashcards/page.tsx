@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LibraryBig, Layers3, Plus, Search, Sparkles, Target } from "lucide-react";
+import { Search } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
-import { Button } from "@/components/ui/button";
-import { SetCard } from "@/features/sets/components";
-import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 import { getPublicSetsOverview, getUserSetsOverview } from "@/server/services/sets-overview";
 
 export const metadata: Metadata = {
@@ -21,6 +18,15 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
 };
+
+const COVER_GRADIENTS = [
+  "linear-gradient(135deg,#C2500A,#8F3A05)",
+  "linear-gradient(135deg,#2563eb,#1B47B8)",
+  "linear-gradient(135deg,#3F7D3F,#2E5F2E)",
+  "linear-gradient(135deg,#E9B949,#B8801A)",
+  "linear-gradient(135deg,#1B1714,#3D342C)",
+  "linear-gradient(135deg,#C2425C,#8F2F45)",
+];
 
 interface FlashcardsPageProps {
   searchParams: Promise<{
@@ -43,127 +49,130 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
     ? sets.filter((s) => s.title.toLowerCase().includes(query) || (s.description ?? "").toLowerCase().includes(query))
     : sets;
 
+  const totalCards = filtered.reduce((sum, s) => sum + s.cardCount, 0);
+
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">
-        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-[var(--primary)] opacity-[0.05]" style={{ filter: "blur(60px)" }} />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="badge-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              {t("flashcards.eyebrow")}
-            </div>
-            <h1 className="mt-4 text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">
-              {t("flashcards.title")}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-              {t("flashcards.subtitle")}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {user ? (
-              <Link href="/sets/new">
-                <Button size="lg">
-                  <Plus className="h-4 w-4" />
-                  {t("dashboard.createNewSet")}
-                </Button>
-              </Link>
-            ) : (
-              <AuthRequiredPrompt
-                triggerLabel={t("dashboard.createNewSet")}
-                title={t("guest.authRequiredTitle")}
-                description={t("guest.createPrompt")}
-                signupLabel={t("guest.signUpToContinue")}
-                loginLabel={t("guest.logInToUnlock")}
-                cancelLabel={t("set.cancel")}
-                icon={<Plus className="h-4 w-4" />}
-              />
-            )}
-          </div>
+    <div className="page-shell py-6 sm:py-10 lg:py-14">
+      {/* Page head */}
+      <div className="nd-page-head nd-reveal nd-d1">
+        <div>
+          <p className="nd-eyebrow">Флэшкарта жинақтары</p>
+          <h1 className="nd-page-title" style={{ marginTop: 10 }}>Менің колодаларым</h1>
+          <p className="nd-page-sub">
+            {filtered.length} жинақ · {totalCards} карта
+          </p>
         </div>
+        <Link href="/sets/new" className="nd-btn-primary" style={{ flexShrink: 0 }}>
+          + Жаңа жинақ
+        </Link>
       </div>
 
-      {/* Tab switcher + search */}
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {user && (
-          <div className="inline-flex rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-1">
+      {/* Filters row */}
+      <div className="nd-reveal nd-d2" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 24 }}>
+        {/* Tab pills */}
+        <div className="nd-lib-filters" style={{ marginBottom: 0 }}>
+          {user && (
             <Link
               href="/flashcards?tab=my"
-              className={`inline-flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-2 text-sm font-semibold transition-all ${
-                showMy
-                  ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
+              className={`nd-lib-pill${showMy ? " on" : ""}`}
             >
-              <Layers3 className="h-4 w-4" />
               {t("flashcards.myCollections")}
             </Link>
-            <Link
-              href="/flashcards?tab=library"
-              className={`inline-flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-2 text-sm font-semibold transition-all ${
-                !showMy
-                  ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              <LibraryBig className="h-4 w-4" />
-              {t("flashcards.publicLibrary")}
-            </Link>
-          </div>
-        )}
-        <form className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 shadow-[var(--shadow-xs)]">
-          <Search className="h-4 w-4 text-[var(--text-muted)]" />
+          )}
+          <Link
+            href="/flashcards?tab=library"
+            className={`nd-lib-pill${!showMy ? " on" : ""}`}
+          >
+            {t("flashcards.publicLibrary")}
+          </Link>
+        </div>
+
+        {/* Search */}
+        <form style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "1.5px solid var(--line)", borderRadius: 99, padding: "7px 16px" }}>
+          <Search style={{ width: 15, height: 15, color: "var(--ink-mute)", flexShrink: 0 }} />
           <input type="hidden" name="tab" value={tab} />
           <input
             type="search"
             name="q"
             defaultValue={q}
             placeholder={t("sets.searchPlaceholder")}
-            className="h-11 w-full min-w-0 bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] sm:w-64"
+            style={{ border: "none", outline: "none", background: "transparent", fontSize: 13, color: "var(--ink)", width: 200 }}
           />
         </form>
       </div>
 
-      {/* Results count */}
-      <div className="mt-4 text-sm font-medium text-[var(--text-secondary)]">
-        {filtered.length} {filtered.length === 1 ? t("dashboard.set") : t("dashboard.sets")}
-      </div>
-
+      {/* Deck grid */}
       {filtered.length > 0 ? (
-        <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((set) => {
-            const isOwner = Boolean(user && "userId" in set && set.userId === user.id);
+        <div className="nd-deck-grid nd-reveal nd-d3">
+          {filtered.map((set, i) => {
+            const gradient = COVER_GRADIENTS[i % COVER_GRADIENTS.length];
+            const coverWord = set.title.split(/\s+/)[0] ?? set.title;
+            const accuracy = set.accuracy ?? 0;
+
             return (
-              <SetCard
-                key={set.id}
-                id={set.id}
-                title={set.title}
-                description={set.description}
-                cardCount={set.cardCount}
-                createdAt={set.createdAt}
-                lastStudiedAt={set.lastStudiedAt}
-                accuracy={set.accuracy}
-                locale={locale}
-                showManageActions={isOwner}
-                showSaveAction={Boolean(user) && !isOwner && !showMy}
-                requireAuthForStudy={!user}
-              />
+              <div key={set.id} className="nd-deck-card">
+                {/* Cover */}
+                <div
+                  className="nd-deck-cover"
+                  style={{ background: gradient }}
+                >
+                  {coverWord}
+                </div>
+
+                {/* Tag */}
+                <span className="nd-tag nd-tag-terra" style={{ alignSelf: "flex-start" }}>
+                  флэшкарта
+                </span>
+
+                {/* Title */}
+                <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--ink)", lineHeight: 1.35 }}>
+                  {set.title}
+                </h4>
+
+                {/* Progress bar */}
+                <div>
+                  <div className="nd-deck-bar">
+                    <div
+                      className="nd-deck-bar-fill"
+                      style={{ width: `${accuracy}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Meta */}
+                <div className="nd-deck-meta">
+                  <span>{set.cardCount} карта</span>
+                  <span>{accuracy}%</span>
+                </div>
+
+                {/* CTA */}
+                <Link
+                  href={`/sets/${set.id}/study`}
+                  className="nd-btn-soft"
+                  style={{ marginTop: 4 }}
+                >
+                  Оқуды бастау →
+                </Link>
+              </div>
             );
           })}
         </div>
       ) : (
-        <div className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--border)] bg-[var(--bg-soft)] px-6 py-16 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--bg-muted)]">
-            <Target className="h-5 w-5 text-[var(--text-muted)]" />
-          </div>
-          <h2 className="mt-4 text-xl font-bold text-[var(--text-primary)]">{t("sets.emptyTitle")}</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">{t("sets.emptyBody")}</p>
-          <Link href="/sets/new" className="mt-6 inline-block">
-            <Button>
-              <Plus className="h-4 w-4" />
-              {t("sets.createFirst")}
-            </Button>
+        <div
+          className="nd-reveal nd-d3"
+          style={{
+            border: "1.5px dashed var(--line-strong)",
+            borderRadius: 18,
+            padding: "64px 24px",
+            textAlign: "center",
+            background: "var(--paper-2)",
+          }}
+        >
+          <p style={{ fontSize: 15, color: "var(--ink-mute)", marginBottom: 16 }}>
+            {t("sets.emptyTitle")}
+          </p>
+          <Link href="/sets/new" className="nd-btn-primary">
+            + Жаңа жинақ жасау
           </Link>
         </div>
       )}

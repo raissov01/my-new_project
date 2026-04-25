@@ -125,13 +125,14 @@ export function SignupForm() {
   }
 
   return (
-    <div className="animate-scale-in rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-xl)] sm:p-8">
-      <div className="mb-6 text-center sm:mb-8">
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] sm:h-12 sm:w-12">
-          <ShieldCheck className="h-5 w-5 text-[var(--primary)]" />
-        </div>
-        <h1 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:mt-5 sm:text-3xl">{t("auth.createAccount")}</h1>
-        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{t("auth.startStudying")}</p>
+    <div>
+      <div className="mb-6">
+        <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em", margin: "0 0 6px", color: "var(--ink)" }}>
+          {t("auth.createAccount")}
+        </h2>
+        <p style={{ fontSize: 14.5, color: "var(--ink-mute)", margin: 0 }}>
+          {t("auth.startStudying")}
+        </p>
       </div>
 
       <fieldset className="mb-6 space-y-3 sm:mb-7">

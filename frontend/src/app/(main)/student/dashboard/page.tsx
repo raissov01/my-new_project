@@ -1,514 +1,232 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import ScoreRadarDashboard from "@/components/dashboard/ScoreRadarDashboard";
-import { getIELTSScoreHistory } from "@/server/services/ielts-score-history";
-import {
-  ArrowRight,
-  BookOpen,
-  CheckCircle2,
-  Flame,
-  GraduationCap,
-  ListChecks,
-  Play,
-  RefreshCw,
-  Star,
-  Target,
-  Trophy,
-  TrendingUp,
-  Users,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import { getUserStats } from "@/app/(main)/sets/progress-actions";
-import {
-  getStudentDashboardSummary,
-  getStudentQuizAssignments,
-} from "@/server/services/classrooms";
-import {
-  getRecentQuizAttempts,
-  getRecommendedQuizzes,
-} from "@/server/services/quizzes";
+import { getStudentDashboardSummary } from "@/server/services/classrooms";
+import { getIELTSScoreHistory } from "@/server/services/ielts-score-history";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { requireRole } from "@/server/auth";
-import { JoinClassModal } from "@/components/dashboard/JoinClassModal";
 
 export const metadata: Metadata = { title: "Басты бет | StudyWithRaissov" };
+
+const WORDS = ["IELTS", "Speaking", "Writing", "Band 9", "Listening", "Reading"];
+const WEEK_DAYS = ["ДС", "СС", "СР", "БС", "ЖМ", "СБ", "ЖС"];
+
+const IELTS_SKILLS = [
+  { label: "Listening", key: "listening" },
+  { label: "Reading",   key: "reading"   },
+  { label: "Writing",   key: "writing"   },
+  { label: "Speaking",  key: "speaking"  },
+] as const;
 
 export default async function StudentDashboardPage() {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
   const access = await requireRole("student");
+  if (access.redirectTo) redirect(access.redirectTo);
 
-  if (access.redirectTo) {
-    redirect(access.redirectTo);
-  }
+  const [summary, stats, scoreHistory] = await Promise.all([
+    getStudentDashboardSummary(access.user?.id),
+    getUserStats(),
+    getIELTSScoreHistory(),
+  ]);
+  if (!summary) redirect("/login");
 
-  const [summary, stats, quizAssignments, recentAttempts, recommendedQuizzes, scoreHistory] =
-    await Promise.all([
-      getStudentDashboardSummary(access.user?.id),
-      getUserStats(),
-      getStudentQuizAssignments(),
-      getRecentQuizAttempts(),
-      getRecommendedQuizzes(),
-      getIELTSScoreHistory(),
-    ]);
+  const firstName =
+    access.profile?.full_name?.split(" ")[0] ??
+    access.profile?.username ??
+    "Студент";
 
-  if (!summary) {
-    redirect("/login");
-  }
+  const latestScore = scoreHistory[scoreHistory.length - 1] ?? null;
 
-  const pendingQuizzes = quizAssignments.filter(
-    (q) => q.status !== "completed"
-  );
+  const ieltsScores = {
+    listening: latestScore?.listening ?? 0,
+    reading:   latestScore?.reading   ?? 0,
+    writing:   latestScore?.writing   ?? 0,
+    speaking:  latestScore?.speaking  ?? 0,
+  };
+  const overallBand = latestScore
+    ? ((ieltsScores.listening + ieltsScores.reading + ieltsScores.writing + ieltsScores.speaking) / 4).toFixed(1)
+    : "—";
 
-  const firstName = access.profile?.full_name?.split(" ")[0] ?? access.profile?.username ?? t("student.dashboardTitle");
-  const nextAssignment = summary.assignments[0] ?? null;
+  // Weekly chart: 7 bars — last bar is highlighted
+  const chartHeights = [40, 65, 50, 80, 70, 95, 60];
+
+  // Today's plan from assignments (up to 4)
+  const todayItems = summary.assignments.slice(0, 4);
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      {/* IELTS Score Radar — only shown when user has ≥2 completed full mock attempts */}
-      {scoreHistory.length >= 2 && <ScoreRadarDashboard scoreHistory={scoreHistory} />}
+    <div className="page-shell py-6 sm:py-8">
 
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">
-        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-[var(--primary)] opacity-[0.06]" style={{ filter: "blur(60px)" }} />
-
-        <div className="relative grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+      {/* ── HERO ── */}
+      <div className="nd-dash-hero nd-reveal">
+        <div className="nd-dash-hero-grid">
           <div>
-            <h1 className="max-w-[16ch] text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl lg:text-5xl">
-              {t("dashboard.hello", { name: firstName })}
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] sm:text-base">
-              {t("student.dashboardSubtitle")}
-            </p>
-
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              {nextAssignment ? (
-                <Link href={`/sets/${nextAssignment.setId}/study`}>
-                  <Button size="lg" className="w-full sm:w-auto">
-                    <Play className="h-4 w-4" />
-                    {t("nav.startStudy")}: {nextAssignment.setTitle}
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/learn/placement">
-                  <Button size="lg" className="w-full sm:w-auto">
-                    <Target className="h-4 w-4" />
-                    Placement тест тапсыр
-                  </Button>
-                </Link>
-              )}
-              <Link href="/ielts">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  <GraduationCap className="h-4 w-4" />
-                  {t("nav.ieltsPrep")}
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <HeroSignal
-              label={t("stats.dailyStreak")}
-              value={`${stats.streakDays}`}
-              detail={stats.streakDays === 1 ? t("stats.dayInRow") : t("stats.daysInRow")}
-              accent="border-l-[var(--accent)]"
-            />
-            <div className="rounded-[var(--radius-lg)] border border-[var(--border)] border-l-[3px] border-l-violet-500 bg-[var(--bg-soft)] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                Today&apos;s XP
-              </p>
-              <p className="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-[var(--text-primary)]">
-                {t("stats.level")} {stats.xpLevel}
-              </p>
-              <div className="progress-track mt-3">
-                <div className="progress-fill" style={{ width: `${stats.xpProgress}%` }} />
-              </div>
-              <p className="mt-1.5 text-xs text-[var(--text-muted)]">{stats.levelName}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Metrics */}
-      <section className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={Users} label={t("student.classCount")} value={summary.classes.length} color="text-blue-500 bg-blue-500/10" />
-        <MetricCard icon={BookOpen} label={t("student.assignedSets")} value={summary.assignments.length} color="text-emerald-500 bg-emerald-500/10" />
-        <MetricCard icon={Trophy} label={t("student.classChallenges")} value={summary.challenges.length} color="text-amber-500 bg-amber-500/10" />
-        <MetricCard icon={Target} label={t("student.personalAccuracy")} value={`${stats.accuracy}%`} color="text-violet-500 bg-violet-500/10" />
-      </section>
-
-      {/* Content grid */}
-      <div className="mt-6 grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-        {/* Assigned work — only show when student is in at least one class */}
-        {summary.classes.length === 0 ? (
-          <section className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[200px]">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
-              <Users className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-base font-bold text-[var(--text-primary)]">{t("student.joinClass")}</p>
-              <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">{t("student.noAssignmentsBody")}</p>
-            </div>
-            <JoinClassModal />
-          </section>
-        ) : (
-        <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                {t("student.assignedWorkspace")}
-              </p>
-              <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
-                {t("student.assignedWork")}
-              </h2>
-              <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                {t("student.assignedWorkBody")}
-              </p>
-            </div>
-            <Link href="/student/classes">
-              <Button variant="outline" size="sm">{t("student.openClasses")}</Button>
-            </Link>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {summary.assignments.length > 0 ? (
-              summary.assignments.slice(0, 5).map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="rounded-[var(--radius-lg)] border border-[var(--border)] border-l-[3px] border-l-[var(--primary)] bg-[var(--bg-soft)] p-4 transition-all hover:shadow-[var(--shadow-sm)]"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-[var(--text-primary)]">
-                        {assignment.setTitle}
-                      </p>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                        {assignment.groupName}
-                      </p>
-                    </div>
-                    <Link href={`/sets/${assignment.setId}`}>
-                      <Button variant="secondary" size="sm">{t("student.openSet")}</Button>
-                    </Link>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyCard
-                icon={BookOpen}
-                title={t("student.noAssignmentsTitle")}
-                body={t("student.noAssignmentsBody")}
-                ctaHref="/student/classes"
-                ctaLabel={t("student.joinClass")}
-              />
-            )}
-          </div>
-        </section>
-        )}
-
-        {/* Right column */}
-        <section className="space-y-5">
-          {/* Progress */}
-          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-              {t("student.personalPerformance")}
-            </p>
-            <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
-              {t("student.progressTitle")}
+            <span className="nd-eyebrow" style={{ color: "#FBA968", marginBottom: 14, display: "inline-flex" }}>
+              <span style={{ background: "#FBA968", width: 20, height: 1 }}></span>
+              Бүгінгі мақсат
+            </span>
+            <h2 style={{ marginTop: 12 }}>
+              Сәлем, <span style={{ fontFamily: "'Caveat',cursive", color: "#FBA968" }}>{firstName}</span> — оқуды бастайық!
             </h2>
-            <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-              {t("student.progressBody")}
-            </p>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <ProgressCard icon={BookOpen} label={t("student.cardsStudied")} value={stats.totalStudied} color="text-blue-500 bg-blue-500/10" />
-              <ProgressCard icon={CheckCircle2} label={t("student.totalCorrect")} value={stats.totalCorrect} color="text-emerald-500 bg-emerald-500/10" />
-              <ProgressCard icon={Flame} label={t("student.currentStreak")} value={stats.streakDays} color="text-orange-500 bg-orange-500/10" />
-              <ProgressCard icon={Star} label={t("student.totalPoints")} value={stats.points} color="text-amber-500 bg-amber-500/10" />
-            </div>
-
-            <div className="progress-track mt-5">
-              <div
-                className="progress-fill"
-                style={{ width: `${stats.xpProgress}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs text-[var(--text-muted)]">
-              {t("stats.level")} {stats.xpLevel} • {stats.levelName}
-            </p>
-          </section>
-
-          {/* Assigned quizzes widget */}
-          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                  {t("classroom.studentAssignedQuizzesEyebrow")}
-                </p>
-                <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
-                  {t("classroom.assignedQuizzes")}
-                </h2>
-              </div>
-              <Link href="/student/classes">
-                <Button variant="outline" size="sm">
-                  <ListChecks className="h-4 w-4" />
-                  {t("classroom.seeAll")}
-                </Button>
+            <p>AI-ден кері байланыс, флэшкарталар, IELTS дайындығы — бәрі бір жерде.</p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link href="/learn/map" className="nd-btn-primary" style={{ background: "#fff", color: "var(--terra-deep)" }}>
+                Сабақты бастау →
+              </Link>
+              <Link href="/ielts" className="nd-btn-ghost">
+                IELTS тесті
               </Link>
             </div>
+          </div>
 
-            <div className="mt-4 space-y-2.5">
-              {pendingQuizzes.length > 0 ? (
-                pendingQuizzes.slice(0, 4).map((assignment) => (
-                  <Link
-                    key={assignment.id}
-                    href={`/quizzes/${assignment.quizId}/play`}
-                    className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-3.5 transition-all hover:border-[var(--border-strong)]"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--primary-soft)] text-[var(--primary)]">
-                      <Play className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--primary)]">
-                        {assignment.quizTitle}
-                      </p>
-                      <p className="truncate text-xs text-[var(--text-muted)]">
-                        {assignment.groupName}
-                        {assignment.status === "overdue"
-                          ? ` · ${t("classroom.statusOverdue")}`
-                          : ""}
-                      </p>
-                    </div>
-                  </Link>
-                ))
-              ) : quizAssignments.length > 0 ? (
-                <EmptyCard
-                  icon={CheckCircle2}
-                  title={t("classroom.allQuizzesDoneTitle")}
-                  body={t("classroom.allQuizzesDoneBody")}
-                />
-              ) : (
-                <EmptyCard
-                  icon={ListChecks}
-                  title={t("classroom.noQuizAssignmentsStudentTitle")}
-                  body={t("classroom.noQuizAssignmentsStudentBody")}
-                  ctaHref="/student/classes"
-                  ctaLabel={t("student.browseClasses")}
-                />
-              )}
+          {/* 3D rotating cube */}
+          <div className="nd-dash-3d">
+            <div className="nd-dash-3d-card">
+              {WORDS.map((w, i) => (
+                <div key={w} className={`nd-dash-3d-face nd-f${i + 1}`}>{w}</div>
+              ))}
             </div>
-          </section>
+          </div>
+        </div>
+      </div>
 
-          {/* Recent quiz results */}
-          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                  {t("quiz.liveMode")}
-                </p>
-                <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
-                  {t("quiz.dashboard.recentTitle")}
-                </h2>
-              </div>
-              <Link href="/quizzes">
-                <Button variant="outline" size="sm">
-                  <TrendingUp className="h-4 w-4" />
-                  {t("quiz.backToLibrary")}
-                </Button>
-              </Link>
-            </div>
+      {/* ── KPI CARDS ── */}
+      <div className="nd-kpi-grid nd-reveal nd-d1">
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">Streak</span>
+          <span className="nd-kpi-num">{stats.streakDays} <small style={{ fontSize: 13, fontWeight: 500 }}>күн</small></span>
+          <span className="nd-kpi-trend">🔥 жалғасуда</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">Карта</span>
+          <span className="nd-kpi-num">{stats.totalStudied.toLocaleString()}</span>
+          <span className="nd-kpi-sub">осы аптада +{stats.totalCorrect}</span>
+        </div>
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">Мақсат</span>
+          <span className="nd-kpi-num">7.5</span>
+          <span className="nd-kpi-sub">IELTS band score</span>
+        </div>
+        <div className="nd-kpi dark">
+          <span className="nd-kpi-lbl">Mock тест</span>
+          <span className="nd-kpi-num">{overallBand}</span>
+          <span className="nd-kpi-sub">соңғы нәтиже</span>
+        </div>
+      </div>
 
-            <div className="mt-4 space-y-2.5">
-              {recentAttempts.length > 0 ? (
-                recentAttempts.map((attempt) => {
-                  const pctColor =
-                    attempt.percentage >= 80
-                      ? "text-emerald-400"
-                      : attempt.percentage >= 60
-                        ? "text-amber-400"
-                        : "text-rose-400";
-                  return (
-                    <Link
-                      key={attempt.attemptId}
-                      href={`/quizzes/${attempt.quizId}/results?attempt=${attempt.attemptId}`}
-                      className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-3.5 transition-all hover:border-[var(--border-strong)]"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--primary-soft)] text-[var(--primary)]">
-                        <Star className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--primary)]">
-                          {attempt.quizTitle}
-                        </p>
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {attempt.score}/{attempt.totalQuestions} {t("quiz.dashboard.score").toLowerCase()}
-                        </p>
-                      </div>
-                      <span className={`shrink-0 font-mono text-sm font-bold ${pctColor}`}>
-                        {attempt.percentage}%
-                      </span>
-                    </Link>
-                  );
-                })
-              ) : (
-                <EmptyCard
-                  icon={Star}
-                  title={t("quiz.dashboard.recentEmpty")}
-                  body={t("quiz.browseHint")}
-                  ctaHref="/quizzes"
-                  ctaLabel={t("student.playQuiz")}
-                />
-              )}
-            </div>
-          </section>
+      {/* ── TODAY'S PLAN ── */}
+      <div className="nd-sect-h nd-reveal nd-d2">
+        <h3>Бүгінгі жоспар</h3>
+        <Link href="/learn/map" className="nd-sect-link">Барлығы →</Link>
+      </div>
 
-          {/* Recommended practice */}
-          {recommendedQuizzes.length > 0 ? (
-            <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                    Quiz
-                  </p>
-                  <h2 className="mt-2 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
-                    {t("quiz.dashboard.recommendedTitle")}
-                  </h2>
+      <div className="nd-today-card nd-reveal nd-d2">
+        {todayItems.length > 0 ? (
+          todayItems.map((a, i) => (
+            <Link
+              key={a.id}
+              href={`/sets/${a.setId}/study`}
+              style={{ textDecoration: "none" }}
+            >
+              <div className="nd-today-row">
+                <div
+                  className="nd-today-ico"
+                  style={{
+                    background: i === 0
+                      ? "var(--green)" : i === 1
+                      ? "var(--terra)" : i === 2
+                      ? "var(--blue)" : "var(--yellow)",
+                    color: i === 3 ? "var(--ink)" : "#fff",
+                  }}
+                >
+                  {i === 0 ? "FC" : i === 1 ? "AI" : i === 2 ? "RD" : "SP"}
                 </div>
+                <div className="nd-today-info">
+                  <h4>{a.setTitle}</h4>
+                  <p>{a.groupName}</p>
+                </div>
+                <span className={`nd-today-status ${i === 0 ? "now" : "next"}`}>
+                  {i === 0 ? "Now" : "Next"}
+                </span>
               </div>
-
-              <div className="mt-4 space-y-2.5">
-                {recommendedQuizzes.map((q) => (
-                  <div
-                    key={q.quizId}
-                    className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] border-l-[3px] border-l-amber-500/60 bg-[var(--bg-soft)] p-3.5"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-amber-500/10 text-amber-500">
-                      <RefreshCw className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
-                        {q.quizTitle}
-                      </p>
-                      <p className="text-xs text-[var(--text-muted)]">
-                        {t("quiz.dashboard.bestScore")}: {q.bestPercentage}% · {q.attemptsCount}× {t("quiz.dashboard.attempts").toLowerCase()}
-                      </p>
-                    </div>
-                    <Link href={`/quizzes/${q.quizId}/play`}>
-                      <Button size="sm" variant="secondary">
-                        <Play className="h-3.5 w-3.5" />
-                        {t("quiz.dashboard.practiceNow")}
-                      </Button>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {/* Next action */}
-          <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[var(--primary)] opacity-[0.04]" style={{ filter: "blur(40px)" }} />
-            <div className="relative flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
-                <GraduationCap className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                  {t("student.nextAction")}
-                </p>
-                <h3 className="mt-1.5 text-lg font-bold tracking-[-0.03em] text-[var(--text-primary)]">
-                  {t("dashboard.startStudying")}
-                </h3>
-                <p className="mt-1.5 text-sm leading-7 text-[var(--text-secondary)]">
-                  {nextAssignment ? nextAssignment.setTitle : t("student.noAssignmentsBody")}
-                </p>
-              </div>
+            </Link>
+          ))
+        ) : (
+          <>
+            <div className="nd-today-row">
+              <div className="nd-today-ico" style={{ background: "var(--terra)" }}>FC</div>
+              <div className="nd-today-info"><h4>Флэшкарталар</h4><p>20 МИНУТ · Academic Vocabulary</p></div>
+              <span className="nd-today-status now">Now</span>
             </div>
-
-            <div className="relative mt-5 inline-flex">
-              {nextAssignment ? (
-                <Link href={`/sets/${nextAssignment.setId}/study`}>
-                  <Button variant="secondary">
-                    {t("nav.startStudy")}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/learn/map">
-                  <Button variant="secondary">
-                    Симуляторды баста
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
+            <div className="nd-today-row">
+              <Link href="/ielts" style={{ display: "contents", textDecoration: "none" }}>
+                <div className="nd-today-ico" style={{ background: "var(--blue)" }}>IT</div>
+                <div className="nd-today-info"><h4>IELTS Reading тест</h4><p>30 МИНУТ · 3 сұрақ</p></div>
+                <span className="nd-today-status next">Next</span>
+              </Link>
             </div>
-          </section>
-        </section>
+            <div className="nd-today-row">
+              <Link href="/tutor" style={{ display: "contents", textDecoration: "none" }}>
+                <div className="nd-today-ico" style={{ background: "var(--green)" }}>AI</div>
+                <div className="nd-today-info"><h4>AI Tutor — Writing</h4><p>15 МИНУТ · Эссе тексеру</p></div>
+                <span className="nd-today-status next">Next</span>
+              </Link>
+            </div>
+          </>
+        )}
       </div>
-    </div>
-  );
-}
 
-function HeroSignal({ label, value, detail, accent }: { label: string; value: string; detail: string; accent: string }) {
-  return (
-    <div className={`rounded-[var(--radius-lg)] border border-[var(--border)] border-l-[3px] ${accent} bg-[var(--bg-soft)] p-4`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">{label}</p>
-      <p className="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-[var(--text-primary)] sm:text-3xl">{value}</p>
-      <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">{detail}</p>
-    </div>
-  );
-}
-
-function MetricCard({ icon: Icon, label, value, color }: { icon: typeof Users; label: string; value: string | number; color: string }) {
-  return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-xs)]">
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] ${color}`}>
-          <Icon className="h-4 w-4" />
+      {/* ── PROGRESS SECTION ── */}
+      <div className="nd-grid-2 nd-reveal nd-d3">
+        {/* Weekly chart */}
+        <div className="nd-card-hand">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>Апталық прогресс</h3>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: "var(--terra-tint)", border: "1px solid var(--terra-soft)", fontSize: 11, fontWeight: 700, color: "var(--terra-deep)", fontFamily: "'JetBrains Mono',monospace" }}>
+              {stats.xpProgress}% XP
+            </span>
+          </div>
+          <div className="nd-mini-chart">
+            {chartHeights.map((h, i) => (
+              <div key={i} className={`bar ${i === 5 ? "hi" : ""}`} style={{ height: `${h}%` }} />
+            ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, color: "var(--ink-mute)", letterSpacing: ".08em" }}>
+            {WEEK_DAYS.map((d) => <span key={d}>{d}</span>)}
+          </div>
         </div>
-        <div>
-          <p className="text-sm text-[var(--text-secondary)]">{label}</p>
-          <p className="mt-0.5 text-xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">{value}</p>
+
+        {/* IELTS skill bars */}
+        <div className="nd-card-hand">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>IELTS прогрессім</h3>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: "var(--green-soft)", border: "1px solid var(--green-soft)", fontSize: 11, fontWeight: 700, color: "var(--green)", fontFamily: "'JetBrains Mono',monospace" }}>
+              7.5 мақсат
+            </span>
+          </div>
+          {IELTS_SKILLS.map(({ label, key }) => {
+            const score = ieltsScores[key];
+            const pct = score > 0 ? Math.min(100, (score / 9) * 100) : 45;
+            const display = score > 0 ? score.toFixed(1) : "—";
+            return (
+              <div key={key} className="nd-skill-row">
+                <span className="nd-skill-lbl">{label}</span>
+                <div className="nd-skill-bar">
+                  <div className="nd-skill-bar-fill" style={{ width: `${pct}%` }} />
+                </div>
+                <span className="nd-skill-score">{display}</span>
+              </div>
+            );
+          })}
+          {scoreHistory.length === 0 && (
+            <p style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 10, fontFamily: "'JetBrains Mono',monospace" }}>
+              Mock тест тапсырсаң нәтиже шығады
+            </p>
+          )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function ProgressCard({ icon: Icon, label, value, color }: { icon: typeof Users; label: string; value: number; color: string }) {
-  return (
-    <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-3.5">
-      <div className="flex items-center gap-3">
-        <div className={`flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] ${color}`}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <div>
-          <p className="text-xs text-[var(--text-muted)]">{label}</p>
-          <p className="mt-0.5 text-base font-bold tracking-[-0.02em] text-[var(--text-primary)]">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EmptyCard({ icon: Icon, title, body, ctaHref, ctaLabel }: { icon: typeof Users; title: string; body: string; ctaHref?: string; ctaLabel?: string }) {
-  return (
-    <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] bg-[var(--bg-soft)] px-5 py-8">
-      <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
-        <Icon className="h-4 w-4" />
-      </div>
-      <p className="mt-3 text-base font-bold text-[var(--text-primary)]">{title}</p>
-      <p className="mt-1.5 text-sm leading-7 text-[var(--text-secondary)]">{body}</p>
-      {ctaHref && ctaLabel ? (
-        <Link href={ctaHref} className="mt-4 inline-block">
-          <Button size="sm" variant="secondary">
-            <ArrowRight className="h-3.5 w-3.5" />
-            {ctaLabel}
-          </Button>
-        </Link>
-      ) : null}
     </div>
   );
 }

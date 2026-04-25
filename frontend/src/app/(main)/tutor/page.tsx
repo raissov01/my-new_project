@@ -1,93 +1,219 @@
 import { getCurrentUser } from "@/server/auth";
-import { getScenarios } from "@/features/tutor/api";
-import { ScenarioCard } from "@/components/tutor/ScenarioCard";
-import { MessageSquareText, History } from "lucide-react";
+import { getScenarios, getConversationHistory } from "@/features/tutor/api";
 import Link from "next/link";
+import { Plus, Send } from "lucide-react";
 
 export const metadata = { title: "AI Tutor — StudyWithRaissov" };
 
-const CATEGORIES = ["travel", "work", "daily", "social", "academic"];
-const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const MODES = [
+  { key: "work",     label: "Writing"  },
+  { key: "social",   label: "Speaking" },
+  { key: "academic", label: "Grammar"  },
+  { key: "daily",    label: "Аударма"  },
+] as const;
+
+const GRADIENTS = [
+  "linear-gradient(135deg,#C2500A,#8F3A05)",
+  "linear-gradient(135deg,#2563eb,#1B47B8)",
+  "linear-gradient(135deg,#3F7D3F,#2E5F2E)",
+  "linear-gradient(135deg,#E9B949,#B8801A)",
+  "linear-gradient(135deg,#C2425C,#8F2F45)",
+  "linear-gradient(135deg,#1B1714,#3D342C)",
+];
 
 export default async function TutorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ level?: string; category?: string }>;
+  searchParams: Promise<{ category?: string }>;
 }) {
   await getCurrentUser();
   const params = await searchParams;
 
-  const scenarios = await getScenarios({ level: params.level, category: params.category });
+  const activeCategory = params.category ?? "";
 
-  const buildHref = (key: string, val: string) => {
-    const p = new URLSearchParams(params as Record<string, string>);
-    if (p.get(key) === val) p.delete(key);
-    else p.set(key, val);
-    return `/tutor?${p}`;
-  };
+  const [scenarios, history] = await Promise.all([
+    getScenarios({ category: activeCategory || undefined }),
+    getConversationHistory(),
+  ]);
 
   return (
-    <div className="page-shell py-8 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <MessageSquareText className="h-8 w-8 text-[var(--primary)]" />
-          <div>
-            <h1 className="text-2xl font-bold">AI Tutor Scenarios</h1>
-            <p className="text-sm text-[var(--text-secondary)]">
-              Roleplay real situations with an AI character
+    <div className="page-shell py-6">
+      <div className="nd-ai-layout" style={{ minHeight: "calc(100vh - 130px)" }}>
+
+        {/* ── Left sidebar ── */}
+        <aside className="nd-ai-side">
+          <Link
+            href="/tutor"
+            className="flex items-center gap-2 rounded-[10px] bg-[var(--ink)] px-3 py-2.5 text-[13px] font-700 text-white hover:opacity-90 transition-opacity"
+            style={{ fontWeight: 700 }}
+          >
+            <Plus className="h-4 w-4 flex-shrink-0" />
+            Жаңа сұхбат
+          </Link>
+
+          {history.length > 0 && (
+            <>
+              <h4>Тарих</h4>
+              {history.slice(0, 20).map((entry) => {
+                const date = new Date(entry.startedAt).toLocaleDateString("kk-KZ", {
+                  month: "short",
+                  day: "numeric",
+                });
+                return (
+                  <Link
+                    key={entry.id}
+                    href={`/tutor/${entry.scenario.slug}`}
+                    className={`nd-ai-history${entry.status === "active" ? " on" : ""}`}
+                  >
+                    {entry.scenario.title}
+                    <small>{date} · {entry.scenario.level}</small>
+                  </Link>
+                );
+              })}
+            </>
+          )}
+
+          {history.length === 0 && (
+            <p style={{ fontSize: 12, color: "var(--ink-mute)", padding: "8px 10px" }}>
+              Сұхбат жоқ
             </p>
-          </div>
-        </div>
-        <Link
-          href="/tutor/history"
-          className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--bg-soft)] transition-colors"
-        >
-          <History className="h-4 w-4" />
-          My history
-        </Link>
-      </div>
+          )}
+        </aside>
 
-      {/* Filters */}
-      <div className="space-y-3">
-        <div>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Level</p>
-          <div className="flex flex-wrap gap-2">
-            {LEVELS.map((lv) => (
-              <a key={lv} href={buildHref("level", lv)}
-                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
-                  params.level === lv ? "bg-[var(--primary)] text-white" : "bg-[var(--bg-soft)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]"
-                }`}>
-                {lv}
-              </a>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Category</p>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <a key={cat} href={buildHref("category", cat)}
-                className={`rounded-full px-3 py-1 text-sm capitalize transition-colors ${
-                  params.category === cat ? "bg-[var(--primary)] text-white" : "bg-[var(--bg-soft)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]"
-                }`}>
-                {cat}
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
+        {/* ── Main panel ── */}
+        <main className="nd-ai-main">
 
-      {/* Grid */}
-      {scenarios.length === 0 ? (
-        <p className="py-12 text-center text-[var(--text-secondary)]">
-          No scenarios match. <a href="/tutor" className="text-[var(--primary)] underline">Clear filters</a>
-        </p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {scenarios.map((sc) => <ScenarioCard key={sc.id} scenario={sc} />)}
-        </div>
-      )}
+          {/* Modes bar */}
+          <nav className="nd-ai-modes">
+            <Link
+              href="/tutor"
+              className={`nd-ai-mode${!activeCategory ? " on" : ""}`}
+            >
+              Барлығы
+            </Link>
+            {MODES.map(({ key, label }) => (
+              <Link
+                key={key}
+                href={`/tutor?category=${key}`}
+                className={`nd-ai-mode${activeCategory === key ? " on" : ""}`}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Thread — scenario cards as messages */}
+          <div className="nd-ai-thread">
+            {/* Intro AI message */}
+            <div className="nd-ai-msg">
+              <div className="nd-ai-ava nd-ai-ava-ai">AI</div>
+              <div className="nd-ai-bubble">
+                Сәлем! Мен сіздің AI тьюторыңызбын. Жаттығуға арналған сценарийді таңдаңыз
+                немесе жоғарыдағы режимдерді қолданып, тақырып бойынша іздеңіз.
+              </div>
+            </div>
+
+            {/* Scenario grid inside thread */}
+            {scenarios.length === 0 ? (
+              <div className="nd-ai-msg">
+                <div className="nd-ai-ava nd-ai-ava-ai">AI</div>
+                <div className="nd-ai-bubble" style={{ color: "var(--ink-mute)" }}>
+                  Бұл санатта сценарийлер жоқ.{" "}
+                  <Link href="/tutor" style={{ color: "var(--terra)" }}>
+                    Барлығын көру
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill,minmax(230px,1fr))",
+                  gap: 14,
+                  maxWidth: "100%",
+                }}
+              >
+                {scenarios.map((sc, i) => (
+                  <Link
+                    key={sc.id}
+                    href={`/tutor/${sc.slug}`}
+                    className="nd-reveal"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <div
+                      style={{
+                        background: "#fff",
+                        border: "1px solid var(--line)",
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        transition: "transform .15s, border-color .15s",
+                        cursor: "pointer",
+                      }}
+                      className="nd-lib-card"
+                    >
+                      {/* Cover */}
+                      <div
+                        className="nd-lib-cover"
+                        style={{
+                          background: GRADIENTS[i % GRADIENTS.length],
+                          fontSize: 32,
+                        }}
+                      >
+                        {sc.icon ?? "💬"}
+                      </div>
+
+                      {/* Body */}
+                      <div className="nd-lib-body">
+                        <span className="nd-tag nd-tag-terra" style={{ alignSelf: "flex-start" }}>
+                          {sc.category}
+                        </span>
+                        <h4>{sc.title}</h4>
+                        <p>{sc.description}</p>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="nd-lib-foot">
+                        <span>~{sc.estimatedMinutes} мин</span>
+                        <span>{sc.level}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Composer — decorative, links to scenario selection */}
+          <div className="nd-ai-composer">
+            <div className="nd-ai-composer-box">
+              <textarea
+                placeholder="Сценарий таңдап, сұхбатты бастаңыз…"
+                rows={1}
+                disabled
+                style={{ cursor: "default" }}
+              />
+              <Link
+                href="/tutor"
+                aria-label="Жіберу"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: "var(--ink)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Send size={16} color="#fff" />
+              </Link>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

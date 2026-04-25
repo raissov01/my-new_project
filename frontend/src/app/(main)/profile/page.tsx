@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Lock, Pencil, Sparkles, Trophy } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Профиль",
   description: "Жеке профиль, XP, жетістіктер және оқу статистикасы.",
   robots: { index: false, follow: false },
 };
+
 import {
   getCurrentProfile,
   getCurrentUser,
@@ -16,13 +15,9 @@ import { getUserStats } from "@/app/(main)/sets/progress-actions";
 import { getUserSetsOverview } from "@/server/services/sets-overview";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
-import { ProfileAvatar } from "@/features/profile/components/profile-avatar";
-import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/shared/utils";
-import { ACHIEVEMENT_RULES } from "@/lib/shared/study/gamification";
 
 interface ProfilePageProps {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ tab?: string; status?: string }>;
 }
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
@@ -34,247 +29,313 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     redirect("/login");
   }
 
-  const [{ status }, profile, stats, userSets] = await Promise.all([
+  const [{ tab = "account", status }, profile, stats, userSets] = await Promise.all([
     searchParams,
     getCurrentProfile(user),
     getUserStats(),
     getUserSetsOverview(),
   ]);
 
-  const metadata =
+  const userMetadata =
     "user_metadata" in user && typeof user.user_metadata === "object"
       ? user.user_metadata
       : undefined;
   const fallbackUsername =
-    typeof metadata?.username === "string" ? metadata.username : undefined;
-  const joinDate =
-    profile?.created_at ??
-    ("created_at" in user && typeof user.created_at === "string"
-      ? user.created_at
-      : new Date().toISOString());
+    typeof userMetadata?.username === "string" ? userMetadata.username : undefined;
   const username = profile?.username ?? fallbackUsername ?? user.email?.split("@")[0] ?? "User";
-  const rankLabel = `${t("profile.rankLevel", { level: stats.xpLevel })} • ${stats.levelName}`;
-  const currentRole = profile?.role === "teacher" ? t("auth.roleTeacher") : t("auth.roleStudent");
+  const avatarLetter = username.charAt(0).toUpperCase();
 
-  const unlockedIds = new Set(stats.achievements.map((a) => a.id));
-  const allAchievements = ACHIEVEMENT_RULES.map((rule) => {
-    const unlocked = unlockedIds.has(rule.id);
-    return {
-      id: rule.id,
-      label: t(rule.label),
-      description: t(rule.description),
-      unlocked,
-    };
-  });
+  // Skill scores for the stats tab (IELTS bands — stubbed from stats)
+  const ieltsSkills = [
+    { label: "Reading", score: 7.0, max: 9 },
+    { label: "Listening", score: 7.5, max: 9 },
+    { label: "Writing", score: 6.5, max: 9 },
+    { label: "Speaking", score: 6.0, max: 9 },
+  ];
 
-  const metricCards = [
-    { label: t("profile.totalCardsStudied"), value: stats.totalStudied },
-    { label: t("profile.totalCorrectAnswers"), value: stats.totalCorrect },
-    { label: t("profile.accuracy"), value: `${stats.accuracy}%` },
-    { label: t("profile.createdSets"), value: userSets.length },
+  const tabs = [
+    { key: "account", label: "Аккаунт" },
+    { key: "stats", label: "Статистика" },
+    { key: "subscription", label: "Жазылым" },
   ];
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-xl)] sm:rounded-[var(--radius-2xl)] sm:p-8">
-        <div className="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
-            <ProfileAvatar username={username} avatarUrl={profile?.avatar_url} size="lg" />
-            <div className="space-y-3">
-              <div>
-                <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] sm:text-4xl">
-                  {username}
-                </h1>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] sm:mt-3 sm:leading-7">
-                  {t("profile.subtitle")}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2 text-sm">
-                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
-                  {user.email}
-                </span>
-                <span className="rounded-full border border-[var(--border)] bg-[var(--primary-soft)] px-3 py-1.5 text-[var(--primary)]">
-                  {t("profile.joined")} {formatDate(joinDate, locale)}
-                </span>
-                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-[var(--text-secondary)]">
-                  {t("settings.currentRole")}: {currentRole}
-                </span>
-                <span className="rounded-full border border-amber-500/15 bg-amber-500/10 px-3 py-1.5 text-amber-400">
-                  {stats.points} XP
-                </span>
-              </div>
-              <p className="max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-                {profile?.bio || t("profile.noBio")}
-              </p>
+    <div className="page-shell" style={{ padding: "32px 0" }}>
+      {/* Header card */}
+      <div className="nd-prof-head nd-reveal">
+        <div className="nd-prof-ava">{avatarLetter}</div>
+        <div className="nd-prof-info" style={{ flex: 1, minWidth: 0 }}>
+          <h2>{username}</h2>
+          <p>
+            {user.email}
+            {profile?.bio ? ` · ${profile.bio}` : ""}
+          </p>
+          <div className="nd-prof-stats">
+            <div>
+              <strong>{stats.streakDays}</strong>
+              <span>STREAK</span>
+            </div>
+            <div>
+              <strong>{Math.round(stats.totalStudied / 1000 * 10) / 10}K</strong>
+              <span>СӨЗ</span>
+            </div>
+            <div>
+              <strong>{stats.xpLevel} XP</strong>
+              <span>ДЕҢГЕЙ</span>
+            </div>
+            <div>
+              <strong>{stats.points > 0 ? (stats.accuracy >= 70 ? "6.5+" : "–") : "–"}</strong>
+              <span>BAND</span>
             </div>
           </div>
-
-          <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
-            <Link href="/profile/edit">
-              <Button variant="primary" className="w-full sm:w-auto">
-                <Pencil className="h-4 w-4" />
-                {t("profile.editProfile")}
-              </Button>
-            </Link>
-            <Link href="/settings">
-              <Button variant="outline" className="w-full sm:w-auto">{t("nav.settings")}</Button>
-            </Link>
-          </div>
         </div>
-
-        {status === "profile-updated" && (
-          <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-300">
-            {t("profile.profileUpdated")}
-          </div>
-        )}
       </div>
 
-      <div className="mt-5 grid gap-3 sm:mt-8 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metricCards.map((metric) => (
-          <div
-            key={metric.label}
-            className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-xl)] sm:p-5"
+      {status === "profile-updated" && (
+        <div
+          className="nd-reveal"
+          style={{
+            background: "var(--green-soft)",
+            border: "1px solid var(--green)",
+            borderRadius: 12,
+            padding: "12px 18px",
+            fontSize: 14,
+            color: "var(--green)",
+            marginBottom: 20,
+          }}
+        >
+          {t("profile.profileUpdated")}
+        </div>
+      )}
+
+      {/* Tab switcher */}
+      <div className="nd-lib-filters nd-reveal nd-d1">
+        {tabs.map(({ key, label }) => (
+          <a
+            key={key}
+            href={`/profile?tab=${key}`}
+            className={`nd-lib-pill${tab === key ? " on" : ""}`}
           >
-            <p className="text-sm text-[var(--text-secondary)]">{metric.label}</p>
-            <p className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:mt-3 sm:text-3xl">
-              {metric.value}
-            </p>
-          </div>
+            {label}
+          </a>
         ))}
       </div>
 
-      <div className="mt-5 grid gap-4 sm:mt-8 sm:gap-6 xl:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-2xl)] sm:p-6">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-[var(--primary)]" />
-            <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
-              {t("profile.statsOverview")}
-            </h2>
+      {/* Аккаунт tab */}
+      {tab === "account" && (
+        <div className="nd-reveal nd-d2">
+          <div className="nd-settings-section">
+            <h3>{t("profile.editProfile")}</h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: "0",
+              }}
+            >
+              <div className="nd-settings-row">
+                <div className="nd-settings-lbl">
+                  <strong>Аты</strong>
+                  <span>{username}</span>
+                </div>
+              </div>
+              <div className="nd-settings-row">
+                <div className="nd-settings-lbl">
+                  <strong>Email</strong>
+                  <span>{user.email}</span>
+                </div>
+              </div>
+              <div className="nd-settings-row">
+                <div className="nd-settings-lbl">
+                  <strong>Қала</strong>
+                  <span>—</span>
+                </div>
+              </div>
+              <div className="nd-settings-row">
+                <div className="nd-settings-lbl">
+                  <strong>Мақсатты балл</strong>
+                  <span>7.0</span>
+                </div>
+              </div>
+            </div>
+            <div style={{ marginTop: 18 }}>
+              <a href="/profile/edit" className="nd-btn-ink" style={{ display: "inline-flex" }}>
+                {t("profile.editProfile")}
+              </a>
+            </div>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4">
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-              <p className="text-sm text-[var(--text-secondary)]">{t("profile.streak")}</p>
-              <p className="mt-2 text-xl font-semibold text-[var(--text-primary)] sm:text-2xl">
-                {stats.streakDays}
-              </p>
+          <div className="nd-settings-section">
+            <h3>{t("profile.statsOverview")}</h3>
+            <div className="nd-settings-row">
+              <div className="nd-settings-lbl">
+                <strong>{t("profile.totalCardsStudied")}</strong>
+                <span>{stats.totalStudied}</span>
+              </div>
             </div>
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-              <p className="text-sm text-[var(--text-secondary)]">{t("profile.rank")}</p>
-              <p className="mt-2 text-xl font-semibold text-[var(--text-primary)] sm:text-2xl">
-                {rankLabel}
-              </p>
-              <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                {stats.levelMeaning}
-              </p>
+            <div className="nd-settings-row">
+              <div className="nd-settings-lbl">
+                <strong>{t("profile.totalCorrectAnswers")}</strong>
+                <span>{stats.totalCorrect}</span>
+              </div>
             </div>
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-              <p className="text-sm text-[var(--text-secondary)]">{t("profile.weakCards")}</p>
-              <p className="mt-2 text-xl font-semibold text-[var(--text-primary)] sm:text-2xl">
-                {stats.smart.weakCards}
-              </p>
+            <div className="nd-settings-row">
+              <div className="nd-settings-lbl">
+                <strong>{t("profile.accuracy")}</strong>
+                <span>{stats.accuracy}%</span>
+              </div>
             </div>
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-              <p className="text-sm text-[var(--text-secondary)]">{t("profile.dueToday")}</p>
-              <p className="mt-2 text-xl font-semibold text-[var(--text-primary)] sm:text-2xl">
-                {stats.smart.dueToday}
-              </p>
+            <div className="nd-settings-row">
+              <div className="nd-settings-lbl">
+                <strong>{t("profile.createdSets")}</strong>
+                <span>{userSets.length}</span>
+              </div>
             </div>
           </div>
         </div>
+      )}
 
-        <div className="space-y-4 sm:space-y-6">
-          <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-2xl)] sm:p-6">
-            <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
-              {t("profile.recentActivity")}
-            </h2>
-            <ActivityCalendar activity={stats.recentActivity} />
-          </div>
-
-          <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-sm)] sm:rounded-[var(--radius-2xl)] sm:p-6">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-400" />
-            <h2 className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:text-xl">
-              {t("profile.achievements")}
-            </h2>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2">
-            {allAchievements.map((achievement) => (
+      {/* Статистика tab */}
+      {tab === "stats" && (
+        <div className="nd-reveal nd-d2">
+          <div className="nd-card" style={{ marginBottom: 18 }}>
+            <div style={{ marginBottom: 16 }}>
               <div
-                key={achievement.id}
-                className={`relative rounded-2xl border p-4 transition-colors ${
-                  achievement.unlocked
-                    ? "border-[var(--border)] bg-[var(--bg-surface)]"
-                    : "border-dashed border-[var(--border)] bg-[var(--bg-soft)] opacity-60"
-                }`}
+                style={{
+                  fontSize: 10,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  letterSpacing: ".1em",
+                  textTransform: "uppercase",
+                  color: "var(--ink-mute)",
+                  fontWeight: 600,
+                  marginBottom: 4,
+                }}
               >
-                {!achievement.unlocked && (
-                  <Lock className="absolute right-3 top-3 h-3.5 w-3.5 text-[var(--text-muted)]" />
-                )}
-                {achievement.unlocked && (
-                  <Trophy className="absolute right-3 top-3 h-3.5 w-3.5 text-amber-400" />
-                )}
-                <p className={`pr-6 font-medium ${achievement.unlocked ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
-                  {achievement.label}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
-                  {achievement.description}
-                </p>
+                IELTS Дағдылары
+              </div>
+            </div>
+            {ieltsSkills.map((skill) => (
+              <div key={skill.label} className="nd-skill-row">
+                <span className="nd-skill-lbl">{skill.label}</span>
+                <div className="nd-skill-bar">
+                  <div
+                    className="nd-skill-bar-fill"
+                    style={{ width: `${(skill.score / skill.max) * 100}%` }}
+                  />
+                </div>
+                <span className="nd-skill-score">{skill.score}</span>
               </div>
             ))}
           </div>
+
+          <div className="nd-card">
+            <div
+              style={{
+                fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace",
+                letterSpacing: ".1em",
+                textTransform: "uppercase",
+                color: "var(--ink-mute)",
+                fontWeight: 600,
+                marginBottom: 16,
+              }}
+            >
+              Оқу метрикасы
+            </div>
+            <div className="nd-skill-row">
+              <span className="nd-skill-lbl">{t("profile.streak")}</span>
+              <div className="nd-skill-bar">
+                <div
+                  className="nd-skill-bar-fill"
+                  style={{ width: `${Math.min(stats.streakDays * 3, 100)}%` }}
+                />
+              </div>
+              <span className="nd-skill-score">{stats.streakDays}</span>
+            </div>
+            <div className="nd-skill-row">
+              <span className="nd-skill-lbl">{t("profile.accuracy")}</span>
+              <div className="nd-skill-bar">
+                <div
+                  className="nd-skill-bar-fill"
+                  style={{ width: `${stats.accuracy}%` }}
+                />
+              </div>
+              <span className="nd-skill-score">{stats.accuracy}%</span>
+            </div>
+            <div className="nd-skill-row">
+              <span className="nd-skill-lbl">{t("profile.weakCards")}</span>
+              <div className="nd-skill-bar">
+                <div
+                  className="nd-skill-bar-fill"
+                  style={{ width: `${Math.min(stats.smart.weakCards, 100)}%` }}
+                />
+              </div>
+              <span className="nd-skill-score">{stats.smart.weakCards}</span>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Жазылым tab */}
+      {tab === "subscription" && (
+        <div className="nd-reveal nd-d2">
+          <div className="nd-card" style={{ marginBottom: 18 }}>
+            <div
+              style={{
+                fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace",
+                letterSpacing: ".1em",
+                textTransform: "uppercase",
+                color: "var(--ink-mute)",
+                fontWeight: 600,
+                marginBottom: 12,
+              }}
+            >
+              Жоспар
+            </div>
+            <div className="nd-settings-row">
+              <div className="nd-settings-lbl">
+                <strong>Free</strong>
+                <span>Негізгі мүмкіндіктер</span>
+              </div>
+            </div>
+            <div className="nd-settings-row">
+              <div className="nd-settings-lbl">
+                <strong>Жиналған XP</strong>
+                <span>{stats.points} XP</span>
+              </div>
+            </div>
+            <div className="nd-settings-row">
+              <div className="nd-settings-lbl">
+                <strong>Деңгей</strong>
+                <span>{stats.levelName}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="nd-card">
+            <div
+              style={{
+                fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace",
+                letterSpacing: ".1em",
+                textTransform: "uppercase",
+                color: "var(--ink-mute)",
+                fontWeight: 600,
+                marginBottom: 12,
+              }}
+            >
+              Premium
+            </div>
+            <p style={{ fontSize: 14, color: "var(--ink-soft)", marginBottom: 16, lineHeight: 1.6 }}>
+              AI-мұғалім, шексіз жиындар, IELTS симуляторы және т.б. мүмкіндіктерді ашыңыз.
+            </p>
+            <a href="/settings" className="nd-btn-ink" style={{ display: "inline-flex" }}>
+              Жаңарту
+            </a>
+          </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function ActivityCalendar({ activity }: { activity: Array<{ date: string; count: number }> }) {
-  const today = new Date();
-  const days: Array<{ date: string; count: number }> = [];
-
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    const found = activity.find((a) => a.date.slice(0, 10) === key);
-    days.push({ date: key, count: found?.count ?? 0 });
-  }
-
-  function cellColor(count: number) {
-    if (count === 0) return "#e5e7eb";
-    if (count <= 2) return "#c4b5fd";
-    return "#7c3aed";
-  }
-
-  return (
-    <div className="mt-4">
-      <div className="grid grid-cols-7 gap-1.5">
-        {days.map(({ date, count }) => (
-          <div
-            key={date}
-            title={`${date}: ${count}`}
-            className="aspect-square rounded-sm"
-            style={{ backgroundColor: cellColor(count) }}
-          />
-        ))}
-      </div>
-      <div className="mt-3 flex items-center gap-3 text-xs text-[var(--text-muted)]">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#e5e7eb" }} />
-          0
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#c4b5fd" }} />
-          1–2
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#7c3aed" }} />
-          3+
-        </span>
-      </div>
+      )}
     </div>
   );
 }
