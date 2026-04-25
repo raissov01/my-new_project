@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Bell, Clock3, Globe2, MoonStar, Sun, Volume2, VolumeX } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { savePomodoroPreferences } from "@/app/(main)/sets/pomodoro-actions";
 import { useSound } from "@/features/study/hooks/use-sound";
@@ -26,11 +25,66 @@ const PRESETS: { key: Exclude<PomodoroPreset, "custom">; label: string }[] = [
   { key: "50/10", label: "50 / 10" },
 ];
 
-export function PreferencesPanel({
-  initialPomodoro,
-}: {
-  initialPomodoro: PomodoroSettings;
-}) {
+const cardStyle: React.CSSProperties = {
+  background: "var(--paper-2)",
+  border: "1px solid var(--line)",
+  borderRadius: 16,
+  padding: "20px 22px",
+  marginBottom: 14,
+};
+
+const iconBoxStyle = (color: string): React.CSSProperties => ({
+  width: 38, height: 38, borderRadius: 10,
+  background: `${color}18`,
+  display: "flex", alignItems: "center", justifyContent: "center",
+  color, flexShrink: 0,
+});
+
+function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      style={{
+        position: "relative", display: "inline-flex", height: 28, width: 50,
+        alignItems: "center", borderRadius: 999, transition: "background .2s",
+        background: checked ? "var(--terra)" : "var(--line-strong)",
+        border: "none", cursor: "pointer", flexShrink: 0, padding: 0,
+      }}
+    >
+      <span style={{
+        display: "inline-block", width: 20, height: 20, borderRadius: "50%",
+        background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,.2)",
+        transform: checked ? "translateX(26px)" : "translateX(4px)",
+        transition: "transform .2s",
+      }} />
+    </button>
+  );
+}
+
+function PrefBtn({
+  active, onClick, children,
+}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: "8px 18px", borderRadius: 99, fontSize: 13, fontWeight: 600,
+        cursor: "pointer", transition: "all .12s",
+        background: active ? "var(--ink)" : "var(--paper-3)",
+        color: active ? "var(--paper)" : "var(--ink-soft)",
+        border: `1.5px solid ${active ? "var(--ink)" : "var(--line-strong)"}`,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function PreferencesPanel({ initialPomodoro }: { initialPomodoro: PomodoroSettings }) {
   const { locale, setLocale, t } = useLocale();
   const { theme, setTheme, mounted } = useTheme();
   const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useSound();
@@ -48,26 +102,8 @@ export function PreferencesPanel({
 
   useEffect(() => {
     const savedValue = window.localStorage.getItem(REMINDER_STORAGE_KEY);
-    requestAnimationFrame(() => {
-      setRemindersEnabled(savedValue === "true");
-    });
+    requestAnimationFrame(() => setRemindersEnabled(savedValue === "true"));
   }, []);
-
-  function handleThemeChange(nextTheme: "light" | "dark") {
-    setTheme(nextTheme);
-  }
-
-  function handleLocaleChange(nextLocale: Locale) {
-    setLocale(nextLocale);
-  }
-
-  function handlePresetSelect(nextPreset: Exclude<PomodoroPreset, "custom">) {
-    const preset = POMODORO_PRESETS[nextPreset];
-    setWorkMinutes(String(preset.workMinutes));
-    setBreakMinutes(String(preset.breakMinutes));
-    setStatus(null);
-    setError(null);
-  }
 
   function handleSavePomodoro() {
     const normalized = normalizePomodoroSettings({
@@ -75,7 +111,6 @@ export function PreferencesPanel({
       workMinutes: Number(workMinutes),
       breakMinutes: Number(breakMinutes),
     });
-
     startTransition(async () => {
       const result = await savePomodoroPreferences(normalized);
       if (result.error || !result.settings) {
@@ -83,7 +118,6 @@ export function PreferencesPanel({
         setStatus(null);
         return;
       }
-
       setWorkMinutes(String(result.settings.workMinutes));
       setBreakMinutes(String(result.settings.breakMinutes));
       setError(null);
@@ -99,7 +133,6 @@ export function PreferencesPanel({
         setStatus(null);
         return;
       }
-
       setWorkMinutes(String(result.settings.workMinutes));
       setBreakMinutes(String(result.settings.breakMinutes));
       setError(null);
@@ -108,240 +141,176 @@ export function PreferencesPanel({
   }
 
   function handleReminderToggle() {
-    const nextValue = !remindersEnabled;
-    setRemindersEnabled(nextValue);
-    window.localStorage.setItem(REMINDER_STORAGE_KEY, String(nextValue));
+    const next = !remindersEnabled;
+    setRemindersEnabled(next);
+    window.localStorage.setItem(REMINDER_STORAGE_KEY, String(next));
     setStatus(t("settings.preferencesSaved"));
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-          <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-indigo-500/10 p-3 text-indigo-600">
-              <Globe2 className="h-5 w-5" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                {t("settings.languageSelection")}
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)]">
-                {t("settings.languageDescription")}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-3">
-            {(["kk", "ru", "en"] as const).map((option) => (
-              <Button
-                key={option}
-                type="button"
-                variant={locale === option ? "primary" : "outline"}
-                onClick={() => handleLocaleChange(option)}
-              >
-                {t(`lang.${option}`)}
-              </Button>
-            ))}
+    <div>
+      {/* Language */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
+          <div style={iconBoxStyle("#6366f1")}><Globe2 size={18} /></div>
+          <div>
+            <strong style={{ display: "block", fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+              {t("settings.languageSelection")}
+            </strong>
+            <span style={{ fontSize: 12.5, color: "var(--ink-mute)" }}>
+              {t("settings.languageDescription")}
+            </span>
           </div>
         </div>
-
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-          <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-amber-500/10 p-3 text-amber-600">
-              {mounted && theme === "dark" ? (
-                <MoonStar className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                {t("settings.themeSelection")}
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)]">
-                {t("settings.themeDescription")}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Button
-              type="button"
-              variant={theme === "light" ? "primary" : "outline"}
-              onClick={() => handleThemeChange("light")}
-            >
-              <Sun className="h-4 w-4" />
-              {t("settings.light")}
-            </Button>
-            <Button
-              type="button"
-              variant={theme === "dark" ? "primary" : "outline"}
-              onClick={() => handleThemeChange("dark")}
-            >
-              <MoonStar className="h-4 w-4" />
-              {t("settings.dark")}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-        <div className="flex items-start gap-3">
-          <div className="rounded-2xl bg-emerald-500/10 p-3 text-emerald-600">
-            <Clock3 className="h-5 w-5" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-              {t("settings.defaultPomodoro")}
-            </h3>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t("settings.pomodoroDescription")}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          {PRESETS.map((preset) => (
-            <Button
-              key={preset.key}
-              type="button"
-              size="sm"
-              variant={selectedPreset === preset.key ? "primary" : "outline"}
-              onClick={() => handlePresetSelect(preset.key)}
-            >
-              {preset.label}
-            </Button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {(["kk", "ru", "en"] as const).map((option) => (
+            <PrefBtn key={option} active={locale === option} onClick={() => setLocale(option)}>
+              {t(`lang.${option}`)}
+            </PrefBtn>
           ))}
         </div>
+      </div>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      {/* Theme */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
+          <div style={iconBoxStyle("#f59e0b")}>
+            {mounted && theme === "dark" ? <MoonStar size={18} /> : <Sun size={18} />}
+          </div>
+          <div>
+            <strong style={{ display: "block", fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+              {t("settings.themeSelection")}
+            </strong>
+            <span style={{ fontSize: 12.5, color: "var(--ink-mute)" }}>
+              {t("settings.themeDescription")}
+            </span>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <PrefBtn active={!mounted || theme === "light"} onClick={() => setTheme("light")}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Sun size={13} />{t("settings.light")}
+            </span>
+          </PrefBtn>
+          <PrefBtn active={mounted && theme === "dark"} onClick={() => setTheme("dark")}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <MoonStar size={13} />{t("settings.dark")}
+            </span>
+          </PrefBtn>
+        </div>
+      </div>
+
+      {/* Pomodoro */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
+          <div style={iconBoxStyle("#10b981")}><Clock3 size={18} /></div>
+          <div>
+            <strong style={{ display: "block", fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+              {t("settings.defaultPomodoro")}
+            </strong>
+            <span style={{ fontSize: 12.5, color: "var(--ink-mute)" }}>
+              {t("settings.pomodoroDescription")}
+            </span>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+          {PRESETS.map((preset) => (
+            <PrefBtn
+              key={preset.key}
+              active={selectedPreset === preset.key}
+              onClick={() => {
+                const p = POMODORO_PRESETS[preset.key];
+                setWorkMinutes(String(p.workMinutes));
+                setBreakMinutes(String(p.breakMinutes));
+                setStatus(null); setError(null);
+              }}
+            >
+              {preset.label}
+            </PrefBtn>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
           <Input
-            type="number"
-            min={5}
-            max={240}
-            step={1}
+            type="number" min={5} max={240} step={1}
             label={t("pomodoro.studyDuration")}
             value={workMinutes}
-            onChange={(event) => setWorkMinutes(event.target.value)}
+            onChange={(e) => setWorkMinutes(e.target.value)}
           />
           <Input
-            type="number"
-            min={1}
-            max={60}
-            step={1}
+            type="number" min={1} max={60} step={1}
             label={t("pomodoro.breakDurationLabel")}
             value={breakMinutes}
-            onChange={(event) => setBreakMinutes(event.target.value)}
+            onChange={(e) => setBreakMinutes(e.target.value)}
           />
         </div>
-
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Button type="button" onClick={handleSavePomodoro} isLoading={isPending}>
-            {t("pomodoro.saveSettings")}
-          </Button>
-          <Button type="button" variant="outline" onClick={handleResetPomodoro}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            onClick={handleSavePomodoro}
+            disabled={isPending}
+            className="nd-btn-primary"
+            style={{ fontSize: 13, padding: "9px 18px" }}
+          >
+            {isPending ? "..." : t("pomodoro.saveSettings")}
+          </button>
+          <button
+            type="button"
+            onClick={handleResetPomodoro}
+            disabled={isPending}
+            className="nd-btn-soft"
+            style={{ fontSize: 13, padding: "9px 18px" }}
+          >
             {t("pomodoro.resetDefault")}
-          </Button>
-        </div>
-      </div>
-
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-        <div className="flex items-start gap-3">
-          <div className="rounded-2xl bg-sky-500/10 p-3 text-sky-600">
-            <Bell className="h-5 w-5" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-              {t("settings.studyReminders")}
-            </h3>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t("settings.studyRemindersDescription")}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 flex items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
-          <div>
-            <p className="font-medium text-[var(--text-primary)]">
-              {t("settings.enableReminders")}
-            </p>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t("settings.remindersLocalOnly")}
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={remindersEnabled}
-            onClick={handleReminderToggle}
-            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-              remindersEnabled ? "bg-indigo-600" : "bg-[var(--border)]"
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                remindersEnabled ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
           </button>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-        <div className="flex items-start gap-3">
-          <div className="rounded-2xl bg-purple-500/10 p-3 text-purple-600">
-            {soundEnabled ? (
-              <Volume2 className="h-5 w-5" />
-            ) : (
-              <VolumeX className="h-5 w-5" />
-            )}
+      {/* Study Reminders */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <div style={iconBoxStyle("#0ea5e9")}><Bell size={18} /></div>
+            <div>
+              <strong style={{ display: "block", fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+                {t("settings.studyReminders")}
+              </strong>
+              <span style={{ fontSize: 12.5, color: "var(--ink-mute)" }}>
+                {t("settings.remindersLocalOnly")}
+              </span>
+            </div>
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-              {t("settings.soundEffects")}
-            </h3>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t("settings.soundDescription")}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 flex items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
-          <div>
-            <p className="font-medium text-[var(--text-primary)]">
-              {t("settings.enableSounds")}
-            </p>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t("settings.soundsLocalOnly")}
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={soundEnabled}
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-              soundEnabled ? "bg-indigo-600" : "bg-[var(--border)]"
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                soundEnabled ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
-          </button>
+          <Toggle checked={remindersEnabled} onChange={handleReminderToggle} />
         </div>
       </div>
 
+      {/* Sound Effects */}
+      <div style={{ ...cardStyle, marginBottom: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <div style={iconBoxStyle("#a855f7")}>
+              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            </div>
+            <div>
+              <strong style={{ display: "block", fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+                {t("settings.soundEffects")}
+              </strong>
+              <span style={{ fontSize: 12.5, color: "var(--ink-mute)" }}>
+                {t("settings.soundsLocalOnly")}
+              </span>
+            </div>
+          </div>
+          <Toggle checked={soundEnabled} onChange={() => setSoundEnabled(!soundEnabled)} />
+        </div>
+      </div>
+
+      {/* Status / Error */}
       {(status || error) && (
-        <div
-          className={`rounded-2xl border px-4 py-3 text-sm ${
-            error
-              ? "border-red-200 bg-red-500/5 text-red-600"
-              : "border-emerald-200 bg-emerald-500/5 text-emerald-700"
-          }`}
-        >
+        <div style={{
+          marginTop: 14, padding: "10px 16px", borderRadius: 12, fontSize: 13.5,
+          border: error ? "1px solid rgba(220,38,38,.2)" : "1px solid rgba(16,185,129,.2)",
+          background: error ? "rgba(220,38,38,.06)" : "rgba(16,185,129,.06)",
+          color: error ? "var(--terra)" : "var(--green)",
+        }}>
           {error ?? status}
         </div>
       )}
