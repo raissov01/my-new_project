@@ -30,79 +30,64 @@ export default async function ListenPage({
   };
 
   return (
-    <div className="page-shell py-8 space-y-8">
+    <div className="page-shell py-4 sm:py-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Headphones className="h-8 w-8 text-[var(--primary)]" />
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Listening Library</h1>
-          <p className="text-sm text-[var(--text-secondary)]">
-            {clips.length} clip{clips.length !== 1 ? "s" : ""} available
-          </p>
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <Headphones style={{ width: 18, height: 18, color: "var(--terra)" }} />
+          <h3>Listening Library</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--ink-mute)" }}>
+            {clips.length} CLIP{clips.length !== 1 ? "S" : ""}
+          </span>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="space-y-3">
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
         <div>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Level</p>
-          <div className="flex flex-wrap gap-2">
+          <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 8 }}>
+            ДЕҢГЕЙ
+          </p>
+          <div className="nd-lib-filters" style={{ marginBottom: 0 }}>
             {LEVELS.map((lv) => (
-              <a
-                key={lv}
-                href={buildHref("level", lv)}
-                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
-                  params.level === lv
-                    ? "bg-[var(--primary)] text-white"
-                    : "bg-[var(--bg-soft)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
-                }`}
-              >
+              <a key={lv} href={buildHref("level", lv)}
+                className={`nd-lib-pill${params.level === lv ? " on" : ""}`}>
                 {lv}
               </a>
             ))}
           </div>
         </div>
         <div>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Topic</p>
-          <div className="flex flex-wrap gap-2">
+          <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 8 }}>
+            ТАҚЫРЫП
+          </p>
+          <div className="nd-lib-filters" style={{ marginBottom: 0 }}>
             {TOPICS.map((tp) => (
-              <a
-                key={tp}
-                href={buildHref("topic", tp)}
-                className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                  params.topic === tp
-                    ? "bg-[var(--primary)] text-white"
-                    : "bg-[var(--bg-soft)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
-                }`}
-              >
+              <a key={tp} href={buildHref("topic", tp)}
+                className={`nd-lib-pill${params.topic === tp ? " on" : ""}`}
+                style={{ textTransform: "capitalize" }}>
                 {tp}
               </a>
             ))}
+            <a href={buildHref("source", "podcast")}
+              className={`nd-lib-pill${params.source === "podcast" ? " on" : ""}`}>
+              🎙 Podcast
+            </a>
           </div>
-        </div>
-        <div>
-          <a
-            href={buildHref("source", "podcast")}
-            className={`rounded-full px-3 py-1 text-sm transition-colors ${
-              params.source === "podcast"
-                ? "bg-[var(--primary)] text-white"
-                : "bg-[var(--bg-soft)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
-            }`}
-          >
-            🎙 Podcast only
-          </a>
         </div>
       </div>
 
       {/* Grid */}
       {clips.length === 0 ? (
-        <div className="py-16 text-center text-[var(--text-secondary)]">
-          <Headphones className="mx-auto mb-3 h-10 w-10 opacity-30" />
-          <p>No clips match your filters.</p>
-          <a href="/listen" className="mt-2 inline-block text-sm text-[var(--primary)] underline">Clear filters</a>
+        <div style={{ padding: "64px 0", textAlign: "center" }}>
+          <Headphones style={{ width: 40, height: 40, margin: "0 auto 12px", opacity: .25, color: "var(--ink-mute)" }} />
+          <p style={{ color: "var(--ink-mute)", fontSize: 14 }}>Фильтрге сәйкес клип жоқ.</p>
+          <a href="/listen" style={{ fontSize: 13, color: "var(--terra)", marginTop: 8, display: "inline-block" }}>
+            Фильтрді тазалау →
+          </a>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))" }}>
           {clips.map((clip) => (
             <ClipCard key={clip.id} clip={clip} />
           ))}

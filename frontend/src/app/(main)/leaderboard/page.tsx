@@ -21,23 +21,19 @@ export default async function LeaderboardPage() {
   const t = createTranslator(locale);
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
-      <div className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-lg)] sm:p-8">
-        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-[var(--accent)] opacity-[0.05]" style={{ filter: "blur(60px)" }} />
-        <p className="relative text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
-          {t("challenge.hubEyebrow")}
-        </p>
-        <h1 className="relative mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">
-          {t("challenge.hubTitle")}
-        </h1>
-        <p className="relative mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-          {t("challenge.hubBody")}
-        </p>
+    <div className="page-shell py-4 sm:py-6">
+      {/* Header */}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <h3>{t("challenge.hubTitle")}</h3>
+          <div className="nd-mock-timer">
+            <span className="nd-mock-pulse" />
+            {t("challenge.hubEyebrow")}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-8">
-        <ChallengeDirectory variant="full" />
-      </div>
+      <ChallengeDirectory variant="full" />
     </div>
   );
 }

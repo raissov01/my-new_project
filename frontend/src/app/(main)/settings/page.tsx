@@ -22,10 +22,7 @@ interface SettingsPageProps {
   searchParams: Promise<{ error?: string }>;
 }
 
-function getFeedbackMessage(
-  t: (key: string) => string,
-  error?: string
-) {
+function getFeedbackMessage(t: (key: string) => string, error?: string) {
   switch (error) {
     case "settings-disabled":
       return { type: "error", text: t("settings.settingsDisabled") };
@@ -43,9 +40,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const t = createTranslator(locale);
   const user = await getCurrentUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const [{ error }, profile, pomodoro, billing] = await Promise.all([
     searchParams,
@@ -57,71 +52,61 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const feedback = getFeedbackMessage(t, error);
 
   return (
-    <div className="page-shell py-5 sm:py-8 lg:py-10">
+    <div className="page-shell py-4 sm:py-6">
       {/* Header */}
-      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-lg)] sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-          {t("settings.workspace")}
-        </p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">
-          {t("settings.title")}
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-          {t("settings.subtitle")}
-        </p>
-
-        {feedback && (
-          <div
-            className={`mt-5 rounded-[var(--radius-lg)] border px-4 py-3 text-sm ${
-              feedback.type === "error"
-                ? "border-red-200 bg-[var(--danger-soft)] text-[var(--danger)] dark:border-red-500/20 dark:text-red-300"
-                : "border-emerald-200 bg-[var(--success-soft)] text-emerald-600 dark:border-emerald-500/20 dark:text-emerald-300"
-            }`}
-          >
-            {feedback.text}
-          </div>
-        )}
+      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
+        <div className="nd-mock-bar">
+          <h3>{t("settings.title")}</h3>
+          <span style={{ fontSize: 12, color: "var(--ink-mute)", fontFamily: "'JetBrains Mono',monospace" }}>
+            {profile?.username} · {user.email}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-5 grid gap-4 sm:mt-8 sm:gap-5 xl:grid-cols-[1.05fr_1.2fr]">
-        <div className="space-y-4 sm:space-y-5">
+      {feedback && (
+        <div style={{
+          marginBottom: 18,
+          padding: "10px 16px",
+          borderRadius: 12,
+          fontSize: 13.5,
+          border: feedback.type === "error" ? "1px solid rgba(220,38,38,.2)" : "1px solid rgba(16,185,129,.2)",
+          background: feedback.type === "error" ? "rgba(220,38,38,.06)" : "rgba(16,185,129,.06)",
+          color: feedback.type === "error" ? "var(--terra)" : "var(--green)",
+        }}>
+          {feedback.text}
+        </div>
+      )}
+
+      <div style={{ display: "grid", gap: 18, gridTemplateColumns: "1fr", alignItems: "start" }}
+        className="xl:grid-cols-[1.05fr_1.2fr]">
+        <div>
           {/* Account */}
-          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-blue-500/10 text-blue-500">
-                <Mail className="h-5 w-5" />
+          <div className="nd-settings-section">
+            <div className="nd-settings-row" style={{ borderTop: "none", paddingTop: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(59,130,246,.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3b82f6", flexShrink: 0 }}>
+                <Mail style={{ width: 18, height: 18 }} />
               </div>
-              <div>
-                <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
-                  {t("settings.account")}
-                </h2>
-                <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
-                  {t("settings.accountDescription")}
-                </p>
+              <div className="nd-settings-lbl">
+                <strong>{t("settings.account")}</strong>
+                <span>{t("settings.accountDescription")}</span>
               </div>
             </div>
-
             <EmailChangeForm defaultEmail={user.email ?? ""} />
 
-            <div className="section-divider my-5" />
+            <div style={{ borderTop: "1px dashed var(--line-strong)", margin: "18px 0" }} />
 
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-amber-500/10 text-amber-500">
-                <LockKeyhole className="h-5 w-5" />
+            <div className="nd-settings-row" style={{ borderTop: "none", paddingTop: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(245,158,11,.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#f59e0b", flexShrink: 0 }}>
+                <LockKeyhole style={{ width: 18, height: 18 }} />
               </div>
-              <div>
-                <h3 className="text-base font-bold tracking-[-0.02em] text-[var(--text-primary)]">
-                  {t("settings.changePassword")}
-                </h3>
-                <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
-                  {t("settings.passwordDescription")}
-                </p>
+              <div className="nd-settings-lbl">
+                <strong>{t("settings.changePassword")}</strong>
+                <span>{t("settings.passwordDescription")}</span>
               </div>
             </div>
-
             <PasswordChangeForm />
 
-            <div className="section-divider my-5" />
+            <div style={{ borderTop: "1px dashed var(--line-strong)", margin: "18px 0" }} />
 
             <form action={logout}>
               <Button type="submit" variant="outline">
@@ -129,72 +114,52 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 {t("nav.logOut")}
               </Button>
             </form>
-          </section>
+          </div>
 
           {/* Role */}
-          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-violet-500/10 text-violet-500">
-                <UserCog className="h-5 w-5" />
+          <div className="nd-settings-section">
+            <div className="nd-settings-row" style={{ borderTop: "none", paddingTop: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(139,92,246,.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#8b5cf6", flexShrink: 0 }}>
+                <UserCog style={{ width: 18, height: 18 }} />
               </div>
-              <div>
-                <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
-                  {t("settings.roleTitle")}
-                </h2>
-                <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
-                  {t("settings.roleDescription")}
-                </p>
+              <div className="nd-settings-lbl">
+                <strong>{t("settings.roleTitle")}</strong>
+                <span>{t("settings.roleDescription")}</span>
               </div>
             </div>
-
-            <div className="mt-5">
-              <RoleSection currentRole={(profile?.role as ProfileRole) ?? "student"} />
-            </div>
-          </section>
+            <RoleSection currentRole={(profile?.role as ProfileRole) ?? "student"} />
+          </div>
 
           {/* Billing */}
           <BillingSection billing={billing} />
 
           {/* Privacy */}
-          <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-slate-500/10 text-slate-500">
-                <ShieldCheck className="h-5 w-5" />
+          <div className="nd-settings-section">
+            <div className="nd-settings-row" style={{ borderTop: "none", paddingTop: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(100,116,139,.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", flexShrink: 0 }}>
+                <ShieldCheck style={{ width: 18, height: 18 }} />
               </div>
-              <div>
-                <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
-                  {t("settings.privacySecurity")}
-                </h2>
-                <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
-                  {t("settings.privacyDescription")}
-                </p>
+              <div className="nd-settings-lbl">
+                <strong>{t("settings.privacySecurity")}</strong>
+                <span>{t("settings.privacyDescription")}</span>
               </div>
             </div>
-
-            <div className="mt-5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-4 text-sm text-[var(--text-secondary)]">
-              <p className="font-medium text-[var(--text-primary)]">{profile?.username}</p>
-              <p className="mt-1">{user.email}</p>
+            <div style={{ background: "var(--paper-2)", borderRadius: 10, padding: "10px 14px", margin: "12px 0", fontSize: 13 }}>
+              <strong style={{ display: "block", color: "var(--ink)" }}>{profile?.username}</strong>
+              <span style={{ color: "var(--ink-mute)" }}>{user.email}</span>
             </div>
-
-            <div className="mt-5">
-              <DeleteAccountSection />
-            </div>
-          </section>
+            <DeleteAccountSection />
+          </div>
         </div>
 
         {/* Preferences */}
-        <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-          <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
-            {t("settings.preferences")}
-          </h2>
-          <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
+        <div className="nd-settings-section" style={{ marginBottom: 0 }}>
+          <h3>{t("settings.preferences")}</h3>
+          <p style={{ fontSize: 13, color: "var(--ink-mute)", margin: "4px 0 18px" }}>
             {t("settings.preferencesDescription")}
           </p>
-
-          <div className="mt-5">
-            <PreferencesPanel initialPomodoro={pomodoro} />
-          </div>
-        </section>
+          <PreferencesPanel initialPomodoro={pomodoro} />
+        </div>
       </div>
     </div>
   );
