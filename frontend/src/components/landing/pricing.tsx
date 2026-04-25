@@ -44,21 +44,6 @@ export function Pricing({ locale }: PricingProps) {
       popularTag: t('lp.pricing.popular'),
       ctaStyle: 'primary-inv',
     },
-    {
-      name: t('lp.pricing.plan3Name'),
-      price: t('lp.pricing.plan3Price'),
-      desc: t('lp.pricing.plan3Desc'),
-      features: [
-        t('lp.pricing.plan3f1'),
-        t('lp.pricing.plan3f2'),
-        t('lp.pricing.plan3f3'),
-        t('lp.pricing.plan3f4'),
-      ],
-      cta: t('lp.pricing.plan3Cta'),
-      ctaHref: '/signup',
-      featured: false,
-      ctaStyle: 'ghost',
-    },
   ];
 
   return (
@@ -162,11 +147,11 @@ export function Pricing({ locale }: PricingProps) {
           display: grid;
           grid-template-columns: 1fr;
           gap: 24px;
-          max-width: 980px;
+          max-width: 680px;
           margin: 0 auto;
         }
-        @media (min-width: 760px) {
-          .lp-pricing { grid-template-columns: repeat(3, 1fr); }
+        @media (min-width: 640px) {
+          .lp-pricing { grid-template-columns: repeat(2, 1fr); }
         }
         .lp-plan {
           border: 1.5px solid var(--ink);

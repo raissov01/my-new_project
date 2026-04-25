@@ -95,11 +95,11 @@ export default async function UpgradePage() {
                   <Gift className="h-4 w-4" /> Тегін сынап көр
                 </p>
                 <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-[var(--text-primary)]">$0</span>
+                  <span className="text-4xl font-extrabold text-[var(--text-primary)]">₸0</span>
                   <span className="text-[var(--text-muted)] mb-1">/7 күн</span>
                 </div>
                 <p className="text-sm text-green-400 mt-2 font-medium">
-                  Одан кейін автоматты $9/ай
+                  Одан кейін автоматты ₸2,000/ай
                 </p>
               </div>
 
