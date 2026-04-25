@@ -13,7 +13,7 @@ export function useTheme() {
     const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light";
-    const initial = stored ?? "dark";
+    const initial = stored ?? preferred;
     document.documentElement.classList.toggle("dark", initial === "dark");
 
     requestAnimationFrame(() => {
