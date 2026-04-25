@@ -185,7 +185,16 @@ func AutoMigrate(db *gorm.DB) error {
 		return err
 	}
 
+	// Team mode columns — GORM AutoMigrate adds them from the model; these are safety guards.
+	db.Exec(`ALTER TABLE quiz_live_sessions ADD COLUMN IF NOT EXISTS team_mode BOOLEAN NOT NULL DEFAULT FALSE`)
+	db.Exec(`ALTER TABLE quiz_live_sessions ADD COLUMN IF NOT EXISTS team_count INT NOT NULL DEFAULT 2`)
+	db.Exec(`ALTER TABLE quiz_live_participants ADD COLUMN IF NOT EXISTS team_id INT NOT NULL DEFAULT 0`)
+
 	if err := SeedListeningClips(db); err != nil {
+		return err
+	}
+
+	if err := SeedListeningQuestions(db); err != nil {
 		return err
 	}
 
