@@ -144,6 +144,9 @@ export function AppSidebar() {
         { href: "/settings", label: t("nav.settings") || "Баптаулар", icon: Settings },
         { href: "/upgrade", label: "Pro", icon: Crown },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle },
+        { href: "/about", label: t("nav.about") || "Біз туралы", icon: HelpCircle },
+        { href: "/blog", label: t("nav.blog") || "Блог", icon: Newspaper },
+        { href: "/contact", label: t("nav.contact") || "Байланыс", icon: MessageSquareText },
       ]
     : [];
 
