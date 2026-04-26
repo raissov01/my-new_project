@@ -24,12 +24,10 @@ type IELTSExaminerHandler struct {
 	claudeModel       string
 	claudeFallback    string
 	claudeURL         string
-	geminiKey         string
-	geminiModel       string
 	timeout           time.Duration
 }
 
-func NewIELTSExaminer(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeFallback, claudeURL, geminiKey, geminiModel string, timeout time.Duration) *IELTSExaminerHandler {
+func NewIELTSExaminer(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeFallback, claudeURL string, timeout time.Duration) *IELTSExaminerHandler {
 	if timeout < 30*time.Second {
 		timeout = 60 * time.Second
 	}
@@ -41,7 +39,7 @@ func NewIELTSExaminer(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeMode
 	return &IELTSExaminerHandler{
 		db: db, openAIKey: openAIKey, openAIModel: examModel,
 		claudeKey: claudeKey, claudeModel: claudeModel, claudeFallback: claudeFallback, claudeURL: claudeURL,
-		geminiKey: geminiKey, geminiModel: geminiModel, timeout: timeout,
+		timeout: timeout,
 	}
 }
 
@@ -90,7 +88,7 @@ func (h *IELTSExaminerHandler) EvaluateWriting(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if h.claudeKey == "" && h.openAIKey == "" && h.geminiKey == "" {
+	if h.claudeKey == "" && h.openAIKey == "" {
 		writeError(w, http.StatusServiceUnavailable, "AI examiner is not configured", nil)
 		return
 	}
@@ -328,7 +326,7 @@ func (h *IELTSExaminerHandler) EvaluateSpeaking(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if h.claudeKey == "" && h.openAIKey == "" && h.geminiKey == "" {
+	if h.claudeKey == "" && h.openAIKey == "" {
 		writeError(w, http.StatusServiceUnavailable, "AI examiner is not configured", nil)
 		return
 	}
@@ -525,65 +523,7 @@ func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error
 		log.Printf("[llm] OpenAI failed: %v", err)
 	}
 
-	// Fallback: Gemini
-	if strings.TrimSpace(h.geminiKey) != "" {
-		raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, h.timeout)
-		if err == nil {
-			return raw, h.geminiModel, nil
-		}
-		log.Printf("[llm] Gemini failed: %v", err)
-	}
-
 	return "", "", fmt.Errorf("all AI providers failed")
-}
-
-func callGeminiRaw(apiKey, model, prompt string, timeout time.Duration) (string, error) {
-	body := map[string]any{
-		"contents": []map[string]any{
-			{"parts": []map[string]string{{"text": prompt}}},
-		},
-		"generationConfig": map[string]any{
-			"temperature":      0.3,
-			"topP":             0.9,
-			"maxOutputTokens":  40000,
-			"responseMimeType": "application/json",
-		},
-	}
-
-	bodyBytes, _ := json.Marshal(body)
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
-
-	client := &http.Client{Timeout: timeout}
-	resp, err := client.Post(url, "application/json", bytes.NewReader(bodyBytes))
-	if err != nil {
-		return "", fmt.Errorf("gemini request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		errBody, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("gemini returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
-	}
-
-	var geminiResp struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&geminiResp); err != nil {
-		return "", fmt.Errorf("decode response: %w", err)
-	}
-
-	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("empty AI response")
-	}
-
-	return cleanJSON(geminiResp.Candidates[0].Content.Parts[0].Text), nil
 }
 
 // callClaudeChatCompletion calls the Claude API via do-ai.run (OpenAI-compatible Chat Completions format).

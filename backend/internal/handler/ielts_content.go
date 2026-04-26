@@ -238,7 +238,7 @@ func (h *IELTSExaminerHandler) loadMockQuestions(mockType, examSet, section, ban
 }
 
 func (h *IELTSExaminerHandler) generatePredictionSection(section, bandTarget string) ([]models.IELTSQuestion, error) {
-	if h.claudeKey == "" && h.openAIKey == "" && h.geminiKey == "" {
+	if h.claudeKey == "" && h.openAIKey == "" {
 		return nil, fmt.Errorf("ai unavailable")
 	}
 

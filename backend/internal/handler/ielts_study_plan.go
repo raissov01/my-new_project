@@ -21,12 +21,10 @@ type IELTSStudyPlanHandler struct {
 	claudeModel    string
 	claudeFallback string
 	claudeURL      string
-	geminiKey      string
-	geminiModel    string
 	timeout        time.Duration
 }
 
-func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeFallback, claudeURL, geminiKey, geminiModel string, timeout time.Duration) *IELTSStudyPlanHandler {
+func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeModel, claudeFallback, claudeURL string, timeout time.Duration) *IELTSStudyPlanHandler {
 	if timeout < 30*time.Second {
 		timeout = 60 * time.Second
 	}
@@ -39,7 +37,7 @@ func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeMod
 	return &IELTSStudyPlanHandler{
 		db: db, openAIKey: openAIKey, openAIModel: planModel,
 		claudeKey: claudeKey, claudeModel: claudeModel, claudeFallback: claudeFallback, claudeURL: claudeURL,
-		geminiKey: geminiKey, geminiModel: geminiModel, timeout: timeout,
+		timeout: timeout,
 	}
 }
 
@@ -78,16 +76,6 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 		log.Printf("[study-plan-llm] OpenAI %s failed: %v", fastModel, err)
 	}
 
-	// Fallback 2: Gemini.
-	if strings.TrimSpace(h.geminiKey) != "" {
-		raw, err := callGeminiRaw(h.geminiKey, h.geminiModel, prompt, perProviderTimeout)
-		if err == nil {
-			log.Printf("[study-plan-llm] success via Gemini: model=%s time=%v len=%d", h.geminiModel, time.Since(start), len(raw))
-			return raw, h.geminiModel, nil
-		}
-		log.Printf("[study-plan-llm] Gemini failed: %v", err)
-	}
-
 	log.Printf("[study-plan-llm] all providers failed (total: %v)", time.Since(start))
 	return "", "", fmt.Errorf("all AI providers failed")
 }
@@ -112,7 +100,7 @@ func (h *IELTSStudyPlanHandler) GeneratePlan(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if h.claudeKey == "" && h.openAIKey == "" && h.geminiKey == "" {
+	if h.claudeKey == "" && h.openAIKey == "" {
 		writeError(w, http.StatusServiceUnavailable, "AI service is not configured", nil)
 		return
 	}
@@ -1067,7 +1055,7 @@ func (h *IELTSStudyPlanHandler) SubmitReflection(w http.ResponseWriter, r *http.
 
 	// Generate AI coach note based on reflection
 	var coachNote *string
-	if h.claudeKey != "" || h.openAIKey != "" || h.geminiKey != "" {
+	if h.claudeKey != "" || h.openAIKey != "" {
 		prompt := fmt.Sprintf(`You are a supportive IELTS study coach. Based on this weekly reflection, write a brief, encouraging coaching note (2-3 sentences max). Be specific and actionable.
 
 Student reflection for Week %d:

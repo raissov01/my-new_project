@@ -87,8 +87,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
-	if cfg.OpenAIAPIKey == "" && cfg.GeminiAPIKey == "" {
-		log.Fatalf("OPENAI_API_KEY or GEMINI_API_KEY must be set in .env")
+	if cfg.OpenAIAPIKey == "" {
+		log.Fatalf("OPENAI_API_KEY must be set in .env")
 	}
 
 	db, err := database.ConnectGorm(cfg.DatabaseURL, cfg.Environment)
@@ -321,13 +321,6 @@ func callAI(prompt string, cfg *config.Config) ([]card, error) {
 		}
 		log.Printf("[ai] openai failed: %v", err)
 	}
-	if cfg.GeminiAPIKey != "" {
-		cards, err := gemini(cfg.GeminiAPIKey, cfg.GeminiModel, prompt, cfg.AIRequestTimeout)
-		if err == nil {
-			return cards, nil
-		}
-		log.Printf("[ai] gemini failed: %v", err)
-	}
 	return nil, fmt.Errorf("all AI providers failed")
 }
 
@@ -444,39 +437,6 @@ func openAI(key, model, prompt string, timeout time.Duration) ([]card, error) {
 		return nil, fmt.Errorf("empty response")
 	}
 	return parseCards(r.Choices[0].Message.Content)
-}
-
-func gemini(key, model, prompt string, timeout time.Duration) ([]card, error) {
-	body, _ := json.Marshal(map[string]any{
-		"contents": []map[string]any{
-			{"parts": []map[string]string{{"text": prompt}}},
-		},
-		"generationConfig": map[string]any{
-			"temperature": 0.4, "maxOutputTokens": 16000, "responseMimeType": "application/json",
-		},
-	})
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, key)
-	resp, err := (&http.Client{Timeout: timeout}).Post(url, "application/json", bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		b, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("gemini %d: %s", resp.StatusCode, truncate(string(b), 200))
-	}
-	var r struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct{ Text string `json:"text"` } `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-	json.NewDecoder(resp.Body).Decode(&r)
-	if len(r.Candidates) == 0 || len(r.Candidates[0].Content.Parts) == 0 {
-		return nil, fmt.Errorf("empty response")
-	}
-	return parseCards(r.Candidates[0].Content.Parts[0].Text)
 }
 
 func parseCards(raw string) ([]card, error) {

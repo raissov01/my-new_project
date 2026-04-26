@@ -27,8 +27,6 @@ type Config struct {
 	ClaudeModel           string
 	ClaudeFallbackModel   string
 	ClaudeAPIURL          string
-	GeminiAPIKey       string
-	GeminiModel        string
 	AIRequestTimeout   time.Duration
 	MaxUploadBytes     int64
 	GoogleClientID     string
@@ -70,8 +68,6 @@ func Load() (*Config, error) {
 		ClaudeModel:           getEnv("CLAUDE_MODEL", "anthropic-claude-opus-4.6"),
 		ClaudeFallbackModel:  getEnv("CLAUDE_FALLBACK_MODEL", "anthropic-claude-sonnet-4.6"),
 		ClaudeAPIURL:         getEnv("CLAUDE_API_URL", "https://inference.do-ai.run/v1/chat/completions"),
-		GeminiAPIKey:       os.Getenv("GEMINI_API_KEY"),
-		GeminiModel:        getEnv("GEMINI_MODEL", "gemini-2.0-flash"),
 		AIRequestTimeout:   time.Duration(maxInt(getEnvInt("AI_REQUEST_TIMEOUT_SECONDS", 90), 30)) * time.Second,
 		MaxUploadBytes:     20 * 1024 * 1024,
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
