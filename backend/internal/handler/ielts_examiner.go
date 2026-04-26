@@ -539,7 +539,7 @@ func callClaudeChatCompletion(apiKey, model, apiURL, systemPrompt, prompt string
 		"model":       model,
 		"messages":    messages,
 		"temperature": 0.3,
-		"max_tokens":  40000,
+		"max_tokens":  8192,
 	}
 
 	bodyBytes, _ := json.Marshal(body)
@@ -594,7 +594,7 @@ func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeou
 	body := map[string]any{
 		"model":                 model,
 		"messages":              messages,
-		"max_completion_tokens": 16000,
+		"max_completion_tokens": 8000,
 	}
 
 	bodyBytes, _ := json.Marshal(body)

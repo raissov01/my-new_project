@@ -55,25 +55,34 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 		perProviderTimeout = h.timeout
 	}
 
-	// Primary: Claude via do-ai.run (llama3.3-70b) — non-reasoning model, fast & cheap.
+	// Primary: Claude (DO AI) — model configured via CLAUDE_MODEL env.
 	if strings.TrimSpace(h.claudeKey) != "" && strings.TrimSpace(h.claudeURL) != "" {
 		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, "", prompt, perProviderTimeout)
 		if err == nil {
 			log.Printf("[study-plan-llm] success via Claude: model=%s time=%v len=%d", h.claudeModel, time.Since(start), len(raw))
 			return raw, h.claudeModel, nil
 		}
-		log.Printf("[study-plan-llm] Claude failed: %v", err)
+		log.Printf("[study-plan-llm] Claude primary failed: %v", err)
+
+		// Claude fallback model
+		if strings.TrimSpace(h.claudeFallback) != "" && h.claudeFallback != h.claudeModel {
+			raw, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, "", prompt, perProviderTimeout)
+			if err == nil {
+				log.Printf("[study-plan-llm] success via Claude fallback: model=%s time=%v len=%d", h.claudeFallback, time.Since(start), len(raw))
+				return raw, h.claudeFallback, nil
+			}
+			log.Printf("[study-plan-llm] Claude fallback failed: %v", err)
+		}
 	}
 
-	// Fallback 1: OpenAI — use the configured primary model (GPT-5 for IELTS prep).
+	// Fallback: OpenAI.
 	if strings.TrimSpace(h.openAIKey) != "" {
-		fastModel := h.openAIModel
-		raw, err := callOpenAIChatCompletion(h.openAIKey, fastModel, "", prompt, perProviderTimeout)
+		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, "", prompt, perProviderTimeout)
 		if err == nil {
-			log.Printf("[study-plan-llm] success via OpenAI: model=%s time=%v len=%d", fastModel, time.Since(start), len(raw))
-			return raw, fastModel, nil
+			log.Printf("[study-plan-llm] success via OpenAI: model=%s time=%v len=%d", h.openAIModel, time.Since(start), len(raw))
+			return raw, h.openAIModel, nil
 		}
-		log.Printf("[study-plan-llm] OpenAI %s failed: %v", fastModel, err)
+		log.Printf("[study-plan-llm] OpenAI %s failed: %v", h.openAIModel, err)
 	}
 
 	log.Printf("[study-plan-llm] all providers failed (total: %v)", time.Since(start))
