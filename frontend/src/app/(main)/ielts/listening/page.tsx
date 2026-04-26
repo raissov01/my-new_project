@@ -11,19 +11,19 @@ export const metadata: Metadata = {
   description: "Cambridge аудио бөлімдері бойынша IELTS Listening бөлімін жаттықтырыңыз.",
 };
 
-const SECTION_TYPES = [
-  { key: "s1", label: "Section 1", desc: "Күнделікті өмір диалогы (сұрақ-жауап форматы)" },
-  { key: "s2", label: "Section 2", desc: "Монолог — кезекші немесе гид" },
-  { key: "s3", label: "Section 3", desc: "Академиялық пікірталас (2-4 спикер)" },
-  { key: "s4", label: "Section 4", desc: "Академиялық дәріс немесе баяндама" },
-];
+const SECTION_TYPE_KEYS = [
+  { key: "s1", label: "Section 1", descKey: "ielts.listening.s1Desc" },
+  { key: "s2", label: "Section 2", descKey: "ielts.listening.s2Desc" },
+  { key: "s3", label: "Section 3", descKey: "ielts.listening.s3Desc" },
+  { key: "s4", label: "Section 4", descKey: "ielts.listening.s4Desc" },
+] as const;
 
-const TIPS = [
-  "Тыңдамас бұрын сұрақтарды оқып, белгіленген сөздерге назар аударыңыз.",
-  "Жауаптарды тыңдай отырып бірден жазыңыз — аудио қайталанбайды.",
-  "Синонимдерге дайын болыңыз: аудиода 'purchase', жауапта 'buy' болуы мүмкін.",
-  "Орфографияны тексеріңіз — қате жазылған жауап есептелмейді.",
-];
+const TIP_KEYS = [
+  "ielts.listening.tip1",
+  "ielts.listening.tip2",
+  "ielts.listening.tip3",
+  "ielts.listening.tip4",
+] as const;
 
 // Indigo accent (kept as inline hex per design instructions)
 const INDIGO = "#6366f1";
@@ -48,11 +48,11 @@ export default async function IELTSListeningPage() {
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
             <Headphones size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
-            10 сұрақ
+            10 {t("ielts.questions")}
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
             <CheckCircle2 size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
-            Автобағалау
+            {t("ielts.listening.autoBadge")}
           </span>
         </div>
       </div>
@@ -60,10 +60,10 @@ export default async function IELTSListeningPage() {
       {/* Section cards */}
       <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
-          Секция таңдаңыз
+          {t("ielts.listening.pickSection")}
         </p>
         <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))" }}>
-          {SECTION_TYPES.map((sec) => (
+          {SECTION_TYPE_KEYS.map((sec) => (
             <Link
               key={sec.key}
               href={`/ielts/simulator?section=listening&focus=${sec.key}`}
@@ -85,9 +85,9 @@ export default async function IELTSListeningPage() {
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
               >
                 <p style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)" }}>{sec.label}</p>
-                <p style={{ fontSize: 13, color: "var(--ink-mute)", flex: 1 }}>{sec.desc}</p>
+                <p style={{ fontSize: 13, color: "var(--ink-mute)", flex: 1 }}>{t(sec.descKey)}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: INDIGO, fontWeight: 600, marginTop: 4 }}>
-                  Бастау <ArrowRight size={12} />
+                  {t("ielts.listening.start")} <ArrowRight size={12} />
                 </div>
               </div>
             </Link>
@@ -100,10 +100,10 @@ export default async function IELTSListeningPage() {
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
           <div>
             <p style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)", marginBottom: 4 }}>
-              Толық Listening бөлімі
+              {t("ielts.listening.fullSectionTitle")}
             </p>
             <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>
-              4 section · 40 сұрақ · 40 минут · нақты IELTS форматы
+              {t("ielts.listening.fullSectionMeta")}
             </p>
           </div>
           <Link
@@ -123,7 +123,7 @@ export default async function IELTSListeningPage() {
             }}
           >
             <Headphones size={15} />
-            Толық жаттығу
+            {t("ielts.listening.fullPractice")}
           </Link>
         </div>
       </div>
@@ -131,12 +131,12 @@ export default async function IELTSListeningPage() {
       {/* Tips */}
       <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
-          Listening кеңестері
+          {t("ielts.listening.tipsTitle")}
         </p>
         <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
-          {TIPS.map((tip, i) => (
+          {TIP_KEYS.map((tipKey, i) => (
             <div
-              key={i}
+              key={tipKey}
               style={{
                 background: "var(--paper-2)",
                 border: "1px solid var(--line)",
@@ -164,7 +164,7 @@ export default async function IELTSListeningPage() {
               >
                 {i + 1}
               </div>
-              <p style={{ fontSize: 13, color: "var(--ink-mute)", lineHeight: 1.6 }}>{tip}</p>
+              <p style={{ fontSize: 13, color: "var(--ink-mute)", lineHeight: 1.6 }}>{t(tipKey)}</p>
             </div>
           ))}
         </div>

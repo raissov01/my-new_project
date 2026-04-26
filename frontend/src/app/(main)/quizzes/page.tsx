@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { Plus, Search, SlidersHorizontal, Sparkles, Target } from "lucide-react";
+import { Plus, Search, Sparkles, Target } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
-import { Button } from "@/components/ui/button";
 import { QuizCard } from "@/features/quizzes/components";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 import { getQuizzesOverview, type QuizListFilters } from "@/server/services/quizzes";
@@ -41,55 +40,35 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
   const ownedCount = user
     ? quizzes.filter((quiz) => quiz.userId === user.id).length
     : 0;
+  const publicCount = quizzes.filter((quiz) => quiz.isPublic).length;
 
   return (
-    <div className="page-shell py-4 sm:py-6">
-      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
-        <div className="nd-mock-bar">
-          <h3>{t("quiz.libraryTitle")}</h3>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
+    <div className="page-shell py-6 sm:py-10 lg:py-14">
+
+      {/* Page head */}
+      <div className="nd-page-head nd-reveal nd-d1">
+        <div>
+          <p className="nd-eyebrow">{t("quiz.navLabel")}</p>
+          <h1 className="nd-page-title" style={{ marginTop: 10 }}>
+            {t("quiz.libraryTitle")}
+          </h1>
+          <p className="nd-page-sub">
             {quizzes.length} {quizzes.length === 1 ? t("quiz.quiz") : t("quiz.quizzes")}
-          </span>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
-            {t("quiz.navLabel")}
-          </span>
+            {" · "}
+            {publicCount} {t("quiz.signalPublicBody")}
+          </p>
         </div>
-      </div>
-
-      <div className="nd-kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="nd-kpi">
-          <span className="nd-kpi-lbl">{t("quiz.signalTotal")}</span>
-          <strong className="nd-kpi-val">{quizzes.length}</strong>
-          <span className="nd-kpi-sub">{t("quiz.signalTotalBody")}</span>
-        </div>
-        <div className="nd-kpi">
-          <span className="nd-kpi-lbl">{t("quiz.signalMine")}</span>
-          <strong className="nd-kpi-val">{ownedCount}</strong>
-          <span className="nd-kpi-sub">{t("quiz.signalMineBody")}</span>
-        </div>
-        <div className="nd-kpi">
-          <span className="nd-kpi-lbl">{t("quiz.signalPublic")}</span>
-          <strong className="nd-kpi-val">{quizzes.filter((quiz) => quiz.isPublic).length}</strong>
-          <span className="nd-kpi-sub">{t("quiz.signalPublicBody")}</span>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 18, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         {user ? (
-          <>
-            <Link href="/quizzes/create">
-              <Button size="lg">
-                <Plus className="h-4 w-4" />
-                {t("quiz.createNew")}
-              </Button>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", flexShrink: 0 }}>
+            <Link href="/quizzes/create" className="nd-btn-primary">
+              <Plus style={{ width: 16, height: 16 }} />
+              {t("quiz.createNew")}
             </Link>
-            <Link href="/quizzes/create-with-ai">
-              <Button size="lg" variant="outline">
-                <Sparkles className="h-4 w-4" />
-                {t("quiz.ai.navLabel")}
-              </Button>
+            <Link href="/quizzes/create-with-ai" className="nd-btn-soft">
+              <Sparkles style={{ width: 15, height: 15 }} />
+              {t("quiz.ai.navLabel")}
             </Link>
-          </>
+          </div>
         ) : (
           <AuthRequiredPrompt
             triggerLabel={t("quiz.createNew")}
@@ -98,187 +77,129 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
             signupLabel={t("guest.signUpToContinue")}
             loginLabel={t("guest.logInToUnlock")}
             cancelLabel={t("set.cancel")}
-            icon={<Plus className="h-4 w-4" />}
+            icon={<Plus style={{ width: 16, height: 16 }} />}
           />
         )}
       </div>
 
-      <form>
-        <div
-          style={{
-            background: "var(--paper)",
-            border: "1px solid var(--line)",
-            borderRadius: 16,
-            padding: "14px 16px",
-            marginBottom: 18,
-            display: "flex",
-            gap: 12,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <label
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "var(--paper-2)",
-              border: "1.5px solid var(--line)",
-              borderRadius: 12,
-              padding: "0 12px",
-              minWidth: 200,
-            }}
-          >
-            <Search style={{ width: 16, height: 16, color: "var(--ink-mute)", flexShrink: 0 }} />
-            <input
-              type="search"
-              name="q"
-              defaultValue={q}
-              placeholder={t("quiz.searchPlaceholder")}
-              style={{
-                height: 44,
-                width: "100%",
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                fontSize: 14,
-                color: "var(--ink)",
-              }}
-            />
-          </label>
-
-          <label
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              background: "var(--paper-2)",
-              border: "1.5px solid var(--line)",
-              borderRadius: 12,
-              padding: "6px 12px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: ".1em",
-                color: "var(--ink-mute)",
-              }}
-            >
-              {t("quiz.filterSubject")}
-            </span>
-            <input
-              type="text"
-              name="subject"
-              defaultValue={subject}
-              placeholder={t("quiz.filterSubjectPlaceholder")}
-              style={{
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                fontSize: 14,
-                color: "var(--ink)",
-                width: 140,
-              }}
-            />
-          </label>
-
-          <label
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              background: "var(--paper-2)",
-              border: "1.5px solid var(--line)",
-              borderRadius: 12,
-              padding: "6px 12px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: ".1em",
-                color: "var(--ink-mute)",
-              }}
-            >
-              {t("quiz.sort")}
-            </span>
-            <select
-              name="sort"
-              defaultValue={sort}
-              style={{
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                fontSize: 14,
-                color: "var(--ink)",
-              }}
-            >
-              <option value="newest">{t("quiz.sortNewest")}</option>
-              <option value="played">{t("quiz.sortPlayed")}</option>
-              <option value="rated">{t("quiz.sortRated")}</option>
-            </select>
-          </label>
-
-          <Button type="submit" variant="outline" style={{ height: 44 }}>
-            <SlidersHorizontal className="h-4 w-4" />
-            {t("quiz.apply")}
-          </Button>
+      {/* KPI grid */}
+      <div className="nd-kpi-grid nd-reveal nd-d2">
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">{t("quiz.signalTotal")}</span>
+          <strong className="nd-kpi-num">{quizzes.length}</strong>
+          <span className="nd-kpi-sub">{t("quiz.signalTotalBody")}</span>
         </div>
-      </form>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 18,
-          flexWrap: "wrap",
-          gap: 8,
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <p style={{ fontSize: 13, color: "var(--ink-mute)", fontFamily: "'JetBrains Mono',monospace" }}>
-            {quizzes.length} {quizzes.length === 1 ? t("quiz.quiz") : t("quiz.quizzes")}
-            {q ? ` — ${t("quiz.searchMatched").replace("{q}", q)}` : ""}
-          </p>
-          {tag ? (
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                borderRadius: 20,
-                border: "1px solid var(--line)",
-                padding: "2px 10px",
-                fontSize: 12,
-                color: "var(--ink-mute)",
-                background: "var(--paper-2)",
-              }}
-            >
-              #{tag}
-              <Link
-                href="/quizzes"
-                style={{ marginLeft: 4, color: "var(--ink-mute)", textDecoration: "none" }}
-                aria-label={t("quiz.tagClear")}
-              >
-                ×
-              </Link>
-            </div>
-          ) : null}
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">{t("quiz.signalMine")}</span>
+          <strong className="nd-kpi-num">{ownedCount}</strong>
+          <span className="nd-kpi-sub">{t("quiz.signalMineBody")}</span>
         </div>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "var(--ink-mute)" }}>
-          {user ? t("quiz.liveMode") : t("quiz.previewMode")}
-        </span>
+        <div className="nd-kpi">
+          <span className="nd-kpi-lbl">{t("quiz.signalPublic")}</span>
+          <strong className="nd-kpi-num">{publicCount}</strong>
+          <span className="nd-kpi-sub">{t("quiz.signalPublicBody")}</span>
+        </div>
       </div>
 
+      {/* Filters + search */}
+      <div
+        className="nd-reveal nd-d3"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 28,
+        }}
+      >
+        {/* Sort pills */}
+        <div className="nd-lib-filters" style={{ marginBottom: 0 }}>
+          <Link
+            href="/quizzes"
+            className={`nd-lib-pill${sort === "newest" && !q && !subject && !tag ? " on" : ""}`}
+          >
+            {t("quiz.sortNewest")}
+          </Link>
+          <Link
+            href="/quizzes?sort=played"
+            className={`nd-lib-pill${sort === "played" ? " on" : ""}`}
+          >
+            {t("quiz.sortPlayed")}
+          </Link>
+          <Link
+            href="/quizzes?sort=rated"
+            className={`nd-lib-pill${sort === "rated" ? " on" : ""}`}
+          >
+            {t("quiz.sortRated")}
+          </Link>
+        </div>
+
+        {/* Search */}
+        <form
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "#fff",
+            border: "1.5px solid var(--line)",
+            borderRadius: 99,
+            padding: "7px 16px",
+          }}
+        >
+          <Search style={{ width: 15, height: 15, color: "var(--ink-mute)", flexShrink: 0 }} />
+          {subject ? <input type="hidden" name="subject" value={subject} /> : null}
+          {tag ? <input type="hidden" name="tag" value={tag} /> : null}
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder={t("quiz.searchPlaceholder")}
+            style={{
+              border: "none",
+              outline: "none",
+              background: "transparent",
+              fontSize: 13,
+              color: "var(--ink)",
+              width: 200,
+            }}
+          />
+        </form>
+      </div>
+
+      {/* Active tag filter badge */}
+      {tag ? (
+        <div style={{ marginBottom: 16 }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              borderRadius: 20,
+              border: "1px solid var(--line)",
+              padding: "3px 10px",
+              fontSize: 12,
+              color: "var(--ink-mute)",
+              background: "var(--paper-2)",
+              fontFamily: "'JetBrains Mono',monospace",
+            }}
+          >
+            #{tag}
+            <Link
+              href="/quizzes"
+              style={{ marginLeft: 4, color: "var(--ink-mute)", textDecoration: "none", fontWeight: 700 }}
+              aria-label={t("quiz.tagClear")}
+            >
+              ×
+            </Link>
+          </span>
+        </div>
+      ) : null}
+
+      {/* Quiz grid / empty states */}
       {!user ? (
         <div
+          className="nd-reveal nd-d4"
           style={{
             border: "1px dashed var(--line)",
             borderRadius: 18,
@@ -295,14 +216,14 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 16,
-              border: "1px solid var(--line)",
+              border: "1.5px solid var(--line)",
               background: "var(--paper-2)",
               color: "var(--ink-mute)",
             }}
           >
             <Target style={{ width: 20, height: 20 }} />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 12 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--ink)", marginBottom: 10, letterSpacing: "-.02em" }}>
             {t("quiz.guestEmptyTitle")}
           </h2>
           <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
@@ -310,18 +231,20 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
           </p>
         </div>
       ) : quizzes.length > 0 ? (
-        <div className="mt-6 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-          {quizzes.map((quiz) => (
+        <div className="nd-lib-grid nd-reveal nd-d4">
+          {quizzes.map((quiz, i) => (
             <QuizCard
               key={quiz.id}
               quiz={quiz}
               locale={locale}
               isOwner={quiz.userId === user.id}
+              index={i}
             />
           ))}
         </div>
       ) : (
         <div
+          className="nd-reveal nd-d4"
           style={{
             border: "1px dashed var(--line)",
             borderRadius: 18,
@@ -338,14 +261,14 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 16,
-              border: "1px solid var(--line)",
+              border: "1.5px solid var(--line)",
               background: "var(--paper-2)",
               color: "var(--ink-mute)",
             }}
           >
             <Target style={{ width: 20, height: 20 }} />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 12 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--ink)", marginBottom: 10, letterSpacing: "-.02em" }}>
             {t("quiz.emptyTitle")}
           </h2>
           <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>

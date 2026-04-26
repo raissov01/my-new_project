@@ -47,6 +47,8 @@ type Dependencies struct {
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
 	Billing            *BillingHandler
+	Push               *PushHandler
+	Contact            *ContactHandler
 	DebugDatabase      http.HandlerFunc
 }
 
@@ -76,11 +78,18 @@ func RegisterRoutes(router *gin.Engine) {
 	api.GET("/auth/google", deps.GoogleOAuth.RedirectToGoogle)
 	api.GET("/auth/google/callback", deps.GoogleOAuth.HandleCallback)
 
+	// ── Contact form ─────────────────────────────────────────────────────
+	contactLimiter := middleware.NewRateLimiter(5, 1*time.Minute).LimitByIP()
+	api.POST("/contact", contactLimiter, func(c *gin.Context) { deps.Contact.Submit(c) })
+
 	// ── Billing ──────────────────────────────────────────────────────────
 	// Webhook is public but signature-verified inside the handler.
 	api.POST("/billing/webhook", wrapHTTP(deps.Billing.Webhook))
 	// Status is internal-auth protected (Next.js server-to-server).
 	api.GET("/billing/status", middleware.InternalAuth(deps.InternalAPIToken), wrapHTTP(deps.Billing.Status))
+
+	// ── Web Push (VAPID public key is public; subscribe requires auth) ──
+	api.GET("/push/vapid-public-key", wrapHTTP(deps.Push.GetVAPIDPublicKey))
 
 	// ── Public file serving (materials PDFs) ────────────────────────────
 	api.GET("/files/*filepath", wrapHTTP(deps.Files.Serve))
@@ -288,6 +297,10 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/tutor/conversations/:id/message", tutorLimiter, wrapHTTP(deps.AITutor.SendMessage))
 		internal.POST("/tutor/conversations/:id/grade", wrapHTTP(deps.AITutor.GradeConversation))
 		internal.GET("/tutor/history", wrapHTTP(deps.AITutor.GetHistory))
+
+		// Web Push subscriptions
+		internal.POST("/push/subscribe", wrapHTTP(deps.Push.Subscribe))
+		internal.DELETE("/push/subscribe", wrapHTTP(deps.Push.Unsubscribe))
 
 		// Sentence Mining
 		miningLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()

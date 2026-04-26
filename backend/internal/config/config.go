@@ -37,10 +37,15 @@ type Config struct {
 	// Resend HTTP API for transactional email (replaces SMTP).
 	ResendAPIKey string
 	ResendFrom   string
+	ContactEmail string // inbox to receive contact form submissions
 
 	// Lemon Squeezy billing
 	LemonSqueezyWebhookSecret string
 	LemonSqueezyCheckoutURL   string // base variant checkout URL from LS dashboard
+
+	// Web Push (VAPID) — generate with: npx web-push generate-vapid-keys
+	VAPIDPublicKey  string
+	VAPIDPrivateKey string
 
 	// Telegram channel history importer (MTProto user session)
 	TelegramAppID         int
@@ -77,9 +82,13 @@ func Load() (*Config, error) {
 
 		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
 		ResendFrom:   getEnv("RESEND_FROM", ""),
+		ContactEmail: getEnv("CONTACT_EMAIL", "raissov1@gmail.com"),
 
 		LemonSqueezyWebhookSecret: os.Getenv("LEMONSQUEEZY_WEBHOOK_SECRET"),
 		LemonSqueezyCheckoutURL:   os.Getenv("LEMONSQUEEZY_CHECKOUT_URL"),
+
+		VAPIDPublicKey:  os.Getenv("VAPID_PUBLIC_KEY"),
+		VAPIDPrivateKey: os.Getenv("VAPID_PRIVATE_KEY"),
 
 		TelegramAppID:         getEnvInt("TELEGRAM_APP_ID", 0),
 		TelegramAppHash:       os.Getenv("TELEGRAM_APP_HASH"),

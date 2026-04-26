@@ -11,19 +11,19 @@ export const metadata: Metadata = {
   description: "Cambridge мәтіндері мен сұрақтары бойынша IELTS Reading бөлімін жаттықтырыңыз.",
 };
 
-const PASSAGE_TYPES = [
-  { key: "skimming", label: "Skimming & Scanning", desc: "Мәтінді жылдам шолу дағдысы" },
-  { key: "tfng", label: "True / False / Not Given", desc: "Фактілерді анықтау дағдысы" },
-  { key: "matching", label: "Matching Headings", desc: "Абзац тақырыптарын сәйкестендіру" },
-  { key: "fill", label: "Fill in the Blank", desc: "Мәтіндегі бос орындарды толтыру" },
-];
+const PASSAGE_TYPE_KEYS = [
+  { key: "skimming", label: "Skimming & Scanning", descKey: "ielts.reading.skimmingDesc" },
+  { key: "tfng", label: "True / False / Not Given", descKey: "ielts.reading.tfngDesc" },
+  { key: "matching", label: "Matching Headings", descKey: "ielts.reading.matchingDesc" },
+  { key: "fill", label: "Fill in the Blank", descKey: "ielts.reading.fillDesc" },
+] as const;
 
-const TIPS = [
-  "Сұрақтарды алдымен оқып, мәтінде не іздейтініңізді біліңіз.",
-  "Жауапты word limit ескере отырып жазыңыз (NOT MORE THAN TWO WORDS).",
-  "True/False/Not Given бойынша: мәтінде жоқ ақпарат = Not Given.",
-  "60 минутқа 3 passage + 40 сұрақ — уақытты тең бөліңіз.",
-];
+const TIP_KEYS = [
+  "ielts.reading.tip1",
+  "ielts.reading.tip2",
+  "ielts.reading.tip3",
+  "ielts.reading.tip4",
+] as const;
 
 export default async function IELTSReadingPage() {
   const locale = await getServerLocale();
@@ -44,11 +44,11 @@ export default async function IELTSReadingPage() {
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
             <BookOpen size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
-            13 сұрақ
+            13 {t("ielts.questions")}
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
             <CheckCircle2 size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
-            Автобағалау
+            {t("ielts.reading.autoBadge")}
           </span>
         </div>
       </div>
@@ -56,10 +56,10 @@ export default async function IELTSReadingPage() {
       {/* Practice type cards */}
       <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
-          Жаттығу форматы
+          {t("ielts.reading.practiceFormat")}
         </p>
         <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))" }}>
-          {PASSAGE_TYPES.map((pt) => (
+          {PASSAGE_TYPE_KEYS.map((pt) => (
             <Link
               key={pt.key}
               href={`/ielts/simulator?section=reading&focus=${pt.key}`}
@@ -81,9 +81,9 @@ export default async function IELTSReadingPage() {
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
               >
                 <p style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)" }}>{pt.label}</p>
-                <p style={{ fontSize: 13, color: "var(--ink-mute)", flex: 1 }}>{pt.desc}</p>
+                <p style={{ fontSize: 13, color: "var(--ink-mute)", flex: 1 }}>{t(pt.descKey)}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--terra)", fontWeight: 600, marginTop: 4 }}>
-                  Бастау <ArrowRight size={12} />
+                  {t("ielts.reading.start")} <ArrowRight size={12} />
                 </div>
               </div>
             </Link>
@@ -96,10 +96,10 @@ export default async function IELTSReadingPage() {
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
           <div>
             <p style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)", marginBottom: 4 }}>
-              Толық Reading бөлімі
+              {t("ielts.reading.fullSectionTitle")}
             </p>
             <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>
-              3 passage · 40 сұрақ · 60 минут · нақты IELTS форматы
+              {t("ielts.reading.fullSectionMeta")}
             </p>
           </div>
           <Link
@@ -119,7 +119,7 @@ export default async function IELTSReadingPage() {
             }}
           >
             <BookOpen size={15} />
-            Толық жаттығу
+            {t("ielts.reading.fullPractice")}
           </Link>
         </div>
       </div>
@@ -127,12 +127,12 @@ export default async function IELTSReadingPage() {
       {/* Tips */}
       <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 18 }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
-          Reading кеңестері
+          {t("ielts.reading.tipsTitle")}
         </p>
         <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
-          {TIPS.map((tip, i) => (
+          {TIP_KEYS.map((tipKey, i) => (
             <div
-              key={i}
+              key={tipKey}
               style={{
                 background: "var(--paper-2)",
                 border: "1px solid var(--line)",
@@ -160,7 +160,7 @@ export default async function IELTSReadingPage() {
               >
                 {i + 1}
               </div>
-              <p style={{ fontSize: 13, color: "var(--ink-mute)", lineHeight: 1.6 }}>{tip}</p>
+              <p style={{ fontSize: 13, color: "var(--ink-mute)", lineHeight: 1.6 }}>{t(tipKey)}</p>
             </div>
           ))}
         </div>

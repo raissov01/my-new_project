@@ -845,13 +845,6 @@ export function PlayQuizClient({
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-start px-3 py-5 sm:px-6 sm:py-10">
-        {streak > 1 ? (
-          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-3.5 py-1.5 text-sm font-semibold text-amber-300">
-            <Flame className="h-4 w-4" />
-            {t("quiz.play.streakLabel").replace("{n}", String(streak))}
-          </div>
-        ) : null}
-
         <div
           key={currentIdx}
           role="main"
@@ -865,37 +858,52 @@ export function PlayQuizClient({
               encourageText={t("quiz.play.encouragement")}
             />
           ) : null}
-          <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--surface-shadow-strong)] sm:rounded-[2rem] sm:p-8 md:p-10">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
-              {t("quiz.question")} {currentIdx + 1}
-            </p>
-            {question.imageUrl && questionType !== "hotspot" ? (
-              <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-base)]">
-                {/* Images are relative paths served via nginx/backend — next/image not usable here */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={question.imageUrl}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className="mx-auto max-h-[280px] w-auto object-contain"
-                />
-              </div>
-            ) : null}
-            {question.audioUrl ? (
-              <div className="mt-3">
-                <audio src={question.audioUrl} controls className="h-10 w-full" />
-              </div>
-            ) : null}
-            {question.videoUrl ? (
-              <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-black">
-                <VideoEmbed url={question.videoUrl} />
-              </div>
-            ) : null}
-            <h1 className="mt-3 break-words text-xl font-semibold leading-tight tracking-[-0.02em] text-[var(--text-primary)] sm:text-2xl md:text-3xl lg:text-4xl">
-              {question.questionText}
-            </h1>
-          </div>
+          <div className="nd-mock-shell">
+            {/* Question header bar */}
+            <div className="nd-mock-bar">
+              <span className="nd-mock-qn">{currentIdx + 1}</span>
+              <span style={{ flex: 1, fontFamily: "'JetBrains Mono',monospace", fontSize: 11, letterSpacing: ".08em", color: "var(--ink-mute)", textTransform: "uppercase" }}>
+                {questionNumberLabel}
+              </span>
+              {streak > 1 ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 700, color: "#f97316" }}>
+                  <Flame className="h-3.5 w-3.5" /> {streak}
+                </span>
+              ) : null}
+            </div>
+
+            {/* Question content */}
+            <div style={{ padding: "20px 24px 16px" }}>
+              {question.imageUrl && questionType !== "hotspot" ? (
+                <div style={{ marginBottom: 14, overflow: "hidden", borderRadius: 10, border: "1px solid var(--line)", background: "var(--paper-2)" }}>
+                  {/* Images are relative paths served via nginx/backend — next/image not usable here */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={question.imageUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    style={{ display: "block", margin: "0 auto", maxHeight: 280, width: "auto", objectFit: "contain" }}
+                  />
+                </div>
+              ) : null}
+              {question.audioUrl ? (
+                <div style={{ marginBottom: 14 }}>
+                  <audio src={question.audioUrl} controls style={{ width: "100%", height: 40 }} />
+                </div>
+              ) : null}
+              {question.videoUrl ? (
+                <div style={{ marginBottom: 14, overflow: "hidden", borderRadius: 10, border: "1px solid var(--line)", background: "#000" }}>
+                  <VideoEmbed url={question.videoUrl} />
+                </div>
+              ) : null}
+              <h1 style={{ fontSize: "clamp(18px, 3vw, 28px)", fontWeight: 800, letterSpacing: "-.025em", color: "var(--ink)", lineHeight: 1.3, wordBreak: "break-word", margin: 0 }}>
+                {question.questionText}
+              </h1>
+            </div>
+
+            {/* Options area */}
+            <div style={{ padding: "0 24px 24px" }}>
 
           {questionType === "mcq" ? (
             <McqBody
@@ -1083,23 +1091,25 @@ export function PlayQuizClient({
           ) : null}
 
           {phase === "submitting" ? (
-            <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
+            <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "var(--ink-mute)", fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".06em" }}>
               {t("quiz.play.submitting")}
             </div>
           ) : null}
 
           {submitError ? (
-            <div className="mt-6 rounded-[var(--radius-md)] border border-[var(--danger)]/30 bg-[var(--danger)]/10 p-4 text-sm text-[var(--danger)]">
-              <p className="font-medium">{submitError}</p>
+            <div style={{ marginTop: 16, borderRadius: 12, border: "1.5px solid #f87171", background: "#fff1f2", padding: 16, fontSize: 13 }}>
+              <p style={{ fontWeight: 600, color: "#be123c", margin: "0 0 8px" }}>{submitError}</p>
               <button
                 type="button"
                 onClick={() => void submitAttempt()}
-                className="mt-2 inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--danger)] px-4 text-xs font-semibold text-white"
+                style={{ display: "inline-flex", alignItems: "center", height: 34, padding: "0 14px", borderRadius: 99, background: "#ef4444", color: "#fff", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer" }}
               >
                 {t("quiz.play.retrySubmit")}
               </button>
             </div>
           ) : null}
+            </div>{/* end options area */}
+          </div>{/* end nd-mock-shell */}
         </div>
       </div>
 
@@ -1192,57 +1202,54 @@ function McqBody({
 }) {
   const hidden = new Set(hiddenLetters);
   return (
-    <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-4">
+    <div className="nd-mock-opts">
       {displayOptions.map((opt, index) => {
         const positionLabel = POSITION_LABELS[index];
         const isSelected = selectedLetter === opt.letter;
         const isCorrectOption = correctLetter === opt.letter;
         const isHidden = hidden.has(opt.letter);
-        let stateClasses =
-          "border-[var(--border)] bg-gradient-to-br " +
-          ACCENT_BY_POSITION[index] +
-          " hover:-translate-y-0.5";
-        let badgeClasses =
-          "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]";
+
+        let extraStyle: React.CSSProperties = {};
+        let letterStyle: React.CSSProperties = {};
         let icon: React.ReactNode = null;
+        let optClass = "nd-mock-opt";
+
         if (isHidden && !revealed) {
-          // 50/50 removed this option — grey it out and make it unclickable.
-          stateClasses =
-            "border-[var(--border)] bg-[var(--bg-surface)] opacity-30 grayscale";
+          extraStyle = { opacity: 0.3, pointerEvents: "none" };
+        } else if (!revealed && isSelected) {
+          optClass += " on";
         }
+
         if (revealed) {
           if (isCorrectOption) {
-            stateClasses =
-              "border-emerald-400/60 bg-emerald-500/15 animate-success-glow";
-            badgeClasses = "border-emerald-400/60 bg-emerald-500 text-white";
-            icon = <Check className="h-5 w-5 text-emerald-300" />;
+            extraStyle = { background: "var(--green-soft)", borderColor: "var(--green)", color: "var(--green)" };
+            letterStyle = { background: "var(--green)", borderColor: "var(--green)", color: "#fff" };
+            icon = <Check className="h-4 w-4" style={{ flexShrink: 0, color: "var(--green)" }} />;
           } else if (isSelected) {
-            stateClasses =
-              "border-rose-400/60 bg-rose-500/15 animate-shake";
-            badgeClasses = "border-rose-400/60 bg-rose-500 text-white";
-            icon = <X className="h-5 w-5 text-rose-300" />;
+            extraStyle = { background: "#fff1f2", borderColor: "#f87171", color: "#be123c" };
+            letterStyle = { background: "#ef4444", borderColor: "#ef4444", color: "#fff" };
+            icon = <X className="h-4 w-4" style={{ flexShrink: 0, color: "#ef4444" }} />;
           } else {
-            stateClasses =
-              "border-[var(--border)] bg-[var(--bg-surface)] opacity-50";
+            extraStyle = { opacity: 0.45 };
           }
         }
+
         return (
           <button
             key={opt.letter}
             type="button"
             onClick={() => onPick(opt.letter)}
             disabled={revealed || isHidden}
-            className={`group flex min-h-[68px] items-center gap-3 rounded-[var(--radius-xl)] border-2 px-3 py-3 text-left transition-all duration-200 disabled:cursor-default sm:min-h-[76px] sm:gap-4 sm:px-5 sm:py-4 ${stateClasses}`}
+            className={optClass}
+            style={extraStyle}
           >
-            <span
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-base font-bold uppercase transition-colors sm:h-11 sm:w-11 ${badgeClasses}`}
-            >
+            <span className="nd-mock-letter" style={letterStyle}>
               {positionLabel}
             </span>
-            <span className="min-w-0 flex-1 break-words text-sm font-medium text-[var(--text-primary)] sm:text-base md:text-lg">
+            <span style={{ flex: 1, textAlign: "left", wordBreak: "break-word", fontSize: 14 }}>
               {opt.text}
             </span>
-            {icon ? <span className="shrink-0">{icon}</span> : null}
+            {icon}
           </button>
         );
       })}
@@ -1277,42 +1284,36 @@ function McqMultiBody({
   );
 
   return (
-    <div className="mt-4 space-y-3 sm:mt-6">
-      <p className="text-sm text-[var(--text-muted)]">
+    <div>
+      <p style={{ fontSize: 12, color: "var(--ink-mute)", fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".06em", marginBottom: 10 }}>
         {t("quiz.play.selectMultiple")}
       </p>
-      <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4">
+      <div className="nd-mock-opts">
         {displayOptions.map((opt, index) => {
           const positionLabel = POSITION_LABELS[index];
           const isSelected = selected.has(opt.letter);
           const isCorrectOption = correctSet.has(opt.letter);
 
-          let stateClasses =
-            "border-[var(--border)] bg-gradient-to-br " +
-            ACCENT_BY_POSITION[index];
-          let badgeClasses =
-            "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]";
+          let extraStyle: React.CSSProperties = {};
+          let letterStyle: React.CSSProperties = {};
           let icon: React.ReactNode = null;
+          let optClass = "nd-mock-opt";
 
           if (!revealed && isSelected) {
-            stateClasses =
-              "border-[var(--primary)] bg-[var(--primary)]/10";
-            badgeClasses =
-              "border-[var(--primary)] bg-[var(--primary)] text-white";
+            optClass += " on";
           }
+
           if (revealed) {
             if (isCorrectOption) {
-              stateClasses =
-                "border-emerald-400/60 bg-emerald-500/15 animate-success-glow";
-              badgeClasses = "border-emerald-400/60 bg-emerald-500 text-white";
-              icon = <Check className="h-5 w-5 text-emerald-300" />;
+              extraStyle = { background: "var(--green-soft)", borderColor: "var(--green)", color: "var(--green)" };
+              letterStyle = { background: "var(--green)", borderColor: "var(--green)", color: "#fff" };
+              icon = <Check className="h-4 w-4" style={{ flexShrink: 0, color: "var(--green)" }} />;
             } else if (isSelected) {
-              stateClasses = "border-rose-400/60 bg-rose-500/15 animate-shake";
-              badgeClasses = "border-rose-400/60 bg-rose-500 text-white";
-              icon = <X className="h-5 w-5 text-rose-300" />;
+              extraStyle = { background: "#fff1f2", borderColor: "#f87171", color: "#be123c" };
+              letterStyle = { background: "#ef4444", borderColor: "#ef4444", color: "#fff" };
+              icon = <X className="h-4 w-4" style={{ flexShrink: 0, color: "#ef4444" }} />;
             } else {
-              stateClasses =
-                "border-[var(--border)] bg-[var(--bg-surface)] opacity-50";
+              extraStyle = { opacity: 0.45 };
             }
           }
 
@@ -1322,43 +1323,47 @@ function McqMultiBody({
               type="button"
               onClick={() => onToggle(opt.letter)}
               disabled={revealed}
-              className={`group flex min-h-[68px] items-center gap-3 rounded-[var(--radius-xl)] border-2 px-3 py-3 text-left transition-all duration-200 disabled:cursor-default sm:min-h-[76px] sm:gap-4 sm:px-5 sm:py-4 ${stateClasses}`}
+              className={optClass}
+              style={extraStyle}
             >
-              <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border-2 text-base font-bold uppercase transition-colors sm:h-11 sm:w-11 ${badgeClasses}`}
-              >
+              <span className="nd-mock-letter" style={letterStyle}>
                 {positionLabel}
               </span>
-              <span className="min-w-0 flex-1 break-words text-sm font-medium text-[var(--text-primary)] sm:text-base md:text-lg">
+              <span style={{ flex: 1, textAlign: "left", wordBreak: "break-word", fontSize: 14 }}>
                 {opt.text}
               </span>
-              {icon ? <span className="shrink-0">{icon}</span> : null}
+              {icon}
             </button>
           );
         })}
       </div>
       {!revealed ? (
-        <div className="flex justify-end">
-          <Button
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+          <button
             type="button"
             onClick={onSubmit}
             disabled={selected.size === 0}
+            className="nd-btn-primary"
+            style={{ fontSize: 13, padding: "10px 20px", opacity: selected.size === 0 ? 0.5 : 1 }}
           >
             {t("quiz.play.submitSelection")}
-          </Button>
+          </button>
         </div>
       ) : null}
       {revealed && lastCorrect !== null ? (
         <div
-          className={`rounded-[var(--radius-md)] border-2 px-4 py-3 text-sm ${
-            lastCorrect
-              ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
-              : "border-rose-400/60 bg-rose-500/10 text-rose-200"
-          }`}
+          style={{
+            marginTop: 12,
+            borderRadius: 10,
+            border: `1.5px solid ${lastCorrect ? "var(--green)" : "#f87171"}`,
+            background: lastCorrect ? "var(--green-soft)" : "#fff1f2",
+            padding: "10px 14px",
+            fontSize: 13,
+            fontWeight: 700,
+            color: lastCorrect ? "var(--green)" : "#be123c",
+          }}
         >
-          <p className="font-semibold">
-            {lastCorrect ? t("quiz.play.correct") : t("quiz.play.wrong")}
-          </p>
+          {lastCorrect ? t("quiz.play.correct") : t("quiz.play.wrong")}
         </div>
       ) : null}
     </div>
@@ -1383,37 +1388,48 @@ function TrueFalseBody({
     { key: "f", labelKey: "quiz.false" },
   ];
   return (
-    <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-4">
+    <div className="nd-mock-opts">
       {choices.map((c) => {
         const isSelected = selected === c.key;
         const isCorrect = correct === c.key;
-        let stateClasses =
-          "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:-translate-y-0.5";
+
+        let extraStyle: React.CSSProperties = {};
+        let letterStyle: React.CSSProperties = {};
         let icon: React.ReactNode = null;
+        let optClass = "nd-mock-opt";
+
+        if (!revealed && isSelected) {
+          optClass += " on";
+        }
+
         if (revealed) {
           if (isCorrect) {
-            stateClasses =
-              "border-emerald-400/60 bg-emerald-500/15 animate-success-glow text-emerald-200";
-            icon = <Check className="h-6 w-6 text-emerald-300" />;
+            extraStyle = { background: "var(--green-soft)", borderColor: "var(--green)", color: "var(--green)" };
+            letterStyle = { background: "var(--green)", borderColor: "var(--green)", color: "#fff" };
+            icon = <Check className="h-4 w-4" style={{ flexShrink: 0, color: "var(--green)" }} />;
           } else if (isSelected) {
-            stateClasses =
-              "border-rose-400/60 bg-rose-500/15 animate-shake text-rose-200";
-            icon = <X className="h-6 w-6 text-rose-300" />;
+            extraStyle = { background: "#fff1f2", borderColor: "#f87171", color: "#be123c" };
+            letterStyle = { background: "#ef4444", borderColor: "#ef4444", color: "#fff" };
+            icon = <X className="h-4 w-4" style={{ flexShrink: 0, color: "#ef4444" }} />;
           } else {
-            stateClasses =
-              "border-[var(--border)] bg-[var(--bg-surface)] opacity-50";
+            extraStyle = { opacity: 0.45 };
           }
         }
+
         return (
           <button
             key={c.key}
             type="button"
             onClick={() => onPick(c.key)}
             disabled={revealed}
-            className={`flex min-h-[88px] items-center justify-center gap-3 rounded-[var(--radius-xl)] border-2 px-4 py-6 text-2xl font-bold uppercase transition-all duration-200 disabled:cursor-default sm:text-3xl ${stateClasses}`}
+            className={optClass}
+            style={{ ...extraStyle, justifyContent: "center", minHeight: 56, fontSize: 16, fontWeight: 700 }}
           >
+            <span className="nd-mock-letter" style={letterStyle}>
+              {c.key.toUpperCase()}
+            </span>
             {t(c.labelKey)}
-            {icon ? <span className="shrink-0">{icon}</span> : null}
+            {icon}
           </button>
         );
       })}

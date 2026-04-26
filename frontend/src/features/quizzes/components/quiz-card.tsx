@@ -2,134 +2,123 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ListChecks, Target, Users, Timer, Pencil } from "lucide-react";
+import { Users, Target, Timer, Pencil, Play } from "lucide-react";
 import { formatDate } from "@/lib/shared/utils";
 import { type Locale, createTranslator } from "@/lib/shared/i18n";
 import type { QuizOverview } from "@/server/services/quizzes";
+
+const COVER_GRADIENTS = [
+  "linear-gradient(135deg,#C2500A,#8F3A05)",
+  "linear-gradient(135deg,#2563eb,#1B47B8)",
+  "linear-gradient(135deg,#3F7D3F,#2E5F2E)",
+  "linear-gradient(135deg,#E9B949,#B8801A)",
+  "linear-gradient(135deg,#1B1714,#3D342C)",
+  "linear-gradient(135deg,#C2425C,#8F2F45)",
+];
 
 interface QuizCardProps {
   quiz: QuizOverview;
   locale: Locale;
   isOwner: boolean;
+  index?: number;
 }
 
-export function QuizCard({ quiz, locale, isOwner }: QuizCardProps) {
+export function QuizCard({ quiz, locale, isOwner, index = 0 }: QuizCardProps) {
   const router = useRouter();
   const t = createTranslator(locale);
   const quizHref = `/quizzes/${quiz.id}`;
-
-  function openQuiz() {
-    router.push(quizHref);
-  }
+  const gradient = COVER_GRADIENTS[index % COVER_GRADIENTS.length];
 
   return (
-    <article
-      className="relative isolate z-50 flex h-full cursor-pointer flex-col rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-strong)] sm:p-6"
-      onClick={openQuiz}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          openQuiz();
-        }
-      }}
+    <div
+      className="nd-lib-card"
+      onClick={() => router.push(quizHref)}
       role="link"
       tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          router.push(quizHref);
+        }
+      }}
       aria-label={`${t("quiz.openQuiz")}: ${quiz.title}`}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h3 className="line-clamp-1 text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)] transition-colors group-hover:text-[var(--primary)]">
-            {quiz.title}
-          </h3>
-          <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-6 text-[var(--text-secondary)]">
-            {quiz.description || t("quiz.noDescription")}
-          </p>
-          {quiz.subject ? (
-            <span className="badge-primary mt-3 text-[11px]">{quiz.subject}</span>
-          ) : null}
-          {quiz.tags && quiz.tags.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {quiz.tags.slice(0, 4).map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center rounded-full bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          ) : null}
+      {/* Cover */}
+      <div className="nd-lib-cover" style={{ background: gradient }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textAlign: "center" }}>
+          <span style={{ fontSize: 48, fontWeight: 900, fontFamily: "'Caveat', cursive", lineHeight: 1 }}>
+            {quiz.questionCount}
+          </span>
+          <span style={{ fontSize: 11, letterSpacing: ".12em", fontFamily: "'JetBrains Mono', monospace", opacity: 0.85, textTransform: "uppercase" }}>
+            {quiz.questionCount === 1 ? t("quiz.question") : t("quiz.questions")}
+          </span>
         </div>
-        <span className="badge-primary text-[11px]">
-          <ListChecks className="h-3 w-3" />
-          {quiz.questionCount}{" "}
-          {quiz.questionCount === 1 ? t("quiz.question") : t("quiz.questions")}
-        </span>
+        {quiz.subject ? (
+          <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,.25)", backdropFilter: "blur(8px)", borderRadius: 99, padding: "3px 10px", fontSize: 10.5, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".06em", color: "#fff" }}>
+            {quiz.subject}
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-        <Stat
-          icon={<Users className="h-3.5 w-3.5" />}
-          label={t("quiz.attempts")}
-          value={String(quiz.attemptsCount)}
-        />
-        <Stat
-          icon={<Target className="h-3.5 w-3.5" />}
-          label={t("quiz.avgScore")}
-          value={`${quiz.averagePercentage}%`}
-        />
+      {/* Body */}
+      <div className="nd-lib-body">
+        <h4 style={{ lineHeight: 1.3 }}>{quiz.title}</h4>
+        <p>{quiz.description || t("quiz.noDescription")}</p>
+
+        {quiz.tags && quiz.tags.length > 0 ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 2 }}>
+            {quiz.tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="nd-tag" style={{ fontSize: 10.5 }}>
+                #{tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-3 flex items-center gap-3 text-xs text-[var(--text-muted)]">
-        <span className="inline-flex items-center gap-1">
-          <Timer className="h-3.5 w-3.5" />
-          {quiz.timePerQuestion}
-          {t("quiz.secondsShort")}
+      {/* Stats footer */}
+      <div className="nd-lib-foot">
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <Users style={{ width: 11, height: 11 }} />
+          {quiz.attemptsCount}
         </span>
-        <span>•</span>
-        <span>
-          {t("quiz.created")} {formatDate(quiz.createdAt, locale)}
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <Target style={{ width: 11, height: 11 }} />
+          {quiz.averagePercentage}%
         </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <Timer style={{ width: 11, height: 11 }} />
+          {quiz.timePerQuestion}{t("quiz.secondsShort")}
+        </span>
+        <span>{formatDate(quiz.createdAt, locale)}</span>
       </div>
 
-      <div className="relative z-20 mt-5 flex flex-wrap gap-2.5">
-        <span className="pointer-events-none inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-8px_rgba(37,99,235,0.4)] transition-all">
-          {t("quiz.openQuiz")}
-        </span>
-      </div>
-
-      {isOwner ? (
-        <div className="relative z-20 mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-4">
+      {/* Action buttons */}
+      <div
+        style={{ padding: "0 16px 16px", display: "flex", gap: 8, alignItems: "center" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Link
+          href={`/quizzes/${quiz.id}/play`}
+          className="nd-btn-primary"
+          style={{ flex: 1, justifyContent: "center", fontSize: 13, padding: "10px 14px" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Play style={{ width: 13, height: 13 }} />
+          {t("quiz.startQuiz")}
+        </Link>
+        {isOwner ? (
           <Link
             href={`/quizzes/${quiz.id}/edit`}
-            onClick={(event) => event.stopPropagation()}
-            className="relative z-20 pointer-events-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-[var(--radius-sm)] px-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+            className="nd-btn-soft"
+            style={{ padding: "10px 14px", fontSize: 13 }}
+            title={t("quiz.edit")}
+            onClick={(e) => e.stopPropagation()}
           >
-            <Pencil className="h-3.5 w-3.5" />
-            {t("quiz.edit")}
+            <Pencil style={{ width: 13, height: 13 }} />
           </Link>
-        </div>
-      ) : null}
-    </article>
-  );
-}
-
-function Stat({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-3">
-      <div className="flex items-center gap-2 text-xs font-medium text-[var(--text-muted)]">
-        {icon}
-        {label}
+        ) : null}
       </div>
-      <p className="mt-1.5 text-sm font-semibold text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }

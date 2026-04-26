@@ -11,7 +11,6 @@ import {
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
-import { Button } from "@/components/ui/button";
 import { getAttemptById, type AttemptAnswerResult } from "@/server/services/quizzes";
 import { DownloadCsvButton } from "./download-csv-button";
 
@@ -84,41 +83,47 @@ export default async function QuizResultsPage({
   const dashOffset = dashArray * (1 - percentage / 100);
 
   return (
-    <div className="page-shell py-4 sm:py-6">
-      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
-        <div className="nd-mock-bar">
-          <Link href={`/quizzes/${encodeURIComponent(id)}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+    <div className="page-shell py-6 sm:py-10">
+      {/* Page head */}
+      <div className="nd-page-head nd-reveal nd-d1">
+        <div>
+          <Link
+            href={`/quizzes/${encodeURIComponent(id)}`}
+            className="nd-tag"
+            style={{ marginBottom: 14, display: "inline-flex", textDecoration: "none" }}
+          >
             ← {t("quiz.backToLibrary")}
           </Link>
-          <h3 style={{ flex: 1 }}>{t("quiz.results.title")}</h3>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
-            {grade}
-          </span>
+          <p className="nd-eyebrow" style={{ marginTop: 8 }}>{t("quiz.results.title")}</p>
+          <h1 className="nd-page-title" style={{ marginTop: 8 }}>{grade}</h1>
+          <p className="nd-page-sub">
+            {attempt.score}/{attempt.totalQuestions} · {percentage}%
+          </p>
         </div>
       </div>
 
       {/* KPI grid */}
-      <div className="nd-kpi-grid" style={{ marginBottom: 24 }}>
+      <div className="nd-kpi-grid nd-reveal nd-d2">
         <div className="nd-kpi">
-          <span className="nd-kpi-label">Score</span>
-          <span className="nd-kpi-value">{attempt.score}/{attempt.totalQuestions}</span>
+          <span className="nd-kpi-lbl">Score</span>
+          <strong className="nd-kpi-num">{attempt.score}/{attempt.totalQuestions}</strong>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-label">Percentage</span>
-          <span className="nd-kpi-value">{percentage}%</span>
+          <span className="nd-kpi-lbl">Percentage</span>
+          <strong className="nd-kpi-num">{percentage}%</strong>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-label">{t("quiz.results.totalTime")}</span>
-          <span className="nd-kpi-value">{formatDuration(attempt.timeSpent)}</span>
+          <span className="nd-kpi-lbl">{t("quiz.results.totalTime")}</span>
+          <strong className="nd-kpi-num">{formatDuration(attempt.timeSpent)}</strong>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-label">{t("quiz.results.longestStreak")}</span>
-          <span className="nd-kpi-value">{maxStreak}</span>
+          <span className="nd-kpi-lbl">{t("quiz.results.longestStreak")}</span>
+          <strong className="nd-kpi-num">{maxStreak}</strong>
         </div>
       </div>
 
-      <section className="mb-8 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-xl)] sm:p-8 lg:p-10">
-        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[auto_1fr] lg:items-center">
+      <section className="nd-mock-shell nd-reveal nd-d3" style={{ marginBottom: 32, overflow: "hidden" }}>
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[auto_1fr] lg:items-center" style={{ padding: "28px 32px" }}>
           <div className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56">
             <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
               <circle
@@ -189,30 +194,22 @@ export default async function QuizResultsPage({
               />
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={`/quizzes/${encodeURIComponent(id)}/play`}>
-                <Button size="lg">
-                  <RotateCw className="h-4 w-4" />
-                  {t("quiz.results.retry")}
-                </Button>
+            <div style={{ marginTop: 24, display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <Link href={`/quizzes/${encodeURIComponent(id)}/play`} className="nd-btn-primary">
+                <RotateCw style={{ width: 15, height: 15 }} />
+                {t("quiz.results.retry")}
               </Link>
               {wrongCount > 0 ? (
                 <Link
                   href={`/quizzes/${encodeURIComponent(id)}/practice?attempt=${encodeURIComponent(attemptId)}`}
+                  className="nd-btn-soft"
                 >
-                  <Button variant="outline" size="lg">
-                    <Dumbbell className="h-4 w-4" />
-                    {t("quiz.results.practiceMistakes").replace(
-                      "{n}",
-                      String(wrongCount)
-                    )}
-                  </Button>
+                  <Dumbbell style={{ width: 15, height: 15 }} />
+                  {t("quiz.results.practiceMistakes").replace("{n}", String(wrongCount))}
                 </Link>
               ) : null}
-              <Link href="/quizzes">
-                <Button variant="outline" size="lg">
-                  {t("quiz.results.backToLibrary")}
-                </Button>
+              <Link href="/quizzes" className="nd-btn-soft">
+                {t("quiz.results.backToLibrary")}
               </Link>
               <DownloadCsvButton attempt={attempt} label={t("quiz.results.downloadCsv")} />
             </div>
@@ -220,13 +217,13 @@ export default async function QuizResultsPage({
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-          {t("quiz.results.breakdown")}
-        </h2>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          {t("quiz.results.breakdownBody")}
-        </p>
+      <section className="nd-reveal nd-d4" style={{ marginTop: 32 }}>
+        <div style={{ marginBottom: 16 }}>
+          <p className="nd-eyebrow">{t("quiz.results.breakdown")}</p>
+          <p style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 6 }}>
+            {t("quiz.results.breakdownBody")}
+          </p>
+        </div>
 
         <div className="mt-5 space-y-3">
           {attempt.answers.map((answer, idx) => (
@@ -257,14 +254,12 @@ function Stat({
   value: string;
 }) {
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+    <div className="nd-kpi" style={{ padding: "14px 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink-mute)", fontWeight: 700 }}>
         {icon}
         {label}
       </div>
-      <p className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
-        {value}
-      </p>
+      <strong className="nd-kpi-num" style={{ fontSize: 22, marginTop: 4 }}>{value}</strong>
     </div>
   );
 }
@@ -409,52 +404,51 @@ function AnswerRow({
   }
 
   return (
-    <article
-      className={`rounded-[var(--radius-xl)] border p-5 shadow-[var(--shadow-sm)] ${
-        answer.isCorrect
-          ? "border-emerald-500/30 bg-emerald-500/5"
-          : "border-rose-500/25 bg-rose-500/5"
-      }`}
+    <div
+      style={{
+        borderRadius: 14,
+        border: `1.5px solid ${answer.isCorrect ? "var(--green)" : "#f87171"}`,
+        background: answer.isCorrect ? "var(--green-soft)" : "#fff1f2",
+        padding: "16px 20px",
+        marginBottom: 10,
+      }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink-mute)", fontWeight: 700, marginBottom: 4 }}>
             #{index + 1}
           </p>
-          <h3 className="mt-1.5 text-base font-semibold text-[var(--text-primary)]">
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", margin: 0, lineHeight: 1.4, wordBreak: "break-word" }}>
             {answer.questionText || "—"}
           </h3>
         </div>
         <span
-          className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.14em] ${
-            answer.isCorrect
-              ? "bg-emerald-500/15 text-emerald-300"
-              : "bg-rose-500/15 text-rose-300"
-          }`}
+          className={answer.isCorrect ? "nd-tag nd-tag-green" : "nd-tag"}
+          style={answer.isCorrect ? {} : { background: "#fff1f2", borderColor: "#f87171", color: "#be123c" }}
         >
           {answer.isCorrect ? (
-            <Check className="h-3.5 w-3.5" />
+            <Check style={{ width: 11, height: 11 }} />
           ) : (
-            <X className="h-3.5 w-3.5" />
+            <X style={{ width: 11, height: 11 }} />
           )}
           {answer.isCorrect ? correctText : wrongText}
         </span>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)]">
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div style={{ borderRadius: 10, border: "1px solid var(--line)", background: "#fff", padding: "10px 14px", fontSize: 13, color: "var(--ink)" }}>
+          <p style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink-mute)", fontWeight: 700, marginBottom: 6 }}>
             {yourLabel}
           </p>
-          <div className="mt-1.5">{yourAnswerNode}</div>
+          {yourAnswerNode}
         </div>
-        <div className="rounded-[var(--radius-md)] border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-emerald-300">
+        <div style={{ borderRadius: 10, border: "1.5px solid var(--green)", background: "var(--green-soft)", padding: "10px 14px", fontSize: 13, color: "var(--ink)" }}>
+          <p style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--green)", fontWeight: 700, marginBottom: 6 }}>
             {correctLabel}
           </p>
-          <div className="mt-1.5">{correctAnswerNode}</div>
+          {correctAnswerNode}
         </div>
       </div>
-    </article>
+    </div>
   );
 }

@@ -78,6 +78,8 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.DailyNews{},
 		// Billing
 		&models.Subscription{},
+		// Push notifications
+		&models.PushSubscription{},
 	)
 	if err != nil {
 		return err

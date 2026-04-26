@@ -157,6 +157,11 @@ func (s *Sender) SendPasswordResetEmail(toEmail, fullName, code string) error {
 }
 
 // sendHTML is the internal helper that POSTs to Resend.
+// SendContactEmail forwards a contact-form submission to the admin inbox.
+func (s *Sender) SendContactEmail(toEmail, subject, html string) error {
+	return s.sendHTML(toEmail, subject, html)
+}
+
 func (s *Sender) sendHTML(to, subject, html string) error {
 	payload, err := json.Marshal(map[string]any{
 		"from":    s.from,

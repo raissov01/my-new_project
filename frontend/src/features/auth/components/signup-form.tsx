@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, GraduationCap, ShieldCheck } from "lucide-react";
+import { AlertCircle, GraduationCap, ShieldCheck } from "lucide-react";
 import { signup } from "@/app/(auth)/actions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,6 @@ export function SignupForm() {
   const { t } = useLocale();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [selectedRole, setSelectedRole] = useState<ProfileRole>("student");
   const [socialPending, setSocialPending] = useState<string | null>(null);
@@ -42,7 +41,6 @@ export function SignupForm() {
 
     submitLockRef.current = true;
     setError(null);
-    setMessage(null);
     setSocialPending(null);
     setEmailPending(true);
     const formData = new FormData(e.currentTarget);
@@ -60,13 +58,9 @@ export function SignupForm() {
         if (result?.error) {
           setError(result.error);
         } else if (result?.message) {
-          // Success — backend queued the 6-digit code email.
-          // Redirect to the verify page with the email pre-filled.
           router.push(`/verify-email?email=${encodeURIComponent(submittedEmail)}`);
         }
       } catch (submitError) {
-        // redirect() throws NEXT_REDIRECT — that's normal on success.
-        // Any other throw means something broke; reset the form state.
         if (process.env.NODE_ENV !== "production") {
           console.error("[signup-form] submit threw:", submitError);
         }
@@ -81,48 +75,12 @@ export function SignupForm() {
   function handleSocial(provider: "google") {
     if (emailPending || socialPending) return;
     setError(null);
-    setMessage(null);
     setSocialPending(provider);
     window.location.assign(`${getApiBaseUrl()}/auth/${provider}`);
   }
 
   // Only disable during active request. Never leave permanently disabled.
   const isDisabled = isPending || emailPending || !!socialPending;
-
-  // Success message screen
-  if (message) {
-    return (
-      <div className="animate-confetti-pop rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)] sm:p-8">
-        <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 sm:h-14 sm:w-14">
-            <CheckCircle2 className="h-7 w-7 text-white" />
-          </div>
-          <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)] sm:mt-5 sm:text-2xl">{t("auth.checkEmail")}</h2>
-          <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{message}</p>
-        </div>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[var(--border)]" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-[var(--bg-elevated)] px-3 text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-muted)]">
-              {t("verify.resendSection")}
-            </span>
-          </div>
-        </div>
-
-        <ResendVerificationForm />
-
-        <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)]">
-          {t("verify.alreadyVerified")}{" "}
-          <Link href="/login" className="font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]">
-            {t("auth.logIn")}
-          </Link>
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -259,86 +217,5 @@ export function SignupForm() {
         </Link>
       </p>
     </div>
-  );
-}
-
-function ResendVerificationForm() {
-  const { t } = useLocale();
-  const [email, setEmail] = useState("");
-  const [pending, setPending] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [cooldown, setCooldown] = useState(0);
-
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
-
-  async function handleResend(e: React.FormEvent) {
-    e.preventDefault();
-    if (pending || cooldown > 0 || !email.trim()) return;
-
-    setPending(true);
-    setSuccess(null);
-    setError(null);
-
-    try {
-      const resp = await fetch(`${getApiBaseUrl()}/auth/resend-verification`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const data = await resp.json().catch(() => null);
-
-      if (resp.ok) {
-        setSuccess(data?.message ?? t("verify.resendSuccess"));
-        setCooldown(30);
-      } else {
-        setError(data?.error ?? t("verify.genericError"));
-      }
-    } catch {
-      setError(t("verify.genericError"));
-    } finally {
-      setPending(false);
-    }
-  }
-
-  const isDisabled = pending || cooldown > 0;
-
-  return (
-    <form onSubmit={handleResend} className="space-y-3.5">
-      <Input
-        id="resend-email"
-        name="email"
-        type="email"
-        label={t("auth.email")}
-        placeholder={t("auth.emailPlaceholder")}
-        required
-        autoComplete="email"
-        disabled={isDisabled}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
-      {error && (
-        <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-600 dark:text-red-400">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {success && (
-        <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
-
-      <Button type="submit" className="w-full" size="lg" isLoading={pending} disabled={isDisabled}>
-        {cooldown > 0 ? `${t("verify.resendBtn")} (${cooldown}s)` : t("verify.resendBtn")}
-      </Button>
-    </form>
   );
 }

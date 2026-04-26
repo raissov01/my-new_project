@@ -4,14 +4,11 @@ import {
   BarChart2,
   Clock3,
   Globe2,
-  ListChecks,
   Lock,
   Play,
   Radio,
   Target,
-  UserRound,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/server/auth";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
@@ -67,112 +64,104 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
   const stats = quiz.isAuthor ? await getQuizStats(id) : null;
 
   return (
-    <div className="page-shell py-4 sm:py-6">
-      <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
-        <div className="nd-mock-bar">
-          <Link href="/quizzes" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+    <div className="page-shell py-6 sm:py-10">
+      {/* Page head */}
+      <div className="nd-page-head nd-reveal nd-d1">
+        <div style={{ minWidth: 0 }}>
+          <Link
+            href="/quizzes"
+            className="nd-tag"
+            style={{ marginBottom: 14, display: "inline-flex", textDecoration: "none" }}
+          >
             ← {t("quiz.backToLibrary")}
           </Link>
-          <h3 style={{ flex: 1 }}>{quiz.title}</h3>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
+          <p className="nd-eyebrow" style={{ marginTop: 8 }}>
+            {quiz.subject ?? t("quiz.navLabel")}
+          </p>
+          <h1 className="nd-page-title" style={{ marginTop: 8 }}>
+            {quiz.title}
+          </h1>
+          <p className="nd-page-sub">
             {quiz.questionCount} {quiz.questionCount === 1 ? t("quiz.question") : t("quiz.questions")}
-          </span>
+            {quiz.authorName ? ` · ${quiz.authorName}` : ""}
+            {" · "}
+            {formatDate(quiz.createdAt, locale)}
+          </p>
         </div>
       </div>
 
       {/* KPI grid */}
-      <div className="nd-kpi-grid" style={{ marginBottom: 24 }}>
+      <div className="nd-kpi-grid nd-reveal nd-d2">
         <div className="nd-kpi">
-          <span className="nd-kpi-label">{t("quiz.attempts")}</span>
-          <span className="nd-kpi-value">{quiz.attemptsCount}</span>
+          <span className="nd-kpi-lbl">{t("quiz.attempts")}</span>
+          <strong className="nd-kpi-num">{quiz.attemptsCount}</strong>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-label">{t("quiz.avgScore")}</span>
-          <span className="nd-kpi-value">{quiz.averagePercentage}%</span>
+          <span className="nd-kpi-lbl">{t("quiz.avgScore")}</span>
+          <strong className="nd-kpi-num">{quiz.averagePercentage}%</strong>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-label">
-            <Clock3 style={{ display: "inline", width: 13, height: 13, marginRight: 4 }} />
+          <span className="nd-kpi-lbl">
+            <Clock3 style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} />
             {t("quiz.secondsShort")}
           </span>
-          <span className="nd-kpi-value">{quiz.timePerQuestion}s</span>
+          <strong className="nd-kpi-num">{quiz.timePerQuestion}s</strong>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-label">
+          <span className="nd-kpi-lbl">
             {quiz.isPublic ? (
-              <Globe2 style={{ display: "inline", width: 13, height: 13, marginRight: 4 }} />
+              <Globe2 style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} />
             ) : (
-              <Lock style={{ display: "inline", width: 13, height: 13, marginRight: 4 }} />
+              <Lock style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} />
             )}
             Visibility
           </span>
-          <span className="nd-kpi-value" style={{ fontSize: 14 }}>
+          <strong className="nd-kpi-num" style={{ fontSize: 16 }}>
             {quiz.isPublic ? t("quiz.isPublic") : t("quiz.isPrivate")}
-          </span>
+          </strong>
         </div>
       </div>
 
-      {/* Meta info */}
-      <div className="mb-4">
-        <p className="mt-1 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-          {quiz.description || t("quiz.noDescription")}
-        </p>
-
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
-          {quiz.subject ? (
-            <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5">
-              {quiz.subject}
-            </span>
-          ) : null}
-          {quiz.authorName ? (
-            <span className="inline-flex items-center gap-1.5">
-              <UserRound className="h-4 w-4" />
-              {quiz.authorName}
-            </span>
-          ) : null}
-          <span>
-            {t("quiz.created")} {formatDate(quiz.createdAt, locale)}
-          </span>
-          {quiz.version != null && quiz.version > 1 ? (
-            <span className="rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 font-mono text-xs text-[var(--text-muted)]">
-              v{quiz.version}
-            </span>
-          ) : null}
-        </div>
-
-        {quiz.tags && quiz.tags.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {quiz.tags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/quizzes?tag=${encodeURIComponent(tag)}`}
-                className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
-              >
-                #{tag}
-              </Link>
-            ))}
-          </div>
+      {/* Meta + actions */}
+      <div className="nd-reveal nd-d3" style={{ marginBottom: 32 }}>
+        {quiz.description ? (
+          <p style={{ fontSize: 15, color: "var(--ink-soft)", lineHeight: 1.7, maxWidth: 680, marginBottom: 16 }}>
+            {quiz.description}
+          </p>
         ) : null}
 
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link href={`/quizzes/${quiz.id}/play`}>
-            <Button size="lg">
-              <Play className="h-4 w-4" />
-              {t("quiz.startQuiz")}
-            </Button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+          {quiz.version != null && quiz.version > 1 ? (
+            <span className="nd-tag">v{quiz.version}</span>
+          ) : null}
+          {quiz.shuffleOptions ? (
+            <span className="nd-tag nd-tag-green">{t("quiz.shuffleEnabled")}</span>
+          ) : null}
+          {quiz.tags?.map((tag) => (
+            <Link
+              key={tag}
+              href={`/quizzes?tag=${encodeURIComponent(tag)}`}
+              className="nd-tag"
+              style={{ textDecoration: "none" }}
+            >
+              #{tag}
+            </Link>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          <Link href={`/quizzes/${quiz.id}/play`} className="nd-btn-primary">
+            <Play style={{ width: 15, height: 15 }} />
+            {t("quiz.startQuiz")}
           </Link>
           {quiz.isAuthor ? (
             <>
-              <Link href={`/quizzes/${quiz.id}/edit`}>
-                <Button variant="outline" size="lg">
-                  {t("quiz.edit")}
-                </Button>
+              <Link href={`/quizzes/${quiz.id}/edit`} className="nd-btn-soft">
+                {t("quiz.edit")}
               </Link>
-              <Link href={`/quizzes/${quiz.id}/host`}>
-                <Button variant="outline" size="lg">
-                  <Radio className="h-4 w-4" />
-                  {t("quiz.hostLive")}
-                </Button>
+              <Link href={`/quizzes/${quiz.id}/host`} className="nd-btn-soft">
+                <Radio style={{ width: 15, height: 15 }} />
+                {t("quiz.hostLive")}
               </Link>
             </>
           ) : null}
@@ -180,64 +169,57 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
         </div>
       </div>
 
-      <section className="mt-8">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-            {t("quiz.questionsSection")}
-          </h2>
-          <span className="text-sm text-[var(--text-muted)]">
-            {quiz.shuffleOptions ? t("quiz.shuffleEnabled") : t("quiz.fixedOrder")}
+      <section className="nd-reveal nd-d4" style={{ marginTop: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
+          <div>
+            <p className="nd-eyebrow">{t("quiz.questionsSection")}</p>
+          </div>
+          <span className="nd-tag" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>
+            {quiz.questionCount} {quiz.questionCount === 1 ? t("quiz.question") : t("quiz.questions")}
           </span>
         </div>
 
-        <div className="mt-4 space-y-4">
+        <div className="nd-mock-shell">
           {quiz.questions.map((question, index) => (
-            <article
+            <div
               key={question.id}
-              className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)]"
+              className="nd-mock-q"
+              style={{ padding: "18px 24px", borderBottom: index < quiz.questions.length - 1 ? "1px dashed var(--line-strong)" : "none" }}
             >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                    {t("quiz.question")} {index + 1}
-                  </p>
-                  <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">
-                    {question.questionText}
-                  </h3>
-                </div>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+                <h5 style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--ink)", margin: 0 }}>
+                  <span className="nd-mock-qn">{index + 1}</span>
+                  {question.questionText}
+                </h5>
                 {quiz.isAuthor && question.correctOption ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-emerald-400">
-                    <Target className="h-3.5 w-3.5" />
-                    {t("quiz.correctAnswer")}: {question.correctOption.toUpperCase()}
+                  <span className="nd-tag nd-tag-green" style={{ fontSize: 10.5, whiteSpace: "nowrap" }}>
+                    <Target style={{ width: 11, height: 11 }} />
+                    {question.correctOption.toUpperCase()}
                   </span>
                 ) : null}
               </div>
 
               {quiz.isAuthor ? (
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   {OPTION_KEYS.map((key) => {
                     const text = getOptionText(question, key);
                     const isCorrect = question.correctOption === key;
-
                     return (
                       <div
                         key={key}
-                        className={`rounded-[var(--radius-lg)] border px-4 py-3 text-sm ${
-                          isCorrect
-                            ? "border-emerald-500/25 bg-emerald-500/10 text-[var(--text-primary)]"
-                            : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-secondary)]"
-                        }`}
+                        className={isCorrect ? "nd-mock-opt on" : "nd-mock-opt"}
+                        style={{ cursor: "default", pointerEvents: "none" }}
                       >
-                        <span className="font-semibold uppercase text-[var(--text-primary)]">
-                          {key}
-                        </span>{" "}
+                        <span className={isCorrect ? "nd-mock-letter" : "nd-mock-letter"} style={isCorrect ? { background: "var(--terra)", borderColor: "var(--terra)", color: "#fff" } : undefined}>
+                          {key.toUpperCase()}
+                        </span>
                         {text}
                       </div>
                     );
                   })}
                 </div>
               ) : null}
-            </article>
+            </div>
           ))}
         </div>
       </section>

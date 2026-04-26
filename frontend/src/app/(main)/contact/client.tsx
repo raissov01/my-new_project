@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
+import { getApiBaseUrl } from "@/lib/client/api";
 import type { Locale } from "@/lib/shared/i18n";
 
 type FormState = {
@@ -16,10 +17,12 @@ export function ContactForm({ locale: _locale }: { locale: Locale }) {
   const [form, setForm] = useState<FormState>({
     name: "",
     email: "",
-    subject: t("contact.subjectGeneral"),
+    subject: "general",
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -27,9 +30,33 @@ export function ContactForm({ locale: _locale }: { locale: Locale }) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+    try {
+      const subjectLabels: Record<string, string> = {
+        general: t("contact.subjectGeneral"),
+        tech: t("contact.subjectTech"),
+        partner: t("contact.subjectPartner"),
+        other: t("contact.subjectOther"),
+      };
+      const res = await fetch(`${getApiBaseUrl()}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, subject: subjectLabels[form.subject] ?? form.subject }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null) as { error?: string } | null;
+        setError(data?.error ?? t("contact.errorGeneric"));
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError(t("contact.errorGeneric"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
@@ -137,10 +164,10 @@ export function ContactForm({ locale: _locale }: { locale: Locale }) {
           onChange={handleChange}
           style={inputStyle}
         >
-          <option>{t("contact.subjectGeneral")}</option>
-          <option>{t("contact.subjectTech")}</option>
-          <option>{t("contact.subjectPartner")}</option>
-          <option>{t("contact.subjectOther")}</option>
+          <option value="general">{t("contact.subjectGeneral")}</option>
+          <option value="tech">{t("contact.subjectTech")}</option>
+          <option value="partner">{t("contact.subjectPartner")}</option>
+          <option value="other">{t("contact.subjectOther")}</option>
         </select>
       </div>
       <div>
@@ -155,8 +182,12 @@ export function ContactForm({ locale: _locale }: { locale: Locale }) {
           style={{ ...inputStyle, resize: "vertical" }}
         />
       </div>
+      {error && (
+        <p style={{ color: "var(--terra)", fontSize: 13, margin: 0 }}>{error}</p>
+      )}
       <button
         type="submit"
+        disabled={loading}
         style={{
           width: "100%",
           padding: "12px 20px",
@@ -166,11 +197,12 @@ export function ContactForm({ locale: _locale }: { locale: Locale }) {
           color: "#fff",
           fontSize: 15,
           fontWeight: 700,
-          cursor: "pointer",
+          cursor: loading ? "not-allowed" : "pointer",
           letterSpacing: ".02em",
+          opacity: loading ? 0.7 : 1,
         }}
       >
-        {t("contact.submit")}
+        {loading ? t("common.loading") : t("contact.submit")}
       </button>
     </form>
   );

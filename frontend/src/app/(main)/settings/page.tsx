@@ -15,6 +15,7 @@ import { PreferencesPanel } from "@/features/settings/components/preferences-pan
 import { DeleteAccountSection } from "@/features/settings/components/delete-account-section";
 import { RoleSection } from "@/features/settings/components/role-section";
 import { BillingSection } from "@/features/settings/components/billing-section";
+import { NotificationsSection } from "@/features/settings/components/notifications-section";
 import { getBillingStatus } from "@/features/settings/api";
 import type { ProfileRole } from "@/lib/shared/types/database";
 
@@ -132,6 +133,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
           {/* Billing */}
           <BillingSection billing={billing} />
+
+          {/* Push Notifications */}
+          <NotificationsSection
+            t={t}
+            vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""}
+          />
 
           {/* Privacy */}
           <div className="nd-settings-section">
