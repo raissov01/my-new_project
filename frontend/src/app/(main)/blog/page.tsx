@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
   const t = createTranslator(locale);

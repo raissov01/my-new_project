@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
@@ -26,22 +28,10 @@ type TeamMember = {
 
 const TEAM: TeamMember[] = [
   {
-    initial: "Ж",
-    name: "Жанар Раиссов",
-    roleKey: "about.roleFounder",
-    avatarBg: "linear-gradient(135deg,#C2500A,#8F3A05)",
-  },
-  {
     initial: "Ә",
     name: "Әбдімүтәлі Бекназар",
     roleKey: "about.roleCTO",
     avatarBg: "linear-gradient(135deg,#2563eb,#1B47B8)",
-  },
-  {
-    initial: "Д",
-    name: "Дина Қанатова",
-    roleKey: "about.roleContent",
-    avatarBg: "linear-gradient(135deg,#3F7D3F,#2E5F2E)",
   },
 ];
 
