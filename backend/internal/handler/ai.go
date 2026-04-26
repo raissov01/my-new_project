@@ -19,12 +19,11 @@ import (
 )
 
 type AIHandler struct {
-	openAIKey      string
-	openAIModel    string
-	geminiKey      string
-	geminiModel    string
-	requestTimeout time.Duration
-	maxBytes       int64
+	openAIKey           string
+	openAIModel         string
+	openAIModelFallback string
+	requestTimeout      time.Duration
+	maxBytes            int64
 }
 
 const (
@@ -37,14 +36,13 @@ const (
 	maxAITextLimitRunes     = 360000
 )
 
-func NewAI(openAIKey, openAIModel, geminiKey, geminiModel string, requestTimeout time.Duration, maxBytes int64) *AIHandler {
+func NewAI(openAIKey, openAIModel, openAIModelFallback string, requestTimeout time.Duration, maxBytes int64) *AIHandler {
 	return &AIHandler{
-		openAIKey:      openAIKey,
-		openAIModel:    openAIModel,
-		geminiKey:      geminiKey,
-		geminiModel:    geminiModel,
-		requestTimeout: requestTimeout,
-		maxBytes:       maxBytes,
+		openAIKey:           openAIKey,
+		openAIModel:         openAIModel,
+		openAIModelFallback: openAIModelFallback,
+		requestTimeout:      requestTimeout,
+		maxBytes:            maxBytes,
 	}
 }
 
@@ -66,7 +64,7 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.TrimSpace(h.openAIKey) == "" && strings.TrimSpace(h.geminiKey) == "" {
+	if strings.TrimSpace(h.openAIKey) == "" {
 		writeError(w, http.StatusServiceUnavailable, "AI is not configured", nil)
 		return
 	}
@@ -174,23 +172,25 @@ func (h *AIHandler) generateCards(text, mode, language string, count int) ([]gen
 }
 
 func (h *AIHandler) generateBatch(prompt string) ([]generatedCard, string, error) {
-	// Use the configured mini model for flashcards (faster and cheaper)
-	flashcardModel := h.openAIModel
-	if strings.TrimSpace(h.openAIKey) != "" {
-		cards, err := callOpenAI(h.openAIKey, flashcardModel, prompt, h.requestTimeout)
-		if err == nil {
-			return cards, flashcardModel, nil
-		}
-		if strings.TrimSpace(h.geminiKey) == "" {
-			return nil, "", err
-		}
-	}
+	// Single shared deadline across primary + fallback so total latency is
+	// bounded by requestTimeout regardless of how many providers are tried.
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
-	cards, err := callGemini(h.geminiKey, h.geminiModel, prompt, h.requestTimeout)
+	cards, err := callOpenAI(ctx, h.openAIKey, h.openAIModel, prompt)
+	if err == nil {
+		return cards, h.openAIModel, nil
+	}
+	if strings.TrimSpace(h.openAIModelFallback) == "" {
+		return nil, "", err
+	}
+	log.Printf("[ai] primary model failed, falling back to %s: %v", h.openAIModelFallback, err)
+
+	cards, err = callOpenAI(ctx, h.openAIKey, h.openAIModelFallback, prompt)
 	if err != nil {
 		return nil, "", err
 	}
-	return cards, h.geminiModel, nil
+	return cards, h.openAIModelFallback, nil
 }
 
 func buildGenerationBatches(text, mode, language string, count int) []string {
@@ -407,7 +407,7 @@ Text:
 %s`, langName, mi, count, text)
 }
 
-func callGemini(apiKey, model, prompt string, timeout time.Duration) ([]generatedCard, error) {
+func callGemini(ctx context.Context, apiKey, model, prompt string) ([]generatedCard, error) {
 	body := map[string]any{
 		"contents": []map[string]any{
 			{"parts": []map[string]string{{"text": prompt}}},
@@ -423,11 +423,17 @@ func callGemini(apiKey, model, prompt string, timeout time.Duration) ([]generate
 	bodyBytes, _ := json.Marshal(body)
 	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 
-	client := &http.Client{Timeout: timeout}
-	resp, err := client.Post(url, "application/json", bytes.NewReader(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("build gemini request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		if isTimeoutError(err) {
-			return nil, fmt.Errorf("gemini request timed out after %s: %w", timeout, err)
+			return nil, fmt.Errorf("gemini request timed out: %w", err)
 		}
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
@@ -482,7 +488,7 @@ func callGemini(apiKey, model, prompt string, timeout time.Duration) ([]generate
 	return valid, nil
 }
 
-func callOpenAI(apiKey, model, prompt string, timeout time.Duration) ([]generatedCard, error) {
+func callOpenAI(ctx context.Context, apiKey, model, prompt string) ([]generatedCard, error) {
 	body := map[string]any{
 		"model": model,
 		"messages": []map[string]string{
@@ -493,18 +499,18 @@ func callOpenAI(apiKey, model, prompt string, timeout time.Duration) ([]generate
 	}
 
 	bodyBytes, _ := json.Marshal(body)
-	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, fmt.Errorf("build openai request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 
-	client := &http.Client{Timeout: timeout}
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		if isTimeoutError(err) {
-			return nil, fmt.Errorf("openai request timed out after %s: %w", timeout, err)
+			return nil, fmt.Errorf("openai request timed out: %w", err)
 		}
 		return nil, fmt.Errorf("openai request failed: %w", err)
 	}

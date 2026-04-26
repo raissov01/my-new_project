@@ -20,8 +20,9 @@ type Config struct {
 	InternalAPIToken   string
 	Environment        string // "development" | "production"
 	OpenAIAPIKey       string
-	OpenAIModel        string // primary model (GPT-5) for chat, simulator, IELTS
-	OpenAIModelMini    string // model used for flashcard generation (defaults to gpt-4.1)
+	OpenAIModel             string // primary model (GPT-5) for chat, simulator, IELTS
+	OpenAIModelMini         string // primary model for flashcard generation (defaults to gpt-4.1)
+	OpenAIModelMiniFallback string // fallback model for flashcard generation (defaults to gpt-4o-mini)
 	ClaudeAPIKey          string
 	ClaudeModel           string
 	ClaudeFallbackModel   string
@@ -62,8 +63,9 @@ func Load() (*Config, error) {
 		InternalAPIToken:   os.Getenv("BACKEND_INTERNAL_TOKEN"),
 		Environment:        getEnv("ENVIRONMENT", "development"),
 		OpenAIAPIKey:       os.Getenv("OPENAI_API_KEY"),
-		OpenAIModel:        getEnv("OPENAI_MODEL", "gpt-5"),
-		OpenAIModelMini:    getEnv("OPENAI_MODEL_MINI", "gpt-4.1"),
+		OpenAIModel:             getEnv("OPENAI_MODEL", "gpt-5"),
+		OpenAIModelMini:         getEnv("OPENAI_MODEL_MINI", "gpt-4.1"),
+		OpenAIModelMiniFallback: getEnv("OPENAI_MODEL_MINI_FALLBACK", "gpt-4o-mini"),
 		ClaudeAPIKey:       os.Getenv("CLAUDE_API_KEY"),
 		ClaudeModel:           getEnv("CLAUDE_MODEL", "anthropic-claude-opus-4.6"),
 		ClaudeFallbackModel:  getEnv("CLAUDE_FALLBACK_MODEL", "anthropic-claude-sonnet-4.6"),

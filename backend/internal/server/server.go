@@ -182,7 +182,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Quiz:             handler.NewQuiz(quizSvc, cfg.Environment),
 		Challenge:        handler.NewChallengeHandler(challengeSvc, cfg.Environment),
 		ProfileWrite:     handler.NewProfileWrite(classroomRepo, cfg.Environment),
-		AI:               handler.NewAI(cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.AIRequestTimeout, cfg.MaxUploadBytes),
+		AI:               handler.NewAI(cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.OpenAIModelMiniFallback, cfg.AIRequestTimeout, cfg.MaxUploadBytes),
 		IELTSMaterial:      handler.NewIELTSMaterial(gormDB),
 		IELTSExaminer:      handler.NewIELTSExaminer(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.GeminiAPIKey, cfg.GeminiModel, cfg.AIRequestTimeout),
 		IELTSAttempt:       handler.NewIELTSAttempt(gormDB),

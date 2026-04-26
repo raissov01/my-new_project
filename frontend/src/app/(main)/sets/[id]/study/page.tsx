@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getCurrentUser } from "@/server/auth";
 import { getSetProgress } from "@/app/(main)/sets/progress-actions";
 import { getPomodoroPreferences } from "@/app/(main)/sets/pomodoro-actions";
 import {
@@ -28,9 +29,12 @@ export default async function StudyPage({
 }: StudyPageProps) {
   const { id } = await params;
   const { mode, view } = await searchParams;
-  const t = createTranslator(await getServerLocale());
+  const [t, user] = await Promise.all([
+    getServerLocale().then(createTranslator),
+    getCurrentUser(),
+  ]);
   const [setDetail, pomodoroSettings] = await Promise.all([
-    getSetDetail(id, "anonymous"),
+    getSetDetail(id, user?.id),
     getPomodoroPreferences(),
   ]);
   if (!setDetail) notFound();
