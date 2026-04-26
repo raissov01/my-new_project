@@ -2,15 +2,11 @@ import { getCurrentUser } from "@/server/auth";
 import { getScenarios, getConversationHistory } from "@/features/tutor/api";
 import Link from "next/link";
 import { Plus, Send } from "lucide-react";
+import { createTranslator } from "@/lib/shared/i18n";
+import { getServerLocale } from "@/server/i18n";
 
 export const metadata = { title: "AI Tutor — StudyWithRaissov" };
 
-const MODES = [
-  { key: "work",     label: "Writing"  },
-  { key: "social",   label: "Speaking" },
-  { key: "academic", label: "Grammar"  },
-  { key: "daily",    label: "Аударма"  },
-] as const;
 
 const GRADIENTS = [
   "linear-gradient(135deg,#C2500A,#8F3A05)",
@@ -26,6 +22,16 @@ export default async function TutorPage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
+  const MODES = [
+    { key: "work",     label: "Writing"  },
+    { key: "social",   label: "Speaking" },
+    { key: "academic", label: "Grammar"  },
+    { key: "daily",    label: t("tutor.modeTranslate") },
+  ];
+
   await getCurrentUser();
   const params = await searchParams;
 
@@ -48,12 +54,12 @@ export default async function TutorPage({
             style={{ fontWeight: 700 }}
           >
             <Plus className="h-4 w-4 flex-shrink-0" />
-            Жаңа сұхбат
+            {t("tutor.newConversation")}
           </Link>
 
           {history.length > 0 && (
             <>
-              <h4>Тарих</h4>
+              <h4>{t("tutor.history")}</h4>
               {history.slice(0, 20).map((entry) => {
                 const date = new Date(entry.startedAt).toLocaleDateString("kk-KZ", {
                   month: "short",
@@ -75,7 +81,7 @@ export default async function TutorPage({
 
           {history.length === 0 && (
             <p style={{ fontSize: 12, color: "var(--ink-mute)", padding: "8px 10px" }}>
-              Сұхбат жоқ
+              {t("tutor.noConversations")}
             </p>
           )}
         </aside>
@@ -89,7 +95,7 @@ export default async function TutorPage({
               href="/tutor"
               className={`nd-ai-mode${!activeCategory ? " on" : ""}`}
             >
-              Барлығы
+              {t("common.all")}
             </Link>
             {MODES.map(({ key, label }) => (
               <Link
@@ -108,8 +114,7 @@ export default async function TutorPage({
             <div className="nd-ai-msg">
               <div className="nd-ai-ava nd-ai-ava-ai">AI</div>
               <div className="nd-ai-bubble">
-                Сәлем! Мен сіздің AI тьюторыңызбын. Жаттығуға арналған сценарийді таңдаңыз
-                немесе жоғарыдағы режимдерді қолданып, тақырып бойынша іздеңіз.
+                {t("tutor.greeting")}
               </div>
             </div>
 
@@ -118,9 +123,9 @@ export default async function TutorPage({
               <div className="nd-ai-msg">
                 <div className="nd-ai-ava nd-ai-ava-ai">AI</div>
                 <div className="nd-ai-bubble" style={{ color: "var(--ink-mute)" }}>
-                  Бұл санатта сценарийлер жоқ.{" "}
+                  {t("tutor.noScenarios")}{" "}
                   <Link href="/tutor" style={{ color: "var(--terra)" }}>
-                    Барлығын көру
+                    {t("common.viewAll")}
                   </Link>
                 </div>
               </div>
@@ -189,7 +194,7 @@ export default async function TutorPage({
           <div className="nd-ai-composer">
             <div className="nd-ai-composer-box">
               <textarea
-                placeholder="Сценарий таңдап, сұхбатты бастаңыз…"
+                placeholder={t("tutor.composerPlaceholder")}
                 rows={1}
                 disabled
                 style={{ cursor: "default" }}

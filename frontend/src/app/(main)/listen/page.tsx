@@ -2,6 +2,8 @@ import { getCurrentUser } from "@/server/auth";
 import { getListeningClips } from "@/features/listening/api";
 import { ClipCard } from "@/components/listening/ClipCard";
 import { Headphones } from "lucide-react";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 
 export const metadata = { title: "Listening Library — StudyWithRaissov" };
 
@@ -15,6 +17,8 @@ export default async function ListenPage({
 }) {
   await getCurrentUser();
   const params = await searchParams;
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
 
   const clips = await getListeningClips({
     level: params.level,
@@ -46,7 +50,7 @@ export default async function ListenPage({
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
         <div>
           <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 8 }}>
-            ДЕҢГЕЙ
+            {t("listen.levelFilter")}
           </p>
           <div className="nd-lib-filters" style={{ marginBottom: 0 }}>
             {LEVELS.map((lv) => (
@@ -59,7 +63,7 @@ export default async function ListenPage({
         </div>
         <div>
           <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 8 }}>
-            ТАҚЫРЫП
+            {t("listen.topicFilter")}
           </p>
           <div className="nd-lib-filters" style={{ marginBottom: 0 }}>
             {TOPICS.map((tp) => (
@@ -81,9 +85,9 @@ export default async function ListenPage({
       {clips.length === 0 ? (
         <div style={{ padding: "64px 0", textAlign: "center" }}>
           <Headphones style={{ width: 40, height: 40, margin: "0 auto 12px", opacity: .25, color: "var(--ink-mute)" }} />
-          <p style={{ color: "var(--ink-mute)", fontSize: 14 }}>Фильтрге сәйкес клип жоқ.</p>
+          <p style={{ color: "var(--ink-mute)", fontSize: 14 }}>{t("listen.noClips")}</p>
           <a href="/listen" style={{ fontSize: 13, color: "var(--terra)", marginTop: 8, display: "inline-block" }}>
-            Фильтрді тазалау →
+            {t("listen.clearFilters")}
           </a>
         </div>
       ) : (

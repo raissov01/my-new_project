@@ -21,22 +21,10 @@ type TeamMember = {
 
 const TEAM: TeamMember[] = [
   {
-    initial: "Ж",
-    name: "Жанар Раиссов",
-    role: "НЕГІЗІН ҚАЛАУШЫ · IELTS 8.5",
-    avatarBg: "linear-gradient(135deg,#C2500A,#8F3A05)",
-  },
-  {
     initial: "Ә",
     name: "Әбдімүтәлі Бекназар",
     role: "ТЕХ. ДИРЕКТОР · AI",
     avatarBg: "linear-gradient(135deg,#2563eb,#1B47B8)",
-  },
-  {
-    initial: "Д",
-    name: "Дина Қанатова",
-    role: "КОНТЕНТ БАСШЫСЫ",
-    avatarBg: "linear-gradient(135deg,#3F7D3F,#2E5F2E)",
   },
 ];
 
@@ -114,7 +102,7 @@ export default function AboutPage() {
             maxWidth: 540,
           }}
         >
-          Біз 2023 жылы 3 адамнан бастадық. Бүгін 12,000+ студент бізбен бірге дайындалуда.
+          Біз 2023 жылы бастадық. Бүгін 12,000+ студент бізбен бірге дайындалуда.
         </p>
       </div>
 

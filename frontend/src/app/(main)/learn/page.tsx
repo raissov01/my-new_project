@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getPlacement, getMap } from "@/features/learn/api";
 import Link from "next/link";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 
-export const metadata = { title: "Кітапхана — StudyWithRaissov" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return { title: t("learn.metaTitle") };
+}
 
 const GRADIENTS = [
   "linear-gradient(135deg,#C2500A,#8F3A05)",
@@ -37,6 +44,9 @@ export default async function LearnPage({
   const mapData = await getMap();
   const allUnits = mapData.units ?? [];
 
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   const units =
     activeSkill === "Барлығы"
       ? allUnits
@@ -50,10 +60,10 @@ export default async function LearnPage({
       {/* Page heading */}
       <div className="nd-reveal" style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--ink)", margin: 0 }}>
-          Кітапхана
+          {t("learn.heading")}
         </h1>
         <p style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 4 }}>
-          Барлық бөлімдер мен сабақтар бір жерде
+          {t("learn.subtitle")}
         </p>
       </div>
 
@@ -65,7 +75,7 @@ export default async function LearnPage({
             href={skill === "Барлығы" ? "/learn" : `/learn?skill=${skill}`}
             className={`nd-lib-pill${activeSkill === skill ? " on" : ""}`}
           >
-            {skill}
+            {skill === "Барлығы" ? t("common.all") : skill}
           </Link>
         ))}
       </div>
@@ -76,9 +86,9 @@ export default async function LearnPage({
           className="nd-reveal nd-d2"
           style={{ padding: "60px 0", textAlign: "center", color: "var(--ink-mute)" }}
         >
-          Бұл санатта бөлімдер жоқ.{" "}
+          {t("learn.noSections")}{" "}
           <Link href="/learn" style={{ color: "var(--terra)", fontWeight: 600 }}>
-            Барлығын көру
+            {t("learn.viewAll")}
           </Link>
         </div>
       ) : (
@@ -116,7 +126,7 @@ export default async function LearnPage({
 
                 {/* Footer */}
                 <div className="nd-lib-foot">
-                  <span>{lessonCount} сабақ</span>
+                  <span>{lessonCount} {t("learn.lesson")}</span>
                   <span>{unit.level}</span>
                 </div>
               </Link>

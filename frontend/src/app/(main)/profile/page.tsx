@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Профиль",
-  description: "Жеке профиль, XP, жетістіктер және оқу статистикасы.",
-  robots: { index: false, follow: false },
-};
-
 import {
   getCurrentProfile,
   getCurrentUser,
@@ -18,6 +12,16 @@ import { getServerLocale } from "@/server/i18n";
 
 interface ProfilePageProps {
   searchParams: Promise<{ tab?: string; status?: string }>;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("profile.title"),
+    description: t("profile.metaDesc"),
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
@@ -54,9 +58,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   ];
 
   const tabs = [
-    { key: "account", label: "Аккаунт" },
-    { key: "stats", label: "Статистика" },
-    { key: "subscription", label: "Жазылым" },
+    { key: "account", label: t("profile.tabAccount") },
+    { key: "stats", label: t("profile.tabStats") },
+    { key: "subscription", label: t("profile.tabSubscription") },
   ];
 
   return (
@@ -77,11 +81,11 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </div>
             <div>
               <strong>{Math.round(stats.totalStudied / 1000 * 10) / 10}K</strong>
-              <span>СӨЗ</span>
+              <span>{t("profile.words")}</span>
             </div>
             <div>
               <strong>{stats.xpLevel} XP</strong>
-              <span>ДЕҢГЕЙ</span>
+              <span>{t("profile.level")}</span>
             </div>
             <div>
               <strong>{stats.points > 0 ? (stats.accuracy >= 70 ? "6.5+" : "–") : "–"}</strong>
@@ -121,7 +125,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         ))}
       </div>
 
-      {/* Аккаунт tab */}
+      {/* Account tab */}
       {tab === "account" && (
         <div className="nd-reveal nd-d2">
           <div className="nd-settings-section">
@@ -135,7 +139,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             >
               <div className="nd-settings-row">
                 <div className="nd-settings-lbl">
-                  <strong>Аты</strong>
+                  <strong>{t("profile.name")}</strong>
                   <span>{username}</span>
                 </div>
               </div>
@@ -147,13 +151,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               </div>
               <div className="nd-settings-row">
                 <div className="nd-settings-lbl">
-                  <strong>Қала</strong>
+                  <strong>{t("profile.city")}</strong>
                   <span>—</span>
                 </div>
               </div>
               <div className="nd-settings-row">
                 <div className="nd-settings-lbl">
-                  <strong>Мақсатты балл</strong>
+                  <strong>{t("profile.targetScore")}</strong>
                   <span>7.0</span>
                 </div>
               </div>
@@ -195,7 +199,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
       )}
 
-      {/* Статистика tab */}
+      {/* Stats tab */}
       {tab === "stats" && (
         <div className="nd-reveal nd-d2">
           <div className="nd-card" style={{ marginBottom: 18 }}>
@@ -211,7 +215,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                   marginBottom: 4,
                 }}
               >
-                IELTS Дағдылары
+                {t("profile.ieltsSkills")}
               </div>
             </div>
             {ieltsSkills.map((skill) => (
@@ -240,7 +244,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 marginBottom: 16,
               }}
             >
-              Оқу метрикасы
+              {t("profile.studyMetrics")}
             </div>
             <div className="nd-skill-row">
               <span className="nd-skill-lbl">{t("profile.streak")}</span>
@@ -276,7 +280,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
       )}
 
-      {/* Жазылым tab */}
+      {/* Subscription tab */}
       {tab === "subscription" && (
         <div className="nd-reveal nd-d2">
           <div className="nd-card" style={{ marginBottom: 18 }}>
@@ -291,23 +295,23 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 marginBottom: 12,
               }}
             >
-              Жоспар
+              {t("profile.plan")}
             </div>
             <div className="nd-settings-row">
               <div className="nd-settings-lbl">
                 <strong>Free</strong>
-                <span>Негізгі мүмкіндіктер</span>
+                <span>{t("profile.coreFeatures")}</span>
               </div>
             </div>
             <div className="nd-settings-row">
               <div className="nd-settings-lbl">
-                <strong>Жиналған XP</strong>
+                <strong>{t("profile.earnedXP")}</strong>
                 <span>{stats.points} XP</span>
               </div>
             </div>
             <div className="nd-settings-row">
               <div className="nd-settings-lbl">
-                <strong>Деңгей</strong>
+                <strong>{t("profile.levelLabel")}</strong>
                 <span>{stats.levelName}</span>
               </div>
             </div>
@@ -328,10 +332,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               Premium
             </div>
             <p style={{ fontSize: 14, color: "var(--ink-soft)", marginBottom: 16, lineHeight: 1.6 }}>
-              AI-мұғалім, шексіз жиындар, IELTS симуляторы және т.б. мүмкіндіктерді ашыңыз.
+              {t("profile.upgradeBody")}
             </p>
             <a href="/settings" className="nd-btn-ink" style={{ display: "inline-flex" }}>
-              Жаңарту
+              {t("profile.upgrade")}
             </a>
           </div>
         </div>

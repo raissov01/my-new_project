@@ -125,6 +125,15 @@ func (r *Progress) UpsertCardResult(ctx context.Context, userID, flashcardID str
 		}
 	}
 
+	_, err = tx.Exec(ctx,
+		`INSERT INTO study_events (user_id, flashcard_id, correct, studied_at)
+		 VALUES ($1, $2, $3, $4)`,
+		userID, flashcardID, correct, now,
+	)
+	if err != nil {
+		return fmt.Errorf("insert study event: %w", err)
+	}
+
 	return tx.Commit(ctx)
 }
 

@@ -1,10 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getAchievements } from "@/features/gamification/api";
 import { getUserStats } from "@/app/(main)/sets/progress-actions";
 import type { AchievementRow } from "@/features/gamification/api";
+import { createTranslator } from "@/lib/shared/i18n";
+import { getServerLocale } from "@/server/i18n";
 
-export const metadata = { title: "Жетістіктер — StudyWithRaissov" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return { title: `${t("achievements.title")} — StudyWithRaissov` };
+}
 
 const TIER_EMOJI: Record<string, string> = {
   bronze: "🥉",
@@ -31,6 +38,9 @@ function badgeIcon(achievement: AchievementRow): string {
 }
 
 export default async function AchievementsPage() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
@@ -47,9 +57,9 @@ export default async function AchievementsPage() {
       {/* Page header */}
       <div className="nd-page-head nd-reveal">
         <div>
-          <div className="nd-page-title">Жетістіктер</div>
+          <div className="nd-page-title">{t("achievements.title")}</div>
           <div className="nd-page-sub">
-            Оқу сапарыңызда белгілі жетістіктерге жетіңіз.
+            {t("achievements.subtitle")}
           </div>
         </div>
       </div>
@@ -57,26 +67,26 @@ export default async function AchievementsPage() {
       {/* KPI grid */}
       <div className="nd-kpi-grid nd-reveal nd-d1">
         <div className="nd-kpi">
-          <div className="nd-kpi-lbl">Жалпы XP</div>
+          <div className="nd-kpi-lbl">{t("achievements.totalXP")}</div>
           <div className="nd-kpi-num">{stats.points}</div>
           <div className="nd-kpi-sub">{stats.levelName}</div>
         </div>
         <div className="nd-kpi">
           <div className="nd-kpi-lbl">Streak</div>
           <div className="nd-kpi-num">{stats.streakDays}</div>
-          <div className="nd-kpi-sub">күн қатарынан</div>
+          <div className="nd-kpi-sub">{t("achievements.daysInRow")}</div>
         </div>
         <div className="nd-kpi">
-          <div className="nd-kpi-lbl">Оқылған карта</div>
+          <div className="nd-kpi-lbl">{t("achievements.studiedCards")}</div>
           <div className="nd-kpi-num">{stats.totalStudied}</div>
-          <div className="nd-kpi-sub">барлығы</div>
+          <div className="nd-kpi-sub">{t("common.total")}</div>
         </div>
         <div className="nd-kpi dark">
-          <div className="nd-kpi-lbl">Жетістіктер</div>
+          <div className="nd-kpi-lbl">{t("achievements.badge")}</div>
           <div className="nd-kpi-num">
             {unlocked}/{total}
           </div>
-          <div className="nd-kpi-sub">ашылды</div>
+          <div className="nd-kpi-sub">{t("achievements.unlocked")}</div>
         </div>
       </div>
 
@@ -128,7 +138,7 @@ export default async function AchievementsPage() {
               letterSpacing: ".04em",
             }}
           >
-            Жетістіктер жоқ. Оқуды бастаңыз!
+            {t("achievements.empty")}
           </div>
         )}
       </div>

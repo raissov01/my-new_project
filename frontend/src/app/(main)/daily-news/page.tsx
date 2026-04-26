@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Newspaper, Volume2 } from "lucide-react";
 import { getTodayNews, getRecentNews } from "@/features/news/api";
 import type { DailyNews, VocabWord, NewsQuestion } from "@/features/news/api";
+import { useLocale } from "@/components/providers/locale-provider";
 
 type Level = "A2" | "B1" | "C1";
 
@@ -15,6 +16,7 @@ function parseJSON<T>(val: unknown): T[] {
 }
 
 function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
+  const { t } = useLocale();
   const text = level === "A2" ? news.versionA2 : level === "B1" ? news.versionB1 : news.versionC1;
   const vocab = level === "A2" ? parseJSON<VocabWord>(news.vocabA2) : level === "B1" ? parseJSON<VocabWord>(news.vocabB1) : parseJSON<VocabWord>(news.vocabC1);
   const audioUrl = level === "A2" ? news.audioA2Url : level === "B1" ? news.audioB1Url : news.audioC1Url;
@@ -23,7 +25,7 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  if (!text) return <p style={{ color: "var(--ink-mute)", fontSize: 14, padding: "16px 0" }}>Бұл деңгей үшін мазмұн жоқ.</p>;
+  if (!text) return <p style={{ color: "var(--ink-mute)", fontSize: 14, padding: "16px 0" }}>{t("news.noContent")}</p>;
 
   const correctCount = submitted
     ? questions.filter((q, i) => (answers[i] ?? "").trim().toLowerCase() === q.answer.toLowerCase()).length
@@ -67,7 +69,7 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
                 <p style={{ fontSize: 14, marginBottom: 6, color: "var(--ink)" }}>{i + 1}. {q.prompt}</p>
                 {submitted ? (
                   <p style={{ fontSize: 13.5, fontWeight: 600, color: (answers[i] ?? "").trim().toLowerCase() === q.answer.toLowerCase() ? "var(--green)" : "var(--terra)" }}>
-                    {(answers[i] ?? "").trim().toLowerCase() === q.answer.toLowerCase() ? "✓ Дұрыс" : `✗ Жауап: ${q.answer}`}
+                    {(answers[i] ?? "").trim().toLowerCase() === q.answer.toLowerCase() ? t("news.correct") : `${t("news.answer")} ${q.answer}`}
                   </p>
                 ) : (
                   <input
@@ -75,7 +77,7 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
                     value={answers[i] ?? ""}
                     onChange={(e) => setAnswers((prev) => ({ ...prev, [i]: e.target.value }))}
                     style={{ width: "100%", borderRadius: 10, border: "1.5px solid var(--line)", padding: "8px 12px", fontSize: 14, outline: "none", boxSizing: "border-box", background: "var(--paper)" }}
-                    placeholder="Жауап енгізіңіз…"
+                    placeholder={t("news.placeholder")}
                   />
                 )}
               </div>
@@ -86,11 +88,11 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
               onClick={() => setSubmitted(true)}
               style={{ marginTop: 14, padding: "9px 20px", borderRadius: 10, background: "var(--ink)", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}
             >
-              Тексеру
+              {t("news.check")}
             </button>
           ) : (
             <p style={{ marginTop: 12, fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
-              Нәтиже: {correctCount} / {questions.length}
+              {t("news.result")} {correctCount} / {questions.length}
             </p>
           )}
         </div>
@@ -100,15 +102,16 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
 }
 
 export default function DailyNewsPage() {
+  const { t } = useLocale();
   const [news, setNews] = useState<DailyNews | null>(null);
   const [recent, setRecent] = useState<DailyNews[]>([]);
   const [level, setLevel] = useState<Level>("B1");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getTodayNews(), getRecentNews()]).then(([t, r]) => {
-      setNews(t);
-      setRecent(r);
+    Promise.all([getTodayNews(), getRecentNews()]).then(([todayNews, recentNews]) => {
+      setNews(todayNews);
+      setRecent(recentNews);
       setLoading(false);
     });
   }, []);
@@ -120,7 +123,7 @@ export default function DailyNewsPage() {
   if (loading) {
     return (
       <div className="page-shell py-16" style={{ textAlign: "center", color: "var(--ink-mute)" }}>
-        Жүктелуде…
+        {t("common.loading")}
       </div>
     );
   }
@@ -129,7 +132,7 @@ export default function DailyNewsPage() {
     return (
       <div className="page-shell py-16" style={{ textAlign: "center" }}>
         <Newspaper style={{ width: 48, height: 48, margin: "0 auto 12px", opacity: .25, color: "var(--ink-mute)" }} />
-        <p style={{ color: "var(--ink-mute)", fontSize: 14 }}>Бүгін жаңалық жоқ. 06:00 UTC-де қайта тексеріңіз.</p>
+        <p style={{ color: "var(--ink-mute)", fontSize: 14 }}>{t("news.noNews")}</p>
       </div>
     );
   }
@@ -157,7 +160,7 @@ export default function DailyNewsPage() {
           {news.sourceUrl && (
             <a href={news.sourceUrl} target="_blank" rel="noopener noreferrer"
               style={{ fontSize: 12, color: "var(--terra)", marginTop: 6, display: "inline-block" }}>
-              Бастапқы дереккөз →
+              {t("news.sourceLink")}
             </a>
           )}
         </div>
@@ -182,7 +185,7 @@ export default function DailyNewsPage() {
       {recent.length > 1 && (
         <div style={{ marginTop: 28 }}>
           <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 12 }}>
-            ОСЫ АПТАДА
+            {t("news.thisWeek")}
           </p>
           <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))" }}>
             {recent.slice(1).map((r) => (

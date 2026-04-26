@@ -11,6 +11,7 @@ import type { XPEvent, DailyQuest } from "@/features/gamification/api";
 import type { StudentQuizAssignment } from "@/server/services/classrooms.types";
 import { XPBoostBanner } from "@/components/gamification/XPBoostBanner";
 import { StreakBadge } from "@/components/gamification/StreakBadge";
+import { useLocale } from "@/components/providers/locale-provider";
 
 // ── Hearts logic ──────────────────────────────────────────────────────────────
 
@@ -171,6 +172,7 @@ function unitIcon(unit: EngSimUnit): string {
 // ── BUG-LEARN-009: Teacher assignment banner ──────────────────────────────────
 
 function AssignmentBanner({ assignments }: { assignments: StudentQuizAssignment[] }) {
+  const { t } = useLocale();
   if (assignments.length === 0) return null;
   const first = assignments[0];
   const daysLeft = first.deadline
@@ -182,19 +184,19 @@ function AssignmentBanner({ assignments }: { assignments: StudentQuizAssignment[
       <span className="mt-0.5 text-xl">📌</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-[var(--text-primary)]">
-          Мұғалімнен тапсырма
+          {t("learn.assignmentBanner")}
         </p>
         <p className="truncate text-xs text-[var(--text-secondary)]">
           {first.quizTitle} · {first.groupName}
           {daysLeft !== null && (
             <span className={` · ${daysLeft <= 1 ? "text-red-500 font-semibold" : "text-[var(--text-muted)]"}`}>
-              {daysLeft === 0 ? "Бүгін дедлайн!" : `${daysLeft} күн қалды`}
+              {daysLeft === 0 ? t("learn.deadlineToday") : t("learn.daysLeft", { daysLeft })}
             </span>
           )}
         </p>
         {assignments.length > 1 && (
           <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            +{assignments.length - 1} тапсырма тағы бар
+            {t("learn.moreAssignments", { count: assignments.length - 1 })}
           </p>
         )}
       </div>
@@ -202,7 +204,7 @@ function AssignmentBanner({ assignments }: { assignments: StudentQuizAssignment[
         href={`/quizzes/${first.quizId}/play`}
         className="shrink-0 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white active:scale-95"
       >
-        Бастау →
+        {t("learn.start")}
       </Link>
     </div>
   );

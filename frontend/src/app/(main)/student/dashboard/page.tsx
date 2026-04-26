@@ -8,10 +8,13 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { requireRole } from "@/server/auth";
 
-export const metadata: Metadata = { title: "Басты бет | StudyWithRaissov" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return { title: t("dashboard.meta") };
+}
 
 const WORDS = ["IELTS", "Speaking", "Writing", "Band 9", "Listening", "Reading"];
-const WEEK_DAYS = ["ДС", "СС", "СР", "БС", "ЖМ", "СБ", "ЖС"];
 
 const IELTS_SKILLS = [
   { label: "Listening", key: "listening" },
@@ -72,6 +75,16 @@ export default async function StudentDashboardPage() {
   // Today's plan from assignments (up to 4)
   const todayItems = summary.assignments.slice(0, 4);
 
+  const WEEK_DAYS = [
+    t("dashboard.mon"),
+    t("dashboard.tue"),
+    t("dashboard.wed"),
+    t("dashboard.thu"),
+    t("dashboard.fri"),
+    t("dashboard.sat"),
+    t("dashboard.sun"),
+  ];
+
   return (
     <div className="page-shell py-6 sm:py-8">
 
@@ -81,18 +94,20 @@ export default async function StudentDashboardPage() {
           <div>
             <span className="nd-eyebrow" style={{ color: "#FBA968", marginBottom: 14, display: "inline-flex" }}>
               <span style={{ background: "#FBA968", width: 20, height: 1 }}></span>
-              Бүгінгі мақсат
+              {t("dashboard.todayGoal")}
             </span>
             <h2 style={{ marginTop: 12 }}>
-              Сәлем, <span style={{ fontFamily: "'Caveat',cursive", color: "#FBA968" }}>{firstName}</span> — оқуды бастайық!
+              {t("dashboard.greeting").split("{name}")[0]}
+              <span style={{ fontFamily: "'Caveat',cursive", color: "#FBA968" }}>{firstName}</span>
+              {t("dashboard.greeting").split("{name}")[1]}
             </h2>
-            <p>AI-ден кері байланыс, флэшкарталар, IELTS дайындығы — бәрі бір жерде.</p>
+            <p>{t("dashboard.heroBody")}</p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/learn/map" className="nd-btn-primary" style={{ background: "#fff", color: "var(--terra-deep)" }}>
-                Сабақты бастау →
+                {t("dashboard.startLesson")}
               </Link>
               <Link href="/ielts" className="nd-btn-ghost">
-                IELTS тесті
+                {t("dashboard.ieltsTest")}
               </Link>
             </div>
           </div>
@@ -112,30 +127,30 @@ export default async function StudentDashboardPage() {
       <div className="nd-kpi-grid nd-reveal nd-d1">
         <div className="nd-kpi">
           <span className="nd-kpi-lbl">Streak</span>
-          <span className="nd-kpi-num">{stats.streakDays} <small style={{ fontSize: 13, fontWeight: 500 }}>күн</small></span>
-          <span className="nd-kpi-trend">🔥 жалғасуда</span>
+          <span className="nd-kpi-num">{stats.streakDays} <small style={{ fontSize: 13, fontWeight: 500 }}>{t("dashboard.days")}</small></span>
+          <span className="nd-kpi-trend">{t("dashboard.streakContinuing")}</span>
         </div>
         <div className="nd-kpi">
           <span className="nd-kpi-lbl">Карта</span>
           <span className="nd-kpi-num">{stats.totalStudied.toLocaleString()}</span>
-          <span className="nd-kpi-sub">осы аптада +{stats.totalCorrect}</span>
+          <span className="nd-kpi-sub">{t("dashboard.thisWeek")}{stats.totalCorrect}</span>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-lbl">Мақсат</span>
+          <span className="nd-kpi-lbl">{t("dashboard.goal")}</span>
           <span className="nd-kpi-num">7.5</span>
           <span className="nd-kpi-sub">IELTS band score</span>
         </div>
         <div className="nd-kpi dark">
-          <span className="nd-kpi-lbl">Mock тест</span>
+          <span className="nd-kpi-lbl">{t("dashboard.mockTest")}</span>
           <span className="nd-kpi-num">{overallBand}</span>
-          <span className="nd-kpi-sub">соңғы нәтиже</span>
+          <span className="nd-kpi-sub">{t("dashboard.latestResult")}</span>
         </div>
       </div>
 
       {/* ── TODAY'S PLAN ── */}
       <div className="nd-sect-h nd-reveal nd-d2">
-        <h3>Бүгінгі жоспар</h3>
-        <Link href="/learn/map" className="nd-sect-link">Барлығы →</Link>
+        <h3>{t("dashboard.todayPlan")}</h3>
+        <Link href="/learn/map" className="nd-sect-link">{t("common.viewAll")}</Link>
       </div>
 
       <div className="nd-today-card nd-reveal nd-d2">
@@ -164,7 +179,7 @@ export default async function StudentDashboardPage() {
                   <p>{a.groupName}</p>
                 </div>
                 <span className={`nd-today-status ${i === 0 ? "now" : "next"}`}>
-                  {i === 0 ? "Now" : "Next"}
+                  {i === 0 ? t("dashboard.statusNow") : t("dashboard.statusNext")}
                 </span>
               </div>
             </Link>
@@ -174,20 +189,20 @@ export default async function StudentDashboardPage() {
             <div className="nd-today-row">
               <div className="nd-today-ico" style={{ background: "var(--terra)" }}>FC</div>
               <div className="nd-today-info"><h4>Флэшкарталар</h4><p>20 МИНУТ · Academic Vocabulary</p></div>
-              <span className="nd-today-status now">Now</span>
+              <span className="nd-today-status now">{t("dashboard.statusNow")}</span>
             </div>
             <div className="nd-today-row">
               <Link href="/ielts" style={{ display: "contents", textDecoration: "none" }}>
                 <div className="nd-today-ico" style={{ background: "var(--blue)" }}>IT</div>
                 <div className="nd-today-info"><h4>IELTS Reading тест</h4><p>30 МИНУТ · 3 сұрақ</p></div>
-                <span className="nd-today-status next">Next</span>
+                <span className="nd-today-status next">{t("dashboard.statusNext")}</span>
               </Link>
             </div>
             <div className="nd-today-row">
               <Link href="/tutor" style={{ display: "contents", textDecoration: "none" }}>
                 <div className="nd-today-ico" style={{ background: "var(--green)" }}>AI</div>
                 <div className="nd-today-info"><h4>AI Tutor — Writing</h4><p>15 МИНУТ · Эссе тексеру</p></div>
-                <span className="nd-today-status next">Next</span>
+                <span className="nd-today-status next">{t("dashboard.statusNext")}</span>
               </Link>
             </div>
           </>
@@ -199,7 +214,7 @@ export default async function StudentDashboardPage() {
         {/* Weekly chart */}
         <div className="nd-card-hand">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>Апталық прогресс</h3>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>{t("dashboard.weeklyProgress")}</h3>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: "var(--terra-tint)", border: "1px solid var(--terra-soft)", fontSize: 11, fontWeight: 700, color: "var(--terra-deep)", fontFamily: "'JetBrains Mono',monospace" }}>
               {stats.xpProgress}% XP
             </span>
@@ -217,9 +232,9 @@ export default async function StudentDashboardPage() {
         {/* IELTS skill bars */}
         <div className="nd-card-hand">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>IELTS прогрессім</h3>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>{t("dashboard.ieltsProgress")}</h3>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: "var(--green-soft)", border: "1px solid var(--green-soft)", fontSize: 11, fontWeight: 700, color: "var(--green)", fontFamily: "'JetBrains Mono',monospace" }}>
-              7.5 мақсат
+              7.5 {t("dashboard.target")}
             </span>
           </div>
           {IELTS_SKILLS.map(({ label, key }) => {
@@ -238,7 +253,7 @@ export default async function StudentDashboardPage() {
           })}
           {scoreHistory.length === 0 && (
             <p style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 10, fontFamily: "'JetBrains Mono',monospace" }}>
-              Mock тест тапсырсаң нәтиже шығады
+              {t("dashboard.mockTestHint")}
             </p>
           )}
         </div>

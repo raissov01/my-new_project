@@ -142,7 +142,7 @@ export function AppSidebar() {
     ? [
         { href: "/profile", label: t("nav.profile") || "Профиль", icon: User },
         { href: "/settings", label: t("nav.settings") || "Баптаулар", icon: Settings },
-        { href: "/upgrade", label: "Pro", icon: Crown },
+        ...(user.plan !== "pro" ? [{ href: "/upgrade", label: "Pro", icon: Crown }] : []),
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle },
         { href: "/about", label: t("nav.about") || "Біз туралы", icon: HelpCircle },
         { href: "/blog", label: t("nav.blog") || "Блог", icon: Newspaper },

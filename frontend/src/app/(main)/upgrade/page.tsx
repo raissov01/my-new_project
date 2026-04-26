@@ -1,29 +1,34 @@
 import { redirect } from "next/navigation";
-import { Crown, CheckCircle2, Zap, BookOpen, Brain, Mic, Trophy, Gift, Sparkles } from "lucide-react";
+import { Crown, CheckCircle2, Zap, BookOpen, Brain, Mic, Trophy, Gift } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { getBillingStatus } from "@/features/settings/api";
+import { createTranslator } from "@/lib/shared/i18n";
+import { getServerLocale } from "@/server/i18n";
 import { PromoCheckout } from "./promo-checkout";
-
-const PRO_FEATURES = [
-  { icon: BookOpen, text: "Шексіз English Simulator сабақтары" },
-  { icon: Brain,    text: "Толық IELTS тренажеры — Reading, Writing, Listening, Speaking" },
-  { icon: Zap,      text: "AI Tutor — шексіз хабарламалар" },
-  { icon: Trophy,   text: "AI Quiz генерация — кез-келген тақырыпта" },
-  { icon: Mic,      text: "Speaking Practice — AI бағалауымен" },
-  { icon: Crown,    text: "Барлық жаңа мүмкіндіктерге бірінші қол жеткізу" },
-];
-
-const FREE_FEATURES = [
-  "Күніне 5 сабақ (English Simulator)",
-  "3 IELTS тест/ай",
-  "AI Tutor — 10 хабарлама/күн",
-  "Flashcard жиындары",
-  "Leaderboard, achievements",
-];
 
 const monoStyle: React.CSSProperties = { fontFamily: "'JetBrains Mono',monospace" };
 
 export default async function UpgradePage() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
+  const PRO_FEATURES = [
+    { icon: BookOpen, text: t("upgrade.feature1") },
+    { icon: Brain,    text: t("upgrade.feature2") },
+    { icon: Zap,      text: t("upgrade.feature3") },
+    { icon: Trophy,   text: t("upgrade.feature4") },
+    { icon: Mic,      text: t("upgrade.feature5") },
+    { icon: Crown,    text: t("upgrade.feature6") },
+  ];
+
+  const FREE_FEATURES = [
+    t("upgrade.freeFeat1"),
+    t("upgrade.freeFeat2"),
+    t("upgrade.freeFeat3"),
+    t("upgrade.freeFeat4"),
+    t("upgrade.freeFeat5"),
+  ];
+
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
@@ -53,11 +58,10 @@ export default async function UpgradePage() {
         {/* ─── Intro ─── */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <h1 style={{ fontSize: 32, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.03em", marginBottom: 12 }}>
-            Шексіз оқу мүмкіндігі
+            {t("upgrade.heading")}
           </h1>
           <p style={{ fontSize: 15, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
-            AI-мен оқудың толық күшін ашыңыз. IELTS дайындығы, ағылшын тілі,
-            AI сабақтар — бәрі бір жазылымда.
+            {t("upgrade.body")}
           </p>
         </div>
 
@@ -82,7 +86,7 @@ export default async function UpgradePage() {
                 <span style={{ fontSize: 36, fontWeight: 900, color: "var(--ink)", lineHeight: 1 }}>$0</span>
                 <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>/ай</span>
               </div>
-              <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>Мәңгілік тегін</p>
+              <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>{t("upgrade.foreverFree")}</p>
             </div>
 
             <ul style={{ display: "flex", flexDirection: "column", gap: 10, listStyle: "none", padding: 0, margin: 0 }}>
@@ -109,7 +113,7 @@ export default async function UpgradePage() {
                 width: "100%",
               }}
             >
-              Ағымдағы жоспар
+              {t("upgrade.currentPlan")}
             </button>
           </div>
 
@@ -140,20 +144,20 @@ export default async function UpgradePage() {
                   ...monoStyle,
                 }}
               >
-                7 КҮН ТЕГІН TRIAL
+                {t("upgrade.trialBadge")}
               </span>
             </div>
 
             <div>
               <p style={{ ...monoStyle, fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--green)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                <Gift style={{ width: 13, height: 13 }} /> ТЕГІН СЫНАП КӨР
+                <Gift style={{ width: 13, height: 13 }} /> {t("upgrade.trialLabel")}
               </p>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 4, marginBottom: 6 }}>
                 <span style={{ fontSize: 36, fontWeight: 900, color: "var(--ink)", lineHeight: 1 }}>₸0</span>
-                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>/7 күн</span>
+                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>{t("upgrade.trialDuration")}</span>
               </div>
               <p style={{ fontSize: 13, color: "var(--green)", fontWeight: 600 }}>
-                Одан кейін автоматты ₸2,000/ай
+                {t("upgrade.trialAfter")}
               </p>
             </div>
 
@@ -188,11 +192,10 @@ export default async function UpgradePage() {
                   }}
                 >
                   <Gift style={{ width: 15, height: 15 }} />
-                  7 күн тегін бастау
+                  {t("upgrade.trialCta")}
                 </a>
                 <p style={{ textAlign: "center", fontSize: 11, color: "var(--ink-mute)" }}>
-                  Картаңыз тіркеледі. 7 күннен кейін $9/ай алынады.
-                  Кез-келген уақытта бас тарта аласыз.
+                  {t("upgrade.trialDisclaimer")}
                 </p>
               </div>
             ) : (
@@ -214,7 +217,7 @@ export default async function UpgradePage() {
                   width: "100%",
                 }}
               >
-                <Gift style={{ width: 15, height: 15 }} /> Жүктелуде...
+                <Gift style={{ width: 15, height: 15 }} /> {t("common.loading")}
               </button>
             )}
           </div>
@@ -246,7 +249,7 @@ export default async function UpgradePage() {
                   ...monoStyle,
                 }}
               >
-                ЕҢ ТАНЫМАЛ
+                {t("upgrade.mostPopular")}
               </span>
             </div>
 
@@ -258,7 +261,7 @@ export default async function UpgradePage() {
                 <span style={{ fontSize: 36, fontWeight: 900, color: "var(--ink)", lineHeight: 1 }}>$9</span>
                 <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>/ай</span>
               </div>
-              <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>немесе $79/жыл (үнемдеу $29)</p>
+              <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>{t("upgrade.yearlyOption")}</p>
             </div>
 
             <ul style={{ display: "flex", flexDirection: "column", gap: 10, listStyle: "none", padding: 0, margin: 0 }}>
@@ -291,7 +294,7 @@ export default async function UpgradePage() {
                   width: "100%",
                 }}
               >
-                <Crown style={{ width: 15, height: 15 }} /> Жүктелуде...
+                <Crown style={{ width: 15, height: 15 }} /> {t("common.loading")}
               </button>
             )}
           </div>
@@ -299,7 +302,7 @@ export default async function UpgradePage() {
 
         {/* ─── Support ─── */}
         <div style={{ marginTop: 36, textAlign: "center", fontSize: 13, color: "var(--ink-mute)" }}>
-          Сұрақтар бар ма?{" "}
+          {t("upgrade.questions")}{" "}
           <a
             href="https://t.me/raissov01"
             target="_blank"

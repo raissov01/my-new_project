@@ -6,18 +6,21 @@ import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getPublicSetsOverview, getUserSetsOverview } from "@/server/services/sets-overview";
 
-export const metadata: Metadata = {
-  title: "Флешкарта кітапханасы",
-  description: "Платформадағы барлық ашық флешкарта жинақтарын қараңыз. IELTS, тіл үйрену, пән бойынша жинақтар.",
-  alternates: { canonical: "/flashcards" },
-  openGraph: {
-    title: "Флешкарта кітапханасы — StudyWithRaissov",
-    description: "Платформадағы барлық ашық флешкарта жинақтарын қараңыз.",
-    url: "/flashcards",
-    locale: "kk_KZ",
-  },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("flashcards.metaTitle"),
+    description: t("flashcards.metaDesc"),
+    alternates: { canonical: "/flashcards" },
+    openGraph: {
+      title: t("flashcards.metaTitle"),
+      description: t("flashcards.metaDesc"),
+      url: "/flashcards",
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg,#C2500A,#8F3A05)",
@@ -56,14 +59,14 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
       {/* Page head */}
       <div className="nd-page-head nd-reveal nd-d1">
         <div>
-          <p className="nd-eyebrow">Флэшкарта жинақтары</p>
-          <h1 className="nd-page-title" style={{ marginTop: 10 }}>Менің колодаларым</h1>
+          <p className="nd-eyebrow">{t("flashcards.eyebrow")}</p>
+          <h1 className="nd-page-title" style={{ marginTop: 10 }}>{t("flashcards.myDecks")}</h1>
           <p className="nd-page-sub">
-            {filtered.length} жинақ · {totalCards} карта
+            {filtered.length} {t("flashcards.setCardCount").split(" · ")[0]} · {totalCards} {t("flashcards.setCardCount").split(" · ")[1]}
           </p>
         </div>
         <Link href="/sets/new" className="nd-btn-primary" style={{ flexShrink: 0 }}>
-          + Жаңа жинақ
+          {t("flashcards.newSet")}
         </Link>
       </div>
 
@@ -121,7 +124,7 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
 
                 {/* Tag */}
                 <span className="nd-tag nd-tag-terra" style={{ alignSelf: "flex-start" }}>
-                  флэшкарта
+                  {t("flashcards.tag")}
                 </span>
 
                 {/* Title */}
@@ -141,7 +144,7 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
 
                 {/* Meta */}
                 <div className="nd-deck-meta">
-                  <span>{set.cardCount} карта</span>
+                  <span>{set.cardCount} {t("flashcards.cards")}</span>
                   <span>{accuracy}%</span>
                 </div>
 
@@ -151,7 +154,7 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
                   className="nd-btn-soft"
                   style={{ marginTop: 4 }}
                 >
-                  Оқуды бастау →
+                  {t("flashcards.startStudy")}
                 </Link>
               </div>
             );
@@ -172,7 +175,7 @@ export default async function FlashcardsPage({ searchParams }: FlashcardsPagePro
             {t("sets.emptyTitle")}
           </p>
           <Link href="/sets/new" className="nd-btn-primary">
-            + Жаңа жинақ жасау
+            {t("flashcards.createNewSet")}
           </Link>
         </div>
       )}
