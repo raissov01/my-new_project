@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Newspaper, Volume2 } from "lucide-react";
 import { getTodayNews, getRecentNews } from "@/features/news/api";
 import type { DailyNews, VocabWord, NewsQuestion } from "@/features/news/api";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
 type Level = "A2" | "B1" | "C1";
 
@@ -103,18 +105,29 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
 
 export default function DailyNewsPage() {
   const { t } = useLocale();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [news, setNews] = useState<DailyNews | null>(null);
+  const [todayNews, setTodayNews] = useState<DailyNews | null>(null);
   const [recent, setRecent] = useState<DailyNews[]>([]);
   const [level, setLevel] = useState<Level>("B1");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getTodayNews(), getRecentNews()]).then(([todayNews, recentNews]) => {
-      setNews(todayNews);
-      setRecent(recentNews);
-      setLoading(false);
-    });
-  }, []);
+    if (!authLoading && !user) router.replace("/login");
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    Promise.all([getTodayNews(), getRecentNews()])
+      .then(([fetchedToday, recentNews]) => {
+        setNews(fetchedToday);
+        setTodayNews(fetchedToday);
+        setRecent(recentNews);
+      })
+      .catch(() => setNews(null))
+      .finally(() => setLoading(false));
+  }, [user, authLoading]);
 
   const date = news
     ? new Date(news.newsDate).toLocaleDateString("kk-KZ", { weekday: "long", month: "long", day: "numeric" })
@@ -181,6 +194,16 @@ export default function DailyNewsPage() {
         <NewsContent news={news} level={level} />
       </div>
 
+      {/* Back to today */}
+      {todayNews && news?.id !== todayNews.id && (
+        <button
+          onClick={() => setNews(todayNews)}
+          style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 600, color: "var(--terra)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        >
+          ← {t("news.backToToday")}
+        </button>
+      )}
+
       {/* Archive */}
       {recent.length > 1 && (
         <div style={{ marginTop: 28 }}>
@@ -190,7 +213,7 @@ export default function DailyNewsPage() {
           <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))" }}>
             {recent.slice(1).map((r) => (
               <button key={r.id} onClick={() => setNews(r)}
-                style={{ borderRadius: 14, border: "1.5px solid var(--line)", background: "var(--paper)", padding: "12px 14px", textAlign: "left", cursor: "pointer", transition: "border-color .12s" }}>
+                style={{ borderRadius: 14, border: `1.5px solid ${news?.id === r.id ? "var(--terra)" : "var(--line)"}`, background: "var(--paper)", padding: "12px 14px", textAlign: "left", cursor: "pointer", transition: "border-color .12s" }}>
                 <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, color: "var(--ink-mute)", marginBottom: 4 }}>
                   {new Date(r.newsDate).toLocaleDateString("kk-KZ", { weekday: "short", month: "short", day: "numeric" })}
                 </p>

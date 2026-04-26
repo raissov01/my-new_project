@@ -1,29 +1,37 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 import { ContactForm } from "./client";
 
-export const metadata: Metadata = {
-  title: "Байланыс",
-  description: "StudyWithRaissov командасымен байланысыңыз. Сұрақ жіберіңіз немесе Telegram арқылы хабарласыңыз.",
-  alternates: { canonical: "/contact" },
-  openGraph: {
-    title: "Байланыс — StudyWithRaissov",
-    description: "Командамен байланысыңыз.",
-    url: "/contact",
-    locale: "kk_KZ",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("contact.heading"),
+    description: "StudyWithRaissov командасымен байланысыңыз. Сұрақ жіберіңіз немесе Telegram арқылы хабарласыңыз.",
+    alternates: { canonical: "/contact" },
+    openGraph: {
+      title: `${t("contact.heading")} — StudyWithRaissov`,
+      description: t("contact.formDesc"),
+      url: "/contact",
+    },
+  };
+}
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   return (
     <div className="page-shell py-4 sm:py-6">
       {/* Header */}
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Link href="/student/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
-            ← Артқа
+            {t("contact.back")}
           </Link>
-          <h3 style={{ flex: 1 }}>Байланыс</h3>
+          <h3 style={{ flex: 1 }}>{t("contact.heading")}</h3>
         </div>
       </div>
 
@@ -58,16 +66,16 @@ export default function ContactPage() {
                 marginBottom: 6,
               }}
             >
-              ФОРМА
+              {t("contact.formLabel")}
             </div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", margin: 0 }}>
-              Сұрағыңды жіберу
+              {t("contact.formTitle")}
             </h2>
             <p style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 6, marginBottom: 0 }}>
-              24 сағат ішінде жауап береміз.
+              {t("contact.formDesc")}
             </p>
           </div>
-          <ContactForm />
+          <ContactForm locale={locale} />
         </div>
 
         {/* RIGHT — Contact info */}
@@ -92,7 +100,7 @@ export default function ContactPage() {
                 marginBottom: 8,
               }}
             >
-              EMAIL
+              {t("contact.emailLabel")}
             </div>
             <a
               href="mailto:hello@studywithraissov.kz"
@@ -127,7 +135,7 @@ export default function ContactPage() {
                 marginBottom: 8,
               }}
             >
-              TELEGRAM
+              {t("contact.telegramLabel")}
             </div>
             <a
               href="https://t.me/studywithraissov"
@@ -144,7 +152,7 @@ export default function ContactPage() {
             </a>
           </div>
 
-          {/* МЕКЕНЖАЙ */}
+          {/* ADDRESS */}
           <div
             style={{
               background: "var(--paper)",
@@ -164,10 +172,10 @@ export default function ContactPage() {
                 marginBottom: 8,
               }}
             >
-              МЕКЕНЖАЙ
+              {t("contact.addressLabel")}
             </div>
             <p style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", margin: 0 }}>
-              Алматы, Достық 132
+              {t("contact.addressValue")}
             </p>
             <p
               style={{
@@ -177,7 +185,7 @@ export default function ContactPage() {
                 fontFamily: "'JetBrains Mono', monospace",
               }}
             >
-              Дс–Жм · 10:00–19:00
+              {t("contact.hours")}
             </p>
           </div>
         </div>

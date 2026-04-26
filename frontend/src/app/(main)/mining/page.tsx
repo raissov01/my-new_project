@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Pickaxe, Loader2, PlusCircle, CheckCircle2, ExternalLink } from "lucide-react";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
 interface ExtractedWord {
   word: string;
@@ -60,8 +62,15 @@ async function saveWordsToSet(selectedWords: ExtractedWord[], level: string): Pr
 const monoStyle: React.CSSProperties = { fontFamily: "'JetBrains Mono',monospace" };
 
 export default function MiningPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [text, setText] = useState("");
   const [level, setLevel] = useState<string>("B1");
+
+  useEffect(() => {
+    if (!authLoading && !user) router.replace("/login");
+  }, [user, authLoading, router]);
+
   const [words, setWords] = useState<ExtractedWord[]>([]);
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [savedSetId, setSavedSetId] = useState<string | null>(null);
@@ -101,6 +110,8 @@ export default function MiningPage() {
   const addAll = () => {
     setAdded(new Set(words.map((w) => w.word)));
   };
+
+  if (authLoading || !user) return null;
 
   return (
     <div className="page-shell py-4 sm:py-6">

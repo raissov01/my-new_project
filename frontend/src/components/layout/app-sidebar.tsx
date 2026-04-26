@@ -140,13 +140,13 @@ export function AppSidebar() {
 
   const accountItems: NavItem[] = user
     ? [
-        { href: "/profile", label: t("nav.profile") || "Профиль", icon: User },
-        { href: "/settings", label: t("nav.settings") || "Баптаулар", icon: Settings },
+        { href: "/profile", label: t("nav.profile"), icon: User },
+        { href: "/settings", label: t("nav.settings"), icon: Settings },
         ...(user.plan !== "pro" ? [{ href: "/upgrade", label: "Pro", icon: Crown }] : []),
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle },
-        { href: "/about", label: t("nav.about") || "Біз туралы", icon: HelpCircle },
-        { href: "/blog", label: t("nav.blog") || "Блог", icon: Newspaper },
-        { href: "/contact", label: t("nav.contact") || "Байланыс", icon: MessageSquareText },
+        { href: "/about", label: t("nav.about"), icon: HelpCircle },
+        { href: "/blog", label: t("nav.blog"), icon: Newspaper },
+        { href: "/contact", label: t("nav.contact"), icon: MessageSquareText },
       ]
     : [];
 
@@ -214,7 +214,7 @@ export function AppSidebar() {
         {/* Guest auth links */}
         {!user && (
           <div className="nd-sidebar-group">
-            <span className="nd-sidebar-group-label">КІРУ</span>
+            <span className="nd-sidebar-group-label">{t("nav.groupGuest")}</span>
             <Link
               href="/login"
               onClick={onLinkClick}

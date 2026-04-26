@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/providers/locale-provider";
+import type { Locale } from "@/lib/shared/i18n";
 
 type FormState = {
   name: string;
@@ -9,11 +11,12 @@ type FormState = {
   message: string;
 };
 
-export function ContactForm() {
+export function ContactForm({ locale: _locale }: { locale: Locale }) {
+  const { t } = useLocale();
   const [form, setForm] = useState<FormState>({
     name: "",
     email: "",
-    subject: "Жалпы сұрақ",
+    subject: t("contact.subjectGeneral"),
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
@@ -57,20 +60,20 @@ export function ContactForm() {
           ✓
         </div>
         <h3 style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", margin: 0 }}>
-          Сұрағыңыз жіберілді!
+          {t("contact.successTitle")}
         </h3>
         <p style={{ fontSize: 14, color: "var(--ink-mute)", margin: 0, lineHeight: 1.6 }}>
-          Жақын арада хабарласамыз. Сабырлы болыңыз.
+          {t("contact.successDesc")}
         </p>
         <button
           onClick={() => {
             setSubmitted(false);
-            setForm({ name: "", email: "", subject: "Жалпы сұрақ", message: "" });
+            setForm({ name: "", email: "", subject: t("contact.subjectGeneral"), message: "" });
           }}
           className="nd-btn-soft"
           style={{ marginTop: 8, fontSize: 13, padding: "8px 16px" }}
         >
-          Жаңа сұрақ жіберу
+          {t("contact.newQuestion")}
         </button>
       </div>
     );
@@ -103,11 +106,11 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <label style={labelStyle}>АТЫ</label>
+        <label style={labelStyle}>{t("contact.labelName")}</label>
         <input
           name="name"
           type="text"
-          placeholder="Атыңыз"
+          placeholder={t("contact.placeholderName")}
           value={form.name}
           onChange={handleChange}
           required
@@ -115,7 +118,7 @@ export function ContactForm() {
         />
       </div>
       <div>
-        <label style={labelStyle}>EMAIL</label>
+        <label style={labelStyle}>{t("contact.labelEmail")}</label>
         <input
           name="email"
           type="email"
@@ -127,24 +130,24 @@ export function ContactForm() {
         />
       </div>
       <div>
-        <label style={labelStyle}>ТАҚЫРЫП</label>
+        <label style={labelStyle}>{t("contact.labelSubject")}</label>
         <select
           name="subject"
           value={form.subject}
           onChange={handleChange}
           style={inputStyle}
         >
-          <option>Жалпы сұрақ</option>
-          <option>Техникалық мәселе</option>
-          <option>Серіктестік</option>
-          <option>Басқа</option>
+          <option>{t("contact.subjectGeneral")}</option>
+          <option>{t("contact.subjectTech")}</option>
+          <option>{t("contact.subjectPartner")}</option>
+          <option>{t("contact.subjectOther")}</option>
         </select>
       </div>
       <div>
-        <label style={labelStyle}>ХАБАРЛАМА</label>
+        <label style={labelStyle}>{t("contact.labelMessage")}</label>
         <textarea
           name="message"
-          placeholder="Сұрағыңды жаз..."
+          placeholder={t("contact.placeholderMessage")}
           value={form.message}
           onChange={handleChange}
           required
@@ -167,7 +170,7 @@ export function ContactForm() {
           letterSpacing: ".02em",
         }}
       >
-        Жіберу →
+        {t("contact.submit")}
       </button>
     </form>
   );

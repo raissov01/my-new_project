@@ -81,6 +81,7 @@ function PrimaryLink({ item, pathname }: { item: NavItem; pathname: string }) {
 // ── Tools dropdown ────────────────────────────────────────────────────────────
 
 function ToolsDropdown({ items, pathname }: { items: NavItem[]; pathname: string }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,7 +121,7 @@ function ToolsDropdown({ items, pathname }: { items: NavItem[]; pathname: string
           }
         `}
       >
-        Құралдар
+        {t("nav.groupTools")}
         <ChevronDown
           className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
@@ -477,7 +478,7 @@ export function Navbar() {
               <div className="my-3 flex items-center gap-2">
                 <div className="h-px flex-1 bg-white/[0.06]" />
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25">
-                  Құралдар
+                  {t("nav.groupTools")}
                 </span>
                 <div className="h-px flex-1 bg-white/[0.06]" />
               </div>

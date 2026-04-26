@@ -188,20 +188,20 @@ export default async function StudentDashboardPage() {
           <>
             <div className="nd-today-row">
               <div className="nd-today-ico" style={{ background: "var(--terra)" }}>FC</div>
-              <div className="nd-today-info"><h4>Флэшкарталар</h4><p>20 МИНУТ · Academic Vocabulary</p></div>
+              <div className="nd-today-info"><h4>{t("dashboard.fallbackFlashcards")}</h4><p>{t("dashboard.fallbackFlashcardsDesc")}</p></div>
               <span className="nd-today-status now">{t("dashboard.statusNow")}</span>
             </div>
             <div className="nd-today-row">
               <Link href="/ielts" style={{ display: "contents", textDecoration: "none" }}>
                 <div className="nd-today-ico" style={{ background: "var(--blue)" }}>IT</div>
-                <div className="nd-today-info"><h4>IELTS Reading тест</h4><p>30 МИНУТ · 3 сұрақ</p></div>
+                <div className="nd-today-info"><h4>{t("dashboard.fallbackIelts")}</h4><p>{t("dashboard.fallbackIeltsDesc")}</p></div>
                 <span className="nd-today-status next">{t("dashboard.statusNext")}</span>
               </Link>
             </div>
             <div className="nd-today-row">
               <Link href="/tutor" style={{ display: "contents", textDecoration: "none" }}>
                 <div className="nd-today-ico" style={{ background: "var(--green)" }}>AI</div>
-                <div className="nd-today-info"><h4>AI Tutor — Writing</h4><p>15 МИНУТ · Эссе тексеру</p></div>
+                <div className="nd-today-info"><h4>{t("dashboard.fallbackTutor")}</h4><p>{t("dashboard.fallbackTutorDesc")}</p></div>
                 <span className="nd-today-status next">{t("dashboard.statusNext")}</span>
               </Link>
             </div>

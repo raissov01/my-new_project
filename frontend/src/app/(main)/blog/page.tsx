@@ -1,22 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 
-export const metadata: Metadata = {
-  title: "Блог",
-  description: "IELTS кеңестері, оқу стратегиялары және нақты мысалдар. StudyWithRaissov блогы.",
-  alternates: { canonical: "/blog" },
-  openGraph: {
-    title: "Блог — StudyWithRaissov",
-    description: "IELTS кеңестері және оқу стратегиялары.",
-    url: "/blog",
-    locale: "kk_KZ",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("blog.heading"),
+    description: "IELTS кеңестері, оқу стратегиялары және нақты мысалдар. StudyWithRaissov блогы.",
+    alternates: { canonical: "/blog" },
+    openGraph: {
+      title: `${t("blog.heading")} — StudyWithRaissov`,
+      description: t("blog.subtitle"),
+      url: "/blog",
+    },
+  };
+}
 
 type Post = {
   category: string;
-  title: string;
-  desc: string;
+  titleKey: string;
+  descKey: string;
   date: string;
   readMin: number;
   author: string;
@@ -25,51 +30,51 @@ type Post = {
 const POSTS: Post[] = [
   {
     category: "WRITING",
-    title: "IELTS Writing Task 2: 7.5 алу үшін 5 қадам",
-    desc: "Қысқаша оқу жоспары, мысалдары және практикалық кеңестер.",
-    date: "12 КАР 2025",
+    titleKey: "blog.post1.title",
+    descKey: "blog.post1.desc",
+    date: "12 DEC 2025",
     readMin: 8,
-    author: "Ж. Раиссов",
+    author: "Zh. Raissov",
   },
   {
     category: "SPEAKING",
-    title: "Speaking-те еркін сөйлеу — қалай үйренуге?",
-    desc: "Қысқаша оқу жоспары, мысалдары және практикалық кеңестер.",
-    date: "8 КАР 2025",
+    titleKey: "blog.post2.title",
+    descKey: "blog.post2.desc",
+    date: "8 DEC 2025",
     readMin: 6,
-    author: "Д. Қанатова",
+    author: "D. Qanatova",
   },
   {
     category: "READING",
-    title: "Reading-тегі True/False/Not Given сыры",
-    desc: "Қысқаша оқу жоспары, мысалдары және практикалық кеңестер.",
-    date: "5 КАР 2025",
+    titleKey: "blog.post3.title",
+    descKey: "blog.post3.desc",
+    date: "5 DEC 2025",
     readMin: 5,
-    author: "Ж. Раиссов",
+    author: "Zh. Raissov",
   },
   {
     category: "VOCAB",
-    title: "500 academic сөз: үйренудің ең тез жолы",
-    desc: "Қысқаша оқу жоспары, мысалдары және практикалық кеңестер.",
-    date: "2 КАР 2025",
+    titleKey: "blog.post4.title",
+    descKey: "blog.post4.desc",
+    date: "2 DEC 2025",
     readMin: 7,
-    author: "Ж. Раиссов",
+    author: "Zh. Raissov",
   },
   {
     category: "LISTENING",
-    title: "Listening Section 4: лекцияны түсіну техникасы",
-    desc: "Қысқаша оқу жоспары, мысалдары және практикалық кеңестер.",
-    date: "28 АҚП 2025",
+    titleKey: "blog.post5.title",
+    descKey: "blog.post5.desc",
+    date: "28 FEB 2025",
     readMin: 6,
-    author: "Д. Қанатова",
+    author: "D. Qanatova",
   },
   {
     category: "TIPS",
-    title: "AI көмекшіден қалай дұрыс кері байланыс алу?",
-    desc: "Қысқаша оқу жоспары, мысалдары және практикалық кеңестер.",
-    date: "25 АҚП 2025",
+    titleKey: "blog.post6.title",
+    descKey: "blog.post6.desc",
+    date: "25 FEB 2025",
     readMin: 4,
-    author: "Ж. Раиссов",
+    author: "Zh. Raissov",
   },
 ];
 
@@ -82,16 +87,19 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   TIPS: "linear-gradient(135deg,#1B1714,#3D342C)",
 };
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   return (
     <div className="page-shell py-4 sm:py-6">
       {/* Header */}
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Link href="/student/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
-            ← Артқа
+            {t("blog.back")}
           </Link>
-          <h3 style={{ flex: 1 }}>Блог</h3>
+          <h3 style={{ flex: 1 }}>{t("blog.heading")}</h3>
           <span
             style={{
               fontFamily: "'JetBrains Mono', monospace",
@@ -99,7 +107,7 @@ export default function BlogPage() {
               color: "var(--ink-mute)",
             }}
           >
-            IELTS кеңестері
+            {t("blog.subtitle")}
           </span>
         </div>
       </div>
@@ -107,14 +115,16 @@ export default function BlogPage() {
       {/* Grid */}
       <div className="nd-lib-grid">
         {POSTS.map((post) => (
-          <BlogCard key={post.title} post={post} />
+          <BlogCard key={post.titleKey} post={post} t={t} />
         ))}
       </div>
     </div>
   );
 }
 
-function BlogCard({ post }: { post: Post }) {
+type TFn = (key: string) => string;
+
+function BlogCard({ post, t }: { post: Post; t: TFn }) {
   const gradient = CATEGORY_GRADIENTS[post.category] ?? "linear-gradient(135deg,#1B1714,#3D342C)";
 
   return (
@@ -175,7 +185,7 @@ function BlogCard({ post }: { post: Post }) {
             lineHeight: 1.4,
           }}
         >
-          {post.title}
+          {t(post.titleKey)}
         </h3>
 
         {/* Description */}
@@ -188,7 +198,7 @@ function BlogCard({ post }: { post: Post }) {
             flex: 1,
           }}
         >
-          {post.desc}
+          {t(post.descKey)}
         </p>
 
         {/* Footer */}
@@ -207,7 +217,7 @@ function BlogCard({ post }: { post: Post }) {
         >
           <span>{post.date}</span>
           <span style={{ color: "var(--line)" }}>·</span>
-          <span>{post.readMin} мин</span>
+          <span>{post.readMin} {t("blog.readMin")}</span>
           <span style={{ color: "var(--line)" }}>·</span>
           <span>{post.author}</span>
         </div>

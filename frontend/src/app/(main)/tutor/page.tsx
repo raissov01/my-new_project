@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getScenarios, getConversationHistory } from "@/features/tutor/api";
 import Link from "next/link";
@@ -32,7 +33,8 @@ export default async function TutorPage({
     { key: "daily",    label: t("tutor.modeTranslate") },
   ];
 
-  await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
   const params = await searchParams;
 
   const activeCategory = params.category ?? "";
@@ -201,7 +203,7 @@ export default async function TutorPage({
               />
               <Link
                 href="/tutor"
-                aria-label="Жіберу"
+                aria-label={t("common.send")}
                 style={{
                   width: 36,
                   height: 36,

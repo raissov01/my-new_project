@@ -68,7 +68,7 @@ export default async function TeacherDashboardPage() {
           <strong className="nd-kpi-val">{summary.groups.length}</strong>
           <span className="nd-kpi-sub">
             <Layers3 style={{ display: "inline", width: 13, height: 13, marginRight: 4 }} />
-            classes
+            {t("teacher.classesDetail")}
           </span>
         </div>
         <div className="nd-kpi">
@@ -84,7 +84,7 @@ export default async function TeacherDashboardPage() {
           <strong className="nd-kpi-val">{summary.totalAssignments}</strong>
           <span className="nd-kpi-sub">
             <BookOpen style={{ display: "inline", width: 13, height: 13, marginRight: 4 }} />
-            assignments
+            {t("teacher.assignmentsDetail")}
           </span>
         </div>
         <div className="nd-kpi">

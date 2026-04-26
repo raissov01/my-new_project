@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getScenario } from "@/features/tutor/api";
 import { ChatInterface } from "@/components/tutor/ChatInterface";
@@ -9,7 +9,8 @@ export default async function TutorScenarioPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
   const { slug } = await params;
 
   const scenario = await getScenario(slug);

@@ -46,7 +46,7 @@ export function ClipWizard({ clip, questions }: Props) {
   const blanks = pickBlanks(clip.transcript, vocab);
 
   const comprQuestions = questions.filter(
-    (q) => q.questionType === "comprehension" || q.questionType === "true_false"
+    (q) => q.questionType === "comprehension" || q.questionType === "true_false" || q.questionType === "fill_blank"
   );
 
   const xpForClip = Math.round(
@@ -226,6 +226,7 @@ export function ClipWizard({ clip, questions }: Props) {
           )}
           {comprQuestions.map((q, qi) => {
             const opts: string[] = (() => {
+              if (q.questionType === "fill_blank") return [];
               if (!q.options) return ["True", "False"];
               if (typeof q.options === "string") { try { return JSON.parse(q.options); } catch { return []; } }
               return q.options;
@@ -243,21 +244,31 @@ export function ClipWizard({ clip, questions }: Props) {
                     />
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {opts.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => setQuizAnswers((prev) => ({ ...prev, [q.id]: opt }))}
-                      className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                        quizAnswers[q.id] === opt
-                          ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
-                          : "border-[var(--border)] hover:border-[var(--primary)]"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
+                {q.questionType === "fill_blank" ? (
+                  <input
+                    type="text"
+                    value={quizAnswers[q.id] ?? ""}
+                    onChange={(e) => setQuizAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
+                    className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition-colors"
+                    placeholder="Type the missing word…"
+                  />
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {opts.map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => setQuizAnswers((prev) => ({ ...prev, [q.id]: opt }))}
+                        className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                          quizAnswers[q.id] === opt
+                            ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                            : "border-[var(--border)] hover:border-[var(--primary)]"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

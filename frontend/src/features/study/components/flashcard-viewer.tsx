@@ -127,22 +127,22 @@ export function FlashcardViewer({
       <div className="nd-fc-actions">
         <button className="nd-fc-rate nd-fc-again" onClick={(e) => { e.stopPropagation(); goPrev(); }}>
           <strong>{t("study.previous")}</strong>
-          <small>← АЛДЫҢҒЫ</small>
+          <small>{t("study.prev")}</small>
         </button>
         <button
           className="nd-fc-rate nd-fc-hard"
           onClick={(e) => { e.stopPropagation(); toggleDifficult(); }}
         >
-          <strong>{isDifficult ? "★ Белгілі" : "Қиын"}</strong>
-          <small>БЕЛГІЛЕ · D</small>
+          <strong>{isDifficult ? t("study.known") : t("study.hardLabel")}</strong>
+          <small>{t("study.markHint")}</small>
         </button>
         <button className="nd-fc-rate nd-fc-good" onClick={(e) => { e.stopPropagation(); handleFlip(); }}>
-          <strong>Айналдыр</strong>
+          <strong>{t("study.flipLabel")}</strong>
           <small>SPACE</small>
         </button>
         <button className="nd-fc-rate nd-fc-easy" onClick={(e) => { e.stopPropagation(); goNext(); }}>
           <strong>{t("study.next")}</strong>
-          <small>КЕЛЕСІ →</small>
+          <small>{t("study.nextHint")}</small>
         </button>
       </div>
 

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getListeningClips } from "@/features/listening/api";
 import { ClipCard } from "@/components/listening/ClipCard";
@@ -15,7 +16,8 @@ export default async function ListenPage({
 }: {
   searchParams: Promise<{ level?: string; topic?: string; source?: string }>;
 }) {
-  await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
   const params = await searchParams;
   const locale = await getServerLocale();
   const t = createTranslator(locale);

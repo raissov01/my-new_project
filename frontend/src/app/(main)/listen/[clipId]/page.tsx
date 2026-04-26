@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getListeningClip } from "@/features/listening/api";
 import { ClipWizard } from "@/components/listening/ClipWizard";
@@ -10,7 +10,8 @@ export default async function ClipPage({
 }: {
   params: Promise<{ clipId: string }>;
 }) {
-  await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
   const { clipId } = await params;
 
   const data = await getListeningClip(clipId);

@@ -1,52 +1,69 @@
 import type { Metadata } from "next";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 
-export const metadata: Metadata = {
-  title: "Біз туралы",
-  description: "StudyWithRaissov — Қазақстандық студенттер үшін IELTS-ті қол жетімді ету. Миссиямыз, командамыз және тарихымыз.",
-  alternates: { canonical: "/about" },
-  openGraph: {
-    title: "Біз туралы — StudyWithRaissov",
-    description: "Раиссовтың миссиясы және командасы.",
-    url: "/about",
-    locale: "kk_KZ",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("about.heading"),
+    description: "StudyWithRaissov — Қазақстандық студенттер үшін IELTS-ті қол жетімді ету. Миссиямыз, командамыз және тарихымыз.",
+    alternates: { canonical: "/about" },
+    openGraph: {
+      title: `${t("about.heading")} — StudyWithRaissov`,
+      description: t("about.missionTag"),
+      url: "/about",
+    },
+  };
+}
 
 type TeamMember = {
   initial: string;
   name: string;
-  role: string;
+  roleKey: string;
   avatarBg: string;
 };
 
 const TEAM: TeamMember[] = [
   {
+    initial: "Ж",
+    name: "Жанар Раиссов",
+    roleKey: "about.roleFounder",
+    avatarBg: "linear-gradient(135deg,#C2500A,#8F3A05)",
+  },
+  {
     initial: "Ә",
     name: "Әбдімүтәлі Бекназар",
-    role: "ТЕХ. ДИРЕКТОР · AI",
+    roleKey: "about.roleCTO",
     avatarBg: "linear-gradient(135deg,#2563eb,#1B47B8)",
+  },
+  {
+    initial: "Д",
+    name: "Дина Қанатова",
+    roleKey: "about.roleContent",
+    avatarBg: "linear-gradient(135deg,#3F7D3F,#2E5F2E)",
   },
 ];
 
-type Stat = {
-  value: string;
-  label: string;
-};
+type StatKey = { value: string; labelKey: string };
 
-const STATS: Stat[] = [
-  { value: "12K+", label: "СТУДЕНТ" },
-  { value: "7.4", label: "ОРТА БАҒ" },
-  { value: "92%", label: "МАҚСАТҚА ЖЕТТІ" },
-  { value: "4.9", label: "APP STORE" },
+const STATS: StatKey[] = [
+  { value: "12K+", labelKey: "about.statStudents" },
+  { value: "7.4",  labelKey: "about.statAvgScore" },
+  { value: "92%",  labelKey: "about.statGoalReached" },
+  { value: "4.9",  labelKey: "about.statAppStore" },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   return (
     <div className="page-shell py-4 sm:py-6">
       {/* Header */}
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
-          <h3 style={{ flex: 1 }}>Біз туралы</h3>
+          <h3 style={{ flex: 1 }}>{t("about.heading")}</h3>
           <span
             style={{
               fontFamily: "'JetBrains Mono', monospace",
@@ -54,7 +71,7 @@ export default function AboutPage() {
               color: "var(--ink-mute)",
             }}
           >
-            Раиссовтың миссиясы
+            {t("about.missionTag")}
           </span>
         </div>
       </div>
@@ -79,7 +96,7 @@ export default function AboutPage() {
             marginBottom: 16,
           }}
         >
-          — ҚҰРЫЛҒАН: 2023
+          {t("about.founded")}
         </div>
         <h1
           style={{
@@ -91,7 +108,7 @@ export default function AboutPage() {
             maxWidth: 620,
           }}
         >
-          Қазақстандық студенттер үшін IELTS-ті қол жетімді ету.
+          {t("about.heroTitle")}
         </h1>
         <p
           style={{
@@ -102,7 +119,7 @@ export default function AboutPage() {
             maxWidth: 540,
           }}
         >
-          Біз 2023 жылы бастадық. Бүгін 12,000+ студент бізбен бірге дайындалуда.
+          {t("about.heroDesc")}
         </p>
       </div>
 
@@ -118,7 +135,7 @@ export default function AboutPage() {
       >
         {STATS.map((stat) => (
           <div
-            key={stat.label}
+            key={stat.labelKey}
             style={{
               background: "var(--paper)",
               border: "1px solid var(--line)",
@@ -148,7 +165,7 @@ export default function AboutPage() {
                 fontWeight: 600,
               }}
             >
-              {stat.label}
+              {t(stat.labelKey)}
             </div>
           </div>
         ))}
@@ -167,7 +184,7 @@ export default function AboutPage() {
             marginBottom: 14,
           }}
         >
-          КОМАНДА
+          {t("about.teamLabel")}
         </div>
         <div
           style={{
@@ -225,7 +242,7 @@ export default function AboutPage() {
                   lineHeight: 1.5,
                 }}
               >
-                {member.role}
+                {t(member.roleKey)}
               </div>
             </div>
           ))}
@@ -253,7 +270,7 @@ export default function AboutPage() {
             marginBottom: 10,
           }}
         >
-          МИССИЯ
+          {t("about.missionLabel")}
         </div>
         <h2
           style={{
@@ -263,7 +280,7 @@ export default function AboutPage() {
             margin: "0 0 14px",
           }}
         >
-          Біздің миссия
+          {t("about.missionTitle")}
         </h2>
         <p
           style={{
@@ -273,9 +290,7 @@ export default function AboutPage() {
             lineHeight: 1.7,
           }}
         >
-          StudyWithRaissov — тек дайындық сайты емес. Бұл Қазақстандағы IELTS мүмкіндіктеріне тең
-          қол жеткізу жолындағы қозғалыс. Біз жасанды интеллект, адаптивті оқу және нақты
-          нәтижелерге бағытталған технологияны бірге қолданамыз.
+          {t("about.missionDesc")}
         </p>
       </div>
     </div>
