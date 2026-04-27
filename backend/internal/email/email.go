@@ -14,21 +14,27 @@ import (
 // Resend replaces the previous net/smtp implementation — simpler, no SMTP
 // port/TLS dance, and works from inside Docker containers without extra config.
 type Sender struct {
-	apiKey string
-	from   string
-	client *http.Client
+	apiKey      string
+	from        string
+	frontendURL string
+	client      *http.Client
 }
 
 // NewSender creates an email sender. Returns nil if Resend is not configured
 // (apiKey or from empty) so callers can no-op gracefully in dev.
-func NewSender(apiKey, from string) *Sender {
+func NewSender(apiKey, from, frontendURL string) *Sender {
 	if apiKey == "" || from == "" {
 		return nil
 	}
+	url := strings.TrimRight(frontendURL, "/")
+	if url == "" {
+		url = "https://studywithraissov.com"
+	}
 	return &Sender{
-		apiKey: apiKey,
-		from:   from,
-		client: &http.Client{Timeout: 15 * time.Second},
+		apiKey:      apiKey,
+		from:        from,
+		frontendURL: url,
+		client:      &http.Client{Timeout: 15 * time.Second},
 	}
 }
 
@@ -209,14 +215,14 @@ func (s *Sender) SendStreakWarningEmail(toEmail, fullName string, streakDays int
     You haven't practiced yet today. It only takes 5 minutes to keep your streak alive.
   </p>
   <div style="text-align:center;margin-bottom:32px;">
-    <a href="https://studywithraissov.kz/learn/map" style="display:inline-block;padding:14px 32px;background:#f97316;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
+    <a href="%s/learn/map" style="display:inline-block;padding:14px 32px;background:#f97316;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
       Save my streak (5 min) →
     </a>
   </div>
   <p style="font-size:12px;color:#a0a0b8;text-align:center;margin:0;">
-    <a href="https://studywithraissov.kz/settings/notifications" style="color:#a0a0b8;">Unsubscribe from streak reminders</a>
+    <a href="%s/settings" style="color:#a0a0b8;">Unsubscribe from streak reminders</a>
   </p>
-</body></html>`, streakDays, name)
+</body></html>`, streakDays, name, s.frontendURL, s.frontendURL)
 	return s.sendHTML(toEmail, fmt.Sprintf("🔥 Don't break your %d-day streak!", streakDays), html)
 }
 
@@ -243,14 +249,14 @@ func (s *Sender) SendComebackEmail(toEmail, fullName string, streakDays, daysIna
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;padding:40px 20px;color:#1a1a2e;">
   %s
   <div style="text-align:center;margin:32px 0;">
-    <a href="https://studywithraissov.kz/learn/map" style="display:inline-block;padding:14px 32px;background:#6366f1;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
+    <a href="%s/learn/map" style="display:inline-block;padding:14px 32px;background:#6366f1;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
       Continue learning →
     </a>
   </div>
   <p style="font-size:12px;color:#a0a0b8;text-align:center;">
-    <a href="https://studywithraissov.kz/settings/notifications" style="color:#a0a0b8;">Unsubscribe</a>
+    <a href="%s/settings" style="color:#a0a0b8;">Unsubscribe</a>
   </p>
-</body></html>`, body)
+</body></html>`, body, s.frontendURL, s.frontendURL)
 	return s.sendHTML(toEmail, subject, html)
 }
 
@@ -270,14 +276,14 @@ func (s *Sender) SendLeagueResultEmail(toEmail, fullName string, rank int, oldTi
   <h2 style="text-align:center;margin:0 0 16px;">League Results, %s!</h2>
   <p style="font-size:15px;line-height:1.6;color:#4a4a6a;text-align:center;margin:0 0 32px;">%s</p>
   <div style="text-align:center;margin-bottom:32px;">
-    <a href="https://studywithraissov.kz/leagues" style="display:inline-block;padding:14px 32px;background:#8b5cf6;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
+    <a href="%s/leagues" style="display:inline-block;padding:14px 32px;background:#8b5cf6;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
       View new league →
     </a>
   </div>
   <p style="font-size:12px;color:#a0a0b8;text-align:center;">
-    <a href="https://studywithraissov.kz/settings/notifications" style="color:#a0a0b8;">Unsubscribe</a>
+    <a href="%s/settings" style="color:#a0a0b8;">Unsubscribe</a>
   </p>
-</body></html>`, icon, name, action)
+</body></html>`, icon, name, action, s.frontendURL, s.frontendURL)
 	return s.sendHTML(toEmail, fmt.Sprintf("%s League results are in!", icon), html)
 }
 

@@ -65,7 +65,7 @@ func New(cfg *config.Config) (*Server, error) {
 	handler.SetDependencies(buildDependencies(cfg, pool, gormDB))
 	handler.RegisterRoutes(router)
 
-	gameSvc := service.NewGamification(gormDB, email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom))
+	gameSvc := service.NewGamification(gormDB, email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL))
 	newsSvc := service.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout)
 	scheduler := cron.New(gameSvc, newsSvc)
 	scheduler.Start()
@@ -164,7 +164,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 
 	chatRepo := repository.NewChat(gormDB)
 
-	emailSender := email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom)
+	emailSender := email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL)
 
 	return handler.Dependencies{
 		InternalAPIToken: cfg.InternalAPIToken,
