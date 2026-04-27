@@ -39,6 +39,74 @@ function normalizeCorrect(value: string): string {
   return "";
 }
 
+// Quizizz-style export: A=#, B=Question, C=Type, D-H=Options 1-5, I=Correct(1-4), J=Time, K=Image
+function isQuizizzFormat(row: unknown[]): boolean {
+  const a = cellToString(row[0]).trim().toLowerCase();
+  const b = cellToString(row[1]).trim().toLowerCase();
+  const i = cellToString(row[8]).trim().toLowerCase();
+  // A = # indicator OR column I = "correct answer" (Quizizz places answer in column I)
+  const aIsHash = a === "#" || a === "no" || a === "no." || a === "№" || a === "s.no" || a === "s.no.";
+  const bIsQuestion = b.includes("question") || b === "сұрақ мәтіні" || b === "сұрақ" || b === "вопрос";
+  const iIsCorrect = i.includes("correct") || i === "дұрыс жауап" || i === "ответ";
+  return (aIsHash && bIsQuestion) || (bIsQuestion && iIsCorrect);
+}
+
+// Find which row is the actual Quizizz header (handles 1 or 2 header rows)
+function findQuizizzHeaderRow(rows: unknown[][]): number {
+  for (let i = 0; i < Math.min(3, rows.length); i++) {
+    if (Array.isArray(rows[i]) && isQuizizzFormat(rows[i] as unknown[])) return i;
+  }
+  return -1;
+}
+
+function parseQuizizzRow(raw: unknown[]): { question: QuizQuestionInput; warnings: string[] } | null {
+  const questionText = cellToString(raw[1]);
+  const typeRaw = cellToString(raw[2]).toLowerCase();
+  const opt1 = cellToString(raw[3]);
+  const opt2 = cellToString(raw[4]);
+  const opt3 = cellToString(raw[5]);
+  const opt4 = cellToString(raw[6]);
+  const correctRaw = cellToString(raw[8]); // column I
+  const warnings: string[] = [];
+
+  if (!questionText) return null;
+
+  let questionType: QuizQuestionType = "mcq";
+  if (typeRaw.includes("true") || typeRaw.includes("false") || typeRaw === "true/false") {
+    questionType = "true_false";
+  } else if (typeRaw.includes("fill") || typeRaw.includes("blank")) {
+    questionType = "fill_blank";
+  }
+
+  if (questionType === "true_false") {
+    const tf = normalizeTrueFalse(correctRaw);
+    if (!tf) warnings.push("Invalid true/false answer");
+    return { question: { questionText, questionType: "true_false", correctOption: tf }, warnings };
+  }
+
+  if (questionType === "fill_blank") {
+    if (!correctRaw) warnings.push("Missing blank answer");
+    return { question: { questionText, questionType: "fill_blank", blankAnswer: correctRaw }, warnings };
+  }
+
+  // MCQ
+  const correct = normalizeCorrect(correctRaw);
+  if (!opt1 || !opt2) warnings.push("Missing options");
+  if (!correct) warnings.push("Invalid correct answer (expected 1–4)");
+  return {
+    question: {
+      questionText,
+      questionType: "mcq",
+      optionA: opt1,
+      optionB: opt2,
+      optionC: opt3,
+      optionD: opt4,
+      correctOption: correct,
+    },
+    warnings,
+  };
+}
+
 function normalizeTrueFalse(value: string): "t" | "f" | "" {
   const v = value.trim().toLowerCase();
   if (v === "t" || v === "true" || v === "1" || v === "yes" || v === "y") return "t";
@@ -52,7 +120,7 @@ function normalizeTrueFalse(value: string): "t" | "f" | "" {
 function normalizeQuestionType(value: string): QuizQuestionType {
   const v = value.trim().toLowerCase();
   if (!v) return "mcq";
-  if (v === "mcq" || v === "multiple" || v === "multiple_choice" || v === "choice") {
+  if (v === "mcq" || v === "multiple" || v === "multiple_choice" || v === "multiple choice" || v === "choice") {
     return "mcq";
   }
   if (v === "tf" || v === "true_false" || v === "truefalse" || v === "true/false" || v === "boolean") {
@@ -114,90 +182,64 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
         return;
       }
 
-      // Column layout (A..H):
-      //   A: question text
-      //   B: type  (mcq | true_false | fill_blank) — empty defaults to mcq
-      //   C..F: option A..D                        (mcq only)
-      //   G: correct answer                        (a/b/c/d for mcq; t/f for true_false;
-      //                                             fill-blank answer for fill_blank)
-      //   H: explanation                           (optional, all types)
-      const dataRows = rows.slice(1);
+      const headerIdx = findQuizizzHeaderRow(rows as unknown[][]);
+      const quizizz = headerIdx >= 0;
+      const dataRows = rows.slice(quizizz ? headerIdx + 1 : 1);
       const parsedRows: ParsedRow[] = [];
-      dataRows.forEach((raw, idx) => {
-        if (!Array.isArray(raw)) return;
-        const warnings: string[] = [];
-        const questionText = cellToString(raw[0]);
-        const typeCell = cellToString(raw[1]);
-        const optionA = cellToString(raw[2]);
-        const optionB = cellToString(raw[3]);
-        const optionC = cellToString(raw[4]);
-        const optionD = cellToString(raw[5]);
-        const answerCell = cellToString(raw[6]);
-        const explanation = cellToString(raw[7]);
 
-        if (
-          !questionText &&
-          !optionA &&
-          !optionB &&
-          !optionC &&
-          !optionD &&
-          !answerCell
-        ) {
-          return;
-        }
-
-        const questionType = normalizeQuestionType(typeCell);
-        if (!questionText) warnings.push(t("quiz.warnMissingText"));
-
-        let question: QuizQuestionInput;
-        switch (questionType) {
-          case "true_false": {
-            const tf = normalizeTrueFalse(answerCell);
-            if (!tf) warnings.push(t("quiz.warnBadTrueFalse"));
-            question = {
-              questionText,
-              questionType: "true_false",
-              correctOption: tf,
-              explanation,
-            };
-            break;
-          }
-          case "fill_blank": {
-            if (!answerCell) warnings.push(t("quiz.warnMissingBlankAnswer"));
-            question = {
-              questionText,
-              questionType: "fill_blank",
-              blankAnswer: answerCell,
-              explanation,
-            };
-            break;
-          }
-          default: {
-            const correct = normalizeCorrect(answerCell);
-            if (!optionA || !optionB || !optionC || !optionD) {
-              warnings.push(t("quiz.warnMissingOptions"));
-            }
-            if (!correct) warnings.push(t("quiz.warnBadCorrect"));
-            question = {
-              questionText,
-              questionType: "mcq",
-              optionA,
-              optionB,
-              optionC,
-              optionD,
-              correctOption: correct,
-              explanation,
-            };
-            break;
-          }
-        }
-
-        parsedRows.push({
-          row: idx + 2,
-          warnings,
-          question,
+      if (quizizz) {
+        // Quizizz / our platform export format:
+        //   A=#  B=Question Text  C=Type  D-H=Options 1-5  I=Correct(1-4)  J=Time  K=Image
+        dataRows.forEach((raw, idx) => {
+          if (!Array.isArray(raw)) return;
+          const result = parseQuizizzRow(raw);
+          if (!result) return; // empty / sub-header row
+          parsedRows.push({ row: idx + 2, ...result });
         });
-      });
+      } else {
+        // Native format:
+        //   A=question  B=type  C-F=options A-D  G=correct  H=explanation
+        dataRows.forEach((raw, idx) => {
+          if (!Array.isArray(raw)) return;
+          const warnings: string[] = [];
+          const questionText = cellToString(raw[0]);
+          const typeCell = cellToString(raw[1]);
+          const optionA = cellToString(raw[2]);
+          const optionB = cellToString(raw[3]);
+          const optionC = cellToString(raw[4]);
+          const optionD = cellToString(raw[5]);
+          const answerCell = cellToString(raw[6]);
+          const explanation = cellToString(raw[7]);
+
+          if (!questionText && !optionA && !optionB && !optionC && !optionD && !answerCell) return;
+
+          const questionType = normalizeQuestionType(typeCell);
+          if (!questionText) warnings.push(t("quiz.warnMissingText"));
+
+          let question: QuizQuestionInput;
+          switch (questionType) {
+            case "true_false": {
+              const tf = normalizeTrueFalse(answerCell);
+              if (!tf) warnings.push(t("quiz.warnBadTrueFalse"));
+              question = { questionText, questionType: "true_false", correctOption: tf, explanation };
+              break;
+            }
+            case "fill_blank": {
+              if (!answerCell) warnings.push(t("quiz.warnMissingBlankAnswer"));
+              question = { questionText, questionType: "fill_blank", blankAnswer: answerCell, explanation };
+              break;
+            }
+            default: {
+              const correct = normalizeCorrect(answerCell);
+              if (!optionA || !optionB || !optionC || !optionD) warnings.push(t("quiz.warnMissingOptions"));
+              if (!correct) warnings.push(t("quiz.warnBadCorrect"));
+              question = { questionText, questionType: "mcq", optionA, optionB, optionC, optionD, correctOption: correct, explanation };
+              break;
+            }
+          }
+          parsedRows.push({ row: idx + 2, warnings, question });
+        });
+      }
 
       if (parsedRows.length === 0) {
         setError(t("quiz.importNoRows"));
