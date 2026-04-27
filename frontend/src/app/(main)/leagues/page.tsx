@@ -1,25 +1,47 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/server/auth";
 import { getLeague } from "@/features/gamification/api";
 import { LeagueLeaderboard } from "@/components/gamification/LeagueLeaderboard";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 
-export const metadata = { title: "Leagues — StudyWithRaissov" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return { title: `${t("leagues.title")} — StudyWithRaissov` };
+}
 
-const TIER_CONFIG: Record<string, { icon: string; next?: string }> = {
-  bronze: { icon: "🥉", next: "Silver" },
-  silver: { icon: "🥈", next: "Gold" },
-  gold:   { icon: "🥇", next: "Sapphire" },
-  sapphire: { icon: "💙", next: "Ruby" },
-  ruby:   { icon: "❤️", next: "Emerald" },
-  emerald: { icon: "💚", next: "Amethyst" },
-  amethyst: { icon: "💜", next: "Pearl" },
-  pearl:  { icon: "🤍", next: "Obsidian" },
-  obsidian: { icon: "🖤", next: "Diamond" },
-  diamond: { icon: "💎" },
+const TIER_ICONS: Record<string, string> = {
+  bronze: "🥉",
+  silver: "🥈",
+  gold:   "🥇",
+  sapphire: "💙",
+  ruby:   "❤️",
+  emerald: "💚",
+  amethyst: "💜",
+  pearl:  "🤍",
+  obsidian: "🖤",
+  diamond: "💎",
+};
+
+const TIER_NEXT: Record<string, string> = {
+  bronze: "Silver",
+  silver: "Gold",
+  gold:   "Sapphire",
+  sapphire: "Ruby",
+  ruby:   "Emerald",
+  emerald: "Amethyst",
+  amethyst: "Pearl",
+  pearl:  "Obsidian",
+  obsidian: "Diamond",
 };
 
 export default async function LeaguesPage() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
@@ -30,20 +52,21 @@ export default async function LeaguesPage() {
       <div className="page-shell py-4 sm:py-6">
         <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
           <div className="nd-mock-bar">
-            <Link href="/student/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>← Back</Link>
-            <h3 style={{ flex: 1 }}>Лиги</h3>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>Leagues</span>
+            <Link href="/student/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+              {t("leagues.back")}
+            </Link>
+            <h3 style={{ flex: 1 }}>{t("leagues.title")}</h3>
           </div>
         </div>
         <div className="flex items-center justify-center p-4">
           <div className="text-center space-y-3">
             <p className="text-4xl">🏟️</p>
-            <h1 className="text-xl font-bold text-[var(--text-primary)]">Leagues</h1>
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">{t("leagues.noLeagueTitle")}</h1>
             <p className="text-sm text-[var(--text-secondary)] max-w-xs">
-              Complete a lesson to join your first league and compete with other learners!
+              {t("leagues.noLeagueDesc")}
             </p>
             <a href="/learn/map" className="inline-block px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700">
-              Start a lesson →
+              {t("leagues.startLesson")}
             </a>
           </div>
         </div>
@@ -53,52 +76,51 @@ export default async function LeaguesPage() {
 
   const { group, members, daysLeft } = data;
   const myMember = members.find((m) => m.userId === user.id);
-  const cfg = TIER_CONFIG[group.tier] ?? TIER_CONFIG.bronze;
+  const icon = TIER_ICONS[group.tier] ?? "🥉";
+  const nextTier = TIER_NEXT[group.tier];
 
   return (
     <div className="page-shell py-4 sm:py-6">
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
-          <Link href="/student/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>← Back</Link>
-          <h3 style={{ flex: 1 }}>Лиги</h3>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>Leagues</span>
+          <Link href="/student/dashboard" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
+            {t("leagues.back")}
+          </Link>
+          <h3 style={{ flex: 1 }}>{t("leagues.title")}</h3>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto space-y-5 px-4">
-        {/* Hero */}
         <div className="text-center space-y-1">
-          <span className="text-5xl">{cfg.icon}</span>
+          <span className="text-5xl">{icon}</span>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] capitalize">
-            {group.tier} League
+            {group.tier} {t("leagues.league")}
           </h1>
           {myMember && (
             <p className="text-sm text-[var(--text-secondary)]">
-              Your rank: <strong className="text-[var(--text-primary)]">#{myMember.rank}</strong> · {myMember.weeklyXp.toLocaleString()} XP this week
+              {t("leagues.yourRank")} <strong className="text-[var(--text-primary)]">#{myMember.rank}</strong> · {myMember.weeklyXp.toLocaleString()} {t("leagues.xpThisWeek")}
             </p>
           )}
-          <p className="text-xs text-[var(--text-muted)]">{daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("leagues.daysRemaining", { n: daysLeft })}</p>
         </div>
 
-        {/* Info */}
-        {cfg.next && (
+        {nextTier && (
           <div className="rounded-xl bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-3 text-sm text-center text-green-800 dark:text-green-200">
-            Top 7 promote to <strong>{cfg.next} League</strong> · Bottom 5 demote
+            {t("leagues.promote", { next: nextTier })}
           </div>
         )}
 
         <LeagueLeaderboard members={members} currentUserId={user.id} tier={group.tier} />
 
-        {/* How it works */}
         <details className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
           <summary className="px-4 py-3 font-medium text-sm cursor-pointer select-none text-[var(--text-secondary)]">
-            How leagues work
+            {t("leagues.howItWorks")}
           </summary>
           <div className="px-4 pb-4 text-sm text-[var(--text-muted)] space-y-2">
-            <p>• Every Monday you join a group of up to 30 learners at the same tier.</p>
-            <p>• Each lesson you complete earns weekly XP — the more you practice, the higher you rank.</p>
-            <p>• On Sunday night the week resets: top 7 move up a tier, bottom 5 drop down.</p>
-            <p>• There are 10 tiers: Bronze → Silver → Gold → Sapphire → Ruby → Emerald → Amethyst → Pearl → Obsidian → Diamond.</p>
+            <p>{t("leagues.rule1")}</p>
+            <p>{t("leagues.rule2")}</p>
+            <p>{t("leagues.rule3")}</p>
+            <p>{t("leagues.rule4")}</p>
           </div>
         </details>
       </div>

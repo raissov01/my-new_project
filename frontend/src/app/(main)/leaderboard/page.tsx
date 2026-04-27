@@ -3,18 +3,21 @@ import { ChallengeDirectory } from "@/features/sets/components/challenge-directo
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
-export const metadata: Metadata = {
-  title: "Челлендж хабы",
-  description: "Ашық және жабық рейтинг тізімдерін қараңыз, флешкарта жинақтарымен челленджге қатысыңыз.",
-  alternates: { canonical: "/leaderboard" },
-  openGraph: {
-    title: "Челлендж хабы — StudyWithRaissov",
-    description: "Ашық және жабық рейтинг тізімдерін қараңыз, флешкарта жинақтарымен челленджге қатысыңыз.",
-    url: "/leaderboard",
-    locale: "kk_KZ",
-  },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("leaderboard.pageTitle"),
+    description: t("leaderboard.pageSubtitle"),
+    alternates: { canonical: "/leaderboard" },
+    openGraph: {
+      title: `${t("leaderboard.pageTitle")} — StudyWithRaissov`,
+      description: t("leaderboard.pageSubtitle"),
+      url: "/leaderboard",
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 export default async function LeaderboardPage() {
   const locale = await getServerLocale();

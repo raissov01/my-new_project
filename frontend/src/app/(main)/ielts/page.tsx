@@ -7,26 +7,26 @@ import { AIFeedbackSignal } from "@/components/ielts/AIFeedbackInfoModal";
 import { IELTSOnboardingModal } from "@/components/ielts/IELTSOnboardingModal";
 import { SkillScoreBar } from "@/components/ielts/SkillScoreBar";
 
-// BUG-014: descriptive SEO metadata
-export const metadata: Metadata = {
-  title: "IELTS дайындық | StudyWithRaissov",
-  description:
-    "IELTS-ке толықтай дайындалыңыз: Cambridge mock тесттер, AI writing/speaking бағалау, Band 5-9 дайындық, жеке study plan.",
-  alternates: { canonical: "/ielts" },
-  openGraph: {
-    title: "IELTS дайындық — StudyWithRaissov",
-    description:
-      "IELTS-ке толықтай дайындалыңыз: Cambridge mock тесттер, AI writing/speaking бағалау, Band 5-9 дайындық.",
-    url: "/ielts",
-    locale: "kk_KZ",
-  },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("ielts.metaTitle"),
+    description: t("ielts.metaDesc"),
+    alternates: { canonical: "/ielts" },
+    openGraph: {
+      title: t("ielts.metaTitle"),
+      description: t("ielts.metaDesc"),
+      url: "/ielts",
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 type TestModule = {
-  name: string;
+  nameKey: string;
   target: string;
-  dur: string;
+  durKey: string;
   q: number;
   parts: string;
   href: string;
@@ -34,12 +34,12 @@ type TestModule = {
 };
 
 const IELTS_MODULES: TestModule[] = [
-  { name: "Full Mock Test — Reading", target: "7.5", dur: "60 мин", q: 40, parts: "READING", href: "/ielts/reading", tag: "READING" },
-  { name: "Full Mock Test — Listening", target: "7.5", dur: "30 мин", q: 40, parts: "LISTENING", href: "/ielts/listening", tag: "LISTENING" },
-  { name: "Writing Task 1 & 2", target: "7.0", dur: "60 мин", q: 2, parts: "WRITING", href: "/ielts/writing", tag: "WRITING" },
-  { name: "Speaking Simulation", target: "7.5", dur: "14 мин", q: 12, parts: "SPEAKING", href: "/ielts/speaking", tag: "SPEAKING" },
-  { name: "IELTS Simulator — Full", target: "8.0", dur: "2 сағ 45 мин", q: 200, parts: "L · R · W · S", href: "/ielts/simulator", tag: "FULL" },
-  { name: "AI Writing тексеруші", target: "7.0", dur: "5 мин", q: 1, parts: "AI БАҒАЛАУ", href: "/ielts/writing", tag: "AI" },
+  { nameKey: "ielts.mod.reading",   target: "7.5", durKey: "ielts.dur.60min", q: 40,  parts: "READING",        href: "/ielts/reading",   tag: "READING"   },
+  { nameKey: "ielts.mod.listening", target: "7.5", durKey: "ielts.dur.30min", q: 40,  parts: "LISTENING",      href: "/ielts/listening", tag: "LISTENING" },
+  { nameKey: "ielts.mod.writing",   target: "7.0", durKey: "ielts.dur.60min", q: 2,   parts: "WRITING",        href: "/ielts/writing",   tag: "WRITING"   },
+  { nameKey: "ielts.mod.speaking",  target: "7.5", durKey: "ielts.dur.14min", q: 12,  parts: "SPEAKING",       href: "/ielts/speaking",  tag: "SPEAKING"  },
+  { nameKey: "ielts.mod.full",      target: "8.0", durKey: "ielts.dur.full",  q: 200, parts: "L · R · W · S", href: "/ielts/simulator", tag: "FULL"      },
+  { nameKey: "ielts.mod.aiWriter",  target: "7.0", durKey: "ielts.dur.5min",  q: 1,   parts: "ielts.partsAI", href: "/ielts/writing",   tag: "AI"        },
 ];
 
 function tagClass(tag: string): string {
@@ -66,12 +66,12 @@ export default async function IELTSHubPage() {
       <section className="nd-dash-hero nd-reveal">
         <div className="nd-dash-hero-grid">
           <div>
-            <p className="nd-eyebrow">IELTS ДАЙЫНДЫҚ</p>
-            <h2>Тестілер кітапханасы</h2>
-            <p>Шынайы IELTS форматы · Cambridge нұсқалары · AI бағалау</p>
+            <p className="nd-eyebrow">{t("ielts.hubEyebrow")}</p>
+            <h2>{t("ielts.libraryTitle")}</h2>
+            <p>{t("ielts.librarySubtitle")}</p>
             <div className="nd-row" style={{ flexWrap: "wrap", gap: "10px" }}>
               <Link href="/ielts/simulator" className="nd-btn-primary">
-                Simulator бастау →
+                {t("ielts.simulatorStart")}
               </Link>
               <Link href="/ielts/study-plan" className="nd-btn-ghost">
                 Study Plan
@@ -118,14 +118,14 @@ export default async function IELTSHubPage() {
       {/* ── Page header ───────────────────────────────────────────────────── */}
       <div className="nd-page-head nd-reveal nd-d2" style={{ marginTop: "32px" }}>
         <div>
-          <h1 className="nd-page-title">Тест модульдері</h1>
+          <h1 className="nd-page-title">{t("ielts.testModulesTitle")}</h1>
           <p className="nd-page-sub">
-            {IELTS_MODULES.length} модуль · Band 7–8+ дайындық
+            {t("ielts.testModulesSub", { n: IELTS_MODULES.length })}
           </p>
         </div>
         <div className="nd-row">
           <Link href="/ielts/study-plan" className="nd-btn-soft">
-            Оқу жоспары
+            {t("ielts.studyPlanLabel")}
           </Link>
         </div>
       </div>
@@ -133,25 +133,25 @@ export default async function IELTSHubPage() {
       {/* ── Test card grid ────────────────────────────────────────────────── */}
       <div className="nd-test-grid nd-reveal nd-d3">
         {IELTS_MODULES.map((mod) => (
-          <article key={mod.href + mod.name} className="nd-test-card">
+          <article key={mod.href + mod.nameKey} className="nd-test-card">
             <div className="nd-test-band">
               <span className="nd-test-target">{mod.target}</span>
               <span className={tagClass(mod.tag)}>{mod.tag}</span>
             </div>
             <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>
-              {mod.name}
+              {t(mod.nameKey)}
             </h4>
             <div className="nd-test-meta">
-              <span>{mod.dur}</span>
+              <span>{t(mod.durKey)}</span>
               <span>·</span>
-              <span>{mod.q} сұрақ</span>
+              <span>{mod.q} {t("ielts.questions")}</span>
             </div>
             <p style={{ margin: 0, fontSize: "12px", fontWeight: 600, color: "var(--ink-mute)", fontFamily: "var(--font-mono,monospace)", letterSpacing: ".06em", textTransform: "uppercase" }}>
-              {mod.parts}
+              {mod.parts.startsWith("ielts.") ? t(mod.parts) : mod.parts}
             </p>
             <div style={{ marginTop: "auto", paddingTop: "6px" }}>
               <Link href={mod.href} className="nd-btn-primary" style={{ width: "100%", justifyContent: "center" }}>
-                Бастау →
+                {t("ielts.cardStart")}
               </Link>
             </div>
           </article>

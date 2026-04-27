@@ -7,11 +7,14 @@ import { QuizCard } from "@/features/quizzes/components";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 import { getQuizzesOverview, type QuizListFilters } from "@/server/services/quizzes";
 
-export const metadata = {
-  title: "Квиз кітапханасы",
-  description:
-    "Ашық квиздерді қараңыз, ойнаңыз және өзіңіздікін жасаңыз. IELTS дайындығы, флешкарталар және басқалары.",
-};
+export async function generateMetadata() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("quiz.libraryTitle"),
+    description: t("quiz.librarySubtitleAuth"),
+  };
+}
 
 interface QuizzesPageProps {
   searchParams: Promise<{

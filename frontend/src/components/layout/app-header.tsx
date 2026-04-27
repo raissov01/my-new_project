@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { Bell, Search } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useLocale } from "@/components/providers/locale-provider";
 import { ProfileAvatar } from "@/features/profile/components/profile-avatar";
 
 export function AppHeader() {
   const { user } = useAuth();
+  const { t } = useLocale();
 
   const userMeta = user?.user_metadata as
     | { username?: string; avatar_url?: string | null; full_name?: string }
@@ -123,7 +125,7 @@ export function AppHeader() {
             flexShrink: 0,
           }}
         >
-          Кіру
+          {t("nav.logIn")}
         </Link>
       )}
     </header>

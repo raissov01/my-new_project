@@ -281,7 +281,7 @@ export function AppSidebar() {
             <button
               type="submit"
               className="nd-sidebar-logout"
-              title={t("nav.logOut") || "Шығу"}
+              title={t("nav.logOut")}
             >
               <LogOut size={14} />
             </button>

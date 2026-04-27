@@ -1,12 +1,22 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth";
 import { getFriends } from "@/features/gamification/api";
 import { InviteCodeCard } from "@/components/gamification/InviteCodeCard";
 import { FriendList } from "@/components/gamification/FriendList";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 
-export const metadata = { title: "Friends — StudyWithRaissov" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return { title: `${t("friends.title")} — StudyWithRaissov` };
+}
 
 export default async function FriendsPage() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
@@ -17,9 +27,9 @@ export default async function FriendsPage() {
     <div className="page-shell py-4 sm:py-6">
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
-          <h3>Friends</h3>
+          <h3>{t("friends.title")}</h3>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", color: "var(--ink-mute)" }}>
-            {friendCount} {friendCount === 1 ? "friend" : "friends"}
+            {t("friends.count", { n: friendCount })}
           </span>
         </div>
       </div>

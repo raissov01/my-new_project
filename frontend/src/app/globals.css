@@ -26,11 +26,11 @@
   --yellow-soft: #F9EBC2;
 
   /* ── Existing Design System ── */
-  /* Brand */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-soft: rgba(37, 99, 235, 0.08);
-  --primary-glow: rgba(37, 99, 235, 0.18);
+  /* Brand — terra as primary */
+  --primary: #C2500A;
+  --primary-hover: #8F3A05;
+  --primary-soft: rgba(194, 80, 10, 0.08);
+  --primary-glow: rgba(194, 80, 10, 0.18);
   --accent: #c2500a;
   --accent-hover: #a84208;
   --accent-soft: rgba(194, 80, 10, 0.08);
@@ -91,8 +91,8 @@
 }
 
 .dark {
-  --primary-soft: rgba(37, 99, 235, 0.12);
-  --primary-glow: rgba(37, 99, 235, 0.25);
+  --primary-soft: rgba(194, 80, 10, 0.15);
+  --primary-glow: rgba(194, 80, 10, 0.30);
   --accent: #f97316;
   --accent-hover: #ea580c;
   --accent-soft: rgba(249, 115, 22, 0.10);
@@ -123,7 +123,7 @@
   --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.50), 0 2px 4px -1px rgba(0, 0, 0, 0.30);
   --shadow-lg: 0 8px 20px -4px rgba(0, 0, 0, 0.60), 0 4px 8px -2px rgba(0, 0, 0, 0.35);
   --shadow-xl: 0 16px 32px -8px rgba(0, 0, 0, 0.70), 0 8px 16px -4px rgba(0, 0, 0, 0.40);
-  --shadow-glow: 0 0 0 1px var(--primary-soft), 0 4px 16px -4px rgba(37, 99, 235, 0.30);
+  --shadow-glow: 0 0 0 1px var(--primary-soft), 0 4px 16px -4px rgba(194, 80, 10, 0.30);
   --shadow-accent-glow: 0 0 0 1px var(--accent-soft), 0 4px 16px -4px rgba(249, 115, 22, 0.30);
 
   --surface-shadow: var(--shadow-sm);
@@ -165,7 +165,7 @@ body {
 }
 
 ::selection {
-  background: rgba(37, 99, 235, 0.15);
+  background: rgba(194, 80, 10, 0.15);
   color: var(--text-primary);
 }
 
@@ -424,7 +424,7 @@ a, button, input, textarea, select {
   border-radius: var(--radius-full);
   background: var(--primary-soft);
   color: var(--primary);
-  border: 1px solid rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(194, 80, 10, 0.15);
 }
 
 .badge-accent {
@@ -1175,10 +1175,10 @@ a, button, input, textarea, select {
 /* Breathing glow — primary CTA button */
 @keyframes breathe-glow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.28), 0 4px 14px rgba(37, 99, 235, 0.18);
+    box-shadow: 0 0 0 0 rgba(194, 80, 10, 0.28), 0 4px 14px rgba(194, 80, 10, 0.18);
   }
   50% {
-    box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.07), 0 8px 28px rgba(37, 99, 235, 0.30);
+    box-shadow: 0 0 0 7px rgba(194, 80, 10, 0.07), 0 8px 28px rgba(194, 80, 10, 0.30);
   }
 }
 
@@ -1190,7 +1190,7 @@ a, button, input, textarea, select {
 .btn-breathe:focus-visible {
   animation: none;
   transform: scale(1.026) translateY(-1px);
-  box-shadow: 0 8px 28px rgba(37, 99, 235, 0.36);
+  box-shadow: 0 8px 28px rgba(194, 80, 10, 0.36);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.2s ease;
 }

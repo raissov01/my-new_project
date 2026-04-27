@@ -11,13 +11,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#2563eb",
+  themeColor: "#C2500A",
 };
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
 const SITE_TITLE = "StudyWithRaissov — Premium IELTS Preparation Platform";
 const SITE_DESCRIPTION =
-  "StudyWithRaissov — студенттер мен оқытушыларға арналған жан-жақты оқу экожүйесі. Флешкарталар, тесттер, челленджтер және тағы басқа.";
+  "StudyWithRaissov — a complete learning ecosystem for students and teachers. Flashcards, tests, challenges and more.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
@@ -139,7 +139,7 @@ export default async function RootLayout({
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-xl focus:bg-[var(--primary)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
         >
-          Негізгі мазмұнға өту
+          Skip to main content
         </a>
         <LocaleProvider initialLocale={initialLocale}>
           <ToastProvider>{children}</ToastProvider>
