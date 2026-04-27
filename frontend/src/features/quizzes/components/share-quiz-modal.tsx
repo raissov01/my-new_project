@@ -84,7 +84,7 @@ export function ShareQuizModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)]"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-xl)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
@@ -108,7 +108,7 @@ export function ShareQuizModal({
 
         <div className="mt-5 flex justify-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-4">
           {publicUrl ? (
-            <QRCodeSVG value={publicUrl} size={176} includeMargin={false} />
+            <QRCodeSVG value={publicUrl} size={148} includeMargin={false} />
           ) : (
             <div className="h-44 w-44 animate-pulse rounded-[var(--radius-md)] bg-[var(--bg-soft)]" />
           )}
