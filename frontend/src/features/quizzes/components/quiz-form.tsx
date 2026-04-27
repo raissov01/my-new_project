@@ -307,6 +307,7 @@ export function QuizForm({
   const { t } = useLocale();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
   const [mode, setMode] = useState<"manual" | "import">("manual");
 
   const [title, setTitle] = useState(initialTitle);
@@ -439,7 +440,18 @@ export function QuizForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+      {/* Sticky publish button — always visible at top-right */}
+      <div className="fixed right-4 top-4 z-50 sm:right-6 sm:top-5">
+        <Button
+          type="button"
+          isLoading={isPending}
+          onClick={() => formRef.current?.requestSubmit()}
+          className="shadow-lg"
+        >
+          {submitLabel}
+        </Button>
+      </div>
       <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">
           {t("quiz.metaSection")}
