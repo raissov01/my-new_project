@@ -4,8 +4,10 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { X, Users, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/components/providers/locale-provider";
 
 export function JoinClassModal() {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
   const [pending, setPending] = useState(false);
@@ -50,10 +52,10 @@ export function JoinClassModal() {
           router.refresh();
         }, 1500);
       } else {
-        setError(data?.error ?? "Сыныпқа қосылу мүмкін болмады. Кодты тексеріңіз.");
+        setError(data?.error ?? t("joinClass.errorDefault"));
       }
     } catch {
-      setError("Желі қатесі. Қайталап көріңіз.");
+      setError(t("joinClass.errorNetwork"));
     } finally {
       setPending(false);
     }
@@ -63,7 +65,7 @@ export function JoinClassModal() {
     <>
       <Button variant="secondary" size="sm" onClick={openModal}>
         <Users className="h-3.5 w-3.5" />
-        Сыныпқа қосылу
+        {t("joinClass.title")}
       </Button>
 
       {/* Backdrop */}
@@ -89,29 +91,29 @@ export function JoinClassModal() {
               <button
                 onClick={closeModal}
                 className="ml-auto flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-                aria-label="Жабу"
+                aria-label={t("joinClass.close")}
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <h2 id="join-class-title" className="mt-4 text-lg font-bold tracking-[-0.03em] text-[var(--text-primary)]">
-              Сыныпқа қосылу
+              {t("joinClass.title")}
             </h2>
             <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">
-              Мұғалімнен алған 6 таңбалы кодты енгізіңіз.
+              {t("joinClass.desc")}
             </p>
 
             {success ? (
               <div className="mt-5 flex items-center gap-2.5 rounded-[var(--radius-lg)] border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="h-4 w-4 shrink-0" />
-                Сыныпқа сәтті қосылдыңыз!
+                {t("joinClass.success")}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="mt-5 space-y-4">
                 <div>
                   <label htmlFor="join-code" className="block text-sm font-medium text-[var(--text-primary)]">
-                    Сынып коды
+                    {t("joinClass.codeLabel")}
                   </label>
                   <input
                     ref={inputRef}
@@ -134,13 +136,13 @@ export function JoinClassModal() {
                 )}
 
                 <Button type="submit" className="w-full" disabled={!code.trim() || pending} isLoading={pending}>
-                  Қосылу
+                  {t("joinClass.submit")}
                 </Button>
 
                 <p className="text-center text-xs text-[var(--text-muted)]">
-                  Код қайдан алам?{" "}
+                  {t("joinClass.codeHint")}{" "}
                   <span className="text-[var(--text-secondary)]">
-                    Мұғаліміңізден сұраңыз немесе invitation email-інен көшіріңіз.
+                    {t("joinClass.codeHintBody")}
                   </span>
                 </p>
               </form>

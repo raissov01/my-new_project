@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocale } from "@/components/providers/locale-provider";
 
 export interface ScoreEntry {
   label: string;
@@ -66,6 +67,7 @@ function bandAvg(entry: ScoreEntry) {
 }
 
 export default function ScoreRadarDashboard({ scoreHistory }: Props) {
+  const { t } = useLocale();
   const sparklines = buildSparklines(scoreHistory);
   const [sliderIndex, setSliderIndex] = useState(scoreHistory.length - 1);
   const [animFrac, setAnimFrac] = useState(0);
@@ -150,13 +152,13 @@ export default function ScoreRadarDashboard({ scoreHistory }: Props) {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4 sm:px-7">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">IELTS Прогресс</p>
-          <h2 className="mt-1 text-xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)]">Балл картасы</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">{t("radar.progressTitle")}</p>
+          <h2 className="mt-1 text-xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)]">{t("radar.bandChart")}</h2>
         </div>
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-400">
             <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" /><span className="relative inline-flex h-2 w-2 rounded-full bg-purple-500" /></span>
-            Белсенді
+            {t("radar.active")}
           </span>
         </div>
       </div>
@@ -337,13 +339,13 @@ export default function ScoreRadarDashboard({ scoreHistory }: Props) {
             <span className="flex items-center gap-1.5"><span className="h-2 w-5 rounded-full border border-dashed border-red-400/60 bg-red-400/15" /> {first.label}</span>
             {mid && <span className="flex items-center gap-1.5"><span className="h-2 w-5 rounded-full border border-yellow-400/60 bg-yellow-400/15" /> {mid.label}</span>}
             <span className="flex items-center gap-1.5"><span className="h-2 w-5 rounded-full" style={{ background: "linear-gradient(90deg,#5533ff,#00ccaa)" }} /> {current.label}</span>
-            <span className="flex items-center gap-1.5"><span className="h-2 w-5 rounded-full border border-dashed border-purple-400/40 bg-purple-400/10" /> Мақсат</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-5 rounded-full border border-dashed border-purple-400/40 bg-purple-400/10" /> {t("radar.goal")}</span>
           </div>
 
           {/* Timeline slider */}
           <div className="w-full max-w-[280px]">
             <div className="mb-1.5 flex items-center justify-between text-xs text-[var(--text-muted)]">
-              <span>Уақыт шкаласы</span>
+              <span>{t("radar.timeline")}</span>
               <span className="font-semibold text-[var(--text-secondary)]">{sliderEntry.label} ({sliderEntry.date})</span>
             </div>
             <input
@@ -392,7 +394,7 @@ export default function ScoreRadarDashboard({ scoreHistory }: Props) {
                 >
                   {isWeak && (
                     <span className="absolute right-2 top-2 rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-rose-500">
-                      Əлсіз
+                      {t("radar.weak")}
                     </span>
                   )}
                   <span className="text-[11px] font-semibold text-[var(--text-muted)]">{ax}</span>
@@ -428,10 +430,10 @@ export default function ScoreRadarDashboard({ scoreHistory }: Props) {
 
           {/* Target section */}
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">Мақсат (Target)</p>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">{t("radar.targetLabel")}</p>
 
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-sm text-[var(--text-secondary)]">Мақсат балл</span>
+              <span className="text-sm text-[var(--text-secondary)]">{t("radar.targetScore")}</span>
               <span className="font-extrabold text-[var(--text-primary)]" style={{ color: "#5533ff" }}>
                 Band {targetBand.toFixed(1)}
               </span>
@@ -457,7 +459,7 @@ export default function ScoreRadarDashboard({ scoreHistory }: Props) {
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(135deg,#5533ff,#00ccaa)" }}
             >
-              Жаттығуды бастау →
+              {t("radar.startPractice")}
             </a>
           </div>
         </div>
@@ -482,24 +484,24 @@ export default function ScoreRadarDashboard({ scoreHistory }: Props) {
 }
 
 function PaceEstimate({ current, target }: { current: ScoreEntry; target: number }) {
+  const { t } = useLocale();
   const avg = (current.reading + current.writing + current.listening + current.speaking) / 4;
   const gap = target - avg;
 
   if (gap <= 0) {
-    return <p className="mt-2 text-xs font-semibold text-emerald-500">Мақсатыңа жеттің! 🎉</p>;
+    return <p className="mt-2 text-xs font-semibold text-emerald-500">{t("radar.goalReached")}</p>;
   }
 
-  // Rough estimate: ~0.5 band per 2 months of practice
   const months = Math.ceil(gap / 0.5) * 2;
   const text = months <= 2
-    ? "~1–2 ай жаттықсаң жетесің"
+    ? t("radar.paceShort")
     : months <= 4
-    ? `~${months} ай жаттықсаң жетесің`
-    : `~${months} ай (жүйелі жаттықсаң)`;
+    ? t("radar.paceMid", { n: months })
+    : t("radar.paceLong", { n: months });
 
   return (
     <p className="mt-2 text-xs text-[var(--text-muted)]">
-      Саған қанша уақыт керек:{" "}
+      {t("radar.timeNeeded")}{" "}
       <span className="font-semibold text-[var(--text-secondary)]">{text}</span>
     </p>
   );

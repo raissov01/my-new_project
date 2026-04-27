@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { GraduationCap, CalendarDays, Target, ArrowRight } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/components/providers/locale-provider";
 
 const STORAGE_KEY = "ielts_onboarding_done";
 const BAND_OPTIONS = ["5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0", "8.5+"];
@@ -20,6 +21,7 @@ function daysUntil(isoDate: string): number {
 }
 
 export function IELTSOnboardingModal() {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"band" | "date" | "done">("band");
   const [targetBand, setTargetBand] = useState("7.0");
@@ -62,10 +64,10 @@ export function IELTSOnboardingModal() {
             <Target className="h-8 w-8 text-emerald-500" />
           </div>
           <div>
-            <p className="text-lg font-bold text-[var(--text-primary)]">Жоспарыңыз дайын!</p>
+            <p className="text-lg font-bold text-[var(--text-primary)]">{t("ielts.onboard.planReady")}</p>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Мақсат: Band {targetBand}
-              {examDate && ` · ${daysUntil(examDate)} күн қалды`}
+              {t("ielts.onboard.goal")} {targetBand}
+              {examDate && ` · ${t("ielts.onboard.daysLeft", { n: daysUntil(examDate) })}`}
             </p>
           </div>
         </div>
@@ -78,10 +80,10 @@ export function IELTSOnboardingModal() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                IELTS жоспарыңызды жасайық
+                {t("ielts.onboard.title")}
               </h2>
               <p className="text-xs text-[var(--text-secondary)]">
-                2 сұрақ — 30 секунд
+                {t("ielts.onboard.subtitle")}
               </p>
             </div>
           </div>
@@ -103,7 +105,7 @@ export function IELTSOnboardingModal() {
           {step === "band" && (
             <div>
               <p className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
-                Мақсатты Band баллыңыз қандай?
+                {t("ielts.onboard.bandQuestion")}
               </p>
               <div className="grid grid-cols-4 gap-2">
                 {BAND_OPTIONS.map((band) => (
@@ -128,10 +130,10 @@ export function IELTSOnboardingModal() {
                   onClick={handleSkip}
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                 >
-                  Өткізіп жіберу
+                  {t("ielts.onboard.skip")}
                 </button>
                 <Button onClick={() => setStep("date")}>
-                  Келесі
+                  {t("ielts.onboard.next")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -141,7 +143,7 @@ export function IELTSOnboardingModal() {
           {step === "date" && (
             <div>
               <p className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
-                Емтихан күніңіз қашан?
+                {t("ielts.onboard.dateQuestion")}
               </p>
               <div className="flex items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2">
                 <CalendarDays className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />
@@ -155,7 +157,7 @@ export function IELTSOnboardingModal() {
               </div>
               {examDate && (
                 <p className="mt-2 text-xs text-[var(--text-muted)]">
-                  {formatDateLabel(examDate)} — {daysUntil(examDate)} күн қалды
+                  {formatDateLabel(examDate)} — {t("ielts.onboard.daysLeft", { n: daysUntil(examDate) })}
                 </p>
               )}
 
@@ -164,10 +166,10 @@ export function IELTSOnboardingModal() {
                   onClick={() => setStep("band")}
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                 >
-                  ← Артқа
+                  {t("ielts.onboard.back")}
                 </button>
                 <Button onClick={handleComplete} disabled={saving}>
-                  {saving ? "Сақталуда..." : "Жоспар жасау"}
+                  {saving ? t("ielts.onboard.saving") : t("ielts.onboard.createPlan")}
                   <Target className="h-4 w-4" />
                 </Button>
               </div>

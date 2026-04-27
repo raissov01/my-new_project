@@ -54,7 +54,7 @@ export function AppHeader() {
         }}
       >
         <Search size={14} style={{ color: "var(--ink-mute)", flexShrink: 0 }} />
-        <span style={{ fontSize: 13.5, color: "var(--ink-mute)", flex: 1 }}>Іздеу...</span>
+        <span style={{ fontSize: 13.5, color: "var(--ink-mute)", flex: 1 }}>{t("header.search")}</span>
         <span
           style={{
             fontFamily: "'JetBrains Mono', monospace",
@@ -77,7 +77,7 @@ export function AppHeader() {
       {/* Notification bell */}
       <button
         type="button"
-        aria-label="Хабарламалар"
+        aria-label={t("header.notifications")}
         style={{
           width: 36,
           height: 36,
