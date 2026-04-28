@@ -25,15 +25,6 @@ export function ShareQuizModal({
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      requestAnimationFrame(() => setVisible(true));
-    } else {
-      setVisible(false);
-    }
-  }, [open]);
 
   // Close on Escape
   useEffect(() => {
@@ -87,22 +78,15 @@ export function ShareQuizModal({
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center p-4"
-      style={{
-        background: visible ? "rgba(0,0,0,0.65)" : "rgba(0,0,0,0)",
-        backdropFilter: visible ? "blur(6px)" : "blur(0px)",
-        transition: "background 0.25s, backdrop-filter 0.25s",
-      }}
+      className="fixed inset-0 z-[110] flex items-start justify-center overflow-y-auto"
+      style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)" }}
       onClick={onClose}
     >
+      {/* вертикальный центр */}
+      <div className="flex min-h-full w-full items-center justify-center p-4 py-8">
       <div
         className="relative w-full overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-2xl"
-        style={{
-          maxWidth: 560,
-          transform: visible ? "scale(1) translateY(0)" : "scale(0.95) translateY(16px)",
-          opacity: visible ? 1 : 0,
-          transition: "transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s",
-        }}
+        style={{ maxWidth: 600 }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -222,5 +206,6 @@ export function ShareQuizModal({
         </div>
       </div>
     </div>
+  </div>
   );
 }
