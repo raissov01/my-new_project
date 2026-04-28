@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -114,7 +116,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
             ) : (
               <Lock style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} />
             )}
-            Visibility
+            {t("quiz.visibility")}
           </span>
           <strong className="nd-kpi-num" style={{ fontSize: 16 }}>
             {quiz.isPublic ? t("quiz.isPublic") : t("quiz.isPrivate")}
@@ -180,11 +182,11 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
         </div>
 
         <div className="nd-mock-shell">
-          {quiz.questions.map((question, index) => (
+          {(quiz.questions ?? []).map((question, index) => (
             <div
               key={question.id}
               className="nd-mock-q"
-              style={{ padding: "18px 24px", borderBottom: index < quiz.questions.length - 1 ? "1px dashed var(--line-strong)" : "none" }}
+              style={{ padding: "18px 24px", borderBottom: index < (quiz.questions ?? []).length - 1 ? "1px dashed var(--line-strong)" : "none" }}
             >
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
                 <h5 style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--ink)", margin: 0 }}>

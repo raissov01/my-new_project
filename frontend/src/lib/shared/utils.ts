@@ -15,9 +15,16 @@ export function formatDate(dateString: string, locale = "en"): string {
     en: "en-US",
   };
 
-  return new Date(dateString).toLocaleDateString(mapping[locale] ?? "en-US", {
+  const bcp47 = mapping[locale] ?? "en-US";
+  const opts: Intl.DateTimeFormatOptions = {
     month: "short",
     day: "numeric",
     year: "numeric",
-  });
+  };
+
+  try {
+    return new Date(dateString).toLocaleDateString(bcp47, opts);
+  } catch {
+    return new Date(dateString).toLocaleDateString("en-US", opts);
+  }
 }

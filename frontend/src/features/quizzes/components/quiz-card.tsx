@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Users, Target, Timer, Pencil, Play } from "lucide-react";
+import { Users, Target, Timer, Pencil, Play, Lock } from "lucide-react";
 import { formatDate } from "@/lib/shared/utils";
 import { type Locale, createTranslator } from "@/lib/shared/i18n";
 import type { QuizOverview } from "@/server/services/quizzes";
@@ -56,6 +56,12 @@ export function QuizCard({ quiz, locale, isOwner, index = 0 }: QuizCardProps) {
         {quiz.subject ? (
           <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,.25)", backdropFilter: "blur(8px)", borderRadius: 99, padding: "3px 10px", fontSize: 10.5, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".06em", color: "#fff" }}>
             {quiz.subject}
+          </div>
+        ) : null}
+        {isOwner && !quiz.isPublic ? (
+          <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,.45)", backdropFilter: "blur(8px)", borderRadius: 99, padding: "3px 8px", fontSize: 10, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".06em", color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
+            <Lock style={{ width: 9, height: 9 }} />
+            {t("quiz.isPrivate")}
           </div>
         ) : null}
       </div>

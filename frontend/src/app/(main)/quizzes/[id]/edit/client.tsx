@@ -54,6 +54,7 @@ export function EditQuizClient({
       return { error: data?.error ?? t("quiz.errCreateFailed") };
     }
 
+    router.refresh();
     router.push(`/quizzes/${quizId}`);
     return { error: null };
   }
