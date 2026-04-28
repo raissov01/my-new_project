@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { FileSpreadsheet, Upload, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { FileSpreadsheet, Upload, AlertTriangle, CheckCircle2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import type {
@@ -130,6 +130,31 @@ function normalizeQuestionType(value: string): QuizQuestionType {
     return "fill_blank";
   }
   return "mcq";
+}
+
+async function downloadTemplate() {
+  const XLSX = await import("xlsx");
+
+  const headerRow = ["Question", "Type", "Option A", "Option B", "Option C", "Option D", "Correct (a/b/c/d)", "Explanation"];
+  const rows = [
+    headerRow,
+    ["What is the capital of France?", "mcq", "London", "Berlin", "Paris", "Madrid", "c", "Paris is the capital of France."],
+    ["The Earth is flat.", "true_false", "", "", "", "", "f", "The Earth is an oblate spheroid."],
+    ["Water boils at ___ degrees Celsius at sea level.", "fill_blank", "", "", "", "", "100", ""],
+    ["Which planet is closest to the Sun?", "mcq", "Venus", "Mercury", "Mars", "Earth", "b", ""],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Set column widths
+  ws["!cols"] = [
+    { wch: 42 }, { wch: 12 }, { wch: 18 }, { wch: 18 },
+    { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 30 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Questions");
+  XLSX.writeFile(wb, "quiz_template.xlsx");
 }
 
 export function ExcelImport({ onImport }: ExcelImportProps) {
@@ -309,16 +334,27 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
             if (file) void handleFile(file);
           }}
         />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => inputRef.current?.click()}
-          isLoading={loading}
-        >
-          <Upload className="h-4 w-4" />
-          {t("quiz.importChooseFile")}
-        </Button>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => inputRef.current?.click()}
+            isLoading={loading}
+          >
+            <Upload className="h-4 w-4" />
+            {t("quiz.importChooseFile")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => void downloadTemplate()}
+          >
+            <Download className="h-4 w-4" />
+            {t("quiz.downloadTemplate")}
+          </Button>
+        </div>
       </div>
 
       {error ? (
