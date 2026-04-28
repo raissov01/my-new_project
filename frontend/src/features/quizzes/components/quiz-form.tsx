@@ -322,6 +322,10 @@ export function QuizForm({
   const [powerUpsEnabled, setPowerUpsEnabled] = useState(initialPowerUpsEnabled);
   const [tags, setTags] = useState<string[]>(() => initialTags ?? []);
 
+  const [show5, setShow5] = useState(() =>
+    (initialQuestions ?? []).some((q) => Boolean(q.optionE))
+  );
+
   const [keyCounter, setKeyCounter] = useState(0);
   const [questions, setQuestions] = useState<QuestionEntry[]>(() => {
     if (initialQuestions && initialQuestions.length > 0) {
@@ -369,6 +373,19 @@ export function QuizForm({
     setQuestions((prev) =>
       prev.map((q) => (q._key === key ? applyTypeChange(q, nextType) : q))
     );
+  };
+
+  const toggleShow5 = (next: boolean) => {
+    setShow5(next);
+    if (!next) {
+      setQuestions((prev) =>
+        prev.map((q) => ({
+          ...q,
+          optionE: "",
+          correctOption: q.correctOption === "e" ? "" : q.correctOption,
+        }))
+      );
+    }
   };
 
   const handleImported = (imported: QuizQuestionInput[]) => {
@@ -569,9 +586,22 @@ export function QuizForm({
 
       <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">
-            {t("quiz.questionsSection")}
-          </h2>
+          <div className="flex flex-wrap items-center gap-4">
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">
+              {t("quiz.questionsSection")}
+            </h2>
+            <label className="flex cursor-pointer items-center gap-2 select-none">
+              <input
+                type="checkbox"
+                checked={show5}
+                onChange={(e) => toggleShow5(e.target.checked)}
+                className="h-4 w-4 accent-[var(--primary)]"
+              />
+              <span className="text-xs text-[var(--text-secondary)]">
+                {t("quiz.show5thOption")}
+              </span>
+            </label>
+          </div>
           <div className="inline-flex rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] p-1">
             <button
               type="button"
@@ -617,6 +647,7 @@ export function QuizForm({
                 onMoveUp={() => moveQuestion(q._key, -1)}
                 onMoveDown={() => moveQuestion(q._key, 1)}
                 canRemove={questions.length > 1}
+                show5={show5}
               />
             ))}
             <Button
@@ -750,6 +781,7 @@ function QuestionEditor({
   onMoveUp,
   onMoveDown,
   canRemove,
+  show5,
 }: {
   index: number;
   question: QuestionEntry;
@@ -759,6 +791,7 @@ function QuestionEditor({
   onMoveUp: () => void;
   onMoveDown: () => void;
   canRemove: boolean;
+  show5: boolean;
 }) {
   const { t } = useLocale();
   const questionType: QuizQuestionType = question.questionType ?? "mcq";
@@ -835,9 +868,9 @@ function QuestionEditor({
       <QuestionExtras question={question} onChange={onChange} />
 
       {questionType === "mcq" ? (
-        <McqBody question={question} onChange={onChange} />
+        <McqBody question={question} onChange={onChange} show5={show5} />
       ) : questionType === "mcq_multi" ? (
-        <McqMultiBody question={question} onChange={onChange} />
+        <McqMultiBody question={question} onChange={onChange} show5={show5} />
       ) : questionType === "true_false" ? (
         <TrueFalseBody question={question} onChange={onChange} />
       ) : questionType === "fill_blank" ? (
@@ -1210,12 +1243,13 @@ function VideoBody({
 function McqBody({
   question,
   onChange,
+  show5,
 }: {
   question: QuestionEntry;
   onChange: (patch: Partial<QuizQuestionInput>) => void;
+  show5: boolean;
 }) {
   const { t } = useLocale();
-  const [show5, setShow5] = useState(() => Boolean(question.optionE));
   const options: Array<{ key: "a" | "b" | "c" | "d" | "e"; field: keyof QuizQuestionInput }> = [
     { key: "a", field: "optionA" },
     { key: "b", field: "optionB" },
@@ -1256,33 +1290,10 @@ function McqBody({
                 placeholder={t("quiz.optionPlaceholder")}
                 className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
               />
-              {isE && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShow5(false);
-                    onChange({ optionE: "", correctOption: question.correctOption === "e" ? "" : question.correctOption });
-                  }}
-                  className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-                  aria-label={t("quiz.removeOption")}
-                >
-                  <X size={12} />
-                </button>
-              )}
             </div>
           );
         })}
       </div>
-      {!show5 && (
-        <button
-          type="button"
-          onClick={() => setShow5(true)}
-          className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)]"
-        >
-          <Plus size={12} />
-          {t("quiz.addOption")}
-        </button>
-      )}
     </div>
   );
 }
@@ -1290,12 +1301,13 @@ function McqBody({
 function McqMultiBody({
   question,
   onChange,
+  show5,
 }: {
   question: QuestionEntry;
   onChange: (patch: Partial<QuizQuestionInput>) => void;
+  show5: boolean;
 }) {
   const { t } = useLocale();
-  const [show5, setShow5] = useState(() => Boolean(question.optionE));
   const options: Array<{ key: "a" | "b" | "c" | "d" | "e"; field: keyof QuizQuestionInput }> = [
     { key: "a", field: "optionA" },
     { key: "b", field: "optionB" },
@@ -1359,36 +1371,10 @@ function McqMultiBody({
                 placeholder={t("quiz.optionPlaceholder")}
                 className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
               />
-              {isE && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShow5(false);
-                    const next = new Set(correctSet);
-                    next.delete("e");
-                    const sorted = ["a", "b", "c", "d"].filter((k) => next.has(k));
-                    onChange({ optionE: "", correctOption: sorted.join(",") });
-                  }}
-                  className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-                  aria-label={t("quiz.removeOption")}
-                >
-                  <X size={12} />
-                </button>
-              )}
             </div>
           );
         })}
       </div>
-      {!show5 && (
-        <button
-          type="button"
-          onClick={() => setShow5(true)}
-          className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)]"
-        >
-          <Plus size={12} />
-          {t("quiz.addOption")}
-        </button>
-      )}
     </div>
   );
 }
