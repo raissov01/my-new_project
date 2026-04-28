@@ -17,7 +17,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 
 const HEART_REFILL_MINUTES = 30;
 
-function useHeartCountdown(refillAt: string | null): string {
+function useHeartCountdown(refillAt: string | null, refillingLabel: string): string {
   const [label, setLabel] = useState("");
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function useHeartCountdown(refillAt: string | null): string {
 
     function tick() {
       const diff = target - Date.now();
-      if (diff <= 0) { setLabel("Refilling…"); return; }
+      if (diff <= 0) { setLabel(refillingLabel); return; }
       const m = Math.floor(diff / 60_000);
       const s = Math.floor((diff % 60_000) / 1_000);
       setLabel(`${m}:${s.toString().padStart(2, "0")}`);
@@ -34,7 +34,7 @@ function useHeartCountdown(refillAt: string | null): string {
     tick();
     const id = setInterval(tick, 1_000);
     return () => clearInterval(id);
-  }, [refillAt]);
+  }, [refillAt, refillingLabel]);
 
   return label;
 }
@@ -230,6 +230,7 @@ export function MapClient({
     units.find(u => u.level === targetLevel)
   )?.id ?? null;
 
+  const { t } = useLocale();
   const [expandedUnit, setExpandedUnit] = useState<string | null>(scrollTargetId);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [showHeartsInfo, setShowHeartsInfo] = useState(false);
@@ -260,10 +261,10 @@ export function MapClient({
   const streak = progress?.currentStreak ?? 0;
   const gems = progress?.gems ?? 0;
   const refillAt = progress?.heartsRefillAt ?? null;
-  const countdown = useHeartCountdown(refillAt);
+  const countdown = useHeartCountdown(refillAt, t("map.refilling"));
 
   const goalTasks = buildGoalTasks(units, quests ?? []);
-  const totalGoalXp = goalTasks.reduce((s, t) => s + t.xp, 0);
+  const totalGoalXp = goalTasks.reduce((s, task) => s + task.xp, 0);
 
   return (
     <div className="mx-auto max-w-lg px-3 pb-32 pt-4 sm:px-4 sm:pt-6">
@@ -273,22 +274,22 @@ export function MapClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--text-primary)]">❤️ Hearts System</h2>
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">{t("map.heartsSystem")}</h2>
               <button onClick={() => setShowHeartsInfo(false)} className="rounded-lg p-1 text-[var(--text-muted)] hover:bg-[var(--bg-soft)]">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="space-y-3 text-sm text-[var(--text-secondary)]">
-              <p>You start with <strong>5 hearts ❤️</strong>. Each wrong answer costs 1 heart.</p>
-              <p>When you run out, you must wait for hearts to regenerate — <strong>1 heart every 30 minutes</strong>.</p>
-              <p>Complete lessons without mistakes to keep all your hearts.</p>
-              <p className="text-xs text-[var(--text-muted)]">💎 Gems can refill hearts instantly (coming soon).</p>
+              <p>{t("map.heartsInfo1")}</p>
+              <p>{t("map.heartsInfo2")}</p>
+              <p>{t("map.heartsInfo3")}</p>
+              <p className="text-xs text-[var(--text-muted)]">{t("map.heartsInfo4")}</p>
             </div>
             <button
               onClick={() => setShowHeartsInfo(false)}
               className="mt-5 w-full rounded-xl bg-[var(--primary)] py-2.5 text-sm font-bold text-white"
             >
-              Got it!
+              {t("map.gotIt")}
             </button>
           </div>
         </div>
@@ -299,7 +300,7 @@ export function MapClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-bold text-[var(--text-primary)]">Your Level</h2>
+              <h2 className="text-base font-bold text-[var(--text-primary)]">{t("map.yourLevel")}</h2>
               <button onClick={() => setShowBadgeModal(false)} className="rounded-lg p-1 text-[var(--text-muted)] hover:bg-[var(--bg-soft)]">
                 <X className="h-5 w-5" />
               </button>
@@ -308,7 +309,7 @@ export function MapClient({
               {userLevel}
             </div>
             <p className="mb-4 text-sm text-[var(--text-secondary)]">
-              Placement test assigned you <strong>{userLevel}</strong>. Path starts from the unit that matches your level.
+              {t("map.levelInfo", { level: userLevel })}
             </p>
             <Link
               href="/learn/placement?retake=true"
@@ -316,7 +317,7 @@ export function MapClient({
               className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-muted)]"
             >
               <RotateCcw className="h-4 w-4" />
-              Retake placement test
+              {t("map.retakePlacement")}
             </Link>
           </div>
         </div>
@@ -393,7 +394,7 @@ export function MapClient({
         <div className="mb-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-base">🎯</span>
-            <h3 className="text-sm font-bold text-[var(--text-primary)] sm:text-base">Today&apos;s Goal</h3>
+            <h3 className="text-sm font-bold text-[var(--text-primary)] sm:text-base">{t("map.todayGoal")}</h3>
           </div>
           <span className="text-xs text-[var(--text-muted)]">+{totalGoalXp} XP</span>
         </div>
@@ -544,7 +545,7 @@ export function MapClient({
                                 href={`/learn/lessons/${lesson.id}`}
                                 className="flex min-h-[36px] min-w-[60px] items-center justify-center rounded-xl bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-transform active:scale-95"
                               >
-                                {lesson.isCompleted ? "Retry" : "Play"}
+                                {lesson.isCompleted ? t("map.retry") : t("map.play")}
                               </Link>
                             ) : (
                               <div className="flex h-10 w-10 items-center justify-center">
@@ -579,25 +580,25 @@ export function MapClient({
 
       {/* ── BUG-LEARN-012: Quick Practice — moved to bottom ── */}
       <div className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:p-4">
-        <h3 className="mb-3 text-sm font-bold text-[var(--text-primary)]">⚡ Quick Practice</h3>
+        <h3 className="mb-3 text-sm font-bold text-[var(--text-primary)]">{t("map.quickPractice")}</h3>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/learn/speak"
             className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-sm font-bold text-emerald-600 transition-colors active:scale-95"
           >
-            🎤 Speaking 5min
+            {t("map.speaking5min")}
           </Link>
           <Link
             href="/chat"
             className="inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2.5 text-sm font-bold text-blue-600 transition-colors active:scale-95"
           >
-            💬 AI Tutor
+            {t("map.aiTutor")}
           </Link>
           <Link
             href="/sets"
             className="inline-flex items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2.5 text-sm font-bold text-violet-600 transition-colors active:scale-95"
           >
-            🧠 Word Builder
+            {t("map.wordBuilder")}
           </Link>
         </div>
       </div>

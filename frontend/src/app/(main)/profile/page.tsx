@@ -51,10 +51,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   // Skill scores for the stats tab (IELTS bands — stubbed from stats)
   const ieltsSkills = [
-    { label: "Reading", score: 7.0, max: 9 },
-    { label: "Listening", score: 7.5, max: 9 },
-    { label: "Writing", score: 6.5, max: 9 },
-    { label: "Speaking", score: 6.0, max: 9 },
+    { label: t("skill.reading"), score: 7.0, max: 9 },
+    { label: t("skill.listening"), score: 7.5, max: 9 },
+    { label: t("skill.writing"), score: 6.5, max: 9 },
+    { label: t("skill.speaking"), score: 6.0, max: 9 },
   ];
 
   const tabs = [
@@ -77,7 +77,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <div className="nd-prof-stats">
             <div>
               <strong>{stats.streakDays}</strong>
-              <span>STREAK</span>
+              <span>{t("profile.statStreak")}</span>
             </div>
             <div>
               <strong>{Math.round(stats.totalStudied / 1000 * 10) / 10}K</strong>
@@ -89,7 +89,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </div>
             <div>
               <strong>{stats.points > 0 ? (stats.accuracy >= 70 ? "6.5+" : "–") : "–"}</strong>
-              <span>BAND</span>
+              <span>{t("profile.statBand")}</span>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               </div>
               <div className="nd-settings-row">
                 <div className="nd-settings-lbl">
-                  <strong>Email</strong>
+                  <strong>{t("profile.emailLabel")}</strong>
                   <span>{user.email}</span>
                 </div>
               </div>
@@ -299,7 +299,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </div>
             <div className="nd-settings-row">
               <div className="nd-settings-lbl">
-                <strong>Free</strong>
+                <strong>{t("profile.freePlan")}</strong>
                 <span>{t("profile.coreFeatures")}</span>
               </div>
             </div>

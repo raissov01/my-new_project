@@ -7,6 +7,7 @@ import { TranscriptViewer } from "./TranscriptViewer";
 import type { ListeningClip, ListeningQuestion, VocabItem } from "@/features/listening/api";
 import { recordListeningProgress } from "@/features/listening/api";
 import { recordDailyActivity } from "@/features/gamification/api";
+import { useLocale } from "@/components/providers/locale-provider";
 
 interface Props {
   clip: ListeningClip;
@@ -26,6 +27,7 @@ function pickBlanks(transcript: string, vocab: VocabItem[]): string[] {
 }
 
 export function ClipWizard({ clip, questions }: Props) {
+  const { t } = useLocale();
   const [stage, setStage] = useState<Stage>(1);
   const [prediction, setPrediction] = useState("");
   const [globalAnswer, setGlobalAnswer] = useState("");
@@ -83,11 +85,11 @@ export function ClipWizard({ clip, questions }: Props) {
   };
 
   const STAGE_LABELS = [
-    "Pre-listening",
-    "First listen",
-    "Listen + transcript",
-    "Comprehension quiz",
-    "Post-listening",
+    t("clip.stage1"),
+    t("clip.stage2"),
+    t("clip.stage3"),
+    t("clip.stage4"),
+    t("clip.stage5"),
   ];
 
   if (completed) {
@@ -95,11 +97,11 @@ export function ClipWizard({ clip, questions }: Props) {
       <div className="space-y-6 text-center py-12">
         <CheckCircle2 className="mx-auto h-16 w-16 text-green-500" />
         <div>
-          <p className="text-2xl font-bold text-[var(--text-primary)]">Well done!</p>
-          <p className="text-[var(--text-secondary)]">You scored {score}/100 and earned +{xpForClip} XP</p>
+          <p className="text-2xl font-bold text-[var(--text-primary)]">{t("clip.wellDone")}</p>
+          <p className="text-[var(--text-secondary)]">{t("clip.scoredXP", { score, xp: xpForClip })}</p>
         </div>
         <a href="/listen" className="inline-block rounded-[var(--radius-md)] bg-[var(--primary)] px-6 py-2.5 text-sm font-medium text-white hover:opacity-90">
-          Back to Library
+          {t("clip.backToLibrary")}
         </a>
       </div>
     );
@@ -127,7 +129,7 @@ export function ClipWizard({ clip, questions }: Props) {
       {/* ── Stage 1: Pre-listening ─────────────────────────────────── */}
       {stage === 1 && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Vocabulary preview</h2>
+          <h2 className="text-lg font-semibold">{t("clip.vocabPreview")}</h2>
           {vocab.length > 0 ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {vocab.map((v) => (
@@ -139,11 +141,11 @@ export function ClipWizard({ clip, questions }: Props) {
               ))}
             </div>
           ) : (
-            <p className="text-[var(--text-secondary)] text-sm">No vocabulary preview for this clip.</p>
+            <p className="text-[var(--text-secondary)] text-sm">{t("clip.noVocab")}</p>
           )}
 
           <div className="space-y-2">
-            <p className="font-medium">What do you think this clip is about?</p>
+            <p className="font-medium">{t("clip.predictPrompt")}</p>
             <div className="flex flex-wrap gap-2">
               {["Work and career", "Technology and science", "Travel and culture", "Daily life and health"].map((opt) => (
                 <button
@@ -166,12 +168,12 @@ export function ClipWizard({ clip, questions }: Props) {
       {/* ── Stage 2: First listen (no transcript) ─────────────────── */}
       {stage === 2 && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Listen once — no transcript</h2>
-          <p className="text-sm text-[var(--text-secondary)]">You have 2 plays. Focus on the general topic.</p>
+          <h2 className="text-lg font-semibold">{t("clip.listenOnce")}</h2>
+          <p className="text-sm text-[var(--text-secondary)]">{t("clip.listenOnceHint")}</p>
           <AudioPlayer src={clip.audioUrl} maxPlays={2} />
 
           <div className="space-y-3">
-            <p className="font-medium">What was the main topic?</p>
+            <p className="font-medium">{t("clip.mainTopicPrompt")}</p>
             {["Work / Career", "Environment / Nature", "Technology / AI", "Health / Lifestyle"].map((opt) => (
               <button
                 key={opt}
@@ -192,9 +194,9 @@ export function ClipWizard({ clip, questions }: Props) {
       {/* ── Stage 3: Second listen + transcript + blanks ──────────── */}
       {stage === 3 && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Listen with transcript — fill the blanks</h2>
+          <h2 className="text-lg font-semibold">{t("clip.listenTranscript")}</h2>
           <p className="text-sm text-[var(--text-secondary)]">
-            Read along and fill in the {blanks.length} missing words.
+            {t("clip.fillBlanksHint", { n: blanks.length })}
           </p>
           <AudioPlayer src={clip.audioUrl} />
           <TranscriptViewer
@@ -211,7 +213,7 @@ export function ClipWizard({ clip, questions }: Props) {
               onClick={() => setRevealed(true)}
               className="text-sm text-[var(--primary)] underline"
             >
-              Show answers
+              {t("clip.showAnswers")}
             </button>
           )}
         </div>
@@ -220,9 +222,9 @@ export function ClipWizard({ clip, questions }: Props) {
       {/* ── Stage 4: Comprehension quiz ───────────────────────────── */}
       {stage === 4 && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Comprehension quiz</h2>
+          <h2 className="text-lg font-semibold">{t("clip.comprQuiz")}</h2>
           {comprQuestions.length === 0 && (
-            <p className="text-[var(--text-secondary)] text-sm">No quiz questions for this clip. Great listening practice!</p>
+            <p className="text-[var(--text-secondary)] text-sm">{t("clip.noQuestions")}</p>
           )}
           {comprQuestions.map((q, qi) => {
             const opts: string[] = (() => {
@@ -250,7 +252,7 @@ export function ClipWizard({ clip, questions }: Props) {
                     value={quizAnswers[q.id] ?? ""}
                     onChange={(e) => setQuizAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
                     className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition-colors"
-                    placeholder="Type the missing word…"
+                    placeholder={t("clip.typeMissing")}
                   />
                 ) : (
                   <div className="flex flex-wrap gap-2">
@@ -278,12 +280,12 @@ export function ClipWizard({ clip, questions }: Props) {
       {/* ── Stage 5: Post-listening ───────────────────────────────── */}
       {stage === 5 && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Post-listening</h2>
+          <h2 className="text-lg font-semibold">{t("clip.stage5")}</h2>
 
           {/* Add words to flashcards */}
           {vocab.length > 0 && (
             <div className="rounded-[var(--radius-lg)] border border-[var(--border)] p-4 space-y-3">
-              <p className="font-medium">Add vocabulary to flashcards</p>
+              <p className="font-medium">{t("clip.addVocabTitle")}</p>
               <div className="flex flex-wrap gap-2">
                 {vocab.map((v) => (
                   <span key={v.word} className="rounded-full bg-[var(--bg-soft)] px-3 py-1 text-sm">
@@ -295,16 +297,16 @@ export function ClipWizard({ clip, questions }: Props) {
                 href={`/sets/new?words=${encodeURIComponent(vocab.map((v) => v.word).join(","))}`}
                 className="inline-block rounded-[var(--radius-md)] border border-[var(--primary)] px-4 py-2 text-sm text-[var(--primary)] hover:bg-[var(--primary-soft)] transition-colors"
               >
-                Add {vocab.length} words to flashcards
+                {t("clip.addNWords", { n: vocab.length })}
               </a>
             </div>
           )}
 
           {/* Shadow speaking */}
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] p-4 space-y-3">
-            <p className="font-medium">Shadow speaking practice</p>
+            <p className="font-medium">{t("clip.shadowTitle")}</p>
             <p className="text-sm text-[var(--text-secondary)]">
-              Play the audio and speak along. Try to match the speaker's rhythm and pronunciation.
+              {t("clip.shadowHint")}
             </p>
             <AudioPlayer src={clip.audioUrl} />
           </div>
@@ -314,7 +316,7 @@ export function ClipWizard({ clip, questions }: Props) {
             <p className="text-xs text-[var(--text-secondary)]">
               Source: {clip.source}
               {clip.sourceUrl && (
-                <> — <a href={clip.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">View original</a></>
+                <> — <a href={clip.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">{t("clip.viewOriginal")}</a></>
               )}
               {" "}(License: {clip.license})
             </p>
@@ -328,7 +330,7 @@ export function ClipWizard({ clip, questions }: Props) {
           onClick={stage === 5 ? handleComplete : next}
           className="rounded-[var(--radius-md)] bg-[var(--primary)] px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
         >
-          {stage === 5 ? `Finish (+${xpForClip} XP)` : "Continue"}
+          {stage === 5 ? t("clip.finish", { xp: xpForClip }) : t("clip.continue")}
         </button>
       </div>
     </div>

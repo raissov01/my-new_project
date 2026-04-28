@@ -84,7 +84,7 @@ export default async function UpgradePage() {
               <p style={{ ...monoStyle, fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 10 }}>FREE</p>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 4, marginBottom: 6 }}>
                 <span style={{ fontSize: 36, fontWeight: 900, color: "var(--ink)", lineHeight: 1 }}>$0</span>
-                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>/ай</span>
+                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>{t("upgrade.perMonth")}</span>
               </div>
               <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>{t("upgrade.foreverFree")}</p>
             </div>
@@ -259,7 +259,7 @@ export default async function UpgradePage() {
               </p>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 4, marginBottom: 6 }}>
                 <span style={{ fontSize: 36, fontWeight: 900, color: "var(--ink)", lineHeight: 1 }}>$9</span>
-                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>/ай</span>
+                <span style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 3 }}>{t("upgrade.perMonth")}</span>
               </div>
               <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>{t("upgrade.yearlyOption")}</p>
             </div>

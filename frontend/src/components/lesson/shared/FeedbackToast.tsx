@@ -2,6 +2,7 @@
 
 import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/components/providers/locale-provider";
 
 interface Props {
   isCorrect: boolean;
@@ -16,8 +17,17 @@ export function FeedbackToast({
   combo,
   explanation,
   onNext,
-  nextLabel = "Continue",
+  nextLabel,
 }: Props) {
+  const { t } = useLocale();
+  const label = nextLabel ?? t("lesson.continue");
+
+  const feedbackText = isCorrect
+    ? combo && combo >= 2
+      ? t("lesson.combo", { n: combo })
+      : t("lesson.correct")
+    : t("lesson.notQuite");
+
   return (
     <div
       role="status"
@@ -38,13 +48,11 @@ export function FeedbackToast({
               isCorrect ? "text-emerald-500" : "text-red-500"
             }`}
           >
-            {isCorrect
-              ? `Correct!${combo && combo >= 2 ? ` (${combo}x combo!)` : ""}`
-              : "Not quite."}
+            {feedbackText}
           </span>
         </div>
         <Button size="sm" onClick={onNext}>
-          {nextLabel} <ArrowRight className="ml-1 h-4 w-4" />
+          {label} <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
       {!isCorrect && explanation && (

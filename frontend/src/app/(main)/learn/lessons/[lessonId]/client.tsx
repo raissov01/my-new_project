@@ -18,6 +18,7 @@ import { FeedbackToast } from "@/components/lesson/shared/FeedbackToast";
 import { useLessonProgress } from "@/hooks/useLessonProgress";
 import { normalizeExercises } from "@/lib/lesson/normalize";
 import type { LessonItem } from "@/types/lesson";
+import { useLocale } from "@/components/providers/locale-provider";
 
 type Phase = "loading" | "playing" | "result";
 
@@ -27,22 +28,9 @@ function parseExercises(
   return Array.isArray(payload) ? payload : (payload.exercises ?? []);
 }
 
-function itemTypeLabel(type: LessonItem["type"]): string {
-  const map: Record<LessonItem["type"], string> = {
-    fill_blank: "Fill in the blank",
-    translate: "Translate",
-    match_pairs: "Match pairs",
-    listen_type: "Listen & type",
-    image_select: "Choose the image",
-    sentence_reorder: "Build the sentence",
-    word_builder: "Build the word",
-    error_spot: "Spot the error",
-  };
-  return map[type] ?? type;
-}
-
 export function LessonClient({ lessonId }: { lessonId: string }) {
   const router = useRouter();
+  const { t } = useLocale();
   const [phase, setPhase] = useState<Phase>("loading");
   const [sessionId, setSessionId] = useState("");
   const [items, setItems] = useState<LessonItem[]>([]);
@@ -70,7 +58,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
         setPhase("playing");
         startTime.current = Date.now();
       } catch (err: unknown) {
-        alert(err instanceof Error ? err.message : "Failed to start lesson");
+        alert(err instanceof Error ? err.message : t("lesson.failedToStart"));
         router.push("/learn/map");
       }
     }
@@ -130,7 +118,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
       <div className="flex h-[60vh] flex-col items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-[var(--primary)]" />
         <p className="mt-4 text-sm text-[var(--text-secondary)]">
-          {result ? "Calculating results…" : "Preparing your lesson…"}
+          {result ? t("lesson.calculating") : t("lesson.preparing")}
         </p>
       </div>
     );
@@ -144,7 +132,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
           <Trophy className="h-10 w-10 text-[var(--primary)]" />
         </div>
         <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-          Lesson Complete!
+          {t("lesson.complete")}
         </h2>
 
         <div className="mt-4 flex justify-center gap-2">
@@ -166,25 +154,25 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
             <p className="text-2xl font-bold text-[var(--primary)]">
               +{result.xpEarned}
             </p>
-            <p className="text-xs text-[var(--text-muted)]">XP Earned</p>
+            <p className="text-xs text-[var(--text-muted)]">{t("lesson.xpEarned")}</p>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
             <p className="text-2xl font-bold text-emerald-500">
               {result.accuracy}%
             </p>
-            <p className="text-xs text-[var(--text-muted)]">Accuracy</p>
+            <p className="text-xs text-[var(--text-muted)]">{t("lesson.accuracy")}</p>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
             <p className="text-2xl font-bold text-orange-500">
               {result.comboMax}x
             </p>
-            <p className="text-xs text-[var(--text-muted)]">Best Combo</p>
+            <p className="text-xs text-[var(--text-muted)]">{t("lesson.bestCombo")}</p>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
             <p className="text-2xl font-bold text-amber-500">
               {result.streak}
             </p>
-            <p className="text-xs text-[var(--text-muted)]">Day Streak</p>
+            <p className="text-xs text-[var(--text-muted)]">{t("lesson.dayStreak")}</p>
           </div>
         </div>
 
@@ -193,7 +181,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
           size="lg"
           onClick={() => router.push("/learn/map")}
         >
-          Continue
+          {t("lesson.continue")}
         </Button>
       </div>
     );
@@ -255,7 +243,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow-md)] sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            {itemTypeLabel(currentItem.type)}
+            {t(`lesson.type.${currentItem.type}` as Parameters<typeof t>[0]) || currentItem.type}
           </p>
           <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-semibold text-[var(--text-muted)]">
             {currentIdx + 1} / {items.length}
@@ -276,7 +264,7 @@ export function LessonClient({ lessonId }: { lessonId: string }) {
             explanation={answeredResult.explanation}
             onNext={handleNext}
             nextLabel={
-              currentIdx + 1 < items.length ? "Continue" : "Finish"
+              currentIdx + 1 < items.length ? t("lesson.continue") : t("lesson.finish")
             }
           />
         )}

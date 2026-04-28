@@ -6,7 +6,11 @@ import { Headphones } from "lucide-react";
 import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 
-export const metadata = { title: "Listening Library — StudyWithRaissov" };
+export async function generateMetadata() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return { title: `${t("listen.listingTitle")} — StudyWithRaissov` };
+}
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const TOPICS = ["daily", "travel", "work", "food", "health", "technology", "environment", "society", "science", "psychology"];
@@ -41,9 +45,9 @@ export default async function ListenPage({
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Headphones style={{ width: 18, height: 18, color: "var(--terra)" }} />
-          <h3>Listening Library</h3>
+          <h3>{t("listen.listingTitle")}</h3>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            {clips.length} CLIP{clips.length !== 1 ? "S" : ""}
+            {t("listen.clipCount", { n: clips.length })}
           </span>
         </div>
       </div>

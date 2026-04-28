@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/server/auth";
 import { getPlacement } from "@/features/learn/api";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 import {
   BookOpen,
   Brain,
@@ -13,15 +15,6 @@ import {
 
 type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
-const LEVEL_DESCRIPTIONS: Record<CEFRLevel, string> = {
-  A1: "Beginner — basic phrases and everyday expressions",
-  A2: "Elementary — simple sentences on familiar topics",
-  B1: "Intermediate — main points on familiar matters",
-  B2: "Upper-Intermediate — complex texts and fluent interaction",
-  C1: "Advanced — flexible and effective language use",
-  C2: "Proficiency — near-native mastery",
-};
-
 const LEVEL_COLORS: Record<CEFRLevel, string> = {
   A1: "bg-slate-100 text-slate-700 border-slate-200",
   A2: "bg-blue-50 text-blue-700 border-blue-200",
@@ -32,6 +25,9 @@ const LEVEL_COLORS: Record<CEFRLevel, string> = {
 };
 
 export default async function PlacementResultPage() {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
@@ -63,9 +59,9 @@ export default async function PlacementResultPage() {
     <div className="page-shell py-4 sm:py-6">
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
-          <Link href="/learn" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>← Back</Link>
-          <h3 style={{ flex: 1 }}>Нәтиже</h3>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>Placement Result</span>
+          <Link href="/learn" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>{t("placement.back")}</Link>
+          <h3 style={{ flex: 1 }}>{t("placement.result")}</h3>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>{t("placement.resultTitle")}</span>
         </div>
       </div>
 
@@ -78,13 +74,13 @@ export default async function PlacementResultPage() {
           <span className="text-4xl font-black">{level}</span>
         </div>
         <h1 className="text-3xl font-bold text-[var(--text-primary)]">
-          🎉 Your Level: {level}
+          {t("placement.yourLevel", { level })}
         </h1>
         <p className="mt-2 text-[var(--text-secondary)]">
-          {LEVEL_DESCRIPTIONS[level] ?? ""}
+          {t(`placement.level.${level}` as Parameters<typeof t>[0])}
         </p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          Completed on {completedDate} · {totalAnswered} questions answered
+          {t("placement.completedOn", { date: completedDate, n: totalAnswered })}
         </p>
       </div>
 
@@ -95,7 +91,7 @@ export default async function PlacementResultPage() {
         >
           <BookOpen className="mx-auto mb-2 h-6 w-6" />
           <p className="text-xs font-semibold uppercase tracking-wide opacity-70">
-            Vocabulary
+            {t("placement.vocabulary")}
           </p>
           <p className="mt-1 text-3xl font-black">{vocabLevel}</p>
         </div>
@@ -104,7 +100,7 @@ export default async function PlacementResultPage() {
         >
           <Brain className="mx-auto mb-2 h-6 w-6" />
           <p className="text-xs font-semibold uppercase tracking-wide opacity-70">
-            Grammar
+            {t("placement.grammar")}
           </p>
           <p className="mt-1 text-3xl font-black">{grammarLevel}</p>
         </div>
@@ -123,7 +119,7 @@ export default async function PlacementResultPage() {
           >
             <span className="font-semibold">{lvl}</span>
             <span className="text-xs">
-              {lvl === level ? "← Your level" : LEVEL_DESCRIPTIONS[lvl]}
+              {lvl === level ? t("placement.yourLevelMark") : t(`placement.level.${lvl}` as Parameters<typeof t>[0])}
             </span>
           </div>
         ))}
@@ -138,9 +134,9 @@ export default async function PlacementResultPage() {
         >
           <GraduationCap className="h-5 w-5 text-[var(--primary)]" />
           <div>
-            <p className="text-sm font-bold">Start Learning</p>
+            <p className="text-sm font-bold">{t("placement.startLearning")}</p>
             <p className="text-xs font-normal text-[var(--text-muted)]">
-              General English course starting at {level} level
+              {t("placement.startLearningDesc", { level })}
             </p>
           </div>
         </Link>
@@ -151,9 +147,9 @@ export default async function PlacementResultPage() {
         >
           <Layers className="h-5 w-5 text-blue-500" />
           <div>
-            <p className="text-sm font-bold">Flashcard Sets</p>
+            <p className="text-sm font-bold">{t("placement.flashcardSets")}</p>
             <p className="text-xs font-normal text-[var(--text-muted)]">
-              Expand vocabulary at {level} level and beyond
+              {t("placement.flashcardSetsDesc", { level })}
             </p>
           </div>
         </Link>
@@ -166,7 +162,7 @@ export default async function PlacementResultPage() {
           <div>
             <p className="text-sm font-bold">AI Tutor</p>
             <p className="text-xs font-normal text-[var(--text-muted)]">
-              Practice speaking and writing at {level} level
+              {t("placement.aiTutorDesc", { level })}
             </p>
           </div>
         </Link>
@@ -177,9 +173,9 @@ export default async function PlacementResultPage() {
         >
           <RotateCcw className="h-5 w-5" />
           <div>
-            <p className="text-sm font-bold">Retake Test</p>
+            <p className="text-sm font-bold">{t("placement.retakeTest")}</p>
             <p className="text-xs font-normal text-[var(--text-muted)]">
-              Previous result will be overwritten
+              {t("placement.retakeTestDesc")}
             </p>
           </div>
         </Link>

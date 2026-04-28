@@ -1,14 +1,15 @@
 "use client";
 
 import { Crown, CheckCircle2, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import type { BillingStatus } from "@/features/settings/api";
+import { useLocale } from "@/components/providers/locale-provider";
 
 interface BillingSectionProps {
   billing: BillingStatus | null;
 }
 
 export function BillingSection({ billing }: BillingSectionProps) {
+  const { t } = useLocale();
   const isPro = billing?.isPro ?? false;
 
   return (
@@ -17,10 +18,10 @@ export function BillingSection({ billing }: BillingSectionProps) {
         <Crown className="h-5 w-5 text-yellow-500" />
         <div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">
-            Жазылым / Subscription
+            {t("billing.title")}
           </h2>
           <p className="text-sm text-[var(--text-muted)]">
-            Ағымдағы жоспар: <span className="font-medium text-[var(--text-primary)]">{isPro ? "Pro" : "Free"}</span>
+            {t("billing.plan")} <span className="font-medium text-[var(--text-primary)]">{isPro ? "Pro" : "Free"}</span>
           </p>
         </div>
         {isPro && (
@@ -34,31 +35,31 @@ export function BillingSection({ billing }: BillingSectionProps) {
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
             <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-            Барлық Pro мүмкіндіктер белсенді
+            {t("billing.proFeatures")}
           </div>
           {billing?.currentPeriodEnd && (
             <p className="text-xs text-[var(--text-muted)]">
-              Келесі төлем: {new Date(billing.currentPeriodEnd).toLocaleDateString("ru-RU")}
+              {t("billing.nextPayment")} {new Date(billing.currentPeriodEnd).toLocaleDateString()}
             </p>
           )}
           {billing?.subStatus === "cancelled" && (
             <p className="text-xs text-orange-500">
-              Жазылым жойылды — мерзім біткенше Pro пайдалануға болады
+              {t("billing.cancelled")}
             </p>
           )}
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid gap-2">
-            {[
-              "Шексіз сабақтар (English Simulator)",
-              "Толық IELTS тренажеры",
-              "AI Tutor — шексіз хабарламалар",
-              "AI Quiz генерация",
-            ].map((feature) => (
-              <div key={feature} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+            {([
+              "billing.upgradeFeat1",
+              "billing.upgradeFeat2",
+              "billing.upgradeFeat3",
+              "billing.upgradeFeat4",
+            ] as const).map((key) => (
+              <div key={key} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                 <Zap className="h-4 w-4 text-yellow-500 shrink-0" />
-                {feature}
+                {t(key)}
               </div>
             ))}
           </div>
@@ -69,7 +70,7 @@ export function BillingSection({ billing }: BillingSectionProps) {
               rel="noopener noreferrer"
             >
               <Crown className="h-4 w-4" />
-              Pro-ға жазылу — $9/ай
+              {t("billing.subscribe")}
             </a>
           )}
         </div>

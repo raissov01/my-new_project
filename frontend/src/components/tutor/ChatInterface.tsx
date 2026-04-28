@@ -6,12 +6,14 @@ import { sendMessage, gradeConversation, startConversation } from "@/features/tu
 import type { AIScenario, ConversationMessage, GradeScores } from "@/features/tutor/api";
 import { GradeResults } from "./GradeResults";
 import { VoiceInput } from "./VoiceInput";
+import { useLocale } from "@/components/providers/locale-provider";
 
 interface Props {
   scenario: AIScenario;
 }
 
 export function ChatInterface({ scenario }: Props) {
+  const { t } = useLocale();
   const [convId, setConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [input, setInput] = useState("");
@@ -78,11 +80,11 @@ export function ChatInterface({ scenario }: Props) {
         <div className="space-y-1">
           <h2 className="text-xl font-bold">{scenario.title}</h2>
           {scenario.personaName && (
-            <p className="text-sm text-[var(--text-secondary)]">with {scenario.personaName}</p>
+            <p className="text-sm text-[var(--text-secondary)]">{t("tutor.withPerson", { name: scenario.personaName })}</p>
           )}
         </div>
         <div className="rounded-[var(--radius-md)] bg-[var(--bg-soft)] p-4 text-left text-sm space-y-2">
-          <p className="font-semibold">Your goal:</p>
+          <p className="font-semibold">{t("tutor.yourGoal")}</p>
           <p className="text-[var(--text-secondary)]">{scenario.studentGoal}</p>
           {scenario.vocabFocus && scenario.vocabFocus.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -97,7 +99,7 @@ export function ChatInterface({ scenario }: Props) {
           disabled={isPending}
           className="w-full rounded-[var(--radius-md)] bg-[var(--primary)] py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
-          {isPending ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Start conversation"}
+          {isPending ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : t("tutor.startConversation")}
         </button>
       </div>
     );
@@ -109,7 +111,7 @@ export function ChatInterface({ scenario }: Props) {
       <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
         <div>
           <p className="font-semibold text-sm">{scenario.personaName ?? scenario.title}</p>
-          <p className="text-xs text-[var(--text-secondary)]">{userMsgCount} / 15 exchanges</p>
+          <p className="text-xs text-[var(--text-secondary)]">{t("tutor.exchanges", { n: userMsgCount })}</p>
         </div>
         {userMsgCount >= 3 && (
           <div className="flex flex-col items-end gap-1">
@@ -119,10 +121,10 @@ export function ChatInterface({ scenario }: Props) {
               className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] hover:bg-[var(--primary-soft)] disabled:opacity-50 transition-colors"
             >
               {grading ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
-              Finish & grade
+              {t("tutor.finishGrade")}
             </button>
             {gradeError && (
-              <p className="text-xs text-red-500">Grading failed. Please try again.</p>
+              <p className="text-xs text-red-500">{t("tutor.gradingFailed")}</p>
             )}
           </div>
         )}
@@ -163,7 +165,7 @@ export function ChatInterface({ scenario }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Type or speak your message…"
+            placeholder={t("tutor.inputPlaceholder")}
             disabled={isPending || userMsgCount >= 15}
             className="flex-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--primary)] disabled:opacity-50"
           />
@@ -176,7 +178,7 @@ export function ChatInterface({ scenario }: Props) {
           </button>
         </div>
         {userMsgCount >= 15 && (
-          <p className="mt-2 text-xs text-amber-600">Maximum exchanges reached. Click &ldquo;Finish &amp; grade&rdquo; above.</p>
+          <p className="mt-2 text-xs text-amber-600">{t("tutor.maxExchanges")}</p>
         )}
       </div>
     </div>

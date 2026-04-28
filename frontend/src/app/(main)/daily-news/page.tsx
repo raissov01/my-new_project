@@ -47,7 +47,7 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
       {vocab.length > 0 && (
         <div>
           <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 10 }}>
-            KEY VOCABULARY
+            {t("news.keyVocab")}
           </p>
           <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))" }}>
             {vocab.map((v) => (
@@ -63,7 +63,7 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
       {questions.length > 0 && (
         <div>
           <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 12 }}>
-            COMPREHENSION CHECK
+            {t("news.comprehensionCheck")}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {questions.map((q, i) => (
@@ -156,7 +156,7 @@ export default function DailyNewsPage() {
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Newspaper style={{ width: 18, height: 18, color: "var(--terra)" }} />
-          <h3>Daily News</h3>
+          <h3>{t("news.dailyNews")}</h3>
           <span style={{ fontSize: 12, color: "var(--ink-mute)", fontFamily: "'JetBrains Mono',monospace", textTransform: "capitalize" }}>
             {date} · {news.topic}
           </span>
@@ -167,7 +167,7 @@ export default function DailyNewsPage() {
       {news.originalHeadline && (
         <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "16px 20px", marginBottom: 20 }}>
           <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, fontWeight: 700, letterSpacing: ".1em", color: "var(--ink-mute)", marginBottom: 6 }}>
-            TODAY&apos;S HEADLINE
+            {t("news.todayHeadline")}
           </p>
           <p style={{ fontWeight: 700, fontSize: 15.5, color: "var(--ink)", lineHeight: 1.4 }}>{news.originalHeadline}</p>
           {news.sourceUrl && (
