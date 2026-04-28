@@ -41,6 +41,7 @@ type QuizQuestion struct {
 	OptionB       string  `json:"optionB"`
 	OptionC       string  `json:"optionC"`
 	OptionD       string  `json:"optionD"`
+	OptionE       string  `json:"optionE"`
 	CorrectOption string  `gorm:"type:text" json:"correctOption"`
 	BlankAnswer   *string `gorm:"type:text" json:"blankAnswer,omitempty"`
 	ReorderItems  *string `gorm:"type:jsonb" json:"reorderItems,omitempty"`
@@ -125,6 +126,7 @@ type QuizAttemptAnswer struct {
 	OptionBSnapshot       *string `gorm:"type:text" json:"-"`
 	OptionCSnapshot       *string `gorm:"type:text" json:"-"`
 	OptionDSnapshot       *string `gorm:"type:text" json:"-"`
+	OptionESnapshot       *string `gorm:"type:text" json:"-"`
 	CorrectOptionSnapshot *string `gorm:"type:text" json:"-"`
 	BlankAnswerSnapshot   *string `gorm:"type:text" json:"-"`
 	ReorderItemsSnapshot  *string `gorm:"type:jsonb" json:"-"`

@@ -53,6 +53,7 @@ export type QuizQuestionDTO = {
   optionB?: string;
   optionC?: string;
   optionD?: string;
+  optionE?: string;
   correctOption?: string | null;
   blankAnswer?: string | null;
   reorderItems?: string[] | null;
@@ -173,6 +174,7 @@ export type AttemptAnswerResult = {
   optionB?: string;
   optionC?: string;
   optionD?: string;
+  optionE?: string;
   selectedOption: string | null;
   correctOption: string;
   textAnswer?: string | null;

@@ -38,6 +38,7 @@ type LiveQuestion = {
   optionB?: string;
   optionC?: string;
   optionD?: string;
+  optionE?: string;
   reorderItems?: string[]; // shuffled display order for reorder questions
   matchLeft?: string[];    // left column items for matching questions
   matchRight?: string[];   // shuffled right column items for matching questions
@@ -512,7 +513,7 @@ const OPTION_COLORS = [
   "border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300",
   "border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300",
 ];
-const OPTION_KEYS = ["a", "b", "c", "d"] as const;
+const OPTION_KEYS = ["a", "b", "c", "d", "e"] as const;
 
 function QuestionScreen({
   evt, timeLeft, selectedOpt, blankInput, reorderDraft, reorderSubmitted,
@@ -539,7 +540,7 @@ function QuestionScreen({
   const [multiSelected, setMultiSelected] = useState<Set<string>>(() => new Set());
 
   const optValues: Record<string, string | undefined> = {
-    a: q.optionA, b: q.optionB, c: q.optionC, d: q.optionD,
+    a: q.optionA, b: q.optionB, c: q.optionC, d: q.optionD, e: q.optionE,
   };
 
   return (
@@ -781,6 +782,7 @@ function QuestionScreen({
             { key: "b", text: q.optionB },
             { key: "c", text: q.optionC },
             { key: "d", text: q.optionD },
+            { key: "e", text: q.optionE },
           ].filter((o) => o.text).map((opt, i) => (
             <button
               key={opt.key}
@@ -794,7 +796,7 @@ function QuestionScreen({
               }`}
             >
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold uppercase">
-                {["A","B","C","D"][i]}
+                {["A","B","C","D","E"][i]}
               </span>
               {opt.text}
             </button>
@@ -819,6 +821,7 @@ function QuestionScreen({
               { key: "b", text: q.optionB },
               { key: "c", text: q.optionC },
               { key: "d", text: q.optionD },
+              { key: "e", text: q.optionE },
             ].filter((o) => o.text).map((opt) => (
               <option key={opt.key} value={opt.key}>{opt.text}</option>
             ))}

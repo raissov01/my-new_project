@@ -36,6 +36,7 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
     optionB: question.optionB,
     optionC: question.optionC,
     optionD: question.optionD,
+    optionE: question.optionE,
     correctOption: question.correctOption ?? "a",
   }));
 

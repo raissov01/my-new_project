@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: QuizDetailPageProps) {
   };
 }
 
-const OPTION_KEYS = ["a", "b", "c", "d"] as const;
+const OPTION_KEYS = ["a", "b", "c", "d", "e"] as const;
 
 export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
   const user = await getCurrentUser();
@@ -203,6 +203,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   {OPTION_KEYS.map((key) => {
                     const text = getOptionText(question, key);
+                    if (!text) return null;
                     const isCorrect = question.correctOption === key;
                     return (
                       <div
@@ -315,17 +316,15 @@ function getOptionText(
     optionB?: string;
     optionC?: string;
     optionD?: string;
+    optionE?: string;
   },
   key: (typeof OPTION_KEYS)[number]
 ): string {
   switch (key) {
-    case "a":
-      return question.optionA ?? "";
-    case "b":
-      return question.optionB ?? "";
-    case "c":
-      return question.optionC ?? "";
-    case "d":
-      return question.optionD ?? "";
+    case "a": return question.optionA ?? "";
+    case "b": return question.optionB ?? "";
+    case "c": return question.optionC ?? "";
+    case "d": return question.optionD ?? "";
+    case "e": return question.optionE ?? "";
   }
 }

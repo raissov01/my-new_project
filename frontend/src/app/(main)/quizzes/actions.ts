@@ -35,6 +35,7 @@ export type QuizQuestionInput = {
   optionB?: string;
   optionC?: string;
   optionD?: string;
+  optionE?: string;
   correctOption?: string;
   blankAnswer?: string;
   reorderItems?: string[];

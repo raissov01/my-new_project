@@ -49,6 +49,7 @@ type QuestionEvt = {
     optionB?: string;
     optionC?: string;
     optionD?: string;
+    optionE?: string;
     timeLimit: number;
   };
 };
@@ -476,9 +477,9 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
     const q = currentQData.question;
     const answered = answerStats?.answered ?? 0;
     const total = participants.length;
-    const opts = ["a", "b", "c", "d"] as const;
+    const opts = ["a", "b", "c", "d", "e"] as const;
     const optLabels: Record<string, string | undefined> = {
-      a: q.optionA, b: q.optionB, c: q.optionC, d: q.optionD,
+      a: q.optionA, b: q.optionB, c: q.optionC, d: q.optionD, e: q.optionE,
     };
 
     return (
@@ -516,7 +517,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
               {opts.map((opt) => {
                 const count = answerStats?.counts[opt] ?? 0;
                 const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                const colors = { a: "bg-blue-500", b: "bg-amber-500", c: "bg-rose-500", d: "bg-emerald-500" };
+                const colors: Record<string, string> = { a: "bg-blue-500", b: "bg-amber-500", c: "bg-rose-500", d: "bg-emerald-500", e: "bg-purple-500" };
                 return (
                   <div key={opt} className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">

@@ -470,6 +470,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		SELECT id, question_text, question_type,
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
+		       COALESCE(option_e, ''),
 		       correct_option, blank_answer, reorder_items,
 		       match_pairs, hotspot_zones, comprehension_data,
 		       image_url, audio_url, video_url, explanation, hint, order_index
@@ -494,6 +495,7 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 			&q.OptionB,
 			&q.OptionC,
 			&q.OptionD,
+			&q.OptionE,
 			&correct,
 			&blank,
 			&reorderJSON,
@@ -594,6 +596,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 			nullableString(q.OptionB),
 			nullableString(q.OptionC),
 			nullableString(q.OptionD),
+			nullableString(q.OptionE),
 			nullableString(q.CorrectOption),
 			nullableString(q.BlankAnswer),
 			encodeStringArray(q.ReorderItems),
@@ -622,6 +625,7 @@ func (r *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQu
 				"option_b",
 				"option_c",
 				"option_d",
+				"option_e",
 				"correct_option",
 				"blank_answer",
 				"reorder_items",
@@ -750,18 +754,19 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 			nullableString(q.OptionB),          // $6
 			nullableString(q.OptionC),          // $7
 			nullableString(q.OptionD),          // $8
-			nullableString(q.CorrectOption),    // $9
-			nullableString(q.BlankAnswer),      // $10
-			encodeStringArray(q.ReorderItems),  // $11
-			nullableString(q.ImageURL),         // $12
-			nullableString(q.Explanation),      // $13
-			i,                                  // $14 (order_index)
-			nullableString(q.Hint),             // $15
-			encodeMatchPairs(q.MatchPairs),          // $16
-			encodeHotspotZones(q.HotspotZones),      // $17
-			encodeComprehensionData(q.ComprehensionData), // $18
-			nullableString(q.AudioURL),              // $19
-			nullableString(q.VideoURL),              // $20
+			nullableString(q.OptionE),          // $9
+			nullableString(q.CorrectOption),    // $10
+			nullableString(q.BlankAnswer),      // $11
+			encodeStringArray(q.ReorderItems),  // $12
+			nullableString(q.ImageURL),         // $13
+			nullableString(q.Explanation),      // $14
+			i,                                  // $15 (order_index)
+			nullableString(q.Hint),             // $16
+			encodeMatchPairs(q.MatchPairs),          // $17
+			encodeHotspotZones(q.HotspotZones),      // $18
+			encodeComprehensionData(q.ComprehensionData), // $19
+			nullableString(q.AudioURL),              // $20
+			nullableString(q.VideoURL),              // $21
 		}
 		if _, ok := existingIDs[id]; ok {
 			if _, err := tx.Exec(ctx, `
@@ -772,18 +777,19 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 				    option_b           = $6,
 				    option_c           = $7,
 				    option_d           = $8,
-				    correct_option     = $9,
-				    blank_answer       = $10,
-				    reorder_items      = $11,
-				    image_url          = $12,
-				    explanation        = $13,
-				    order_index        = $14,
-				    hint               = $15,
-				    match_pairs        = $16,
-				    hotspot_zones      = $17,
-				    comprehension_data = $18,
-				    audio_url          = $19,
-				    video_url          = $20
+				    option_e           = $9,
+				    correct_option     = $10,
+				    blank_answer       = $11,
+				    reorder_items      = $12,
+				    image_url          = $13,
+				    explanation        = $14,
+				    order_index        = $15,
+				    hint               = $16,
+				    match_pairs        = $17,
+				    hotspot_zones      = $18,
+				    comprehension_data = $19,
+				    audio_url          = $20,
+				    video_url          = $21
 				WHERE id = $1 AND quiz_id = $2
 			`, args...); err != nil {
 				return fmt.Errorf("update question %d: %w", i, err)
@@ -796,12 +802,12 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 		err := tx.QueryRow(ctx, `
 			INSERT INTO quiz_questions (
 				quiz_id, question_text, question_type,
-				option_a, option_b, option_c, option_d,
+				option_a, option_b, option_c, option_d, option_e,
 				correct_option, blank_answer, reorder_items,
 				image_url, explanation, order_index, hint,
 				match_pairs, hotspot_zones, comprehension_data, audio_url, video_url, created_at
 			)
-			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW())
+			VALUES ($2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW())
 			RETURNING id
 		`, args...).Scan(&newID)
 		if err != nil {
@@ -903,13 +909,13 @@ func (r *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO quiz_questions (
 			quiz_id, question_text, question_type,
-			option_a, option_b, option_c, option_d,
+			option_a, option_b, option_c, option_d, option_e,
 			correct_option, blank_answer, reorder_items,
 			match_pairs, hotspot_zones, comprehension_data,
 			image_url, audio_url, video_url, explanation, order_index, hint, created_at
 		)
 		SELECT $1, question_text, question_type,
-		       option_a, option_b, option_c, option_d,
+		       option_a, option_b, option_c, option_d, option_e,
 		       correct_option, blank_answer, reorder_items,
 		       match_pairs, hotspot_zones, comprehension_data,
 		       image_url, audio_url, video_url, explanation, order_index, hint, NOW()
@@ -942,6 +948,7 @@ type questionAnswerRow struct {
 	OptionB           string
 	OptionC           string
 	OptionD           string
+	OptionE           string
 	CorrectOption     *string
 	BlankAnswer       *string
 	ReorderItems      []string
@@ -980,6 +987,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		SELECT id, question_text, question_type,
 		       COALESCE(option_a, ''), COALESCE(option_b, ''),
 		       COALESCE(option_c, ''), COALESCE(option_d, ''),
+		       COALESCE(option_e, ''),
 		       correct_option, blank_answer, reorder_items,
 		       match_pairs, hotspot_zones, comprehension_data,
 		       image_url, audio_url, video_url, explanation, order_index
@@ -999,7 +1007,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		var reorderJSON, matchPairsJSON, hotspotJSON, comprJSON *string
 		if err := rows.Scan(
 			&q.ID, &q.QuestionText, &q.QuestionType,
-			&q.OptionA, &q.OptionB, &q.OptionC, &q.OptionD,
+			&q.OptionA, &q.OptionB, &q.OptionC, &q.OptionD, &q.OptionE,
 			&q.CorrectOption, &q.BlankAnswer, &reorderJSON,
 			&matchPairsJSON, &hotspotJSON, &comprJSON,
 			&q.ImageURL, &q.AudioURL, &q.VideoURL, &q.Explanation, &q.OrderIndex,
@@ -1162,7 +1170,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 				// Non-graded: record selection but never award a point.
 				if a.SelectedOption != nil {
 					t := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
-					if t == "a" || t == "b" || t == "c" || t == "d" {
+					if t == "a" || t == "b" || t == "c" || t == "d" || t == "e" {
 						selected = &t
 					}
 				}
@@ -1175,7 +1183,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 			default: // mcq
 				if a.SelectedOption != nil {
 					normalized := strings.ToLower(strings.TrimSpace(*a.SelectedOption))
-					if normalized == "a" || normalized == "b" || normalized == "c" || normalized == "d" {
+					if normalized == "a" || normalized == "b" || normalized == "c" || normalized == "d" || normalized == "e" {
 						selected = &normalized
 						if q.CorrectOption != nil && normalized == *q.CorrectOption {
 							isCorrect = true
@@ -1200,6 +1208,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 			OptionB:           q.OptionB,
 			OptionC:           q.OptionC,
 			OptionD:           q.OptionD,
+			OptionE:           q.OptionE,
 			SelectedOption:    selected,
 			CorrectOption:     correctStr,
 			TextAnswer:        textAnswer,
@@ -1260,11 +1269,11 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 				text_answer, order_answer, is_correct, time_spent,
 				question_text_snapshot, question_type_snapshot,
 				option_a_snapshot, option_b_snapshot,
-				option_c_snapshot, option_d_snapshot,
+				option_c_snapshot, option_d_snapshot, option_e_snapshot,
 				correct_option_snapshot, blank_answer_snapshot,
 				reorder_items_snapshot, match_pairs_snapshot, order_index_snapshot
 			)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
 		`,
 			attemptID, qid, g.SelectedOption,
 			g.TextAnswer, encodeStringArray(g.OrderAnswer),
@@ -1274,6 +1283,7 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 			g.QuestionText, g.QuestionType,
 			nullableString(g.OptionA), nullableString(g.OptionB),
 			nullableString(g.OptionC), nullableString(g.OptionD),
+			nullableString(g.OptionE),
 			nullableString(g.CorrectOption), g.BlankAnswer,
 			encodeStringArray(g.ReorderItems), encodeMatchPairs(g.MatchPairs),
 			g.OrderIndex,
@@ -1370,6 +1380,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			COALESCE(aa.option_b_snapshot, COALESCE(qq.option_b, '')),
 			COALESCE(aa.option_c_snapshot, COALESCE(qq.option_c, '')),
 			COALESCE(aa.option_d_snapshot, COALESCE(qq.option_d, '')),
+			COALESCE(aa.option_e_snapshot, COALESCE(qq.option_e, '')),
 			aa.selected_option,
 			COALESCE(aa.correct_option_snapshot, COALESCE(qq.correct_option, '')),
 			aa.text_answer,
@@ -1405,7 +1416,7 @@ func (r *Quiz) GetAttempt(ctx context.Context, userID, attemptID string) (*model
 			&questionID,
 			&a.QuestionText,
 			&a.QuestionType,
-			&a.OptionA, &a.OptionB, &a.OptionC, &a.OptionD,
+			&a.OptionA, &a.OptionB, &a.OptionC, &a.OptionD, &a.OptionE,
 			&a.SelectedOption,
 			&a.CorrectOption,
 			&a.TextAnswer,

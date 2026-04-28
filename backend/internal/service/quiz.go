@@ -213,6 +213,7 @@ func (s *Quiz) validateAndNormalize(
 		b := strings.TrimSpace(q.OptionB)
 		c := strings.TrimSpace(q.OptionC)
 		d := strings.TrimSpace(q.OptionD)
+		e := strings.TrimSpace(q.OptionE)
 		correct := strings.ToLower(strings.TrimSpace(q.CorrectOption))
 		blank := strings.TrimSpace(q.BlankAnswer)
 		imageURL := strings.TrimSpace(q.ImageURL)
@@ -221,7 +222,7 @@ func (s *Quiz) validateAndNormalize(
 		explanation := strings.TrimSpace(q.Explanation)
 
 		// Skip fully empty rows (helps Excel import tolerate trailing blanks).
-		isEmpty := qt == "" && a == "" && b == "" && c == "" && d == "" &&
+		isEmpty := qt == "" && a == "" && b == "" && c == "" && d == "" && e == "" &&
 			blank == "" && len(q.ReorderItems) == 0
 		if isEmpty {
 			continue
@@ -245,13 +246,17 @@ func (s *Quiz) validateAndNormalize(
 			if a == "" || b == "" || c == "" || d == "" {
 				return nil, fmt.Errorf("question %d: all four options are required", i+1)
 			}
-			if correct != "a" && correct != "b" && correct != "c" && correct != "d" {
-				return nil, fmt.Errorf("question %d: correct option must be a, b, c, or d", i+1)
+			if correct == "e" && e == "" {
+				return nil, fmt.Errorf("question %d: option E text is required when correct answer is e", i+1)
+			}
+			if correct != "a" && correct != "b" && correct != "c" && correct != "d" && correct != "e" {
+				return nil, fmt.Errorf("question %d: correct option must be a, b, c, d, or e", i+1)
 			}
 			out.OptionA = a
 			out.OptionB = b
 			out.OptionC = c
 			out.OptionD = d
+			out.OptionE = e
 			out.CorrectOption = correct
 
 		case QTypeMCQMulti:
@@ -259,7 +264,7 @@ func (s *Quiz) validateAndNormalize(
 				return nil, fmt.Errorf("question %d: all four options are required for mcq_multi", i+1)
 			}
 			// correct is comma-separated, e.g. "a,c" — validate and sort
-			normalizedCorrect, err := normalizeMCQMultiCorrect(correct)
+			normalizedCorrect, err := normalizeMCQMultiCorrect(correct, e != "")
 			if err != nil {
 				return nil, fmt.Errorf("question %d: %w", i+1, err)
 			}
@@ -267,6 +272,7 @@ func (s *Quiz) validateAndNormalize(
 			out.OptionB = b
 			out.OptionC = c
 			out.OptionD = d
+			out.OptionE = e
 			out.CorrectOption = normalizedCorrect
 
 		case QTypeTrueFalse:
@@ -341,6 +347,7 @@ func (s *Quiz) validateAndNormalize(
 			out.OptionB = b
 			out.OptionC = c
 			out.OptionD = d
+			out.OptionE = e
 
 		case QTypeDropdown:
 			if a == "" || b == "" {
@@ -366,6 +373,7 @@ func (s *Quiz) validateAndNormalize(
 			out.OptionB = b
 			out.OptionC = c
 			out.OptionD = d
+			out.OptionE = e
 			out.CorrectOption = correct
 
 		case QTypeComprehension:
@@ -397,26 +405,34 @@ func (s *Quiz) validateAndNormalize(
 			if a == "" || b == "" || c == "" || d == "" {
 				return nil, fmt.Errorf("question %d: all four options are required for audio", i+1)
 			}
-			if correct != "a" && correct != "b" && correct != "c" && correct != "d" {
-				return nil, fmt.Errorf("question %d: correct option must be a, b, c, or d", i+1)
+			if correct == "e" && e == "" {
+				return nil, fmt.Errorf("question %d: option E text is required when correct answer is e", i+1)
+			}
+			if correct != "a" && correct != "b" && correct != "c" && correct != "d" && correct != "e" {
+				return nil, fmt.Errorf("question %d: correct option must be a, b, c, d, or e", i+1)
 			}
 			out.OptionA = a
 			out.OptionB = b
 			out.OptionC = c
 			out.OptionD = d
+			out.OptionE = e
 			out.CorrectOption = correct
 
 		case QTypeVideo:
 			if a == "" || b == "" || c == "" || d == "" {
 				return nil, fmt.Errorf("question %d: all four options are required for video", i+1)
 			}
-			if correct != "a" && correct != "b" && correct != "c" && correct != "d" {
-				return nil, fmt.Errorf("question %d: correct option must be a, b, c, or d", i+1)
+			if correct == "e" && e == "" {
+				return nil, fmt.Errorf("question %d: option E text is required when correct answer is e", i+1)
+			}
+			if correct != "a" && correct != "b" && correct != "c" && correct != "d" && correct != "e" {
+				return nil, fmt.Errorf("question %d: correct option must be a, b, c, d, or e", i+1)
 			}
 			out.OptionA = a
 			out.OptionB = b
 			out.OptionC = c
 			out.OptionD = d
+			out.OptionE = e
 			out.CorrectOption = correct
 
 		case QTypeDrawing:
@@ -482,7 +498,8 @@ func (s *Quiz) GetRecommendedPractice(ctx context.Context, userID string, limit 
 
 // normalizeMCQMultiCorrect validates and sorts a comma-separated correct-option
 // string for mcq_multi questions (e.g. "c,a" → "a,c").
-func normalizeMCQMultiCorrect(raw string) (string, error) {
+// hasE indicates whether option E was provided, making "e" a valid choice.
+func normalizeMCQMultiCorrect(raw string, hasE bool) (string, error) {
 	parts := strings.Split(raw, ",")
 	seen := map[string]bool{}
 	valid := []string{}
@@ -491,8 +508,11 @@ func normalizeMCQMultiCorrect(raw string) (string, error) {
 		if p == "" {
 			continue
 		}
-		if p != "a" && p != "b" && p != "c" && p != "d" {
-			return "", fmt.Errorf("correct options must be a, b, c, or d (got %q)", p)
+		if p == "e" && !hasE {
+			return "", fmt.Errorf("correct option %q requires option E text to be set", p)
+		}
+		if p != "a" && p != "b" && p != "c" && p != "d" && p != "e" {
+			return "", fmt.Errorf("correct options must be a, b, c, d, or e (got %q)", p)
 		}
 		if seen[p] {
 			return "", fmt.Errorf("duplicate correct option: %q", p)

@@ -57,6 +57,7 @@ type QuizQuestionInput struct {
 	OptionB       string      `json:"optionB,omitempty"`
 	OptionC       string      `json:"optionC,omitempty"`
 	OptionD       string      `json:"optionD,omitempty"`
+	OptionE       string      `json:"optionE,omitempty"`
 	CorrectOption string      `json:"correctOption,omitempty"`
 	BlankAnswer   string      `json:"blankAnswer,omitempty"`
 	ReorderItems  []string      `json:"reorderItems,omitempty"`
@@ -133,6 +134,7 @@ type QuizQuestionDTO struct {
 	OptionB       string      `json:"optionB,omitempty"`
 	OptionC       string      `json:"optionC,omitempty"`
 	OptionD       string      `json:"optionD,omitempty"`
+	OptionE       string      `json:"optionE,omitempty"`
 	CorrectOption *string     `json:"correctOption,omitempty"`
 	BlankAnswer   *string     `json:"blankAnswer,omitempty"`
 	ReorderItems  []string      `json:"reorderItems,omitempty"`
@@ -203,6 +205,7 @@ type AttemptAnswerResult struct {
 	OptionB        string      `json:"optionB,omitempty"`
 	OptionC        string      `json:"optionC,omitempty"`
 	OptionD        string      `json:"optionD,omitempty"`
+	OptionE        string      `json:"optionE,omitempty"`
 	SelectedOption *string     `json:"selectedOption,omitempty"`
 	CorrectOption  string      `json:"correctOption,omitempty"`
 	TextAnswer     *string     `json:"textAnswer,omitempty"`

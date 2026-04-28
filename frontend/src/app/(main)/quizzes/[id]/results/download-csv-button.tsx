@@ -36,6 +36,7 @@ function answerText(answer: AttemptAnswerResult, side: "yours" | "correct"): str
   const letterToText: Record<string, string> = {
     a: answer.optionA ?? "", b: answer.optionB ?? "",
     c: answer.optionC ?? "", d: answer.optionD ?? "",
+    e: answer.optionE ?? "",
   };
 
   if (qType === "mcq_multi") {

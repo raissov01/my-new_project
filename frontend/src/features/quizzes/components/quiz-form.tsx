@@ -1215,46 +1215,74 @@ function McqBody({
   onChange: (patch: Partial<QuizQuestionInput>) => void;
 }) {
   const { t } = useLocale();
-  const options: Array<{ key: "a" | "b" | "c" | "d"; field: keyof QuizQuestionInput }> = [
+  const [show5, setShow5] = useState(() => Boolean(question.optionE));
+  const options: Array<{ key: "a" | "b" | "c" | "d" | "e"; field: keyof QuizQuestionInput }> = [
     { key: "a", field: "optionA" },
     { key: "b", field: "optionB" },
     { key: "c", field: "optionC" },
     { key: "d", field: "optionD" },
+    ...(show5 ? [{ key: "e" as const, field: "optionE" as keyof QuizQuestionInput }] : []),
   ];
   return (
-    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-      {options.map((opt) => {
-        const selected = question.correctOption === opt.key;
-        return (
-          <div
-            key={opt.key}
-            className={`flex items-center gap-2.5 rounded-[var(--radius-md)] border px-3 py-2 transition-colors ${
-              selected
-                ? "border-[var(--success)] bg-[var(--success)]/10"
-                : "border-[var(--border)] bg-[var(--bg-surface)]"
-            }`}
-          >
-            <button
-              type="button"
-              onClick={() => onChange({ correctOption: opt.key })}
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold uppercase transition-colors ${
+    <div className="mt-3 space-y-2">
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        {options.map((opt) => {
+          const selected = question.correctOption === opt.key;
+          const isE = opt.key === "e";
+          return (
+            <div
+              key={opt.key}
+              className={`flex items-center gap-2.5 rounded-[var(--radius-md)] border px-3 py-2 transition-colors ${isE ? "sm:col-span-2" : ""} ${
                 selected
-                  ? "border-[var(--success)] bg-[var(--success)] text-white"
-                  : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                  ? "border-[var(--success)] bg-[var(--success)]/10"
+                  : "border-[var(--border)] bg-[var(--bg-surface)]"
               }`}
-              aria-label={t("quiz.markCorrect")}
             >
-              {opt.key}
-            </button>
-            <input
-              value={(question[opt.field] as string | undefined) ?? ""}
-              onChange={(e) => onChange({ [opt.field]: e.target.value })}
-              placeholder={t("quiz.optionPlaceholder")}
-              className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
-            />
-          </div>
-        );
-      })}
+              <button
+                type="button"
+                onClick={() => onChange({ correctOption: opt.key })}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold uppercase transition-colors ${
+                  selected
+                    ? "border-[var(--success)] bg-[var(--success)] text-white"
+                    : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                }`}
+                aria-label={t("quiz.markCorrect")}
+              >
+                {opt.key}
+              </button>
+              <input
+                value={(question[opt.field] as string | undefined) ?? ""}
+                onChange={(e) => onChange({ [opt.field]: e.target.value })}
+                placeholder={t("quiz.optionPlaceholder")}
+                className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+              />
+              {isE && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShow5(false);
+                    onChange({ optionE: "", correctOption: question.correctOption === "e" ? "" : question.correctOption });
+                  }}
+                  className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+                  aria-label={t("quiz.removeOption")}
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {!show5 && (
+        <button
+          type="button"
+          onClick={() => setShow5(true)}
+          className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)]"
+        >
+          <Plus size={12} />
+          {t("quiz.addOption")}
+        </button>
+      )}
     </div>
   );
 }
@@ -1267,11 +1295,13 @@ function McqMultiBody({
   onChange: (patch: Partial<QuizQuestionInput>) => void;
 }) {
   const { t } = useLocale();
-  const options: Array<{ key: "a" | "b" | "c" | "d"; field: keyof QuizQuestionInput }> = [
+  const [show5, setShow5] = useState(() => Boolean(question.optionE));
+  const options: Array<{ key: "a" | "b" | "c" | "d" | "e"; field: keyof QuizQuestionInput }> = [
     { key: "a", field: "optionA" },
     { key: "b", field: "optionB" },
     { key: "c", field: "optionC" },
     { key: "d", field: "optionD" },
+    ...(show5 ? [{ key: "e" as const, field: "optionE" as keyof QuizQuestionInput }] : []),
   ];
 
   // Parse comma-separated correctOption into a Set for easy toggling
@@ -1289,7 +1319,7 @@ function McqMultiBody({
     } else {
       next.add(key);
     }
-    const sorted = ["a", "b", "c", "d"].filter((k) => next.has(k));
+    const sorted = ["a", "b", "c", "d", "e"].filter((k) => next.has(k));
     onChange({ correctOption: sorted.join(",") });
   };
 
@@ -1301,10 +1331,11 @@ function McqMultiBody({
       <div className="grid gap-2.5 sm:grid-cols-2">
         {options.map((opt) => {
           const selected = correctSet.has(opt.key);
+          const isE = opt.key === "e";
           return (
             <div
               key={opt.key}
-              className={`flex items-center gap-2.5 rounded-[var(--radius-md)] border px-3 py-2 transition-colors ${
+              className={`flex items-center gap-2.5 rounded-[var(--radius-md)] border px-3 py-2 transition-colors ${isE ? "sm:col-span-2" : ""} ${
                 selected
                   ? "border-[var(--success)] bg-[var(--success)]/10"
                   : "border-[var(--border)] bg-[var(--bg-surface)]"
@@ -1328,10 +1359,36 @@ function McqMultiBody({
                 placeholder={t("quiz.optionPlaceholder")}
                 className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
               />
+              {isE && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShow5(false);
+                    const next = new Set(correctSet);
+                    next.delete("e");
+                    const sorted = ["a", "b", "c", "d"].filter((k) => next.has(k));
+                    onChange({ optionE: "", correctOption: sorted.join(",") });
+                  }}
+                  className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+                  aria-label={t("quiz.removeOption")}
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
           );
         })}
       </div>
+      {!show5 && (
+        <button
+          type="button"
+          onClick={() => setShow5(true)}
+          className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)]"
+        >
+          <Plus size={12} />
+          {t("quiz.addOption")}
+        </button>
+      )}
     </div>
   );
 }

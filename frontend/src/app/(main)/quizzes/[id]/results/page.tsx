@@ -337,6 +337,7 @@ function AnswerRow({
       b: answer.optionB ?? "",
       c: answer.optionC ?? "",
       d: answer.optionD ?? "",
+      e: answer.optionE ?? "",
     };
     const parseLetters = (raw: string | null | undefined) =>
       (raw ?? "")
@@ -382,6 +383,7 @@ function AnswerRow({
       b: answer.optionB ?? "",
       c: answer.optionC ?? "",
       d: answer.optionD ?? "",
+      e: answer.optionE ?? "",
     };
     const selectedText = answer.selectedOption
       ? (letterToText[answer.selectedOption] ?? "")

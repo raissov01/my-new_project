@@ -31,7 +31,7 @@ import type {
   QuizQuestionType,
 } from "@/server/services/quizzes";
 
-type OptionLetter = "a" | "b" | "c" | "d";
+type OptionLetter = "a" | "b" | "c" | "d" | "e";
 type TrueFalseLetter = "t" | "f";
 
 type DisplayOption = {
@@ -52,7 +52,7 @@ type RecordedAnswer = {
 
 type Phase = "asking" | "revealed" | "submitting";
 
-const POSITION_LABELS = ["A", "B", "C", "D"] as const;
+const POSITION_LABELS = ["A", "B", "C", "D", "E"] as const;
 
 const ACCENT_BY_POSITION = [
   "from-indigo-500/25 to-indigo-500/5 border-indigo-400/30",
@@ -66,17 +66,14 @@ function normalizeBlank(value: string): string {
 }
 
 function buildBaseOptions(question: QuizQuestionDTO): DisplayOption[] {
-  return (["a", "b", "c", "d"] as OptionLetter[]).map((letter) => ({
-    letter,
-    text:
-      letter === "a"
-        ? question.optionA ?? ""
-        : letter === "b"
-          ? question.optionB ?? ""
-          : letter === "c"
-            ? question.optionC ?? ""
-            : question.optionD ?? "",
-  }));
+  const all: Array<{ letter: OptionLetter; text: string }> = [
+    { letter: "a", text: question.optionA ?? "" },
+    { letter: "b", text: question.optionB ?? "" },
+    { letter: "c", text: question.optionC ?? "" },
+    { letter: "d", text: question.optionD ?? "" },
+    { letter: "e", text: question.optionE ?? "" },
+  ];
+  return all.filter((o) => o.text !== "");
 }
 
 function shuffleOptions(base: DisplayOption[]): DisplayOption[] {
@@ -461,7 +458,7 @@ export function PlayQuizClient({
 
   const recordMcqMulti = useCallback(
     (selected: Set<OptionLetter>) => {
-      const sorted = (["a", "b", "c", "d"] as OptionLetter[]).filter((k) =>
+      const sorted = (["a", "b", "c", "d", "e"] as OptionLetter[]).filter((k) =>
         selected.has(k)
       );
       const submitted = sorted.join(",");

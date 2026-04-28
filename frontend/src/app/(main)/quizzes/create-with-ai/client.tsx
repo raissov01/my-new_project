@@ -167,7 +167,7 @@ function GenerateForm({
 // ── Step 2 — Preview & edit ───────────────────────────────────────────────────
 
 const OPTION_LETTERS = ["A", "B", "C", "D"];
-const CORRECT_OPTION_MAP: Record<number, string> = { 0: "a", 1: "b", 2: "c", 3: "d" };
+const CORRECT_OPTION_MAP: Record<number, string> = { 0: "a", 1: "b", 2: "c", 3: "d", 4: "e" };
 
 function QuestionCard({
   question,
@@ -364,6 +364,7 @@ function PreviewStep({
       optionB: q.options[1] ?? "",
       optionC: q.options[2] ?? "",
       optionD: q.options[3] ?? "",
+      ...(q.options[4] ? { optionE: q.options[4] } : {}),
       correctOption: CORRECT_OPTION_MAP[q.correctIndex] ?? "a",
       explanation: q.explanation,
     }));
