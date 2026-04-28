@@ -405,6 +405,17 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-[var(--text-muted)]">{t("quiz.importFormats")}</p>
+        <button
+          type="button"
+          onClick={() => void downloadTemplate()}
+          className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--primary)]/40 bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/20"
+        >
+          <Download className="h-3.5 w-3.5" />
+          {t("quiz.downloadTemplate")}
+        </button>
+      </div>
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -440,27 +451,16 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
             if (file) void handleFile(file);
           }}
         />
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => inputRef.current?.click()}
-            isLoading={loading}
-          >
-            <Upload className="h-4 w-4" />
-            {t("quiz.importChooseFile")}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => void downloadTemplate()}
-          >
-            <Download className="h-4 w-4" />
-            {t("quiz.downloadTemplate")}
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          isLoading={loading}
+        >
+          <Upload className="h-4 w-4" />
+          {t("quiz.importChooseFile")}
+        </Button>
       </div>
 
       {error ? (
