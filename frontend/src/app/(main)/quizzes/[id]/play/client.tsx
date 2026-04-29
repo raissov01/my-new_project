@@ -308,6 +308,51 @@ export function PlayQuizClient({
     setPhase("submitting");
     setSubmitError(null);
     sounds.play("complete");
+
+    if (isGuest) {
+      // Compute results locally — no backend call needed.
+      const correct = correctnessRef.current.filter(Boolean).length;
+      const total = quiz.questions.length;
+      const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+      const timeSpent = Math.max(0, Math.round((Date.now() - quizStartRef.current) / 1000));
+      const guestResult = {
+        score: correct,
+        totalQuestions: total,
+        percentage: pct,
+        timeSpent,
+        answers: answersRef.current.map((a, i) => {
+          const q = quiz.questions[i];
+          return {
+            questionId: a.questionId,
+            questionText: q?.questionText ?? "",
+            questionType: q?.questionType ?? "mcq",
+            selectedOption: a.selectedOption,
+            textAnswer: a.textAnswer,
+            orderAnswer: a.orderAnswer,
+            correctOption: q?.correctOption ?? "",
+            isCorrect: correctnessRef.current[i] ?? false,
+            timeSpent: a.timeSpent,
+            optionA: q?.optionA,
+            optionB: q?.optionB,
+            optionC: q?.optionC,
+            optionD: q?.optionD,
+            optionE: q?.optionE,
+          };
+        }),
+      };
+      try {
+        sessionStorage.setItem(`guest_quiz_result_${quiz.id}`, JSON.stringify(guestResult));
+        const prev = parseInt(localStorage.getItem(GUEST_ATTEMPTS_KEY) ?? "0", 10);
+        localStorage.setItem(GUEST_ATTEMPTS_KEY, String(prev + 1));
+      } catch {
+        // storage unavailable — proceed anyway
+      }
+      if (!isExitingRef.current) {
+        router.push(`/quizzes/${encodeURIComponent(quiz.id)}/results?guest=1`);
+      }
+      return;
+    }
+
     try {
       const response = await fetch(
         `/api/quizzes/${encodeURIComponent(quiz.id)}/attempts`,
@@ -339,7 +384,7 @@ export function PlayQuizClient({
       setSubmitError(t("quiz.play.submitFailed"));
       setPhase("revealed");
     }
-  }, [quiz.id, router, t, sounds]);
+  }, [quiz.id, quiz.questions, router, t, sounds, isGuest]);
 
   const advance = useCallback(() => {
     clearAdvanceTimer();
@@ -783,6 +828,57 @@ export function PlayQuizClient({
         ? "bg-amber-400"
         : "bg-red-500";
   const revealed = phase !== "asking";
+
+  // Gate: guest has used all free attempts — block play and ask to sign up.
+  if (isGuest && !isPractice && guestAttemptsUsed >= GUEST_ATTEMPT_LIMIT) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-base)] px-4">
+        <div
+          style={{
+            maxWidth: 440,
+            width: "100%",
+            background: "var(--bg-surface)",
+            border: "1.5px solid var(--border)",
+            borderRadius: 20,
+            padding: "40px 36px",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: "var(--ink)",
+              marginBottom: 10,
+              letterSpacing: "-0.03em",
+            }}
+          >
+            Тегін квиздер аяқталды
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.6, marginBottom: 28 }}>
+            {GUEST_ATTEMPT_LIMIT} квизді тіркелмей өттіңіз. Нәтижелеріңізді сақтау және шексіз квиздер үшін тіркеліңіз — тегін!
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <a
+              href={`/signup?redirect=${encodeURIComponent(`/quizzes/${quiz.id}/play`)}`}
+              className="nd-btn-primary"
+              style={{ justifyContent: "center" }}
+            >
+              Тіркелу — тегін
+            </a>
+            <a
+              href={`/login?redirect=${encodeURIComponent(`/quizzes/${quiz.id}/play`)}`}
+              className="nd-btn-soft"
+              style={{ justifyContent: "center" }}
+            >
+              Кіру
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const questionNumberLabel = t("quiz.play.questionOf")
     .replace("{n}", String(currentIdx + 1))

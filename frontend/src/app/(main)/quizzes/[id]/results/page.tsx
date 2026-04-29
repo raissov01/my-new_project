@@ -13,10 +13,11 @@ import { getServerLocale } from "@/server/i18n";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getAttemptById, type AttemptAnswerResult } from "@/server/services/quizzes";
 import { DownloadCsvButton } from "./download-csv-button";
+import { GuestResultsPage } from "./guest-results";
 
 interface ResultsPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ attempt?: string }>;
+  searchParams: Promise<{ attempt?: string; guest?: string }>;
 }
 
 function gradeKey(percentage: number): string {
@@ -52,12 +53,19 @@ export default async function QuizResultsPage({
   searchParams,
 }: ResultsPageProps) {
   const user = await getCurrentUser();
+  const { id } = await params;
+  const { attempt: attemptId, guest } = await searchParams;
+
+  // Guest mode: results were computed locally and stored in sessionStorage.
+  if (guest === "1" && !user) {
+    const locale = await getServerLocale();
+    return <GuestResultsPage quizId={id} locale={locale} />;
+  }
+
   if (!user) {
     redirect("/login");
   }
 
-  const { id } = await params;
-  const { attempt: attemptId } = await searchParams;
   if (!attemptId) {
     redirect(`/quizzes/${encodeURIComponent(id)}`);
   }
