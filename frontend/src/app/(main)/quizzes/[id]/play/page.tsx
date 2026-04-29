@@ -14,8 +14,9 @@ export default async function PlayQuizPage({ params }: PlayPageProps) {
 
   const quiz = await getQuizById(id);
   if (!quiz) {
-    // Private quiz or doesn't exist — require login
-    if (!user) redirect("/login");
+    // Private quiz or doesn't exist — guest is prompted to log in,
+    // logged-in users see notFound (no access).
+    if (!user) redirect(`/login?next=/quizzes/${encodeURIComponent(id)}/play`);
     notFound();
   }
 

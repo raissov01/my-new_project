@@ -328,11 +328,14 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// Quiz read routes — allow guests (empty X-User-ID) so unauthenticated
 	// visitors can browse public quizzes and play them before signing up.
+	// IMPORTANT: register static /quizzes/overview BEFORE the wildcard
+	// /quizzes/:quizID — Gin's tree refuses a static next to an existing
+	// wildcard at the same level if registered in the wrong order.
 	guestOK := api.Group("")
 	guestOK.Use(middleware.InternalAuthGuestOK(deps.InternalAPIToken))
 	{
-		guestOK.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
 		guestOK.GET("/quizzes/overview", wrapHTTP(deps.Quiz.GetOverview))
+		guestOK.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
 	}
 
 	// Public read routes are registered above in the internal group.
