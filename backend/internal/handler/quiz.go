@@ -32,13 +32,10 @@ func (h *QuizHandler) errorMessage(err error, fallback string) string {
 	return fallback
 }
 
-// GetOverview handles GET /api/v1/quizzes/overview
+// GetOverview handles GET /api/v1/quizzes/overview.
+// Guests (empty userID) get public quizzes only; authenticated users also see their own.
 func (h *QuizHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
-	if !ok || userID == "" {
-		writeError(w, http.StatusUnauthorized, "authentication required", nil)
-		return
-	}
+	userID, _ := middleware.UserIDFromContext(r.Context())
 
 	filters := repository.QuizListFilters{
 		Search:  r.URL.Query().Get("q"),

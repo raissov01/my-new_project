@@ -38,7 +38,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
     sort,
   };
 
-  const quizzes = user ? await getQuizzesOverview(filters) : [];
+  const quizzes = await getQuizzesOverview(filters);
 
   const ownedCount = user
     ? quizzes.filter((quiz) => quiz.userId === user.id).length
@@ -200,47 +200,14 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
       ) : null}
 
       {/* Quiz grid / empty states */}
-      {!user ? (
-        <div
-          className="nd-reveal nd-d4"
-          style={{
-            border: "1px dashed var(--line)",
-            borderRadius: 18,
-            padding: "64px 24px",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              margin: "0 auto 20px",
-              width: 56,
-              height: 56,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 16,
-              border: "1.5px solid var(--line)",
-              background: "var(--paper-2)",
-              color: "var(--ink-mute)",
-            }}
-          >
-            <Target style={{ width: 20, height: 20 }} />
-          </div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--ink)", marginBottom: 10, letterSpacing: "-.02em" }}>
-            {t("quiz.guestEmptyTitle")}
-          </h2>
-          <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
-            {t("quiz.guestEmptyBody")}
-          </p>
-        </div>
-      ) : quizzes.length > 0 ? (
+      {quizzes.length > 0 ? (
         <div className="nd-lib-grid nd-reveal nd-d4">
           {quizzes.map((quiz, i) => (
             <QuizCard
               key={quiz.id}
               quiz={quiz}
               locale={locale}
-              isOwner={quiz.userId === user.id}
+              isOwner={user ? quiz.userId === user.id : false}
               index={i}
             />
           ))}

@@ -269,9 +269,11 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 	args := []any{userID}
 
 	if filters.OnlyMine {
-		where = append(where, "q.user_id = $1")
+		// OnlyMine requires a real user; cast as text so empty string returns no rows.
+		where = append(where, "q.user_id::text = $1")
 	} else {
-		where = append(where, "(q.is_public = true OR q.user_id = $1)")
+		// Guests pass empty userID — only public quizzes match. Cast to text to avoid UUID parse errors.
+		where = append(where, "(q.is_public = true OR q.user_id::text = $1)")
 	}
 
 	if s := strings.TrimSpace(filters.Subject); s != "" {

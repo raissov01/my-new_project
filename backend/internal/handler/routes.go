@@ -167,7 +167,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/sets/:setID/clone", wrapHTTP(deps.Flashcard.CloneSet))
 
 		// Quizizz-style quiz module
-		internal.GET("/quizzes/overview", wrapHTTP(deps.Quiz.GetOverview))
+		// /quizzes/overview moved to guestOK group below (allows guests to browse public quizzes)
 		internal.GET("/quizzes/mine", wrapHTTP(deps.Quiz.GetMine))
 		internal.GET("/quizzes/dashboard/recent-attempts", wrapHTTP(deps.Quiz.GetRecentAttempts))
 		internal.GET("/quizzes/dashboard/recommended", wrapHTTP(deps.Quiz.GetRecommendedPractice))
@@ -326,12 +326,13 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/ielts/admin/questions/stats", wrapHTTP(deps.IELTSQuestionAdmin.GetQuestionStats))
 	}
 
-	// Quiz read route — allows guests (empty X-User-ID) so unauthenticated
-	// visitors can fetch public quiz data before signing up.
+	// Quiz read routes — allow guests (empty X-User-ID) so unauthenticated
+	// visitors can browse public quizzes and play them before signing up.
 	guestOK := api.Group("")
 	guestOK.Use(middleware.InternalAuthGuestOK(deps.InternalAPIToken))
 	{
 		guestOK.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
+		guestOK.GET("/quizzes/overview", wrapHTTP(deps.Quiz.GetOverview))
 	}
 
 	// Public read routes are registered above in the internal group.

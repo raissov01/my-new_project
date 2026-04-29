@@ -142,8 +142,8 @@ export async function getQuizzesOverview(
   filters?: QuizListFilters
 ): Promise<QuizOverview[]> {
   const user = await getCurrentUser();
-  if (!user) return [];
-  return getQuizzesOverviewCached(user.id, buildQuery(filters));
+  // Guests get public quizzes only; backend uses empty userID to filter.
+  return getQuizzesOverviewCached(user?.id ?? "", buildQuery(filters));
 }
 
 export async function getMyQuizzes(
