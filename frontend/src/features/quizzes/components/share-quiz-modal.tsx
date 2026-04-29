@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { Check, Copy, Files, X, ExternalLink, Link2, RefreshCw, Trash2, Lock } from "lucide-react";
@@ -182,7 +183,7 @@ export function ShareQuizModal({
   const isGenerating = invite.status === "loading";
   const hasLink = invite.status === "loaded";
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[110] flex items-start justify-center overflow-y-auto"
       style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)" }}
@@ -420,5 +421,5 @@ export function ShareQuizModal({
         </div>
       </div>
     </div>
-  );
+  , document.body);
 }
