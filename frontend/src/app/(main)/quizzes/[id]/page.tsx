@@ -50,16 +50,14 @@ const OPTION_KEYS = ["a", "b", "c", "d", "e"] as const;
 
 export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
   const user = await getCurrentUser();
-  if (!user) {
-    redirect("/login");
-  }
-
   const { id } = await params;
   const locale = await getServerLocale();
   const t = createTranslator(locale);
   const quiz = await getQuizById(id);
 
   if (!quiz) {
+    // Private quiz and not logged in → ask to log in
+    if (!user) redirect(`/login?next=/quizzes/${encodeURIComponent(id)}`);
     notFound();
   }
 
@@ -167,7 +165,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
               </Link>
             </>
           ) : null}
-          <ShareQuizButton quizId={quiz.id} quizTitle={quiz.title} />
+          {user ? <ShareQuizButton quizId={quiz.id} quizTitle={quiz.title} /> : null}
         </div>
       </div>
 
