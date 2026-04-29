@@ -424,7 +424,23 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID, inviteToken
 	var d model.QuizDetail
 	var createdAt, updatedAt time.Time
 
-	err := r.pool.QueryRow(ctx, `
+	// Build the visibility predicate dynamically. We only reference the
+	// quiz_invite_links table when an invite token was actually supplied —
+	// otherwise we skip it entirely so the query stays valid even if that
+	// table doesn't yet exist (e.g. before the migration ran).
+	visibility := "q.is_public = true OR q.user_id::text = $2"
+	args := []any{quizID, requesterUserID}
+	if strings.TrimSpace(inviteToken) != "" {
+		visibility += ` OR EXISTS (
+			SELECT 1 FROM public.quiz_invite_links il
+			WHERE il.quiz_id = q.id
+			  AND il.id::text = $3
+			  AND il.is_active = true
+		)`
+		args = append(args, inviteToken)
+	}
+
+	query := fmt.Sprintf(`
 		SELECT
 			q.id,
 			q.user_id,
@@ -442,18 +458,10 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID, inviteToken
 			COALESCE(q.updated_at, COALESCE(q.created_at, NOW()))
 		FROM public.quizzes q
 		LEFT JOIN public.users u ON u.id = q.user_id
-		WHERE q.id = $1
-		  AND (
-		    q.is_public = true
-		    OR q.user_id::text = $2
-		    OR ($3 != '' AND EXISTS (
-		        SELECT 1 FROM public.quiz_invite_links il
-		        WHERE il.quiz_id = q.id
-		          AND il.id::text = $3
-		          AND il.is_active = true
-		    ))
-		  )
-	`, quizID, requesterUserID, inviteToken).Scan(
+		WHERE q.id = $1 AND (%s)
+	`, visibility)
+
+	err := r.pool.QueryRow(ctx, query, args...).Scan(
 		&d.ID,
 		&d.UserID,
 		&d.AuthorName,
