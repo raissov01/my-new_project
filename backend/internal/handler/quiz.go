@@ -85,8 +85,9 @@ func (h *QuizHandler) GetMine(w http.ResponseWriter, r *http.Request) {
 func (h *QuizHandler) GetQuiz(w http.ResponseWriter, r *http.Request) {
 	quizID := r.PathValue("quizID")
 	userID, _ := middleware.UserIDFromContext(r.Context())
+	inviteToken := r.Header.Get("X-Invite-Token")
 
-	detail, err := h.svc.GetByID(r.Context(), quizID, userID)
+	detail, err := h.svc.GetByID(r.Context(), quizID, userID, inviteToken)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "quiz not found", err)
 		return
@@ -203,7 +204,8 @@ func (h *QuizHandler) SubmitAttempt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.svc.SubmitAttempt(r.Context(), userID, quizID, req)
+	inviteToken := r.Header.Get("X-Invite-Token")
+	result, err := h.svc.SubmitAttempt(r.Context(), userID, quizID, inviteToken, req)
 	if err != nil {
 		status, msg := classifyQuizError(err, "failed to submit attempt")
 		if h.isDev() {
@@ -327,4 +329,78 @@ func (h *QuizHandler) GetRecommendedPractice(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// ── Invite Links ──────────────────────────────────────────────────────────────
+
+// CreateInviteLink handles POST /api/v1/quizzes/{quizID}/invite-links
+func (h *QuizHandler) CreateInviteLink(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || strings.TrimSpace(userID) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	quizID := r.PathValue("quizID")
+
+	var req struct {
+		MaxUses *int `json:"maxUses"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request", err)
+		return
+	}
+
+	token, err := h.svc.CreateInviteLink(r.Context(), quizID, userID, req.MaxUses)
+	if err != nil {
+		status, msg := classifyQuizError(err, "failed to create invite link")
+		writeError(w, status, msg, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"token": token})
+}
+
+// ListInviteLinks handles GET /api/v1/quizzes/{quizID}/invite-links
+func (h *QuizHandler) ListInviteLinks(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || strings.TrimSpace(userID) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	quizID := r.PathValue("quizID")
+
+	links, err := h.svc.ListInviteLinks(r.Context(), quizID, userID)
+	if err != nil {
+		status, msg := classifyQuizError(err, "failed to list invite links")
+		writeError(w, status, msg, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": links})
+}
+
+// UseInviteLink handles POST /api/v1/quiz-invite/{token}/use (no auth required on token)
+func (h *QuizHandler) UseInviteLink(w http.ResponseWriter, r *http.Request) {
+	token := r.PathValue("token")
+	quizID, quizTitle, err := h.svc.UseInviteLink(r.Context(), token)
+	if err != nil {
+		writeJSON(w, http.StatusGone, map[string]any{"valid": false, "reason": "expired"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"valid": true, "quizId": quizID, "quizTitle": quizTitle})
+}
+
+// RevokeInviteLink handles DELETE /api/v1/quiz-invite/{token}
+func (h *QuizHandler) RevokeInviteLink(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || strings.TrimSpace(userID) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	token := r.PathValue("token")
+
+	if err := h.svc.RevokeInviteLink(r.Context(), token, userID); err != nil {
+		status, msg := classifyQuizError(err, "failed to revoke invite link")
+		writeError(w, status, msg, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "revoked"})
 }

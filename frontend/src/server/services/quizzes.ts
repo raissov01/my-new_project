@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { getCurrentUser } from "@/server/auth";
 
@@ -155,11 +156,13 @@ export async function getMyQuizzes(
 
 export async function getQuizById(quizId: string): Promise<QuizDetail | null> {
   const user = await getCurrentUser();
-  if (!user) return null;
   try {
+    const cookieStore = await cookies();
+    const inviteToken = cookieStore.get(`quiz_invite_${quizId}`)?.value;
     return await fetchBackendJson<QuizDetail>({
       path: `/api/v1/quizzes/${encodeURIComponent(quizId)}`,
-      userId: user.id,
+      userId: user?.id ?? "",
+      headers: inviteToken ? { "X-Invite-Token": inviteToken } : undefined,
     });
   } catch {
     return null;

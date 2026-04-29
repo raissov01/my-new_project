@@ -107,3 +107,28 @@ func InternalAuth(internalToken string) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// InternalAuthGuestOK validates the internal API token but allows empty X-User-ID.
+// Used for read-only public endpoints where guest (unauthenticated) access is allowed.
+func InternalAuthGuestOK(internalToken string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if internalToken == "" {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Internal API token not configured."})
+			return
+		}
+
+		token := strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
+		if token == "" || token != internalToken {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid internal API token."})
+			return
+		}
+
+		userID := strings.TrimSpace(c.GetHeader("X-User-ID"))
+		if userID != "" {
+			req := c.Request.WithContext(context.WithValue(c.Request.Context(), userIDKey, userID))
+			c.Request = req
+			c.Set("userID", userID)
+		}
+		c.Next()
+	}
+}

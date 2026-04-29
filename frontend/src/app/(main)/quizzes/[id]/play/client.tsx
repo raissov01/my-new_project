@@ -124,7 +124,13 @@ interface PlayQuizClientProps {
   mode?: "play" | "practice";
   // Where to send the student when practice completes. Ignored in play mode.
   returnHref?: string;
+  // True when the visitor is not logged in. Guest attempts are scored
+  // locally and tracked in localStorage; no backend submission is made.
+  isGuest?: boolean;
 }
+
+const GUEST_ATTEMPTS_KEY = "guest_quiz_attempts";
+const GUEST_ATTEMPT_LIMIT = 15;
 
 // localStorage key for quiz progress persistence (play mode only).
 // Clears on successful submit or explicit exit.
@@ -168,6 +174,7 @@ export function PlayQuizClient({
   locale,
   mode = "play",
   returnHref,
+  isGuest = false,
 }: PlayQuizClientProps) {
   const isPractice = mode === "practice";
   const sounds = useQuizSounds();
@@ -221,12 +228,21 @@ export function PlayQuizClient({
   const [hintVisible, setHintVisible] = useState(false);
 
   const answersRef = useRef<RecordedAnswer[]>(savedProgress?.answers ?? []);
+  // Tracks whether each answer was correct — parallel array to answersRef.
+  // Used only in guest mode to compute the final score locally.
+  const correctnessRef = useRef<boolean[]>([]);
   const questionStartRef = useRef<number>(0);
   const quizStartRef = useRef<number>(savedProgress?.quizStartedAt ?? 0);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set to true when the user confirms exit so submitAttempt's router.push
   // doesn't race against the exit navigation.
   const isExitingRef = useRef(false);
+
+  // Guest attempt counter — read once on mount; gate renders before the quiz.
+  const [guestAttemptsUsed] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    return parseInt(localStorage.getItem(GUEST_ATTEMPTS_KEY) ?? "0", 10);
+  });
   // Refs for values read inside recordAnswer's stable closure. Using refs
   // avoids adding fast-changing state to the useCallback dep array (which
   // would recreate the callback on every answer and break timing).
@@ -370,6 +386,7 @@ export function PlayQuizClient({
         0,
         Math.round((Date.now() - questionStartRef.current) / 1000)
       );
+      correctnessRef.current.push(isCorrect);
       answersRef.current.push({
         questionId: question.id,
         selectedOption: record.selectedOption,

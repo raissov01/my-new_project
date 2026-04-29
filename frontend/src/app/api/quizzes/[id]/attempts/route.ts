@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { getCurrentUser } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import type { AttemptResult } from "@/server/services/quizzes";
@@ -18,6 +19,8 @@ export async function POST(req: NextRequest, { params }: AttemptsRouteProps) {
 
   const { id } = await params;
   const body = await req.text();
+  const cookieStore = await cookies();
+  const inviteToken = cookieStore.get(`quiz_invite_${id}`)?.value;
 
   try {
     const data = await fetchBackendJson<AttemptResult>({
@@ -25,7 +28,10 @@ export async function POST(req: NextRequest, { params }: AttemptsRouteProps) {
       userId: user.id,
       method: "POST",
       body,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(inviteToken ? { "X-Invite-Token": inviteToken } : {}),
+      },
       timeoutMs: 30_000,
     });
     return NextResponse.json(data);

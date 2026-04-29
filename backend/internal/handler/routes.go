@@ -172,7 +172,6 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/quizzes/dashboard/recent-attempts", wrapHTTP(deps.Quiz.GetRecentAttempts))
 		internal.GET("/quizzes/dashboard/recommended", wrapHTTP(deps.Quiz.GetRecommendedPractice))
 		internal.GET("/quizzes/attempts/:attemptID", wrapHTTP(deps.Quiz.GetAttempt))
-		internal.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
 		internal.POST("/quizzes", wrapHTTP(deps.Quiz.CreateQuiz))
 		internal.PUT("/quizzes/:quizID", wrapHTTP(deps.Quiz.UpdateQuiz))
 		internal.DELETE("/quizzes/:quizID", wrapHTTP(deps.Quiz.DeleteQuiz))
@@ -180,6 +179,10 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/quizzes/:quizID/attempts", wrapHTTP(deps.Quiz.ListAttempts))
 		internal.GET("/quizzes/:quizID/stats", wrapHTTP(deps.Quiz.GetQuestionStats))
 		internal.POST("/quizzes/:quizID/clone", wrapHTTP(deps.Quiz.CloneQuiz))
+		internal.POST("/quizzes/:quizID/invite-links", wrapHTTP(deps.Quiz.CreateInviteLink))
+		internal.GET("/quizzes/:quizID/invite-links", wrapHTTP(deps.Quiz.ListInviteLinks))
+		internal.POST("/quiz-invite/:token/use", wrapHTTP(deps.Quiz.UseInviteLink))
+		internal.DELETE("/quiz-invite/:token", wrapHTTP(deps.Quiz.RevokeInviteLink))
 		internal.POST("/quizzes/images", wrapHTTP(deps.QuizImage.Upload))
 		internal.POST("/quizzes/audio", wrapHTTP(deps.QuizAudio.Upload))
 
@@ -321,6 +324,14 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.DELETE("/ielts/admin/questions/:questionID", wrapHTTP(deps.IELTSQuestionAdmin.DeleteQuestion))
 		internal.POST("/ielts/admin/questions/bulk", wrapHTTP(deps.IELTSQuestionAdmin.BulkCreateQuestions))
 		internal.GET("/ielts/admin/questions/stats", wrapHTTP(deps.IELTSQuestionAdmin.GetQuestionStats))
+	}
+
+	// Quiz read route — allows guests (empty X-User-ID) so unauthenticated
+	// visitors can fetch public quiz data before signing up.
+	guestOK := api.Group("")
+	guestOK.Use(middleware.InternalAuthGuestOK(deps.InternalAPIToken))
+	{
+		guestOK.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
 	}
 
 	// Public read routes are registered above in the internal group.

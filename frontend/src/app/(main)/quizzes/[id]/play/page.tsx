@@ -10,13 +10,12 @@ interface PlayPageProps {
 
 export default async function PlayQuizPage({ params }: PlayPageProps) {
   const user = await getCurrentUser();
-  if (!user) {
-    redirect("/login");
-  }
-
   const { id } = await params;
+
   const quiz = await getQuizById(id);
   if (!quiz) {
+    // Private quiz or doesn't exist — require login
+    if (!user) redirect("/login");
     notFound();
   }
 
@@ -26,5 +25,5 @@ export default async function PlayQuizPage({ params }: PlayPageProps) {
 
   const locale = await getServerLocale();
 
-  return <PlayQuizClient quiz={quiz} locale={locale} />;
+  return <PlayQuizClient quiz={quiz} locale={locale} isGuest={!user} />;
 }

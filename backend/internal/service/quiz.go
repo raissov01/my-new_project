@@ -58,11 +58,11 @@ func (s *Quiz) GetOverview(ctx context.Context, userID string, filters repositor
 	return s.repo.GetOverview(ctx, userID, filters)
 }
 
-func (s *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*model.QuizDetail, error) {
+func (s *Quiz) GetByID(ctx context.Context, quizID, requesterUserID, inviteToken string) (*model.QuizDetail, error) {
 	if strings.TrimSpace(quizID) == "" {
 		return nil, fmt.Errorf("quiz id is required")
 	}
-	return s.repo.GetByID(ctx, quizID, requesterUserID)
+	return s.repo.GetByID(ctx, quizID, requesterUserID, inviteToken)
 }
 
 func (s *Quiz) CreateQuiz(ctx context.Context, userID string, req model.CreateQuizRequest) (string, error) {
@@ -150,14 +150,14 @@ func (s *Quiz) CloneQuiz(ctx context.Context, userID, sourceQuizID string) (stri
 	return s.repo.CloneQuiz(ctx, userID, sourceQuizID)
 }
 
-func (s *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req model.SubmitAttemptRequest) (*model.AttemptResult, error) {
+func (s *Quiz) SubmitAttempt(ctx context.Context, userID, quizID, inviteToken string, req model.SubmitAttemptRequest) (*model.AttemptResult, error) {
 	if strings.TrimSpace(userID) == "" {
 		return nil, fmt.Errorf("authentication required")
 	}
 	if strings.TrimSpace(quizID) == "" {
 		return nil, fmt.Errorf("quiz id is required")
 	}
-	return s.repo.SubmitAttempt(ctx, userID, quizID, req)
+	return s.repo.SubmitAttempt(ctx, userID, quizID, inviteToken, req)
 }
 
 func (s *Quiz) ListAttempts(ctx context.Context, userID, quizID string) ([]model.AttemptSummary, error) {
@@ -470,7 +470,7 @@ func (s *Quiz) GetQuestionStats(ctx context.Context, userID, quizID string) (*mo
 		return nil, fmt.Errorf("quiz id is required")
 	}
 	// Verify ownership — GetByID already returns isAuthor; check that.
-	detail, err := s.repo.GetByID(ctx, quizID, userID)
+	detail, err := s.repo.GetByID(ctx, quizID, userID, "")
 	if err != nil {
 		return nil, fmt.Errorf("quiz not found")
 	}
@@ -525,4 +525,31 @@ func normalizeMCQMultiCorrect(raw string, hasE bool) (string, error) {
 	}
 	sort.Strings(valid)
 	return strings.Join(valid, ","), nil
+}
+
+// ── Invite Links ──────────────────────────────────────────────────────────────
+
+func (s *Quiz) CreateInviteLink(ctx context.Context, quizID, userID string, maxUses *int) (string, error) {
+	if strings.TrimSpace(userID) == "" {
+		return "", fmt.Errorf("authentication required")
+	}
+	return s.repo.CreateInviteLink(ctx, quizID, userID, maxUses)
+}
+
+func (s *Quiz) UseInviteLink(ctx context.Context, token string) (quizID, quizTitle string, err error) {
+	return s.repo.UseInviteLink(ctx, token)
+}
+
+func (s *Quiz) ListInviteLinks(ctx context.Context, quizID, userID string) ([]repository.InviteLinkRow, error) {
+	if strings.TrimSpace(userID) == "" {
+		return nil, fmt.Errorf("authentication required")
+	}
+	return s.repo.ListInviteLinks(ctx, quizID, userID)
+}
+
+func (s *Quiz) RevokeInviteLink(ctx context.Context, token, userID string) error {
+	if strings.TrimSpace(userID) == "" {
+		return fmt.Errorf("authentication required")
+	}
+	return s.repo.RevokeInviteLink(ctx, token, userID)
 }

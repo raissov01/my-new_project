@@ -416,9 +416,9 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 	return items, nil
 }
 
-// GetByID loads a quiz with its questions, visible to the user if public or owned.
-// CorrectOption is only populated when the requester is the author.
-func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*model.QuizDetail, error) {
+// GetByID loads a quiz with its questions, visible to the user if public, owned,
+// or accessed via a valid invite token.
+func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID, inviteToken string) (*model.QuizDetail, error) {
 	var d model.QuizDetail
 	var createdAt, updatedAt time.Time
 
@@ -441,8 +441,17 @@ func (r *Quiz) GetByID(ctx context.Context, quizID, requesterUserID string) (*mo
 		FROM public.quizzes q
 		LEFT JOIN public.users u ON u.id = q.user_id
 		WHERE q.id = $1
-		  AND (q.is_public = true OR q.user_id::text = $2)
-	`, quizID, requesterUserID).Scan(
+		  AND (
+		    q.is_public = true
+		    OR q.user_id::text = $2
+		    OR ($3 != '' AND EXISTS (
+		        SELECT 1 FROM public.quiz_invite_links il
+		        WHERE il.quiz_id = q.id
+		          AND il.id::text = $3
+		          AND il.is_active = true
+		    ))
+		  )
+	`, quizID, requesterUserID, inviteToken).Scan(
 		&d.ID,
 		&d.UserID,
 		&d.AuthorName,
@@ -965,7 +974,7 @@ type questionAnswerRow struct {
 // SubmitAttempt grades the attempt on the server and persists the result.
 // The client's selected options are trusted only as selections — correctness
 // is recomputed from the database.
-func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req model.SubmitAttemptRequest) (*model.AttemptResult, error) {
+func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID, inviteToken string, req model.SubmitAttemptRequest) (*model.AttemptResult, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
@@ -980,7 +989,18 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID string, req mod
 		return nil, fmt.Errorf("quiz not found: %w", err)
 	}
 	if !isPublic && ownerID != userID {
-		return nil, fmt.Errorf("access denied")
+		// Allow if a valid invite token is provided
+		if inviteToken == "" {
+			return nil, fmt.Errorf("access denied")
+		}
+		var linkCount int
+		_ = r.pool.QueryRow(ctx, `
+			SELECT COUNT(*) FROM public.quiz_invite_links
+			WHERE id = $1::uuid AND quiz_id = $2::uuid AND is_active = true
+		`, inviteToken, quizID).Scan(&linkCount)
+		if linkCount == 0 {
+			return nil, fmt.Errorf("access denied")
+		}
 	}
 
 	rows, err := tx.Query(ctx, `
@@ -1627,4 +1647,106 @@ func mcqMultiMatch(submitted, correct string) bool {
 		}
 	}
 	return true
+}
+
+// ── Invite Links ─────────────────────────────────────────────────────────────
+
+// CreateInviteLink creates a new invite link for a quiz (owner only).
+func (r *Quiz) CreateInviteLink(ctx context.Context, quizID, userID string, maxUses *int) (string, error) {
+	var ownerID string
+	if err := r.pool.QueryRow(ctx, `SELECT user_id FROM quizzes WHERE id = $1`, quizID).Scan(&ownerID); err != nil {
+		return "", fmt.Errorf("quiz not found")
+	}
+	if ownerID != userID {
+		return "", fmt.Errorf("access denied")
+	}
+	var id string
+	if err := r.pool.QueryRow(ctx, `
+		INSERT INTO public.quiz_invite_links (quiz_id, created_by, max_uses)
+		VALUES ($1, $2, $3)
+		RETURNING id::text
+	`, quizID, userID, maxUses).Scan(&id); err != nil {
+		return "", fmt.Errorf("create invite link: %w", err)
+	}
+	return id, nil
+}
+
+// UseInviteLink atomically "uses" one slot of the invite link and returns the
+// quiz ID + title on success. Returns an error when the link is expired/inactive.
+func (r *Quiz) UseInviteLink(ctx context.Context, token string) (quizID, quizTitle string, err error) {
+	err = r.pool.QueryRow(ctx, `
+		WITH updated AS (
+			UPDATE public.quiz_invite_links
+			SET use_count = use_count + 1
+			WHERE id = $1::uuid
+			  AND is_active = true
+			  AND (max_uses IS NULL OR use_count < max_uses)
+			RETURNING quiz_id
+		)
+		SELECT q.id::text, q.title
+		FROM updated u
+		JOIN public.quizzes q ON q.id = u.quiz_id
+	`, token).Scan(&quizID, &quizTitle)
+	if err != nil {
+		return "", "", fmt.Errorf("link expired or not found")
+	}
+	return quizID, quizTitle, nil
+}
+
+// InviteLink is the public-facing shape of a quiz_invite_links row.
+type InviteLinkRow struct {
+	ID        string  `json:"id"`
+	QuizID    string  `json:"quizId"`
+	MaxUses   *int    `json:"maxUses"`
+	UseCount  int     `json:"useCount"`
+	IsActive  bool    `json:"isActive"`
+	CreatedAt string  `json:"createdAt"`
+}
+
+// ListInviteLinks returns all invite links for a quiz (owner only).
+func (r *Quiz) ListInviteLinks(ctx context.Context, quizID, userID string) ([]InviteLinkRow, error) {
+	var ownerID string
+	if err := r.pool.QueryRow(ctx, `SELECT user_id FROM quizzes WHERE id = $1`, quizID).Scan(&ownerID); err != nil {
+		return nil, fmt.Errorf("quiz not found")
+	}
+	if ownerID != userID {
+		return nil, fmt.Errorf("access denied")
+	}
+	rows, err := r.pool.Query(ctx, `
+		SELECT id::text, quiz_id::text, max_uses, use_count, is_active, created_at
+		FROM public.quiz_invite_links
+		WHERE quiz_id = $1
+		ORDER BY created_at DESC
+	`, quizID)
+	if err != nil {
+		return nil, fmt.Errorf("list invite links: %w", err)
+	}
+	defer rows.Close()
+	var out []InviteLinkRow
+	for rows.Next() {
+		var row InviteLinkRow
+		var createdAt time.Time
+		if err := rows.Scan(&row.ID, &row.QuizID, &row.MaxUses, &row.UseCount, &row.IsActive, &createdAt); err != nil {
+			return nil, fmt.Errorf("scan invite link: %w", err)
+		}
+		row.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+		out = append(out, row)
+	}
+	return out, rows.Err()
+}
+
+// RevokeInviteLink deactivates an invite link (owner only, matched by created_by).
+func (r *Quiz) RevokeInviteLink(ctx context.Context, token, userID string) error {
+	result, err := r.pool.Exec(ctx, `
+		UPDATE public.quiz_invite_links
+		SET is_active = false
+		WHERE id = $1::uuid AND created_by = $2
+	`, token, userID)
+	if err != nil {
+		return fmt.Errorf("revoke: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("not found or access denied")
+	}
+	return nil
 }
