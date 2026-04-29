@@ -87,6 +87,20 @@ func AutoMigrate(db *gorm.DB) error {
 
 	log.Println("GORM auto-migration complete")
 
+	// Quiz invite links — limited-use shareable tokens for private quizzes.
+	// Not a GORM model (raw pgx queries), so we create the table manually.
+	db.Exec(`CREATE TABLE IF NOT EXISTS public.quiz_invite_links (
+		id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+		quiz_id     UUID        NOT NULL REFERENCES public.quizzes(id) ON DELETE CASCADE,
+		created_by  TEXT        NOT NULL,
+		max_uses    INT,
+		use_count   INT         NOT NULL DEFAULT 0,
+		is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
+		created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_quiz_invite_links_quiz_id ON public.quiz_invite_links(quiz_id)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_quiz_invite_links_created_by ON public.quiz_invite_links(created_by)`)
+
 	// Drop old restrictive CHECK constraint on question_type and replace with
 	// an expanded one that supports all IELTS question types.
 	db.Exec(`ALTER TABLE ielts_questions DROP CONSTRAINT IF EXISTS chk_ielts_questions_question_type`)
