@@ -167,7 +167,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/sets/:setID/clone", wrapHTTP(deps.Flashcard.CloneSet))
 
 		// Quizizz-style quiz module
-		// /quizzes/overview moved to guestOK group below (allows guests to browse public quizzes)
+		internal.GET("/quizzes/overview", wrapHTTP(deps.Quiz.GetOverview))
 		internal.GET("/quizzes/mine", wrapHTTP(deps.Quiz.GetMine))
 		internal.GET("/quizzes/dashboard/recent-attempts", wrapHTTP(deps.Quiz.GetRecentAttempts))
 		internal.GET("/quizzes/dashboard/recommended", wrapHTTP(deps.Quiz.GetRecommendedPractice))
@@ -326,15 +326,11 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/ielts/admin/questions/stats", wrapHTTP(deps.IELTSQuestionAdmin.GetQuestionStats))
 	}
 
-	// Quiz read routes — allow guests (empty X-User-ID) so unauthenticated
-	// visitors can browse public quizzes and play them before signing up.
-	// IMPORTANT: register static /quizzes/overview BEFORE the wildcard
-	// /quizzes/:quizID — Gin's tree refuses a static next to an existing
-	// wildcard at the same level if registered in the wrong order.
+	// Quiz read route — allows guests (empty X-User-ID) so unauthenticated
+	// visitors can fetch public quiz data before signing up.
 	guestOK := api.Group("")
 	guestOK.Use(middleware.InternalAuthGuestOK(deps.InternalAPIToken))
 	{
-		guestOK.GET("/quizzes/overview", wrapHTTP(deps.Quiz.GetOverview))
 		guestOK.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
 	}
 
