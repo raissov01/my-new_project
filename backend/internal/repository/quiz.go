@@ -331,7 +331,7 @@ func (r *Quiz) GetOverview(ctx context.Context, userID string, filters QuizListF
 				quiz_id,
 				COUNT(*)::int AS attempts_count,
 				COALESCE(ROUND(AVG(percentage)), 0)::int AS average_percentage,
-				MAX(CASE WHEN user_id = $1 THEN percentage END) AS best_percentage
+				MAX(CASE WHEN user_id::text = $1 THEN percentage END) AS best_percentage
 			FROM public.quiz_attempts
 			WHERE quiz_id IN (SELECT id FROM visible)
 			  AND completed_at IS NOT NULL
