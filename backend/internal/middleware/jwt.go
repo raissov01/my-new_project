@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/midoriya/flashlearn-backend/internal/auth"
+	"github.com/midoriya/flashlearn-backend/internal/models"
+	"gorm.io/gorm"
 )
 
 // JWTAuth validates the Authorization: Bearer <token> header and
@@ -75,6 +77,37 @@ func RequireRole(role string) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions."})
 			return
 		}
+		c.Next()
+	}
+}
+
+// RequireAdmin checks the current user against the database, making the DB role
+// authoritative even when requests come through the internal Next.js bridge.
+func RequireAdmin(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if db == nil {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Admin auth is not configured."})
+			return
+		}
+
+		rawUserID, exists := c.Get("userID")
+		userID, ok := rawUserID.(string)
+		if !exists || !ok || strings.TrimSpace(userID) == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authentication required."})
+			return
+		}
+
+		var user models.User
+		if err := db.Select("id", "role").First(&user, "id = ?", userID).Error; err != nil {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Admin access required."})
+			return
+		}
+		if user.Role != "admin" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Admin access required."})
+			return
+		}
+
+		c.Set("role", user.Role)
 		c.Next()
 	}
 }

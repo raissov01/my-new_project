@@ -6,12 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
+	"gorm.io/gorm"
 )
 
 type Dependencies struct {
 	InternalAPIToken string
 	JWTSecret        string
 	Environment      string
+	GormDB           *gorm.DB
 
 	Auth               *AuthHandler
 	GoogleOAuth        *GoogleOAuthHandler
@@ -29,6 +31,7 @@ type Dependencies struct {
 	Progress           *Progress
 	Flashcard          *FlashcardHandler
 	Quiz               *QuizHandler
+	QuizUsageEvent     *QuizUsageEventHandler
 	Challenge          *ChallengeHandler
 	ProfileWrite       *ProfileWriteHandler
 	AI                 *AIHandler
@@ -44,6 +47,10 @@ type Dependencies struct {
 	Listening          *ListeningHandler
 	AITutor            *AITutorHandler
 	QuestionReview     *QuestionReviewHandler
+	AdminAnalytics     *AdminQuizizzAnalyticsHandler
+	AdminUsers         *AdminUsersHandler
+	AdminQuizzes       *AdminQuizzesHandler
+	AdminAuditLog      *AdminAuditLogHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
 	Billing            *BillingHandler
@@ -186,8 +193,8 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/quizzes/images", wrapHTTP(deps.QuizImage.Upload))
 		internal.POST("/quizzes/audio", wrapHTTP(deps.QuizAudio.Upload))
 
-			// Live quiz session management (host only — authentication required)
-			internal.POST("/quizzes/:quizID/live-sessions", wrapHTTP(deps.QuizLive.CreateSession))
+		// Live quiz session management (host only — authentication required)
+		internal.POST("/quizzes/:quizID/live-sessions", wrapHTTP(deps.QuizLive.CreateSession))
 
 		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
 		internal.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))
@@ -314,10 +321,6 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/news/recent", wrapHTTP(deps.DailyNews.GetRecent))
 		internal.POST("/news/cron/generate", wrapHTTP(deps.DailyNews.CronGenerate))
 
-		// Question bank review
-		internal.GET("/admin/review-questions", wrapHTTP(deps.QuestionReview.ListPending))
-		internal.POST("/admin/review-questions/approve", wrapHTTP(deps.QuestionReview.ApproveBatch))
-
 		// IELTS admin question management
 		internal.POST("/ielts/admin/questions", wrapHTTP(deps.IELTSQuestionAdmin.CreateQuestion))
 		internal.PUT("/ielts/admin/questions/:questionID", wrapHTTP(deps.IELTSQuestionAdmin.UpdateQuestion))
@@ -326,12 +329,40 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/ielts/admin/questions/stats", wrapHTTP(deps.IELTSQuestionAdmin.GetQuestionStats))
 	}
 
+	// All admin routes are gated by RequireSuperadmin: developers/owners only.
+	// (`role='admin'` is reserved for a future "school admin" role and does
+	// NOT grant access here. Bootstrap with `UPDATE users SET is_superadmin=TRUE …`.)
+	registerAdminRoutes := func(g *gin.RouterGroup) {
+		g.Use(middleware.InternalAuth(deps.InternalAPIToken), middleware.RequireSuperadmin(deps.GormDB))
+		// Question review (existing)
+		g.GET("/review-questions", wrapHTTP(deps.QuestionReview.ListPending))
+		g.POST("/review-questions/approve", wrapHTTP(deps.QuestionReview.ApproveBatch))
+		// Quizizz analytics
+		g.GET("/quizizz/analytics/summary", wrapHTTP(deps.AdminAnalytics.Summary))
+		g.GET("/quizizz/analytics/daily", wrapHTTP(deps.AdminAnalytics.Daily))
+		// Users
+		g.GET("/users", wrapHTTP(deps.AdminUsers.List))
+		g.PATCH("/users/:id", wrapHTTP(deps.AdminUsers.Patch))
+		// Quizzes
+		g.GET("/quizzes", wrapHTTP(deps.AdminQuizzes.List))
+		g.PATCH("/quizzes/:id", wrapHTTP(deps.AdminQuizzes.Patch))
+		// Audit log
+		g.GET("/audit-log", wrapHTTP(deps.AdminAuditLog.List))
+	}
+
+	admin := api.Group("/admin")
+	registerAdminRoutes(admin)
+
+	adminAlias := router.Group("/api/admin")
+	registerAdminRoutes(adminAlias)
+
 	// Quiz read route — allows guests (empty X-User-ID) so unauthenticated
 	// visitors can fetch public quiz data before signing up.
 	guestOK := api.Group("")
 	guestOK.Use(middleware.InternalAuthGuestOK(deps.InternalAPIToken))
 	{
 		guestOK.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
+		guestOK.POST("/quizizz/events", wrapHTTP(deps.QuizUsageEvent.Create))
 	}
 
 	// Public read routes are registered above in the internal group.

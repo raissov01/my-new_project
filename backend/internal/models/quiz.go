@@ -10,6 +10,9 @@ type Quiz struct {
 	Description          *string   `json:"description"`
 	Subject              *string   `gorm:"index" json:"subject"`
 	IsPublic             bool      `gorm:"not null;default:false" json:"isPublic"`
+	// IsHiddenByAdmin lets a superadmin take a quiz out of public listings
+	// without deleting it. Owners still see and can edit/delete their own quiz.
+	IsHiddenByAdmin      bool      `gorm:"not null;default:false;index" json:"isHiddenByAdmin"`
 	TimePerQuestion      int       `gorm:"not null;default:30" json:"timePerQuestion"`
 	ShuffleOptions       bool      `gorm:"not null;default:true" json:"shuffleOptions"`
 	ShowAnswerAnimations bool      `gorm:"not null;default:true" json:"showAnswerAnimations"`

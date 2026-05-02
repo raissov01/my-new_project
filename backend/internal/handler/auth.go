@@ -159,6 +159,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	if !user.IsActive {
+		c.JSON(http.StatusForbidden, gin.H{"error": "This account has been deactivated. Please contact support.", "code": "account_deactivated"})
+		return
+	}
+
 	token, err := auth.GenerateToken(h.jwtSecret, user.ID, user.Email, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate session."})

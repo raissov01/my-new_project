@@ -24,6 +24,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.QuizTag{},
 		&models.QuizAttempt{},
 		&models.QuizAttemptAnswer{},
+		&models.QuizUsageEvent{},
 		&models.AIQuizGenerationLog{},
 		&models.ClassQuizAssignment{},
 		&models.ClassGroup{},
@@ -80,12 +81,23 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.Subscription{},
 		// Push notifications
 		&models.PushSubscription{},
+		// Admin
+		&models.AdminAuditLog{},
 	)
 	if err != nil {
 		return err
 	}
 
 	log.Println("GORM auto-migration complete")
+
+	// Role support: normal registration/self-service remains student/teacher,
+	// but trusted DB-managed accounts may now be admins.
+	db.Exec(`ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_users_role`)
+	db.Exec(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`)
+	db.Exec(`ALTER TABLE users ADD CONSTRAINT chk_users_role CHECK (role IN ('student','teacher','admin'))`)
+
+	db.Exec(`ALTER TABLE quiz_usage_events DROP CONSTRAINT IF EXISTS chk_quiz_usage_events_event_type`)
+	db.Exec(`ALTER TABLE quiz_usage_events ADD CONSTRAINT chk_quiz_usage_events_event_type CHECK (event_type IN ('quiz_page_opened','quiz_started','question_answered','quiz_finished','quiz_abandoned','heartbeat'))`)
 
 	// Quiz invite links — limited-use shareable tokens for private quizzes.
 	// Not a GORM model (raw pgx queries), so we create the table manually.
@@ -217,6 +229,41 @@ func AutoMigrate(db *gorm.DB) error {
 	if err := SeedAIScenarios(db); err != nil {
 		return err
 	}
+
+	// ── Admin panel + analytics (idempotent) ─────────────────────────────────
+	// 1) is_superadmin flag — gates the developer/owner control panel. Distinct
+	//    from role='admin' (which is reserved for a future "school admin" tier).
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_superadmin BOOLEAN NOT NULL DEFAULT FALSE`)
+
+	// 2) is_active — soft-deactivate a user without deleting their data.
+	//    The login handler returns 403 when is_active = FALSE.
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE`)
+
+	// 3) is_hidden_by_admin — let a superadmin pull a quiz from public listings
+	//    without affecting the owner's ability to edit it.
+	db.Exec(`ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS is_hidden_by_admin BOOLEAN NOT NULL DEFAULT FALSE`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_quizzes_is_hidden_by_admin ON quizzes(is_hidden_by_admin) WHERE is_hidden_by_admin = TRUE`)
+
+	// 4) Rename quiz_usage_events.anonymous_id → session_id (idempotent: only
+	//    rename when the old column still exists). The GORM AutoMigrate above
+	//    will have already created session_id on fresh installs; this branch
+	//    only runs on existing databases.
+	db.Exec(`DO $$
+	BEGIN
+	  IF EXISTS (SELECT 1 FROM information_schema.columns
+	             WHERE table_name = 'quiz_usage_events' AND column_name = 'anonymous_id')
+	     AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+	                     WHERE table_name = 'quiz_usage_events' AND column_name = 'session_id') THEN
+	    ALTER TABLE quiz_usage_events RENAME COLUMN anonymous_id TO session_id;
+	  END IF;
+	END$$`)
+	// Drop the old anonymous_id index if it survived; the new session_id index
+	// is created by GORM AutoMigrate via the model's index tag.
+	db.Exec(`DROP INDEX IF EXISTS idx_quiz_usage_events_anon_created`)
+
+	// 5) ip_address column for quiz_usage_events. Captured server-side from
+	//    X-Forwarded-For via the Next.js proxy.
+	db.Exec(`ALTER TABLE quiz_usage_events ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)`)
 
 	return nil
 }
