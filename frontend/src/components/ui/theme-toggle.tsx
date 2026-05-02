@@ -22,7 +22,7 @@ export function ThemeToggle({
       <button
         type="button"
         onClick={toggle}
-        className="flex w-full items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-left transition-all hover:bg-[var(--bg-elevated)]"
+        className="flex w-full items-center justify-between rounded-[18px] border border-[var(--line)] bg-[var(--paper-2)] px-4 py-3 text-left transition-all hover:bg-[var(--paper-3)]"
         aria-label={
           theme === "dark"
             ? t("theme.switchToLight")
@@ -30,10 +30,10 @@ export function ThemeToggle({
         }
       >
         <div>
-          <p className="text-sm font-medium text-[var(--text-primary)]">
+          <p className="text-sm font-bold text-[var(--ink)]">
             {t("nav.theme")}
           </p>
-          <p className="mt-1 text-xs text-[var(--text-secondary)]">
+          <p className="mt-1 font-mono text-[11px] text-[var(--ink-mute)]">
             {theme === "dark" ? t("settings.dark") : t("settings.light")}
           </p>
         </div>
@@ -41,8 +41,8 @@ export function ThemeToggle({
           className={cn(
             "inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors",
             theme === "dark"
-              ? "border-amber-500/20 bg-amber-500/10 text-amber-500"
-              : "border-indigo-500/20 bg-indigo-500/10 text-indigo-600"
+              ? "border-[var(--terra)] bg-[var(--terra-tint)] text-[var(--terra)]"
+              : "border-[var(--line-strong)] bg-[var(--paper)] text-[var(--ink-soft)]"
           )}
         >
           {theme === "dark" ? (

@@ -89,14 +89,14 @@ export function AvatarMenu() {
 
   const menuContent = (
     <>
-      <div className="rounded-[var(--radius-lg)] bg-[var(--bg-soft)] px-4 py-4">
+      <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-2)] px-4 py-4">
         <div className="flex items-center gap-3">
           <ProfileAvatar username={username} avatarUrl={avatarUrl} size="sm" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+            <p className="truncate text-sm font-bold text-[var(--ink)]">
               {username}
             </p>
-            <p className="truncate text-xs text-[var(--text-secondary)]">
+            <p className="truncate font-mono text-[11px] text-[var(--ink-mute)]">
               {user.email}
             </p>
           </div>
@@ -107,10 +107,10 @@ export function AvatarMenu() {
         <Link
           href="/profile"
           onClick={() => setOpen(false)}
-          className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-soft)] active:bg-[var(--bg-soft)]"
+          className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-[var(--ink-soft)] transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--ink)] active:bg-[var(--paper-3)]"
         >
           <span className="flex items-center gap-3">
-            <UserCircle2 className="h-4 w-4 text-[var(--text-secondary)]" />
+            <UserCircle2 className="h-4 w-4 text-[var(--ink-mute)]" />
             {t("nav.profile")}
           </span>
         </Link>
@@ -118,16 +118,16 @@ export function AvatarMenu() {
         <Link
           href="/settings"
           onClick={() => setOpen(false)}
-          className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-soft)] active:bg-[var(--bg-soft)]"
+          className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-[var(--ink-soft)] transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--ink)] active:bg-[var(--paper-3)]"
         >
           <span className="flex items-center gap-3">
-            <Settings className="h-4 w-4 text-[var(--text-secondary)]" />
+            <Settings className="h-4 w-4 text-[var(--ink-mute)]" />
             {t("nav.settings")}
           </span>
         </Link>
       </div>
 
-      <div className="mt-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-3">
+      <div className="mt-3 rounded-[18px] border border-[var(--line)] bg-[var(--paper-2)] p-3">
         <LanguageSwitcher variant="menu" />
       </div>
 
@@ -139,7 +139,7 @@ export function AvatarMenu() {
         type="button"
         onClick={handleLogout}
         disabled={loggingOut}
-        className="mt-3 flex w-full items-center justify-between rounded-[var(--radius-md)] border border-red-500/10 bg-red-500/5 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 active:bg-red-500/15 disabled:opacity-60 dark:text-red-400"
+        className="mt-3 flex w-full items-center justify-between rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-500/10 active:bg-red-500/15 disabled:opacity-60 dark:text-red-300"
       >
         <span className="flex items-center gap-3">
           <LogOut className="h-4 w-4" />
@@ -155,8 +155,8 @@ export function AvatarMenu() {
         type="button"
         onClick={() => setOpen((current) => !current)}
         className={cn(
-          "flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-1.5 py-1.5 shadow-sm transition-all hover:bg-[var(--bg-soft)]",
-          open && "border-[var(--border-strong)]"
+          "flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper)] px-1.5 py-1.5 shadow-sm transition-all hover:bg-[var(--paper-2)]",
+          open && "border-[var(--ink-soft)]"
         )}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -169,7 +169,7 @@ export function AvatarMenu() {
         />
         <ChevronDown
           className={cn(
-            "mr-1 h-4 w-4 text-[var(--text-secondary)] transition-transform",
+            "mr-1 h-4 w-4 text-[var(--ink-mute)] transition-transform",
             open && "rotate-180"
           )}
         />
@@ -178,16 +178,7 @@ export function AvatarMenu() {
       {/* Desktop dropdown */}
       {open && (
         <div
-          className="animate-fade-in-up absolute right-0 top-[calc(100%+0.75rem)] z-50 hidden w-[min(22rem,calc(100vw-2rem))] rounded-[var(--radius-xl)] border p-3 shadow-[0_8px_32px_rgba(85,51,255,0.15)] lg:block"
-          style={{
-            background: "#0f0f1e",
-            borderColor: "#2a1a5e",
-            ["--bg-elevated" as string]: "#0f0f1e",
-            ["--bg-soft" as string]: "rgba(255,255,255,0.05)",
-            ["--border" as string]: "rgba(255,255,255,0.08)",
-            ["--text-primary" as string]: "#ffffff",
-            ["--text-secondary" as string]: "rgba(255,255,255,0.5)",
-          }}
+          className="animate-fade-in-up absolute right-0 top-[calc(100%+0.75rem)] z-50 hidden w-[min(22rem,calc(100vw-2rem))] rounded-[22px] border border-[var(--line-strong)] bg-[var(--paper)] p-3 shadow-[6px_6px_0_var(--ink)] lg:block"
         >
           {menuContent}
         </div>
@@ -203,18 +194,9 @@ export function AvatarMenu() {
           />
           <div className="absolute inset-x-0 bottom-0 animate-slide-up-sheet">
             <div
-              className="max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-[var(--radius-xl)] border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
-              style={{
-                background: "#0f0f1e",
-                borderColor: "#2a1a5e",
-                ["--bg-elevated" as string]: "#0f0f1e",
-                ["--bg-soft" as string]: "rgba(255,255,255,0.05)",
-                ["--border" as string]: "rgba(255,255,255,0.08)",
-                ["--text-primary" as string]: "#ffffff",
-                ["--text-secondary" as string]: "rgba(255,255,255,0.5)",
-              }}
+              className="max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-[24px] border-t border-[var(--line-strong)] bg-[var(--paper)] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
             >
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/10" />
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--line-strong)]" />
               {menuContent}
             </div>
           </div>

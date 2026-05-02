@@ -30,7 +30,7 @@ export function LanguageSwitcher({
   if (variant === "menu") {
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+        <div className="flex items-center gap-2 px-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[var(--ink-mute)]">
           <Languages className="h-3.5 w-3.5" />
           <span>{t("lang.label")}</span>
         </div>
@@ -41,10 +41,10 @@ export function LanguageSwitcher({
               type="button"
               onClick={() => setLocale(code)}
               className={cn(
-                "inline-flex h-9 items-center justify-center rounded-xl border px-3 text-sm font-medium transition-all",
+                "inline-flex h-9 items-center justify-center rounded-full border px-3 text-sm font-semibold transition-all",
                 locale === code
-                  ? "border-indigo-500 bg-indigo-600 text-white"
-                  : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+                  : "border-[var(--line)] bg-[var(--paper)] text-[var(--ink-mute)] hover:border-[var(--ink-soft)] hover:text-[var(--ink)]"
               )}
             >
               {t(`lang.${code}`)}
