@@ -4,23 +4,11 @@ import Link from "next/link";
 import { Bell, Search } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useLocale } from "@/components/providers/locale-provider";
-import { ProfileAvatar } from "@/features/profile/components/profile-avatar";
+import { AvatarMenu } from "@/components/layout/avatar-menu";
 
 export function AppHeader() {
   const { user } = useAuth();
   const { t } = useLocale();
-
-  const userMeta = user?.user_metadata as
-    | { username?: string; avatar_url?: string | null; full_name?: string }
-    | undefined;
-
-  const username =
-    (userMeta?.username as string | undefined) ||
-    (userMeta?.full_name as string | undefined) ||
-    user?.email?.split("@")[0] ||
-    "User";
-
-  const avatarUrl = (userMeta?.avatar_url as string | null | undefined) ?? null;
 
   return (
     <header
@@ -109,11 +97,11 @@ export function AppHeader() {
         />
       </button>
 
-      {/* Profile avatar → profile page */}
+      {/* Account menu — opens dropdown with profile, settings, theme, language, logout */}
       {user ? (
-        <Link href="/profile" style={{ flexShrink: 0 }}>
-          <ProfileAvatar username={username} avatarUrl={avatarUrl} size="xs" />
-        </Link>
+        <div style={{ flexShrink: 0 }}>
+          <AvatarMenu />
+        </div>
       ) : (
         <Link
           href="/login"
