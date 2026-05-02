@@ -11,7 +11,7 @@ import {
 } from "@/lib/shared/auth/admin";
 import { DEV_MODE, DEV_USER } from "@/lib/shared/auth/dev-mode";
 
-const VALID_ROLES = new Set<ProfileRole>(["student", "teacher"]);
+const VALID_ROLES = new Set<ProfileRole>(["student", "teacher", "admin"]);
 const TOKEN_COOKIE = "swr_token";
 
 type BackendUser = {
@@ -22,6 +22,8 @@ type BackendUser = {
   avatarUrl: string | null;
   bio: string | null;
   role: ProfileRole;
+  isSuperadmin?: boolean;
+  isActive?: boolean;
   streakDays: number;
   points: number;
   lastActiveDate: string | null;
@@ -173,10 +175,12 @@ export async function getCurrentProfile(
 }
 
 export function getDefaultAppRoute(role: ProfileRole) {
+  if (role === "admin") return "/admin/dashboard";
   return role === "teacher" ? "/teacher/dashboard" : "/student/dashboard";
 }
 
 export function getRoleRegistrationRedirect(role: ProfileRole) {
+  if (role === "admin") return "/admin/dashboard";
   return role === "teacher" ? "/teacher" : "/student";
 }
 
@@ -211,7 +215,52 @@ export async function requireRole(role: ProfileRole) {
   return { user, profile, redirectTo: null };
 }
 
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { user: null, profile: null, redirectTo: "/login" as const };
+  }
+
+  const profile = await getCurrentProfile(user);
+  if (profile?.role !== "admin") {
+    return { user, profile, redirectTo: getDefaultAppRoute(profile?.role ?? "student") };
+  }
+
+  return { user, profile, redirectTo: null };
+}
+
+/**
+ * Gate the developer/owner control panel. Distinct from {@link requireAdmin}:
+ * `role='admin'` is reserved for a future "school admin" role and does NOT
+ * grant access here. Only users with `is_superadmin = TRUE` in the DB pass.
+ *
+ * The DB is the single source of truth — the JWT carries no superadmin claim,
+ * so revoking access takes effect on the very next request.
+ */
+export async function requireSuperadmin() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { user: null, profile: null, isSuperadmin: false, redirectTo: "/login" as const };
+  }
+
+  const backendUser = await getCurrentBackendUserCached();
+  const profile = await getCurrentProfile(user);
+
+  if (!backendUser?.isSuperadmin) {
+    return {
+      user,
+      profile,
+      isSuperadmin: false,
+      redirectTo: getDefaultAppRoute(profile?.role ?? "student"),
+    };
+  }
+
+  return { user, profile, isSuperadmin: true, redirectTo: null };
+}
+
 export async function ensureProfile(_user: unknown, _roleOverride?: ProfileRole) {
+  void _user;
+  void _roleOverride;
   return;
 }
 
@@ -249,5 +298,6 @@ export async function createProfileForSignup(_params: {
   username: string;
   role: ProfileRole;
 }) {
+  void _params;
   return { error: null as string | null };
 }

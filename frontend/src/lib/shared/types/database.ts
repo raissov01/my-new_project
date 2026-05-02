@@ -13,7 +13,7 @@ export type Database = {
           streak_days: number;
           last_active_date: string | null;
           points: number;
-          role: "student" | "teacher";
+          role: "student" | "teacher" | "admin";
         };
         Insert: {
           id: string;
@@ -26,7 +26,7 @@ export type Database = {
           streak_days?: number;
           last_active_date?: string | null;
           points?: number;
-          role?: "student" | "teacher";
+          role?: "student" | "teacher" | "admin";
         };
         Update: {
           id?: string;
@@ -39,7 +39,7 @@ export type Database = {
           streak_days?: number;
           last_active_date?: string | null;
           points?: number;
-          role?: "student" | "teacher";
+          role?: "student" | "teacher" | "admin";
         };
         Relationships: [];
       };

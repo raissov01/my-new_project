@@ -15,10 +15,9 @@ interface PendingQuestion {
 
 interface Props {
   questions: PendingQuestion[];
-  userId: string;
 }
 
-export function ReviewClient({ questions: initial, userId }: Props) {
+export function ReviewClient({ questions: initial }: Props) {
   const [questions, setQuestions] = useState<PendingQuestion[]>(initial);
   const [approved, setApproved] = useState<Set<number>>(new Set());
   const [rejected, setRejected] = useState<Set<number>>(new Set());
@@ -27,10 +26,26 @@ export function ReviewClient({ questions: initial, userId }: Props) {
 
   const toggle = (idx: number, set: "approve" | "reject") => {
     if (set === "approve") {
-      setApproved((prev) => { const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n; });
+      setApproved((prev) => {
+        const next = new Set(prev);
+        if (next.has(idx)) {
+          next.delete(idx);
+        } else {
+          next.add(idx);
+        }
+        return next;
+      });
       setRejected((prev) => { const n = new Set(prev); n.delete(idx); return n; });
     } else {
-      setRejected((prev) => { const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n; });
+      setRejected((prev) => {
+        const next = new Set(prev);
+        if (next.has(idx)) {
+          next.delete(idx);
+        } else {
+          next.add(idx);
+        }
+        return next;
+      });
       setApproved((prev) => { const n = new Set(prev); n.delete(idx); return n; });
     }
   };
@@ -40,12 +55,10 @@ export function ReviewClient({ questions: initial, userId }: Props) {
     if (toApprove.length === 0) return;
 
     startTransition(async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/admin/review-questions/approve`, {
+      const res = await fetch("/api/admin/review-questions/approve", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_BACKEND_TOKEN ?? ""}`,
-          "X-User-ID": userId,
         },
         body: JSON.stringify({ questions: toApprove }),
       });

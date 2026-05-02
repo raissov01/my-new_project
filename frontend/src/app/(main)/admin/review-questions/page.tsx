@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/server/auth";
+import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { ReviewClient } from "./ReviewClient";
 
@@ -16,10 +16,9 @@ interface PendingQuestion {
 }
 
 export default async function ReviewQuestionsPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  const role = user.user_metadata?.role;
-  if (role !== "teacher" && role !== "admin") redirect("/dashboard");
+  const auth = await requireAdmin();
+  if (auth.redirectTo) redirect(auth.redirectTo);
+  if (!auth.user) redirect("/login");
 
   let questions: PendingQuestion[] = [];
   let files: string[] = [];
@@ -27,7 +26,7 @@ export default async function ReviewQuestionsPage() {
   try {
     const data = await fetchBackendJson<{ questions: PendingQuestion[]; files: string[] }>({
       path: "/api/v1/admin/review-questions",
-      userId: user.id,
+      userId: auth.user.id,
     });
     questions = data.questions ?? [];
     files = data.files ?? [];
@@ -52,7 +51,7 @@ export default async function ReviewQuestionsPage() {
           </p>
         </div>
       ) : (
-        <ReviewClient questions={questions} userId={user.id} />
+        <ReviewClient questions={questions} />
       )}
     </div>
   );

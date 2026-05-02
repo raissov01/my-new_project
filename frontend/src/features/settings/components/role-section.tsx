@@ -14,6 +14,7 @@ export function RoleSection({ currentRole }: { currentRole: ProfileRole }) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const isAdmin = currentRole === "admin";
   const targetRole: ProfileRole = currentRole === "student" ? "teacher" : "student";
 
   function handleConfirm() {
@@ -38,11 +39,11 @@ export function RoleSection({ currentRole }: { currentRole: ProfileRole }) {
               <ShieldCheck className="h-5 w-5 text-emerald-500" />
             )}
             <span className="text-sm font-semibold text-[var(--text-primary)]">
-              {currentRole === "student" ? t("auth.roleStudent") : t("auth.roleTeacher")}
+              {isAdmin ? "Admin" : currentRole === "student" ? t("auth.roleStudent") : t("auth.roleTeacher")}
             </span>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShowModal(true)}>
+        <Button variant="outline" size="sm" onClick={() => setShowModal(true)} disabled={isAdmin}>
           {t("settings.changeRole")}
         </Button>
       </div>

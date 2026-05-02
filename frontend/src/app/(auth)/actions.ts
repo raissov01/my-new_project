@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
-  getRoleRegistrationRedirect,
+  getDefaultAppRoute,
   setAuthToken,
   clearAuthToken,
 } from "@/server/auth";
@@ -15,7 +15,6 @@ import {
   getAdminSessionCookie,
   isAdminCredentials,
 } from "@/lib/shared/auth/admin";
-import type { ProfileRole } from "@/lib/shared/types/database";
 
 export type AuthResult = {
   error: string | null;
@@ -114,7 +113,13 @@ export async function login(formData: FormData): Promise<AuthResult> {
     });
 
     await setAuthToken(resp.token, rememberMe);
-    redirect(resp.user.role === "teacher" ? "/teacher/dashboard" : "/student/dashboard");
+    redirect(
+      resp.user.role === "admin"
+        ? getDefaultAppRoute("admin")
+        : resp.user.role === "teacher"
+          ? "/teacher/dashboard"
+          : "/student/dashboard"
+    );
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err) throw err;
     const msg = err instanceof Error ? err.message : "";

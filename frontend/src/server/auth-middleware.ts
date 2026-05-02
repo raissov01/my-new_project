@@ -17,6 +17,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   const isProtectedRoute =
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
     pathname === "/teacher" ||
@@ -85,6 +87,12 @@ export async function updateSession(request: NextRequest) {
   if (pathname === "/teacher" || pathname === "/student") {
     const url = request.nextUrl.clone();
     url.pathname = `${pathname}/dashboard`;
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/admin") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/dashboard";
     return NextResponse.redirect(url);
   }
 
