@@ -21,6 +21,7 @@ import { useQuizSounds } from "@/features/quizzes/use-sounds";
 import { AnswerAnimation } from "@/features/quizzes/components/answer-animation";
 import { usePowerUps, type PowerUpKey } from "@/features/quizzes/use-power-ups";
 import { PowerUpBar } from "@/features/quizzes/components/power-up-bar";
+import { trackQuizUsageEvent } from "@/features/quizzes/analytics";
 import type {
   ComprehensionData,
   ComprehensionSubQuestion,
@@ -196,6 +197,7 @@ export function PlayQuizClient({
 
   // Restore saved progress on mount (play mode only — practice is ephemeral)
   const savedProgress = !isPractice ? loadProgress(quiz.id) : null;
+  const restoredProgress = Boolean(savedProgress);
 
   const [currentIdx, setCurrentIdx] = useState(savedProgress?.currentIdx ?? 0);
   const [phase, setPhase] = useState<Phase>("asking");
@@ -237,12 +239,15 @@ export function PlayQuizClient({
   // Set to true when the user confirms exit so submitAttempt's router.push
   // doesn't race against the exit navigation.
   const isExitingRef = useRef(false);
+  const finishedRef = useRef(false);
+  const abandonedRef = useRef(false);
 
   // Guest attempt counter — read once on mount; gate renders before the quiz.
   const [guestAttemptsUsed] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
     return parseInt(localStorage.getItem(GUEST_ATTEMPTS_KEY) ?? "0", 10);
   });
+
   // Refs for values read inside recordAnswer's stable closure. Using refs
   // avoids adding fast-changing state to the useCallback dep array (which
   // would recreate the callback on every answer and break timing).
@@ -250,6 +255,27 @@ export function PlayQuizClient({
   useEffect(() => { streakRef.current = streak; }, [streak]);
   const currentIdxRef = useRef(currentIdx);
   useEffect(() => { currentIdxRef.current = currentIdx; }, [currentIdx]);
+
+  const trackAbandoned = useCallback(
+    (reason: string) => {
+      if (isPractice || finishedRef.current || abandonedRef.current || answersRef.current.length === 0) {
+        return;
+      }
+      abandonedRef.current = true;
+      trackQuizUsageEvent({
+        quizId: quiz.id,
+        eventType: "quiz_abandoned",
+        metadata: {
+          mode,
+          guest: isGuest,
+          answeredCount: answersRef.current.length,
+          currentIndex: currentIdxRef.current,
+          reason,
+        },
+      });
+    },
+    [isPractice, quiz.id, mode, isGuest]
+  );
 
   const question = quiz.questions[currentIdx];
   const questionType: QuizQuestionType = question.questionType ?? "mcq";
@@ -348,6 +374,19 @@ export function PlayQuizClient({
         // storage unavailable — proceed anyway
       }
       if (!isExitingRef.current) {
+        finishedRef.current = true;
+        trackQuizUsageEvent({
+          quizId: quiz.id,
+          eventType: "quiz_finished",
+          metadata: {
+            mode,
+            guest: true,
+            score: correct,
+            totalQuestions: total,
+            percentage: pct,
+            timeSpent,
+          },
+        });
         router.push(`/quizzes/${encodeURIComponent(quiz.id)}/results?guest=1`);
       }
       return;
@@ -376,6 +415,17 @@ export function PlayQuizClient({
       }
       // Don't navigate to results if the user has already chosen to exit.
       if (isExitingRef.current) return;
+      finishedRef.current = true;
+      trackQuizUsageEvent({
+        quizId: quiz.id,
+        eventType: "quiz_finished",
+        attemptId: data.id,
+        metadata: {
+          mode,
+          guest: false,
+          answeredCount: answersRef.current.length,
+        },
+      });
       clearProgress(quiz.id);
       router.push(
         `/quizzes/${encodeURIComponent(quiz.id)}/results?attempt=${encodeURIComponent(data.id)}`
@@ -384,7 +434,7 @@ export function PlayQuizClient({
       setSubmitError(t("quiz.play.submitFailed"));
       setPhase("revealed");
     }
-  }, [quiz.id, quiz.questions, router, t, sounds, isGuest]);
+  }, [quiz.id, quiz.questions, router, t, sounds, isGuest, mode]);
 
   const advance = useCallback(() => {
     clearAdvanceTimer();
@@ -439,6 +489,19 @@ export function PlayQuizClient({
         orderAnswer: record.orderAnswer,
         timeSpent,
       });
+      trackQuizUsageEvent({
+        quizId: quiz.id,
+        eventType: "question_answered",
+        questionId: question.id,
+        metadata: {
+          mode,
+          guest: isGuest,
+          questionIndex: currentIdxRef.current,
+          questionType,
+          isCorrect,
+          timeSpent,
+        },
+      });
 
       // Persist progress so a page refresh doesn't lose answered questions.
       // Practice mode is ephemeral — no persistence needed.
@@ -491,7 +554,7 @@ export function PlayQuizClient({
         advance();
       }, 1800);
     },
-    [advance, phase, question.id, sounds, powerUps, isPractice, quiz.id]
+    [advance, phase, question.id, sounds, powerUps, isPractice, quiz.id, mode, isGuest, questionType]
   );
 
   const recordMcq = useCallback(
@@ -770,12 +833,50 @@ export function PlayQuizClient({
       quizStartRef.current = Date.now();
     }
     questionStartRef.current = Date.now();
+    if (!isPractice) {
+      trackQuizUsageEvent({
+        quizId: quiz.id,
+        eventType: "quiz_started",
+        metadata: {
+          mode,
+          guest: isGuest,
+          restored: restoredProgress,
+          totalQuestions,
+        },
+      });
+    }
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
+      trackAbandoned("unmount");
     };
-  }, []);
+  }, [isPractice, quiz.id, mode, isGuest, restoredProgress, totalQuestions, trackAbandoned]);
+
+  useEffect(() => {
+    const handlePageHide = () => trackAbandoned("pagehide");
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, [trackAbandoned]);
+
+  useEffect(() => {
+    if (isPractice) return;
+    const interval = setInterval(() => {
+      if (finishedRef.current || abandonedRef.current) return;
+      trackQuizUsageEvent({
+        quizId: quiz.id,
+        eventType: "heartbeat",
+        metadata: {
+          mode,
+          guest: isGuest,
+          currentIndex: currentIdxRef.current,
+          answeredCount: answersRef.current.length,
+        },
+      });
+    }, 30_000);
+
+    return () => clearInterval(interval);
+  }, [isPractice, quiz.id, mode, isGuest]);
 
   // Keyboard shortcuts: 1-4 / A-D for MCQ, T/F or 1/2 for TrueFalse,
   // Space/Enter to advance after reveal, Enter submits fill_blank via form.
@@ -1253,6 +1354,7 @@ export function PlayQuizClient({
                 size="sm"
                 onClick={() => {
                   isExitingRef.current = true;
+                  trackAbandoned("exit_confirmed");
                   clearAdvanceTimer();
                   clearProgress(quiz.id);
                   router.push(`/quizzes/${encodeURIComponent(quiz.id)}`);

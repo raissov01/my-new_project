@@ -17,6 +17,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { formatDate } from "@/lib/shared/utils";
 import { getQuizById, getQuizStats, type QuestionStat } from "@/server/services/quizzes";
 import { ShareQuizButton } from "@/features/quizzes/components/share-quiz-button";
+import { QuizPageTracker } from "@/features/quizzes/components/quiz-page-tracker";
 
 interface QuizDetailPageProps {
   params: Promise<{ id: string }>;
@@ -65,6 +66,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
 
   return (
     <div className="page-shell py-6 sm:py-10">
+      <QuizPageTracker quizId={quiz.id} />
       {/* Page head */}
       <div className="nd-page-head nd-reveal nd-d1">
         <div style={{ minWidth: 0 }}>
