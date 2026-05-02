@@ -138,7 +138,7 @@ export function AdminSidebar() {
 
         <div className="nd-sidebar-group">
           <Link
-            href="/student/dashboard"
+            href="/quizzes"
             onClick={onLinkClick}
             className="nd-sidebar-link"
           >
