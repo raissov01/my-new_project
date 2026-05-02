@@ -93,11 +93,11 @@ export function AdminSidebar() {
   const overviewItems: NavItem[] = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/admin/live", label: "Live activity", icon: Activity, badge: "Soon" },
+    { href: "/admin/live", label: "Live activity", icon: Activity },
   ];
 
   const manageItems: NavItem[] = [
-    { href: "/admin/quizzes", label: "Quizzes", icon: ListChecks, badge: "Soon" },
+    { href: "/admin/quizzes", label: "Quizzes", icon: ListChecks },
     { href: "/admin/users", label: "Users", icon: Users, badge: "Soon" },
     { href: "/admin/review-questions", label: "Review queue", icon: ClipboardCheck },
     { href: "/admin/audit-log", label: "Audit log", icon: ScrollText, badge: "Soon" },
