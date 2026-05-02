@@ -51,6 +51,7 @@ type Dependencies struct {
 	AdminUsers         *AdminUsersHandler
 	AdminQuizzes       *AdminQuizzesHandler
 	AdminAuditLog      *AdminAuditLogHandler
+	AdminLiveWS        *AdminLiveWSHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
 	Billing            *BillingHandler
@@ -358,6 +359,11 @@ func RegisterRoutes(router *gin.Engine) {
 
 	adminAlias := router.Group("/api/admin")
 	registerAdminRoutes(adminAlias)
+
+	// Admin live-activity WebSocket. Browsers cannot set custom headers
+	// on WS upgrade, so this endpoint authenticates via the swr_token
+	// cookie itself instead of going through InternalAuth + RequireSuperadmin.
+	api.GET("/admin/live-ws", wrapHTTP(deps.AdminLiveWS.Connect))
 
 	// Quiz read route — allows guests (empty X-User-ID) so unauthenticated
 	// visitors can fetch public quiz data before signing up.

@@ -7,17 +7,19 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/midoriya/flashlearn-backend/internal/hub"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
 )
 
 type QuizUsageEventHandler struct {
-	db *gorm.DB
+	db      *gorm.DB
+	liveHub *hub.AdminLiveHub
 }
 
-func NewQuizUsageEvent(db *gorm.DB) *QuizUsageEventHandler {
-	return &QuizUsageEventHandler{db: db}
+func NewQuizUsageEvent(db *gorm.DB, liveHub *hub.AdminLiveHub) *QuizUsageEventHandler {
+	return &QuizUsageEventHandler{db: db, liveHub: liveHub}
 }
 
 var allowedQuizUsageEvents = map[string]bool{
@@ -100,7 +102,58 @@ func (h *QuizUsageEventHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Best-effort live broadcast to subscribed admin WebSockets. Skip
+	// heartbeats — they would dominate the feed without adding signal.
+	// Silent on enrichment errors: the polling endpoint will still see
+	// the row when the next admin refresh fires.
+	if h.liveHub != nil && eventType != "heartbeat" {
+		go h.publishLive(event)
+	}
+
 	writeJSON(w, http.StatusCreated, map[string]any{"ok": true, "id": event.ID})
+}
+
+// publishLive enriches the freshly-inserted event with the actor's
+// username/email and the quiz's title (so admins see "alice on Geography
+// 101" rather than just two UUIDs) and pushes it through the hub.
+func (h *QuizUsageEventHandler) publishLive(e models.QuizUsageEvent) {
+	type enriched struct {
+		Username  *string `gorm:"column:username"`
+		Email     *string `gorm:"column:email"`
+		QuizTitle *string `gorm:"column:quiz_title"`
+	}
+	var info enriched
+	// We deliberately do not propagate the request context — that one is
+	// cancelled the moment we return the HTTP response. Using a fresh
+	// context with a tight timeout keeps this best-effort.
+	if err := h.db.Raw(`
+		SELECT u.username, u.email, q.title AS quiz_title
+		FROM (SELECT 1 AS one) x
+		LEFT JOIN users   u ON u.id::text = ?
+		LEFT JOIN quizzes q ON q.id::text = ?
+	`, derefOrEmpty(e.UserID), derefOrEmpty(e.QuizID)).Scan(&info).Error; err != nil {
+		// Soft fail — push the event without enrichment.
+		info = enriched{}
+	}
+	h.liveHub.Publish(hub.AdminLiveEvent{
+		ID:        e.ID,
+		EventType: e.EventType,
+		CreatedAt: e.CreatedAt,
+		SessionID: e.SessionID,
+		UserID:    e.UserID,
+		Username:  info.Username,
+		Email:     info.Email,
+		QuizID:    e.QuizID,
+		QuizTitle: info.QuizTitle,
+		IPAddress: e.IPAddress,
+	})
+}
+
+func derefOrEmpty(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
 }
 
 func nullableTrimmed(value string) *string {

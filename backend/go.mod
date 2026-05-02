@@ -3,6 +3,7 @@ module github.com/midoriya/flashlearn-backend
 go 1.25.0
 
 require (
+	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/coder/websocket v1.8.14
 	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -13,11 +14,11 @@ require (
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/rs/cors v1.11.1
 	golang.org/x/oauth2 v0.21.0
+	nhooyr.io/websocket v1.8.17
 )
 
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
-	github.com/SherClockHolmes/webpush-go v1.4.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect

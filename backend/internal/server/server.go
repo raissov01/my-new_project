@@ -18,6 +18,7 @@ import (
 	"github.com/midoriya/flashlearn-backend/internal/database"
 	"github.com/midoriya/flashlearn-backend/internal/email"
 	"github.com/midoriya/flashlearn-backend/internal/handler"
+	"github.com/midoriya/flashlearn-backend/internal/hub"
 	"github.com/midoriya/flashlearn-backend/internal/repository"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 	"github.com/rs/cors"
@@ -166,6 +167,8 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 
 	emailSender := email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL)
 
+	adminLiveHub := hub.NewAdminLiveHub()
+
 	return handler.Dependencies{
 		InternalAPIToken:   cfg.InternalAPIToken,
 		JWTSecret:          cfg.JWTSecret,
@@ -181,7 +184,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Progress:           handler.NewProgress(progressSvc, cfg.Environment),
 		Flashcard:          handler.NewFlashcard(flashcardSvc, cfg.Environment),
 		Quiz:               handler.NewQuiz(quizSvc, cfg.Environment),
-		QuizUsageEvent:     handler.NewQuizUsageEvent(gormDB),
+		QuizUsageEvent:     handler.NewQuizUsageEvent(gormDB, adminLiveHub),
 		Challenge:          handler.NewChallengeHandler(challengeSvc, cfg.Environment),
 		ProfileWrite:       handler.NewProfileWrite(classroomRepo, cfg.Environment),
 		AI:                 handler.NewAI(cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.OpenAIModelMiniFallback, cfg.AIRequestTimeout, cfg.MaxUploadBytes),
@@ -207,6 +210,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		AdminUsers:         handler.NewAdminUsers(gormDB),
 		AdminQuizzes:       handler.NewAdminQuizzes(gormDB),
 		AdminAuditLog:      handler.NewAdminAuditLog(gormDB),
+		AdminLiveWS:        handler.NewAdminLiveWS(gormDB, adminLiveHub, cfg.JWTSecret),
 		DailyNews:          handler.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		Mining:             handler.NewMining(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		Billing:            handler.NewBilling(gormDB, cfg.LemonSqueezyWebhookSecret, cfg.LemonSqueezyCheckoutURL),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Activity,
   CheckCircle2,
@@ -11,6 +11,8 @@ import {
   RotateCw,
   Pause,
   Play,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 
 interface LiveEvent {
@@ -26,7 +28,12 @@ interface LiveEvent {
   ip_address: string | null;
 }
 
-const REFRESH_MS = 10_000;
+type WSMessage =
+  | { type: "hello"; sent_at: string }
+  | { type: "ping"; sent_at: string }
+  | { type: "event"; event: LiveEvent };
+
+const MAX_EVENTS = 200;
 const RANGES = [5, 15, 30, 60] as const;
 
 const EVENT_META: Record<
@@ -86,6 +93,8 @@ function actorLabel(e: LiveEvent): { label: string; isGuest: boolean } {
   return { label: "anonymous", isGuest: true };
 }
 
+type ConnState = "connecting" | "open" | "closed";
+
 export function LiveFeedClient() {
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [minutes, setMinutes] = useState<(typeof RANGES)[number]>(5);
@@ -93,8 +102,13 @@ export function LiveFeedClient() {
   const [error, setError] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [connState, setConnState] = useState<ConnState>("connecting");
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
 
-  const fetchEvents = useCallback(async () => {
+  // Initial backfill via the polling endpoint — gives us events from
+  // before we connected. After this, the WebSocket pushes live updates.
+  const fetchInitial = useCallback(async () => {
     try {
       const res = await fetch(
         `/api/admin/quizizz/analytics/live?minutes=${minutes}&limit=200`,
@@ -114,22 +128,90 @@ export function LiveFeedClient() {
     }
   }, [minutes]);
 
-  // Initial load + polling
-  useEffect(() => {
-    fetchEvents();
-    if (paused) return;
-    const id = setInterval(fetchEvents, REFRESH_MS);
-    return () => clearInterval(id);
-  }, [fetchEvents, paused]);
+  // Cutoff for trimming events older than the selected range. Recomputed
+  // on each render so the moving window keeps tightening as time passes.
+  const cutoffMs = now - minutes * 60_000;
 
-  // Tick the clock so relative times update without a refetch
+  // WebSocket lifecycle: connect once, reconnect with backoff on close.
+  useEffect(() => {
+    if (paused) return;
+
+    let attempt = 0;
+    let cancelled = false;
+
+    function connect() {
+      if (cancelled) return;
+      const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const url = `${proto}//${window.location.host}/api/v1/admin/live-ws`;
+      setConnState("connecting");
+
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        attempt = 0;
+        setConnState("open");
+      };
+
+      ws.onmessage = (msg) => {
+        let parsed: WSMessage;
+        try {
+          parsed = JSON.parse(msg.data) as WSMessage;
+        } catch {
+          return;
+        }
+        if (parsed.type === "event") {
+          setEvents((prev) => {
+            // De-dupe (the same event ID could arrive via the initial
+            // backfill and also via the WS race window).
+            if (prev.some((e) => e.id === parsed.event.id)) return prev;
+            return [parsed.event, ...prev].slice(0, MAX_EVENTS);
+          });
+        }
+      };
+
+      ws.onerror = () => {
+        // Don't surface an error toast; onclose will run and trigger a reconnect.
+      };
+
+      ws.onclose = () => {
+        wsRef.current = null;
+        setConnState("closed");
+        if (cancelled) return;
+        // Exponential backoff: 1s, 2s, 4s, 8s … capped at 15s.
+        const delay = Math.min(1000 * 2 ** attempt, 15_000);
+        attempt += 1;
+        reconnectTimerRef.current = window.setTimeout(connect, delay);
+      };
+    }
+
+    fetchInitial();
+    connect();
+
+    return () => {
+      cancelled = true;
+      if (reconnectTimerRef.current != null) {
+        window.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [paused, fetchInitial]);
+
+  // Tick the clock so relative times update and the cutoff slides.
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const guestCount = events.filter((e) => !e.user_id).length;
-  const userCount = events.length - guestCount;
+  const visibleEvents = events.filter(
+    (e) => new Date(e.created_at).getTime() >= cutoffMs,
+  );
+  const guestCount = visibleEvents.filter((e) => !e.user_id).length;
+  const userCount = visibleEvents.length - guestCount;
 
   return (
     <div className="space-y-4">
@@ -157,8 +239,9 @@ export function LiveFeedClient() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <ConnectionBadge state={connState} paused={paused} />
           <span className="tabular-nums">
-            {events.length} events · {userCount} signed-in · {guestCount} guest
+            {visibleEvents.length} events · {userCount} signed-in · {guestCount} guest
           </span>
           <button
             type="button"
@@ -171,11 +254,12 @@ export function LiveFeedClient() {
           </button>
           <button
             type="button"
-            onClick={fetchEvents}
+            onClick={fetchInitial}
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
+            title="Re-fetch the last N minutes from the database"
           >
             <RotateCw className={"h-3.5 w-3.5 " + (loading ? "animate-spin" : "")} />
-            Refresh
+            Backfill
           </button>
         </div>
       </div>
@@ -186,7 +270,7 @@ export function LiveFeedClient() {
         </div>
       )}
 
-      {!loading && events.length === 0 && !error && (
+      {!loading && visibleEvents.length === 0 && !error && (
         <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-10 text-center">
           <Activity className="mx-auto h-8 w-8 text-[var(--text-secondary)]" />
           <p className="mt-3 text-sm text-[var(--text-secondary)]">
@@ -195,10 +279,10 @@ export function LiveFeedClient() {
         </div>
       )}
 
-      {events.length > 0 && (
+      {visibleEvents.length > 0 && (
         <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)]">
           <ul className="divide-y divide-[var(--border)]">
-            {events.map((e) => {
+            {visibleEvents.map((e) => {
               const meta = EVENT_META[e.event_type] ?? fallbackMeta(e.event_type);
               const Icon = meta.icon;
               const actor = actorLabel(e);
@@ -245,5 +329,41 @@ export function LiveFeedClient() {
         </div>
       )}
     </div>
+  );
+}
+
+function ConnectionBadge({ state, paused }: { state: ConnState; paused: boolean }) {
+  if (paused) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+        paused
+      </span>
+    );
+  }
+  if (state === "open") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        </span>
+        <Wifi className="h-2.5 w-2.5" />
+        live
+      </span>
+    );
+  }
+  if (state === "connecting") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+        <Wifi className="h-2.5 w-2.5" />
+        connecting…
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-700">
+      <WifiOff className="h-2.5 w-2.5" />
+      offline · retrying
+    </span>
   );
 }
