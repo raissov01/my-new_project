@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, LogOut, Settings, UserCircle2 } from "lucide-react";
+import { ChevronDown, LogOut, Settings, ShieldCheck, UserCircle2 } from "lucide-react";
 import { logout } from "@/app/(auth)/actions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { ProfileAvatar } from "@/features/profile/components/profile-avatar";
@@ -81,6 +81,14 @@ export function AvatarMenu() {
 
   const username = fallback?.username ?? "User";
   const avatarUrl = fallback?.avatarUrl ?? null;
+  const role =
+    "user_metadata" in user &&
+    typeof user.user_metadata === "object" &&
+    user.user_metadata &&
+    typeof (user.user_metadata as { role?: unknown }).role === "string"
+      ? ((user.user_metadata as { role: string }).role)
+      : null;
+  const isAdmin = role === "admin";
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -125,6 +133,19 @@ export function AvatarMenu() {
             {t("nav.settings")}
           </span>
         </Link>
+
+        {isAdmin && (
+          <Link
+            href="/admin/dashboard"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm font-semibold text-amber-700 transition-colors hover:bg-amber-500/10 dark:text-amber-300"
+          >
+            <span className="flex items-center gap-3">
+              <ShieldCheck className="h-4 w-4" />
+              Admin panel
+            </span>
+          </Link>
+        )}
       </div>
 
       <div className="mt-3 rounded-[18px] border border-[var(--line)] bg-[var(--paper-2)] p-3">
