@@ -27,6 +27,7 @@ type MeResponse = {
     avatarUrl: string | null;
     role: string;
     plan: "free" | "pro";
+    isSuperadmin?: boolean;
   } | null;
 };
 
@@ -78,6 +79,7 @@ export function useAuth() {
               username: data.user.username,
               avatar_url: data.user.avatarUrl,
               role: data.user.role,
+              is_superadmin: data.user.isSuperadmin ?? false,
             },
           });
         } else {

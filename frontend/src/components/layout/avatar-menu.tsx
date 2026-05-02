@@ -81,14 +81,13 @@ export function AvatarMenu() {
 
   const username = fallback?.username ?? "User";
   const avatarUrl = fallback?.avatarUrl ?? null;
-  const role =
-    "user_metadata" in user &&
-    typeof user.user_metadata === "object" &&
-    user.user_metadata &&
-    typeof (user.user_metadata as { role?: unknown }).role === "string"
-      ? ((user.user_metadata as { role: string }).role)
-      : null;
-  const isAdmin = role === "admin";
+  const meta =
+    "user_metadata" in user && typeof user.user_metadata === "object" && user.user_metadata
+      ? (user.user_metadata as { role?: unknown; is_superadmin?: unknown })
+      : {};
+  const role = typeof meta.role === "string" ? meta.role : null;
+  const isSuperadmin = meta.is_superadmin === true;
+  const isAdmin = role === "admin" || isSuperadmin;
 
   async function handleLogout() {
     setLoggingOut(true);

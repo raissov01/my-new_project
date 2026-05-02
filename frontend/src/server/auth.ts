@@ -63,7 +63,7 @@ const getAuthTokenCached = cache(async (): Promise<string | null> => {
   return cookieStore.get(TOKEN_COOKIE)?.value ?? null;
 });
 
-const getCurrentBackendUserCached = cache(async (): Promise<BackendUser | null> => {
+export const getCurrentBackendUser = cache(async (): Promise<BackendUser | null> => {
   if (DEV_MODE) {
     return {
       id: DEV_USER.id,
@@ -128,7 +128,7 @@ export async function clearAuthToken() {
 }
 
 export async function getCurrentUser(): Promise<AppUser | null> {
-  const user = await getCurrentBackendUserCached();
+  const user = await getCurrentBackendUser();
   if (!user) {
     return null;
   }
@@ -154,7 +154,7 @@ export async function getCurrentProfile(
     return null;
   }
 
-  const backendUser = await getCurrentBackendUserCached();
+  const backendUser = await getCurrentBackendUser();
   if (!backendUser) {
     return null;
   }
@@ -243,7 +243,7 @@ export async function requireSuperadmin() {
     return { user: null, profile: null, isSuperadmin: false, redirectTo: "/login" as const };
   }
 
-  const backendUser = await getCurrentBackendUserCached();
+  const backendUser = await getCurrentBackendUser();
   const profile = await getCurrentProfile(user);
 
   if (!backendUser?.isSuperadmin) {

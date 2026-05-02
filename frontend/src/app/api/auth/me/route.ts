@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser, getCurrentProfile } from "@/server/auth";
+import { getCurrentUser, getCurrentProfile, getCurrentBackendUser } from "@/server/auth";
 
 /**
  * GET /api/auth/me
@@ -18,6 +18,7 @@ export async function GET() {
     }
 
     const profile = await getCurrentProfile(user);
+    const backend = await getCurrentBackendUser();
 
     return NextResponse.json({
       user: {
@@ -28,6 +29,7 @@ export async function GET() {
         avatarUrl: profile?.avatar_url ?? null,
         role: profile?.role ?? user.user_metadata?.role ?? "student",
         plan: user.plan ?? "free",
+        isSuperadmin: backend?.isSuperadmin ?? false,
       },
     });
   } catch {
