@@ -5,6 +5,7 @@ import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { AdminPageHeader } from "../../_components/coming-soon";
 import { LineChart, type SeriesDef } from "../../_components/line-chart";
+import { InviteLinkActions } from "./InviteLinkActions";
 
 export const metadata = { title: "Quiz analytics — Admin" };
 export const dynamic = "force-dynamic";
@@ -289,6 +290,7 @@ function InviteLinksTable({ links }: { links: InviteLinkStat[] }) {
               <th className="px-5 py-2 text-right font-medium">Finishes</th>
               <th className="px-5 py-2 text-left font-medium">Status</th>
               <th className="px-5 py-2 text-left font-medium">Last seen</th>
+              <th className="px-5 py-2 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -325,6 +327,9 @@ function InviteLinksTable({ links }: { links: InviteLinkStat[] }) {
                 </td>
                 <td className="px-5 py-2 font-mono text-xs text-[var(--text-secondary)]">
                   {l.last_seen_at.slice(0, 16).replace("T", " ")}
+                </td>
+                <td className="px-5 py-2">
+                  <InviteLinkActions token={l.token} />
                 </td>
               </tr>
             ))}
