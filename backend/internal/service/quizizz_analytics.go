@@ -45,6 +45,20 @@ type QuizizzDailyStat struct {
 	CompletionRate float64 `json:"completion_rate"`
 }
 
+// LiveActivityEvent is one row in the live-activity feed.
+type LiveActivityEvent struct {
+	ID         string    `json:"id" gorm:"column:id"`
+	EventType  string    `json:"event_type" gorm:"column:event_type"`
+	CreatedAt  time.Time `json:"created_at" gorm:"column:created_at"`
+	SessionID  *string   `json:"session_id,omitempty" gorm:"column:session_id"`
+	UserID     *string   `json:"user_id,omitempty" gorm:"column:user_id"`
+	Username   *string   `json:"username,omitempty" gorm:"column:username"`
+	Email      *string   `json:"email,omitempty" gorm:"column:email"`
+	QuizID     *string   `json:"quiz_id,omitempty" gorm:"column:quiz_id"`
+	QuizTitle  *string   `json:"quiz_title,omitempty" gorm:"column:quiz_title"`
+	IPAddress  *string   `json:"ip_address,omitempty" gorm:"column:ip_address"`
+}
+
 // activeUserCountSQL counts distinct "people" inside a window using
 // user_id-priority dedup: any session that ever logged in is collapsed
 // into the user_id; only never-logged-in sessions stay distinct on session_id.
@@ -234,4 +248,51 @@ func (s *QuizizzAnalyticsService) Daily(ctx context.Context, days int) ([]Quiziz
 
 func round2(x float64) float64 {
 	return float64(int(x*100+0.5)) / 100
+}
+
+// LiveActivity returns the most recent quiz_usage_events from the last
+// `minutes` minutes, with the actor's username/email and quiz title
+// joined in for display. Heartbeats are excluded — they would dominate
+// the feed without adding signal.
+func (s *QuizizzAnalyticsService) LiveActivity(ctx context.Context, minutes int, limit int) ([]LiveActivityEvent, error) {
+	if minutes <= 0 {
+		minutes = 5
+	}
+	if minutes > 60 {
+		minutes = 60
+	}
+	if limit <= 0 {
+		limit = 200
+	}
+	if limit > 500 {
+		limit = 500
+	}
+
+	since := time.Now().UTC().Add(-time.Duration(minutes) * time.Minute)
+
+	var rows []LiveActivityEvent
+	err := s.db.WithContext(ctx).Raw(`
+		SELECT
+		  e.id,
+		  e.event_type,
+		  e.created_at,
+		  e.session_id,
+		  e.user_id::text AS user_id,
+		  u.username,
+		  u.email,
+		  e.quiz_id::text AS quiz_id,
+		  q.title AS quiz_title,
+		  e.ip_address
+		FROM quiz_usage_events e
+		LEFT JOIN users   u ON u.id = e.user_id
+		LEFT JOIN quizzes q ON q.id = e.quiz_id
+		WHERE e.created_at >= ?
+		  AND e.event_type <> 'heartbeat'
+		ORDER BY e.created_at DESC
+		LIMIT ?
+	`, since, limit).Scan(&rows).Error
+	if err != nil {
+		return nil, fmt.Errorf("live activity: %w", err)
+	}
+	return rows, nil
 }

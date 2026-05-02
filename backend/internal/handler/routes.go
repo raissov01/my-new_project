@@ -340,6 +340,7 @@ func RegisterRoutes(router *gin.Engine) {
 		// Quizizz analytics
 		g.GET("/quizizz/analytics/summary", wrapHTTP(deps.AdminAnalytics.Summary))
 		g.GET("/quizizz/analytics/daily", wrapHTTP(deps.AdminAnalytics.Daily))
+		g.GET("/quizizz/analytics/live", wrapHTTP(deps.AdminAnalytics.LiveActivity))
 		// Users
 		g.GET("/users", wrapHTTP(deps.AdminUsers.List))
 		g.PATCH("/users/:id", wrapHTTP(deps.AdminUsers.Patch))

@@ -1,16 +1,22 @@
-import { Activity } from "lucide-react";
-import { AdminPageHeader, ComingSoon } from "../_components/coming-soon";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/server/auth";
+import { AdminPageHeader } from "../_components/coming-soon";
+import { LiveFeedClient } from "./LiveFeedClient";
 
 export const metadata = { title: "Live activity — Admin" };
+export const dynamic = "force-dynamic";
 
-export default function AdminLivePage() {
+export default async function AdminLivePage() {
+  const auth = await requireAdmin();
+  if (auth.redirectTo) redirect(auth.redirectTo);
+
   return (
     <div className="space-y-6">
-      <AdminPageHeader title="Live activity" />
-      <ComingSoon
-        icon={Activity}
-        body="A real-time feed of who is currently on the site, opening quizzes, and answering questions. Auto-refreshes every 10 seconds."
+      <AdminPageHeader
+        title="Live activity"
+        description="Last 5 minutes of quiz events, refreshed every 10 seconds."
       />
+      <LiveFeedClient />
     </div>
   );
 }
