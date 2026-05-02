@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import {
   BarChart2,
   Clock3,
@@ -64,9 +65,12 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
 
   const stats = quiz.isAuthor ? await getQuizStats(id) : null;
 
+  const cookieStore = await cookies();
+  const inviteToken = cookieStore.get(`quiz_invite_${quiz.id}`)?.value ?? null;
+
   return (
     <div className="page-shell py-6 sm:py-10">
-      <QuizPageTracker quizId={quiz.id} />
+      <QuizPageTracker quizId={quiz.id} inviteToken={inviteToken} />
       {/* Page head */}
       <div className="nd-page-head nd-reveal nd-d1">
         <div style={{ minWidth: 0 }}>

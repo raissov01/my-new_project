@@ -457,3 +457,116 @@ func (h *AdminQuizzesHandler) Analytics(w http.ResponseWriter, r *http.Request) 
 func roundPct(x float64) float64 {
 	return float64(int(x*100+0.5)) / 100
 }
+
+// ── Invite link analytics ──────────────────────────────────────────────────
+
+type inviteLinkStat struct {
+	Token            string  `json:"token"`
+	Opens            int     `json:"opens"`
+	DistinctVisitors int     `json:"distinct_visitors"`
+	SignedInCount    int     `json:"signed_in_count"`
+	GuestCount       int     `json:"guest_count"`
+	Starts           int     `json:"starts"`
+	Finishes         int     `json:"finishes"`
+	UseCount         *int    `json:"use_count,omitempty"`
+	MaxUses          *int    `json:"max_uses,omitempty"`
+	IsActive         *bool   `json:"is_active,omitempty"`
+	CreatedAt        *string `json:"created_at,omitempty"`
+	LastSeenAt       string  `json:"last_seen_at"`
+}
+
+type inviteLinksResponse struct {
+	QuizID string           `json:"quiz_id"`
+	Links  []inviteLinkStat `json:"links"`
+}
+
+// InviteLinks handles GET /admin/quizzes/:id/invite-links — returns
+// per-token open/visitor/conversion counts pulled from quiz_usage_events,
+// optionally enriched with the row from quiz_invite_links if it still exists.
+func (h *AdminQuizzesHandler) InviteLinks(w http.ResponseWriter, r *http.Request) {
+	quizID := strings.TrimSpace(r.PathValue("id"))
+	if quizID == "" {
+		writeError(w, http.StatusBadRequest, "missing quiz id", nil)
+		return
+	}
+
+	type row struct {
+		Token            string     `gorm:"column:token"`
+		Opens            int        `gorm:"column:opens"`
+		DistinctVisitors int        `gorm:"column:distinct_visitors"`
+		SignedInCount    int        `gorm:"column:signed_in_count"`
+		GuestCount       int        `gorm:"column:guest_count"`
+		Starts           int        `gorm:"column:starts"`
+		Finishes         int        `gorm:"column:finishes"`
+		UseCount         *int       `gorm:"column:use_count"`
+		MaxUses          *int       `gorm:"column:max_uses"`
+		IsActive         *bool      `gorm:"column:is_active"`
+		CreatedAt        *time.Time `gorm:"column:created_at"`
+		LastSeenAt       time.Time  `gorm:"column:last_seen_at"`
+	}
+
+	var rows []row
+	err := h.db.WithContext(r.Context()).Raw(`
+		WITH tokenized AS (
+		  SELECT
+		    e.metadata->>'inviteToken'                                   AS token,
+		    e.event_type                                                 AS event_type,
+		    COALESCE(e.user_id::text, e.session_id)                      AS bucket,
+		    (e.user_id IS NOT NULL)                                      AS is_signed_in,
+		    e.created_at                                                 AS created_at
+		  FROM quiz_usage_events e
+		  WHERE e.quiz_id = ?
+		    AND e.metadata ? 'inviteToken'
+		    AND COALESCE(e.metadata->>'inviteToken', '') <> ''
+		)
+		SELECT
+		  t.token                                                       AS token,
+		  COUNT(*) FILTER (WHERE t.event_type = 'quiz_page_opened')     AS opens,
+		  COUNT(DISTINCT t.bucket)                                      AS distinct_visitors,
+		  COUNT(DISTINCT t.bucket) FILTER (WHERE t.is_signed_in)        AS signed_in_count,
+		  COUNT(DISTINCT t.bucket) FILTER (WHERE NOT t.is_signed_in)    AS guest_count,
+		  COUNT(*) FILTER (WHERE t.event_type = 'quiz_started')         AS starts,
+		  COUNT(*) FILTER (WHERE t.event_type = 'quiz_finished')        AS finishes,
+		  l.use_count                                                   AS use_count,
+		  l.max_uses                                                    AS max_uses,
+		  l.is_active                                                   AS is_active,
+		  l.created_at                                                  AS created_at,
+		  MAX(t.created_at)                                             AS last_seen_at
+		FROM tokenized t
+		LEFT JOIN quiz_invite_links l ON l.id::text = t.token
+		GROUP BY t.token, l.use_count, l.max_uses, l.is_active, l.created_at
+		ORDER BY opens DESC, last_seen_at DESC
+	`, quizID).Scan(&rows).Error
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load invite link analytics", err)
+		return
+	}
+
+	out := make([]inviteLinkStat, 0, len(rows))
+	for _, r := range rows {
+		var createdAt *string
+		if r.CreatedAt != nil {
+			s := r.CreatedAt.UTC().Format("2006-01-02T15:04:05Z")
+			createdAt = &s
+		}
+		out = append(out, inviteLinkStat{
+			Token:            r.Token,
+			Opens:            r.Opens,
+			DistinctVisitors: r.DistinctVisitors,
+			SignedInCount:    r.SignedInCount,
+			GuestCount:       r.GuestCount,
+			Starts:           r.Starts,
+			Finishes:         r.Finishes,
+			UseCount:         r.UseCount,
+			MaxUses:          r.MaxUses,
+			IsActive:         r.IsActive,
+			CreatedAt:        createdAt,
+			LastSeenAt:       r.LastSeenAt.UTC().Format("2006-01-02T15:04:05Z"),
+		})
+	}
+
+	writeJSON(w, http.StatusOK, inviteLinksResponse{
+		QuizID: quizID,
+		Links:  out,
+	})
+}

@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Globe, Lock, EyeOff } from "lucide-react";
+import { ArrowLeft, Globe, Lock, EyeOff, Link2 } from "lucide-react";
 import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { AdminPageHeader } from "../../_components/coming-soon";
@@ -55,6 +55,26 @@ interface QuizAnalyticsResponse {
   days: number;
 }
 
+interface InviteLinkStat {
+  token: string;
+  opens: number;
+  distinct_visitors: number;
+  signed_in_count: number;
+  guest_count: number;
+  starts: number;
+  finishes: number;
+  use_count?: number | null;
+  max_uses?: number | null;
+  is_active?: boolean | null;
+  created_at?: string | null;
+  last_seen_at: string;
+}
+
+interface InviteLinksResponse {
+  quiz_id: string;
+  links: InviteLinkStat[];
+}
+
 const RANGES = [7, 30, 90] as const;
 
 interface PageProps {
@@ -81,12 +101,21 @@ export default async function AdminQuizAnalyticsPage({ params, searchParams }: P
     : 30;
 
   let data: QuizAnalyticsResponse | null = null;
+  let links: InviteLinkStat[] = [];
   let loadError: string | null = null;
   try {
-    data = await fetchBackendJson<QuizAnalyticsResponse>({
-      path: `/api/v1/admin/quizzes/${encodeURIComponent(id)}/analytics?days=${days}`,
-      userId: auth.user.id,
-    });
+    const [analytics, linksRes] = await Promise.all([
+      fetchBackendJson<QuizAnalyticsResponse>({
+        path: `/api/v1/admin/quizzes/${encodeURIComponent(id)}/analytics?days=${days}`,
+        userId: auth.user.id,
+      }),
+      fetchBackendJson<InviteLinksResponse>({
+        path: `/api/v1/admin/quizzes/${encodeURIComponent(id)}/invite-links`,
+        userId: auth.user.id,
+      }).catch(() => ({ quiz_id: id, links: [] })),
+    ]);
+    data = analytics;
+    links = linksRes.links ?? [];
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to load";
     if (msg.includes("404")) notFound();
@@ -168,6 +197,7 @@ export default async function AdminQuizAnalyticsPage({ params, searchParams }: P
               rangeLabel={`Last ${data.days} days`}
             />
           )}
+          <InviteLinksTable links={links} />
           <RecentAttemptsTable attempts={data.recent_attempts} />
         </>
       )}
@@ -221,6 +251,86 @@ function CountsGrid({ counts }: { counts: QuizAnalyticsResponse["counts"] }) {
           )}
         </div>
       ))}
+    </section>
+  );
+}
+
+function InviteLinksTable({ links }: { links: InviteLinkStat[] }) {
+  if (links.length === 0) {
+    return (
+      <section className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-center">
+        <Link2 className="mx-auto h-6 w-6 text-[var(--text-secondary)]" />
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          No traffic from invite links yet — opens via /quizzes/join/[token] will appear here.
+        </p>
+      </section>
+    );
+  }
+  return (
+    <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)]">
+      <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+          Invite link traffic
+        </h3>
+        <span className="text-xs text-[var(--text-secondary)]">
+          {links.length} link{links.length === 1 ? "" : "s"} with traffic
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-[var(--bg-soft)] text-xs uppercase tracking-wide text-[var(--text-secondary)]">
+            <tr>
+              <th className="px-5 py-2 text-left font-medium">Token</th>
+              <th className="px-5 py-2 text-right font-medium">Opens</th>
+              <th className="px-5 py-2 text-right font-medium">Visitors</th>
+              <th className="px-5 py-2 text-right font-medium">Signed-in</th>
+              <th className="px-5 py-2 text-right font-medium">Guest</th>
+              <th className="px-5 py-2 text-right font-medium">Starts</th>
+              <th className="px-5 py-2 text-right font-medium">Finishes</th>
+              <th className="px-5 py-2 text-left font-medium">Status</th>
+              <th className="px-5 py-2 text-left font-medium">Last seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {links.map((l) => (
+              <tr key={l.token} className="border-t border-[var(--border)]">
+                <td className="px-5 py-2 font-mono text-xs text-[var(--text-primary)]">
+                  {l.token.slice(0, 8)}…
+                  {l.use_count != null && l.max_uses != null && (
+                    <span className="ml-2 text-[var(--text-secondary)]">
+                      {l.use_count}/{l.max_uses} uses
+                    </span>
+                  )}
+                </td>
+                <td className="px-5 py-2 text-right tabular-nums">{l.opens.toLocaleString()}</td>
+                <td className="px-5 py-2 text-right tabular-nums">{l.distinct_visitors.toLocaleString()}</td>
+                <td className="px-5 py-2 text-right tabular-nums text-[var(--text-secondary)]">{l.signed_in_count.toLocaleString()}</td>
+                <td className="px-5 py-2 text-right tabular-nums text-[var(--text-secondary)]">{l.guest_count.toLocaleString()}</td>
+                <td className="px-5 py-2 text-right tabular-nums">{l.starts.toLocaleString()}</td>
+                <td className="px-5 py-2 text-right tabular-nums">{l.finishes.toLocaleString()}</td>
+                <td className="px-5 py-2">
+                  {l.is_active === true && (
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                      active
+                    </span>
+                  )}
+                  {l.is_active === false && (
+                    <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
+                      revoked
+                    </span>
+                  )}
+                  {l.is_active === null || l.is_active === undefined ? (
+                    <span className="text-xs text-[var(--text-secondary)]">deleted</span>
+                  ) : null}
+                </td>
+                <td className="px-5 py-2 font-mono text-xs text-[var(--text-secondary)]">
+                  {l.last_seen_at.slice(0, 16).replace("T", " ")}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

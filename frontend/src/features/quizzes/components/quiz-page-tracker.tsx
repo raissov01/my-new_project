@@ -3,14 +3,22 @@
 import { useEffect } from "react";
 import { trackQuizUsageEvent } from "@/features/quizzes/analytics";
 
-export function QuizPageTracker({ quizId }: { quizId: string }) {
+interface Props {
+  quizId: string;
+  inviteToken?: string | null;
+}
+
+export function QuizPageTracker({ quizId, inviteToken }: Props) {
   useEffect(() => {
     trackQuizUsageEvent({
       quizId,
       eventType: "quiz_page_opened",
-      metadata: { path: window.location.pathname },
+      metadata: {
+        path: window.location.pathname,
+        ...(inviteToken ? { inviteToken } : {}),
+      },
     });
-  }, [quizId]);
+  }, [quizId, inviteToken]);
 
   return null;
 }

@@ -347,6 +347,7 @@ func RegisterRoutes(router *gin.Engine) {
 		// Quizzes
 		g.GET("/quizzes", wrapHTTP(deps.AdminQuizzes.List))
 		g.GET("/quizzes/:id/analytics", wrapHTTP(deps.AdminQuizzes.Analytics))
+		g.GET("/quizzes/:id/invite-links", wrapHTTP(deps.AdminQuizzes.InviteLinks))
 		g.PATCH("/quizzes/:id", wrapHTTP(deps.AdminQuizzes.Patch))
 		// Audit log
 		g.GET("/audit-log", wrapHTTP(deps.AdminAuditLog.List))
