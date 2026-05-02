@@ -36,6 +36,13 @@ const notes = [
 export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
+      <header>
+        <p className="nd-eyebrow">Admin</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+          Control panel
+        </h1>
+      </header>
+
       <section className="grid gap-4 md:grid-cols-2">
         {tiles.map((tile) => {
           const Icon = tile.icon;
