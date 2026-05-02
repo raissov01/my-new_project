@@ -98,9 +98,9 @@ export function AdminSidebar() {
 
   const manageItems: NavItem[] = [
     { href: "/admin/quizzes", label: "Quizzes", icon: ListChecks },
-    { href: "/admin/users", label: "Users", icon: Users, badge: "Soon" },
+    { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/review-questions", label: "Review queue", icon: ClipboardCheck },
-    { href: "/admin/audit-log", label: "Audit log", icon: ScrollText, badge: "Soon" },
+    { href: "/admin/audit-log", label: "Audit log", icon: ScrollText },
   ];
 
   useEffect(() => {
