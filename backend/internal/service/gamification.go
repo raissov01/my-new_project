@@ -10,6 +10,7 @@ import (
 
 	"github.com/midoriya/flashlearn-backend/internal/email"
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/notifier"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -99,7 +100,62 @@ func (s *GamificationService) RecordDailyActivity(userID string, xpEarned, lesso
 		Where("user_id = ?", userID).
 		Updates(map[string]any{"current_streak": updates["streak_days"], "last_practice_date": today.Format("2006-01-02")})
 
+	// Best-effort achievement unlock pass. Errors are swallowed because the
+	// daily activity write is the load-bearing operation; achievements are a
+	// follow-on UX nicety and must never fail the activity record.
+	s.evaluateAchievementsAfterActivity(userID, lessonsCompleted)
+
 	return nil
+}
+
+// evaluateAchievementsAfterActivity rebuilds an AchievementEvent from the
+// user's current totals and unlocks any newly earned badges, writing a
+// notification per unlock so the bell dropdown reflects the win.
+func (s *GamificationService) evaluateAchievementsAfterActivity(userID string, lessonsJustCompleted int) {
+	var u models.User
+	if err := s.db.First(&u, "id = ?", userID).Error; err != nil {
+		return
+	}
+
+	var lessonsTotal int64
+	s.db.Model(&models.LessonAttempt{}).Where("user_id = ?", userID).Count(&lessonsTotal)
+
+	var starsTotal int64
+	s.db.Model(&models.LessonAttempt{}).Where("user_id = ?", userID).
+		Select("COALESCE(SUM(stars), 0)").Scan(&starsTotal)
+
+	var totalXP int
+	s.db.Model(&models.EngSimUserProgress{}).Where("user_id = ?", userID).
+		Select("COALESCE(total_xp, 0)").Scan(&totalXP)
+
+	var friendsCount int64
+	s.db.Model(&models.Friendship{}).
+		Where("user_id = ? AND status = 'accepted'", userID).
+		Count(&friendsCount)
+
+	now := time.Now()
+	wd := now.Weekday()
+	ev := AchievementEvent{
+		StreakDays:   u.StreakDays,
+		LessonsTotal: int(lessonsTotal),
+		TotalStars:   int(starsTotal),
+		TotalXP:      totalXP,
+		FriendsCount: int(friendsCount),
+		Hour:         now.Hour(),
+		IsWeekend:    wd == time.Saturday || wd == time.Sunday,
+	}
+	_ = lessonsJustCompleted // reserved for future "perfect lesson" wiring
+
+	unlocked, err := s.CheckAchievements(userID, ev)
+	if err != nil || len(unlocked) == 0 {
+		return
+	}
+	for _, ach := range unlocked {
+		title := "🏆 Achievement unlocked: " + ach.Title
+		body := ach.Description
+		link := "/achievements"
+		notifier.Create(s.db, userID, "achievement_unlocked", title, body, &link)
+	}
 }
 
 // DayStatus represents one calendar cell in the streak calendar.
@@ -782,7 +838,30 @@ func (s *GamificationService) RecordLessonAttempt(userID, lessonID string, stars
 		WHERE id = ?
 	`, stars, userID)
 
+	// Perfect-lesson achievement: heartsLost == 0 means no mistakes. We pass
+	// it as a one-shot signal so CheckAchievements can award perfect_lesson_1
+	// even when the user's other totals haven't crossed a new threshold.
+	if heartsLost == 0 {
+		s.evaluatePerfectLesson(userID)
+	}
+
 	return nil
+}
+
+// evaluatePerfectLesson awards the no-mistake badge and emits a notification.
+// Separate from RecordDailyActivity's pass because the perfect-lesson signal
+// is per-attempt, not per-day.
+func (s *GamificationService) evaluatePerfectLesson(userID string) {
+	unlocked, err := s.CheckAchievements(userID, AchievementEvent{IsNoMistake: true})
+	if err != nil || len(unlocked) == 0 {
+		return
+	}
+	for _, ach := range unlocked {
+		title := "🏆 Achievement unlocked: " + ach.Title
+		body := ach.Description
+		link := "/achievements"
+		notifier.Create(s.db, userID, "achievement_unlocked", title, body, &link)
+	}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
