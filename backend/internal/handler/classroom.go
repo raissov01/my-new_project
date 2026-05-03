@@ -9,17 +9,57 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/model"
+	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/notifier"
 	"github.com/midoriya/flashlearn-backend/internal/service"
+	"gorm.io/gorm"
 )
 
 // Classroom handles read-only classroom/challenge routes used by Next.js during migration.
 type Classroom struct {
 	svc *service.Classroom
+	db  *gorm.DB
 	env string
 }
 
-func NewClassroom(svc *service.Classroom, env string) *Classroom {
-	return &Classroom{svc: svc, env: env}
+func NewClassroom(svc *service.Classroom, db *gorm.DB, env string) *Classroom {
+	return &Classroom{svc: svc, db: db, env: env}
+}
+
+// quizTitle returns the quiz title for use in notification text. Best-effort:
+// if the lookup fails, callers fall back to a generic phrase.
+func (h *Classroom) quizTitle(quizID string) string {
+	var q models.Quiz
+	if err := h.db.Select("title").Where("id = ?", quizID).First(&q).Error; err != nil {
+		return ""
+	}
+	return q.Title
+}
+
+// groupOwnerID returns the teacher (owner) of a class group, or empty on lookup failure.
+func (h *Classroom) groupOwnerID(groupID string) string {
+	var g models.ClassGroup
+	if err := h.db.Select("owner_id").Where("id = ?", groupID).First(&g).Error; err != nil {
+		return ""
+	}
+	return g.OwnerID
+}
+
+// userDisplayName resolves a user ID to a name suitable for notification text.
+func (h *Classroom) userDisplayName(userID string) string {
+	var u models.User
+	if err := h.db.Select("full_name", "username").
+		Where("id = ?", userID).
+		First(&u).Error; err != nil {
+		return "A new student"
+	}
+	if u.FullName != "" {
+		return u.FullName
+	}
+	if u.Username != "" {
+		return u.Username
+	}
+	return "A new student"
 }
 
 func (h *Classroom) isDev() bool {
@@ -203,6 +243,20 @@ func (h *Classroom) JoinByCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Notify the teacher (group owner) that a new student joined.
+	if ownerID := h.groupOwnerID(groupID); ownerID != "" && ownerID != userID {
+		studentName := h.userDisplayName(userID)
+		link := "/classes/" + groupID
+		notifier.Create(
+			h.db,
+			ownerID,
+			"class_join",
+			"New student joined",
+			studentName+" joined your class",
+			&link,
+		)
+	}
+
 	writeJSON(w, http.StatusOK, map[string]string{"groupId": groupID})
 }
 
@@ -285,6 +339,18 @@ func (h *Classroom) CreateChallenge(w http.ResponseWriter, r *http.Request) {
 		writeError(w, status, msg, err)
 		return
 	}
+
+	// Notify every student in the group (excluding the teacher who created it).
+	link := "/classes/" + req.GroupID + "/challenges/" + challengeID
+	notifier.CreateForGroupMembers(
+		h.db,
+		req.GroupID,
+		userID,
+		"class_challenge",
+		"New class challenge: "+req.Title,
+		"A new challenge is waiting in your class",
+		&link,
+	)
 
 	writeJSON(w, http.StatusCreated, map[string]string{"challengeId": challengeID})
 }
@@ -435,6 +501,26 @@ func (h *Classroom) AssignQuiz(w http.ResponseWriter, r *http.Request) {
 		writeError(w, status, msg, err)
 		return
 	}
+
+	// Notify every student in the group (excluding the teacher who assigned it).
+	title := h.quizTitle(req.QuizID)
+	if title == "" {
+		title = "New quiz"
+	}
+	body := "A new quiz is waiting in your class"
+	if req.Deadline != nil && *req.Deadline != "" {
+		body = "Deadline: " + *req.Deadline
+	}
+	link := "/quizzes/" + req.QuizID
+	notifier.CreateForGroupMembers(
+		h.db,
+		req.GroupID,
+		userID,
+		"quiz_assigned",
+		"New quiz: "+title,
+		body,
+		&link,
+	)
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }

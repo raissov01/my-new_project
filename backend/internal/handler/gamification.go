@@ -6,17 +6,37 @@ import (
 	"time"
 
 	"github.com/midoriya/flashlearn-backend/internal/email"
+	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/notifier"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 	"gorm.io/gorm"
 )
 
 // GamificationHandler serves all retention-loop endpoints.
 type GamificationHandler struct {
+	db  *gorm.DB
 	svc *service.GamificationService
 }
 
 func NewGamification(db *gorm.DB, emailSender *email.Sender) *GamificationHandler {
-	return &GamificationHandler{svc: service.NewGamification(db, emailSender)}
+	return &GamificationHandler{db: db, svc: service.NewGamification(db, emailSender)}
+}
+
+// displayName returns the user's full name, falling back to username, then ID.
+func (h *GamificationHandler) displayName(userID string) string {
+	var u models.User
+	if err := h.db.Select("full_name", "username").
+		Where("id = ?", userID).
+		First(&u).Error; err != nil {
+		return "Someone"
+	}
+	if u.FullName != "" {
+		return u.FullName
+	}
+	if u.Username != "" {
+		return u.Username
+	}
+	return "Someone"
 }
 
 // ── Streak ────────────────────────────────────────────────────────────────────
@@ -119,6 +139,16 @@ func (h *GamificationHandler) SendFriendRequest(w http.ResponseWriter, r *http.R
 		jsonErr(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	senderName := h.displayName(userID)
+	link := "/friends"
+	notifier.Create(
+		h.db,
+		body.TargetID,
+		"friend_request",
+		"New friend request",
+		senderName+" wants to be friends",
+		&link,
+	)
 	jsonOK(w, map[string]any{"ok": true})
 }
 
@@ -136,6 +166,16 @@ func (h *GamificationHandler) AcceptFriendRequest(w http.ResponseWriter, r *http
 		jsonErr(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	accepterName := h.displayName(userID)
+	link := "/friends"
+	notifier.Create(
+		h.db,
+		body.RequesterID,
+		"friend_accepted",
+		"Friend request accepted",
+		accepterName+" accepted your friend request",
+		&link,
+	)
 	jsonOK(w, map[string]any{"ok": true})
 }
 

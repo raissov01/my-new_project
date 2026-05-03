@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/notifier"
 	"gorm.io/gorm"
 )
 
@@ -96,20 +97,8 @@ func (h *NotificationHandler) MarkAllRead(w http.ResponseWriter, r *http.Request
 	jsonOK(w, map[string]any{"ok": true, "updated": res.RowsAffected})
 }
 
-// Create inserts a notification for a user. Internal helper — call from
-// other handlers/services when something happens that should surface in
-// the bell dropdown. Errors are swallowed; missing notifications are not
-// worth failing the originating action over.
+// Create inserts a notification for a user. Thin wrapper around
+// notifier.Create kept for callers that already hold a *NotificationHandler.
 func (h *NotificationHandler) Create(userID, ntype, title, body string, link *string) {
-	if userID == "" || title == "" {
-		return
-	}
-	n := models.Notification{
-		UserID: userID,
-		Type:   ntype,
-		Title:  title,
-		Body:   body,
-		Link:   link,
-	}
-	_ = h.db.Create(&n).Error
+	notifier.Create(h.db, userID, ntype, title, body, link)
 }

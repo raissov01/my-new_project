@@ -180,7 +180,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Profile:            handler.NewProfile(profileSvc, cfg.Environment),
 		Set:                handler.NewSet(setSvc, cfg.Environment),
 		Dashboard:          handler.NewDashboard(dashboardSvc, cfg.Environment),
-		Classroom:          handler.NewClassroom(classroomSvc, cfg.Environment),
+		Classroom:          handler.NewClassroom(classroomSvc, gormDB, cfg.Environment),
 		Progress:           handler.NewProgress(progressSvc, cfg.Environment),
 		Flashcard:          handler.NewFlashcard(flashcardSvc, cfg.Environment),
 		Quiz:               handler.NewQuiz(quizSvc, cfg.Environment),

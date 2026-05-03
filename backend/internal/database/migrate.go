@@ -81,6 +81,8 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.Subscription{},
 		// Push notifications
 		&models.PushSubscription{},
+		// In-app notifications (bell dropdown)
+		&models.Notification{},
 		// Admin
 		&models.AdminAuditLog{},
 	)
