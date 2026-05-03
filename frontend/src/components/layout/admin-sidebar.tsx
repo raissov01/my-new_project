@@ -16,6 +16,7 @@ import {
   Coins,
   Clock,
   Mail,
+  HardDrive,
   ArrowLeft,
   LogOut,
   Menu,
@@ -104,6 +105,7 @@ export function AdminSidebar() {
     { href: "/admin/ai-usage", label: "AI cost", icon: Coins },
     { href: "/admin/jobs", label: "Jobs", icon: Clock },
     { href: "/admin/deliverability", label: "Deliverability", icon: Mail },
+    { href: "/admin/storage", label: "Storage", icon: HardDrive },
   ];
 
   const manageItems: NavItem[] = [
