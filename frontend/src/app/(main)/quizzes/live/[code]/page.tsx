@@ -30,6 +30,16 @@ type MatchPair = { left: string; right: string };
 
 type HotspotZone = { id: number; x: number; y: number; r: number; label?: string };
 
+type LiveCompSubQ = {
+  id: string;
+  type: string; // "mcq" | "true_false" | "fill_blank"
+  prompt: string;
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
+};
+
 type LiveQuestion = {
   id: string;
   questionText: string;
@@ -43,6 +53,8 @@ type LiveQuestion = {
   matchLeft?: string[];    // left column items for matching questions
   matchRight?: string[];   // shuffled right column items for matching questions
   hotspotZones?: HotspotZone[];
+  comprehensionPassage?: string;
+  comprehensionSubQuestions?: LiveCompSubQ[];
   timeLimit: number;
   imageUrl?: string;
 };
@@ -109,6 +121,7 @@ function LiveGameInner() {
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   const [reorderSubmitted, setReorderSubmitted] = useState(false);
   const [matchDraft, setMatchDraft] = useState<Record<string, string>>({});
+  const [compDraft, setCompDraft] = useState<Record<string, string>>({});
   const [wsError, setWsError] = useState("");
   // "connected" | "reconnecting" | "disconnected"
   const [wsStatus, setWsStatus] = useState<"connected" | "reconnecting" | "disconnected">("connected");
@@ -254,6 +267,14 @@ function LiveGameInner() {
           setMatchDraft(draft);
         } else {
           setMatchDraft({});
+        }
+        // Init comprehension draft: one key per sub-question, value = "" (unselected).
+        if (q.questionType === "comprehension" && q.comprehensionSubQuestions) {
+          const draft: Record<string, string> = {};
+          for (const sq of q.comprehensionSubQuestions) draft[sq.id] = "";
+          setCompDraft(draft);
+        } else {
+          setCompDraft({});
         }
         setPhase("question");
         startRef.current = Date.now();
@@ -425,9 +446,11 @@ function LiveGameInner() {
           reorderDraft={reorderDraft}
           reorderSubmitted={reorderSubmitted}
           matchDraft={matchDraft}
+          compDraft={compDraft}
           onBlankChange={setBlankInput}
           onReorderChange={setReorderDraft}
           onMatchChange={setMatchDraft}
+          onCompChange={setCompDraft}
           onSelect={(opt) => {
             setSelectedOpt(opt);
             submitAnswer(opt);
@@ -439,6 +462,12 @@ function LiveGameInner() {
           }}
           onMatchSubmit={() => {
             submitAnswer(undefined, undefined, undefined, matchDraft);
+            setSelectedOpt("submitted");
+          }}
+          onCompSubmit={() => {
+            // Comprehension reuses textAnswer with a JSON-encoded {sqID: answer} map,
+            // matching the backend's liveComprehensionCorrect contract.
+            submitAnswer(undefined, JSON.stringify(compDraft));
             setSelectedOpt("submitted");
           }}
         />
@@ -517,7 +546,9 @@ const OPTION_KEYS = ["a", "b", "c", "d", "e"] as const;
 
 function QuestionScreen({
   evt, timeLeft, selectedOpt, blankInput, reorderDraft, reorderSubmitted,
-  matchDraft, onBlankChange, onReorderChange, onMatchChange, onSelect, onBlankSubmit, onReorderSubmit, onMatchSubmit,
+  matchDraft, compDraft,
+  onBlankChange, onReorderChange, onMatchChange, onCompChange,
+  onSelect, onBlankSubmit, onReorderSubmit, onMatchSubmit, onCompSubmit,
 }: {
   evt: QuestionEvt;
   timeLeft: number;
@@ -526,13 +557,16 @@ function QuestionScreen({
   reorderDraft: string[];
   reorderSubmitted: boolean;
   matchDraft: Record<string, string>;
+  compDraft: Record<string, string>;
   onBlankChange: (v: string) => void;
   onReorderChange: (items: string[]) => void;
   onMatchChange: (draft: Record<string, string>) => void;
+  onCompChange: (draft: Record<string, string>) => void;
   onSelect: (opt: string) => void;
   onBlankSubmit: () => void;
   onReorderSubmit: () => void;
   onMatchSubmit: () => void;
+  onCompSubmit: () => void;
 }) {
   const { t } = useLocale();
   const q = evt.question;
@@ -840,6 +874,122 @@ function QuestionScreen({
           onSubmit={onMatchSubmit}
         />
       )}
+
+      {q.questionType === "comprehension" && q.comprehensionSubQuestions && (
+        <LiveComprehensionInput
+          t={t}
+          passage={q.comprehensionPassage ?? ""}
+          subQuestions={q.comprehensionSubQuestions}
+          draft={compDraft}
+          submitted={!!selectedOpt}
+          onDraftChange={onCompChange}
+          onSubmit={onCompSubmit}
+        />
+      )}
+    </div>
+  );
+}
+
+function LiveComprehensionInput({
+  t,
+  passage,
+  subQuestions,
+  draft,
+  submitted,
+  onDraftChange,
+  onSubmit,
+}: {
+  t: (k: string) => string;
+  passage: string;
+  subQuestions: LiveCompSubQ[];
+  draft: Record<string, string>;
+  submitted: boolean;
+  onDraftChange: (draft: Record<string, string>) => void;
+  onSubmit: () => void;
+}) {
+  // All sub-questions must have a non-empty answer before submit. Whitespace
+  // is treated as empty so a stray Tab on a fill_blank doesn't enable submit.
+  const allAnswered = subQuestions.every((sq) => (draft[sq.id] ?? "").trim() !== "");
+
+  return (
+    <div className="space-y-4">
+      {passage && (
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm leading-6 text-[var(--text-primary)] whitespace-pre-wrap">
+          {passage}
+        </div>
+      )}
+      <div className="space-y-3">
+        {subQuestions.map((sq, idx) => (
+          <div key={sq.id} className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] p-3">
+            <div className="mb-2 text-sm font-medium text-[var(--text-primary)]">
+              {idx + 1}. {sq.prompt}
+            </div>
+            {sq.type === "true_false" ? (
+              <div className="flex gap-2">
+                {(["true", "false"] as const).map((v) => {
+                  const active = draft[sq.id] === v;
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      disabled={submitted}
+                      onClick={() => onDraftChange({ ...draft, [sq.id]: v })}
+                      className={`flex-1 rounded-[var(--radius-md)] border px-3 py-2 text-sm font-medium transition-colors ${
+                        active
+                          ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                          : "border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
+                      } disabled:opacity-60`}
+                    >
+                      {v === "true" ? t("quiz.true") || "True" : t("quiz.false") || "False"}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : sq.type === "fill_blank" ? (
+              <input
+                type="text"
+                value={draft[sq.id] ?? ""}
+                disabled={submitted}
+                onChange={(e) => onDraftChange({ ...draft, [sq.id]: e.target.value })}
+                placeholder={t("quiz.fillBlank.placeholder") || "Type your answer…"}
+                className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none disabled:opacity-60"
+              />
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {(["a", "b", "c", "d"] as const).map((letter) => {
+                  const value = letter === "a" ? sq.optionA
+                    : letter === "b" ? sq.optionB
+                    : letter === "c" ? sq.optionC
+                    : sq.optionD;
+                  if (!value) return null;
+                  const active = draft[sq.id] === letter;
+                  return (
+                    <button
+                      key={letter}
+                      type="button"
+                      disabled={submitted}
+                      onClick={() => onDraftChange({ ...draft, [sq.id]: letter })}
+                      className={`rounded-[var(--radius-md)] border px-3 py-2 text-left text-sm transition-colors ${
+                        active
+                          ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                          : "border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
+                      } disabled:opacity-60`}
+                    >
+                      <span className="mr-2 font-bold uppercase">{letter}.</span>
+                      {value}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <Button type="button" onClick={onSubmit} disabled={submitted || !allAnswered} className="w-full">
+        {submitted
+          ? (t("quiz.live.submitted") || "Submitted")
+          : (t("quiz.matching.submitAll") || "Submit all")}
+      </Button>
     </div>
   );
 }
