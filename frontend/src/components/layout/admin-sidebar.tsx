@@ -13,6 +13,7 @@ import {
   ScrollText,
   HeartPulse,
   Gauge,
+  Coins,
   ArrowLeft,
   LogOut,
   Menu,
@@ -98,6 +99,7 @@ export function AdminSidebar() {
     { href: "/admin/live", label: "Live activity", icon: Activity },
     { href: "/admin/system", label: "System", icon: HeartPulse },
     { href: "/admin/api-metrics", label: "API metrics", icon: Gauge },
+    { href: "/admin/ai-usage", label: "AI cost", icon: Coins },
   ];
 
   const manageItems: NavItem[] = [

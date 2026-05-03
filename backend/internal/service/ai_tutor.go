@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -107,7 +108,7 @@ func (s *AITutorService) SendMessage(ctx context.Context, convID, userID, userTe
 	// Build system prompt
 	systemPrompt := sc.PersonaPrompt
 
-	reply, err := s.callLLM(ctx, systemPrompt, msgs)
+	reply, err := s.callLLM(ctx, systemPrompt, msgs, userID, "ai_tutor_chat")
 	if err != nil {
 		return "", err
 	}
@@ -175,7 +176,7 @@ Return ONLY valid JSON: {"fluency":N,"grammar":N,"vocabulary":N,"task":N,"tips":
 Student messages:
 %s`, sc.Level, sc.StudentGoal, userLines)
 
-	reply, err := s.callLLM(ctx, graderPrompt, []ChatMessage{{Role: "user", Content: "Grade this conversation."}})
+	reply, err := s.callLLM(ctx, graderPrompt, []ChatMessage{{Role: "user", Content: "Grade this conversation."}}, userID, "ai_tutor_grade")
 	if err != nil {
 		return nil, err
 	}
@@ -256,10 +257,22 @@ func (s *AITutorService) ListHistory(userID string) ([]map[string]any, error) {
 	return results, nil
 }
 
-// callLLM uses OpenAI API (falls back to Claude).
-func (s *AITutorService) callLLM(ctx context.Context, system string, msgs []ChatMessage) (string, error) {
+// callLLM uses OpenAI API (falls back to Claude). userID/feature are
+// recorded into ai_usage_events so the admin cost dashboard can attribute
+// spend per feature and per user.
+func (s *AITutorService) callLLM(ctx context.Context, system string, msgs []ChatMessage, userID, feature string) (string, error) {
 	if s.openAIKey != "" {
-		reply, err := s.callOpenAI(ctx, system, msgs)
+		start := time.Now()
+		reply, usage, err := s.callOpenAI(ctx, system, msgs)
+		model := s.openAIModel
+		if model == "" {
+			model = "gpt-4o-mini"
+		}
+		aicost.Record(s.db, aicost.Event{
+			UserID: userID, Feature: feature, Model: model,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(start), Err: err,
+		})
 		if err == nil {
 			return reply, nil
 		}
@@ -268,14 +281,28 @@ func (s *AITutorService) callLLM(ctx context.Context, system string, msgs []Chat
 		}
 	}
 	if s.claudeKey != "" {
-		return s.callClaude(ctx, system, msgs)
+		start := time.Now()
+		reply, usage, err := s.callClaude(ctx, system, msgs)
+		aicost.Record(s.db, aicost.Event{
+			UserID: userID, Feature: feature, Model: s.claudeModel,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(start), Err: err,
+		})
+		return reply, err
 	}
 	return "", fmt.Errorf("no AI API key configured")
 }
 
-func (s *AITutorService) callOpenAI(ctx context.Context, system string, msgs []ChatMessage) (string, error) {
+// llmUsage carries token counts decoded from the LLM response so the caller
+// can record cost telemetry. Zero if the API didn't return a `usage` block.
+type llmUsage struct {
+	Prompt     int
+	Completion int
+}
+
+func (s *AITutorService) callOpenAI(ctx context.Context, system string, msgs []ChatMessage) (string, llmUsage, error) {
 	if s.openAIKey == "" {
-		return "", fmt.Errorf("openai: no API key configured")
+		return "", llmUsage{}, fmt.Errorf("openai: no API key configured")
 	}
 	model := s.openAIModel
 	if model == "" {
@@ -304,31 +331,35 @@ func (s *AITutorService) callOpenAI(ctx context.Context, system string, msgs []C
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("openai: request failed: %w", err)
+		return "", llmUsage{}, fmt.Errorf("openai: request failed: %w", err)
 	}
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("openai: status %d: %s", resp.StatusCode, string(raw))
+		return "", llmUsage{}, fmt.Errorf("openai: status %d: %s", resp.StatusCode, string(raw))
 	}
 	var result struct {
 		Choices []struct {
 			Message struct{ Content string } `json:"message"`
 		} `json:"choices"`
+		Usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+		} `json:"usage"`
 	}
 	if err2 := json.Unmarshal(raw, &result); err2 != nil || len(result.Choices) == 0 {
-		return "", fmt.Errorf("openai: unexpected response: %s", string(raw))
+		return "", llmUsage{}, fmt.Errorf("openai: unexpected response: %s", string(raw))
 	}
-	return result.Choices[0].Message.Content, nil
+	return result.Choices[0].Message.Content, llmUsage{Prompt: result.Usage.PromptTokens, Completion: result.Usage.CompletionTokens}, nil
 }
 
 // callClaude uses the DO-AI / OpenAI-compatible Chat Completions endpoint.
-func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []ChatMessage) (string, error) {
+func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []ChatMessage) (string, llmUsage, error) {
 	if s.claudeURL == "" {
-		return "", fmt.Errorf("claude: no API URL configured")
+		return "", llmUsage{}, fmt.Errorf("claude: no API URL configured")
 	}
 	if s.claudeModel == "" {
-		return "", fmt.Errorf("claude: no model configured")
+		return "", llmUsage{}, fmt.Errorf("claude: no model configured")
 	}
 	type oaMsg struct {
 		Role    string `json:"role"`
@@ -351,26 +382,30 @@ func (s *AITutorService) callClaude(ctx context.Context, system string, msgs []C
 	defer cancel()
 	req, err := http.NewRequestWithContext(timeoutCtx, "POST", s.claudeURL, bytes.NewReader(body))
 	if err != nil {
-		return "", fmt.Errorf("claude: build request: %w", err)
+		return "", llmUsage{}, fmt.Errorf("claude: build request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+s.claudeKey)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("claude: request failed: %w", err)
+		return "", llmUsage{}, fmt.Errorf("claude: request failed: %w", err)
 	}
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("claude: status %d: %s", resp.StatusCode, string(raw))
+		return "", llmUsage{}, fmt.Errorf("claude: status %d: %s", resp.StatusCode, string(raw))
 	}
 	var result struct {
 		Choices []struct {
 			Message struct{ Content string } `json:"message"`
 		} `json:"choices"`
+		Usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+		} `json:"usage"`
 	}
 	if err2 := json.Unmarshal(raw, &result); err2 != nil || len(result.Choices) == 0 {
-		return "", fmt.Errorf("claude: unexpected response: %s", string(raw))
+		return "", llmUsage{}, fmt.Errorf("claude: unexpected response: %s", string(raw))
 	}
-	return result.Choices[0].Message.Content, nil
+	return result.Choices[0].Message.Content, llmUsage{Prompt: result.Usage.PromptTokens, Completion: result.Usage.CompletionTokens}, nil
 }

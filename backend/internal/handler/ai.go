@@ -15,10 +15,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
+	"gorm.io/gorm"
 )
 
 type AIHandler struct {
+	db                  *gorm.DB
 	openAIKey           string
 	openAIModel         string
 	openAIModelFallback string
@@ -36,8 +39,9 @@ const (
 	maxAITextLimitRunes     = 360000
 )
 
-func NewAI(openAIKey, openAIModel, openAIModelFallback string, requestTimeout time.Duration, maxBytes int64) *AIHandler {
+func NewAI(db *gorm.DB, openAIKey, openAIModel, openAIModelFallback string, requestTimeout time.Duration, maxBytes int64) *AIHandler {
 	return &AIHandler{
+		db:                  db,
 		openAIKey:           openAIKey,
 		openAIModel:         openAIModel,
 		openAIModelFallback: openAIModelFallback,
@@ -58,7 +62,7 @@ type generatedCard struct {
 // Accepts extracted text (not files — file parsing stays in Next.js for now,
 // or the frontend sends pre-extracted text).
 func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
-	_, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
 		writeError(w, http.StatusUnauthorized, "authentication required", nil)
 		return
@@ -100,7 +104,7 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 	text := limitTextForGeneration(req.Text, req.CardCount)
 
-	cards, modelName, err := h.generateCards(text, req.Mode, req.Language, req.CardCount)
+	cards, modelName, err := h.generateCards(text, req.Mode, req.Language, req.CardCount, userID)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, "AI generation failed: "+err.Error(), err)
 		return
@@ -112,7 +116,7 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *AIHandler) generateCards(text, mode, language string, count int) ([]generatedCard, string, error) {
+func (h *AIHandler) generateCards(text, mode, language string, count int, userID string) ([]generatedCard, string, error) {
 	batches := buildGenerationBatches(text, mode, language, count)
 
 	type batchResult struct {
@@ -132,7 +136,7 @@ func (h *AIHandler) generateCards(text, mode, language string, count int) ([]gen
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			cards, model, err := h.generateBatch(p)
+			cards, model, err := h.generateBatch(p, userID)
 			results[idx] = batchResult{cards: cards, model: model, err: err}
 		}(i, prompt)
 	}
@@ -171,13 +175,19 @@ func (h *AIHandler) generateCards(text, mode, language string, count int) ([]gen
 	return allCards, modelName, nil
 }
 
-func (h *AIHandler) generateBatch(prompt string) ([]generatedCard, string, error) {
+func (h *AIHandler) generateBatch(prompt, userID string) ([]generatedCard, string, error) {
 	// Single shared deadline across primary + fallback so total latency is
 	// bounded by requestTimeout regardless of how many providers are tried.
 	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
 	defer cancel()
 
-	cards, err := callOpenAI(ctx, h.openAIKey, h.openAIModel, prompt)
+	start := time.Now()
+	cards, usage, err := callOpenAI(ctx, h.openAIKey, h.openAIModel, prompt)
+	aicost.Record(h.db, aicost.Event{
+		UserID: userID, Feature: "flashcard_generate", Model: h.openAIModel,
+		PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+		Latency: time.Since(start), Err: err,
+	})
 	if err == nil {
 		return cards, h.openAIModel, nil
 	}
@@ -186,7 +196,13 @@ func (h *AIHandler) generateBatch(prompt string) ([]generatedCard, string, error
 	}
 	log.Printf("[ai] primary model failed, falling back to %s: %v", h.openAIModelFallback, err)
 
-	cards, err = callOpenAI(ctx, h.openAIKey, h.openAIModelFallback, prompt)
+	startFB := time.Now()
+	cards, usage, err = callOpenAI(ctx, h.openAIKey, h.openAIModelFallback, prompt)
+	aicost.Record(h.db, aicost.Event{
+		UserID: userID, Feature: "flashcard_generate", Model: h.openAIModelFallback,
+		PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+		Latency: time.Since(startFB), Err: err,
+	})
 	if err != nil {
 		return nil, "", err
 	}
@@ -407,7 +423,15 @@ Text:
 %s`, langName, mi, count, text)
 }
 
-func callOpenAI(ctx context.Context, apiKey, model, prompt string) ([]generatedCard, error) {
+// openaiUsage carries the token counts decoded from the OpenAI response so
+// the caller can record cost telemetry. Zeroed if the API didn't return a
+// `usage` block (older models, errored requests).
+type openaiUsage struct {
+	Prompt     int
+	Completion int
+}
+
+func callOpenAI(ctx context.Context, apiKey, model, prompt string) ([]generatedCard, openaiUsage, error) {
 	body := map[string]any{
 		"model": model,
 		"messages": []map[string]string{
@@ -420,7 +444,7 @@ func callOpenAI(ctx context.Context, apiKey, model, prompt string) ([]generatedC
 	bodyBytes, _ := json.Marshal(body)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(bodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf("build openai request: %w", err)
+		return nil, openaiUsage{}, fmt.Errorf("build openai request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
@@ -429,15 +453,15 @@ func callOpenAI(ctx context.Context, apiKey, model, prompt string) ([]generatedC
 	resp, err := client.Do(req)
 	if err != nil {
 		if isTimeoutError(err) {
-			return nil, fmt.Errorf("openai request timed out: %w", err)
+			return nil, openaiUsage{}, fmt.Errorf("openai request timed out: %w", err)
 		}
-		return nil, fmt.Errorf("openai request failed: %w", err)
+		return nil, openaiUsage{}, fmt.Errorf("openai request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		errBody, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
+		return nil, openaiUsage{}, fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
 	}
 
 	var chatResp struct {
@@ -446,14 +470,20 @@ func callOpenAI(ctx context.Context, apiKey, model, prompt string) ([]generatedC
 				Content string `json:"content"`
 			} `json:"message"`
 		} `json:"choices"`
+		Usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+		} `json:"usage"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
-		return nil, fmt.Errorf("decode openai response: %w", err)
+		return nil, openaiUsage{}, fmt.Errorf("decode openai response: %w", err)
 	}
 
+	usage := openaiUsage{Prompt: chatResp.Usage.PromptTokens, Completion: chatResp.Usage.CompletionTokens}
+
 	if len(chatResp.Choices) == 0 || strings.TrimSpace(chatResp.Choices[0].Message.Content) == "" {
-		return nil, fmt.Errorf("openai returned empty output")
+		return nil, usage, fmt.Errorf("openai returned empty output")
 	}
 
 	raw := strings.TrimSpace(chatResp.Choices[0].Message.Content)
@@ -470,7 +500,7 @@ func callOpenAI(ctx context.Context, apiKey, model, prompt string) ([]generatedC
 			Cards []generatedCard `json:"cards"`
 		}
 		if err2 := json.Unmarshal([]byte(raw), &wrapped); err2 != nil {
-			return nil, fmt.Errorf("parse cards: %w", err)
+			return nil, usage, fmt.Errorf("parse cards: %w", err)
 		}
 		cards = wrapped.Cards
 	}
@@ -485,7 +515,7 @@ func callOpenAI(ctx context.Context, apiKey, model, prompt string) ([]generatedC
 		}
 	}
 
-	return valid, nil
+	return valid, usage, nil
 }
 
 func isTimeoutError(err error) bool {

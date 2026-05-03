@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -94,7 +95,13 @@ func (s *QuizAIGenerateService) Generate(userID, text, subject string, count int
 	text = limitRunes(text, maxQuizGenTextRunes)
 
 	prompt := buildQuizPrompt(text, subject, count)
-	questions, err := s.callOpenAI(prompt)
+	start := time.Now()
+	questions, usage, err := s.callOpenAI(prompt)
+	aicost.Record(s.db, aicost.Event{
+		UserID: userID, Feature: "quiz_generate", Model: s.openAIModel,
+		PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+		Latency: time.Since(start), Err: err,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +158,15 @@ Return ONLY valid JSON with NO extra text, NO markdown, NO code fences:
 
 // ── OpenAI API call ───────────────────────────────────────────────────────────
 
-func (s *QuizAIGenerateService) callOpenAI(prompt string) ([]AIGeneratedQuestion, error) {
+// quizAIUsage carries the token counts decoded from the OpenAI response so
+// the caller can record cost telemetry. Zero if the API didn't return a
+// `usage` block.
+type quizAIUsage struct {
+	Prompt     int
+	Completion int
+}
+
+func (s *QuizAIGenerateService) callOpenAI(prompt string) ([]AIGeneratedQuestion, quizAIUsage, error) {
 	body := map[string]any{
 		"model": s.openAIModel,
 		"messages": []map[string]string{
@@ -163,7 +178,7 @@ func (s *QuizAIGenerateService) callOpenAI(prompt string) ([]AIGeneratedQuestion
 
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
-		return nil, fmt.Errorf("marshal request: %w", err)
+		return nil, quizAIUsage{}, fmt.Errorf("marshal request: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.requestTimeout)
@@ -171,20 +186,20 @@ func (s *QuizAIGenerateService) callOpenAI(prompt string) ([]AIGeneratedQuestion
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, openAIChatURL, bytes.NewReader(bodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf("build request: %w", err)
+		return nil, quizAIUsage{}, fmt.Errorf("build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+s.openAIKey)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("openai request failed: %w", err)
+		return nil, quizAIUsage{}, fmt.Errorf("openai request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		errBody, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		return nil, fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody))
+		return nil, quizAIUsage{}, fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody))
 	}
 
 	var chatResp struct {
@@ -193,13 +208,19 @@ func (s *QuizAIGenerateService) callOpenAI(prompt string) ([]AIGeneratedQuestion
 				Content string `json:"content"`
 			} `json:"message"`
 		} `json:"choices"`
+		Usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+		} `json:"usage"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
-		return nil, fmt.Errorf("decode openai response: %w", err)
+		return nil, quizAIUsage{}, fmt.Errorf("decode openai response: %w", err)
 	}
 
+	usage := quizAIUsage{Prompt: chatResp.Usage.PromptTokens, Completion: chatResp.Usage.CompletionTokens}
+
 	if len(chatResp.Choices) == 0 || strings.TrimSpace(chatResp.Choices[0].Message.Content) == "" {
-		return nil, fmt.Errorf("openai returned empty output")
+		return nil, usage, fmt.Errorf("openai returned empty output")
 	}
 
 	raw := strings.TrimSpace(chatResp.Choices[0].Message.Content)
@@ -213,10 +234,10 @@ func (s *QuizAIGenerateService) callOpenAI(prompt string) ([]AIGeneratedQuestion
 		Questions []AIGeneratedQuestion `json:"questions"`
 	}
 	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
-		return nil, fmt.Errorf("parse AI response JSON: %w", err)
+		return nil, usage, fmt.Errorf("parse AI response JSON: %w", err)
 	}
 
-	return validateQuestions(parsed.Questions), nil
+	return validateQuestions(parsed.Questions), usage, nil
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

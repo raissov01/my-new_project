@@ -114,6 +114,8 @@ func AutoMigrate(db *gorm.DB) (err error) {
 		&models.PushSubscription{},
 		// In-app notifications (bell dropdown)
 		&models.Notification{},
+		// AI usage tracking (admin cost dashboard)
+		&models.AIUsageEvent{},
 		// Admin
 		&models.AdminAuditLog{},
 	)

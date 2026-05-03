@@ -54,6 +54,7 @@ type Dependencies struct {
 	AdminLiveWS        *AdminLiveWSHandler
 	AdminSystem        *AdminSystemHandler
 	AdminAPIMetrics    *AdminAPIMetricsHandler
+	AdminAIUsage       *AdminAIUsageHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
 	Billing            *BillingHandler
@@ -365,6 +366,9 @@ func RegisterRoutes(router *gin.Engine) {
 		g.GET("/system/errors", wrapHTTP(deps.AdminSystem.Errors))
 		// Per-route API metrics
 		g.GET("/api-metrics", wrapHTTP(deps.AdminAPIMetrics.Snapshot))
+		// AI usage / cost tracking
+		g.GET("/ai-usage/summary", wrapHTTP(deps.AdminAIUsage.Summary))
+		g.GET("/ai-usage/daily", wrapHTTP(deps.AdminAIUsage.Daily))
 	}
 
 	admin := api.Group("/admin")
