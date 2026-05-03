@@ -54,12 +54,17 @@ type auditScanRow struct {
 	CreatedAt     string
 }
 
-// List handles GET /admin/audit-log.
+// List handles GET /admin/audit-log. Supports ?format=csv for export.
 func (h *AdminAuditLogHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	page, pageSize := parsePagination(q.Get("page"), q.Get("pageSize"), 50, 200)
 	action := strings.TrimSpace(q.Get("action"))
 	adminID := strings.TrimSpace(q.Get("adminId"))
+	csvOut := wantsCSV(r)
+	if csvOut {
+		page = 1
+		pageSize = 50000
+	}
 
 	args := []any{}
 	where := []string{}
@@ -138,6 +143,21 @@ func (h *AdminAuditLogHandler) List(w http.ResponseWriter, r *http.Request) {
 		out = append(out, row)
 	}
 
+	if csvOut {
+		writeCSV(w, "audit-log",
+			[]string{"id", "created_at", "admin_user_id", "admin_email", "admin_username", "action", "target_type", "target_id", "before", "after", "ip"},
+			len(out),
+			func(i int) []string {
+				row := out[i]
+				return []string{
+					row.ID, row.CreatedAt, row.AdminUserID, row.AdminEmail, row.AdminUsername,
+					row.Action, row.TargetType, deref(row.TargetID),
+					deref(row.BeforeValue), deref(row.AfterValue), deref(row.IPAddress),
+				}
+			})
+		return
+	}
+
 	writeJSON(w, http.StatusOK, adminAuditResponse{
 		Items:      out,
 		Total:      total,
@@ -145,4 +165,11 @@ func (h *AdminAuditLogHandler) List(w http.ResponseWriter, r *http.Request) {
 		PageSize:   pageSize,
 		TotalPages: totalPages(total, pageSize),
 	})
+}
+
+func deref(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
 }

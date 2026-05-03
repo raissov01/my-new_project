@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/server/auth";
-import { fetchBackendJson } from "@/server/integrations/go-backend/server";
+import {
+  fetchBackendJson,
+  fetchBackendRaw,
+} from "@/server/integrations/go-backend/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +33,24 @@ async function proxyAdminRequest(
   const body = method === "GET" ? null : await req.text();
   const contentType = req.headers.get("content-type");
 
+  // CSV / file downloads are routed straight through. The backend writes its
+  // own Content-Type / Content-Disposition headers; we just relay the bytes
+  // so the browser triggers a download instead of trying to parse JSON.
+  const wantsRaw = req.nextUrl.searchParams.get("format") === "csv";
+
   try {
+    if (wantsRaw && method === "GET") {
+      const upstream = await fetchBackendRaw({
+        path: `/api/v1/admin/${safePath}${search}`,
+        userId: auth.user.id,
+        method,
+      });
+      return new NextResponse(upstream.body, {
+        status: upstream.status,
+        headers: upstream.headers,
+      });
+    }
+
     const data = await fetchBackendJson<unknown>({
       path: `/api/v1/admin/${safePath}${search}`,
       userId: auth.user.id,

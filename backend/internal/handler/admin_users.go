@@ -46,12 +46,18 @@ type adminUsersResponse struct {
 	TotalPages int            `json:"totalPages"`
 }
 
-// List handles GET /admin/users.
+// List handles GET /admin/users. Supports ?format=csv for export — that path
+// ignores pagination and dumps up to 50k rows.
 func (h *AdminUsersHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	page, pageSize := parsePagination(q.Get("page"), q.Get("pageSize"), 25, 100)
 	search := strings.TrimSpace(q.Get("search"))
 	role := strings.TrimSpace(q.Get("role"))
+	csvOut := wantsCSV(r)
+	if csvOut {
+		page = 1
+		pageSize = 50000
+	}
 
 	tx := h.db.WithContext(r.Context()).Model(&models.User{})
 	if search != "" {
@@ -94,6 +100,21 @@ func (h *AdminUsersHandler) List(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	if csvOut {
+		writeCSV(w, "users",
+			[]string{"id", "email", "username", "full_name", "role", "is_superadmin", "is_active", "email_verified", "plan", "streak_days", "points", "created_at"},
+			len(rows),
+			func(i int) []string {
+				row := rows[i]
+				return []string{
+					row.ID, row.Email, row.Username, row.FullName, row.Role,
+					boolStr(row.IsSuperadmin), boolStr(row.IsActive), boolStr(row.EmailVerified),
+					row.Plan, intStr(row.StreakDays), intStr(row.Points), row.CreatedAt,
+				}
+			})
+		return
+	}
+
 	writeJSON(w, http.StatusOK, adminUsersResponse{
 		Items:      rows,
 		Total:      total,
@@ -101,6 +122,17 @@ func (h *AdminUsersHandler) List(w http.ResponseWriter, r *http.Request) {
 		PageSize:   pageSize,
 		TotalPages: totalPages(total, pageSize),
 	})
+}
+
+func boolStr(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
+func intStr(n int) string {
+	return strconv.Itoa(n)
 }
 
 type adminUserPatchRequest struct {

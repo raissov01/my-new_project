@@ -4,6 +4,7 @@ import { ScrollText } from "lucide-react";
 import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { AdminPageHeader } from "../_components/coming-soon";
+import { CSVButton } from "../_components/csv-button";
 
 export const metadata = { title: "Audit log — Admin" };
 export const dynamic = "force-dynamic";
@@ -72,10 +73,13 @@ export default async function AdminAuditLogPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader
-        title="Audit log"
-        description="Every superadmin action recorded with before/after state and IP."
-      />
+      <div className="flex items-start justify-between gap-3">
+        <AdminPageHeader
+          title="Audit log"
+          description="Every superadmin action recorded with before/after state and IP."
+        />
+        <CSVButton path="/api/admin/audit-log?format=csv" />
+      </div>
 
       <form
         method="GET"

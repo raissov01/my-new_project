@@ -4,6 +4,7 @@ import { ShieldCheck, Mail } from "lucide-react";
 import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { AdminPageHeader } from "../_components/coming-soon";
+import { CSVButton } from "../_components/csv-button";
 import { UserRowActions } from "./UserRowActions";
 
 export const metadata = { title: "Users — Admin" };
@@ -79,10 +80,13 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader
-        title="Users"
-        description="Search any account, change role, grant superadmin, or deactivate."
-      />
+      <div className="flex items-start justify-between gap-3">
+        <AdminPageHeader
+          title="Users"
+          description="Search any account, change role, grant superadmin, or deactivate."
+        />
+        <CSVButton path="/api/admin/users?format=csv" />
+      </div>
 
       <form
         method="GET"

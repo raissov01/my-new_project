@@ -54,3 +54,44 @@ export async function fetchBackendJson<T>(options: BackendFetchOptions): Promise
     clearTimeout(timeout);
   }
 }
+
+// fetchBackendRaw is the streaming counterpart used for non-JSON endpoints
+// (CSV exports, file downloads). It returns the raw status/body/headers so
+// the proxy route can forward them verbatim to the browser. Call sites that
+// expect JSON should use fetchBackendJson instead.
+export async function fetchBackendRaw(
+  options: BackendFetchOptions,
+): Promise<{ status: number; body: ReadableStream<Uint8Array> | null; headers: Headers }> {
+  const baseUrl = getBackendBaseUrl();
+  const internalToken = getBackendInternalToken();
+
+  if (!baseUrl || !internalToken) {
+    throw new Error("GO_BACKEND_BRIDGE_NOT_CONFIGURED");
+  }
+
+  const response = await fetch(`${baseUrl}${options.path}`, {
+    method: options.method ?? "GET",
+    body: options.body ?? null,
+    headers: {
+      Authorization: `Bearer ${internalToken}`,
+      "X-User-ID": options.userId,
+      ...(options.headers ?? {}),
+    },
+    cache: "no-store",
+  });
+
+  // Pass through only headers we know are safe for download UX. Strip
+  // hop-by-hop / cookie headers so the proxy doesn't accidentally leak
+  // backend session state.
+  const passthrough = new Headers();
+  for (const name of ["content-type", "content-disposition", "content-length"]) {
+    const v = response.headers.get(name);
+    if (v) passthrough.set(name, v);
+  }
+
+  return {
+    status: response.status,
+    body: response.body,
+    headers: passthrough,
+  };
+}

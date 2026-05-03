@@ -4,6 +4,7 @@ import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { AdminPageHeader } from "../_components/coming-soon";
 import { LineChart } from "../_components/line-chart";
+import { CSVButton } from "../_components/csv-button";
 import { CapsForm } from "./CapsForm";
 
 export const metadata = { title: "AI cost — Admin" };
@@ -104,10 +105,16 @@ export default async function AdminAIUsagePage() {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader
-        title="AI cost"
-        description="LLM spend, tokens, and error rate aggregated from ai_usage_events. Recorded per call from instrumented features."
-      />
+      <div className="flex items-start justify-between gap-3">
+        <AdminPageHeader
+          title="AI cost"
+          description="LLM spend, tokens, and error rate aggregated from ai_usage_events. Recorded per call from instrumented features."
+        />
+        <div className="flex flex-col gap-2">
+          <CSVButton path="/api/admin/ai-usage/events?days=30&format=csv" label="Events CSV" />
+          <CSVButton path="/api/admin/ai-usage/blocks?format=csv" label="Blocks CSV" />
+        </div>
+      </div>
 
       {loadError && (
         <div className="rounded-[var(--radius-md)] border border-red-300 bg-red-50 p-3 text-sm text-red-700">

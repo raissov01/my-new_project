@@ -381,6 +381,7 @@ func RegisterRoutes(router *gin.Engine) {
 		g.GET("/ai-usage/settings", wrapHTTP(deps.AdminAIUsage.Settings))
 		g.PATCH("/ai-usage/settings", wrapHTTP(deps.AdminAIUsage.UpdateSettings))
 		g.GET("/ai-usage/blocks", wrapHTTP(deps.AdminAIUsage.Blocks))
+		g.GET("/ai-usage/events", wrapHTTP(deps.AdminAIUsage.EventsExport))
 		// Background jobs (cron scheduler)
 		g.GET("/jobs", wrapHTTP(deps.AdminJobs.Summary))
 		g.GET("/jobs/history", wrapHTTP(deps.AdminJobs.History))

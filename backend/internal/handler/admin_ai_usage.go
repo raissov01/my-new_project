@@ -324,13 +324,16 @@ type aiCostBlockRow struct {
 // Blocks handles GET /admin/ai-usage/blocks?limit=50.
 //
 // Most-recent-first list of refused AI calls so admins can spot abuse or
-// runaway features that keep tripping the cap.
+// runaway features that keep tripping the cap. Supports ?format=csv.
 func (h *AdminAIUsageHandler) Blocks(w http.ResponseWriter, r *http.Request) {
 	limit := 50
 	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
 		if n, err := strconv.Atoi(raw); err == nil && n > 0 && n <= 500 {
 			limit = n
 		}
+	}
+	if wantsCSV(r) {
+		limit = 10000
 	}
 
 	type scan struct {
@@ -384,5 +387,92 @@ func (h *AdminAIUsageHandler) Blocks(w http.ResponseWriter, r *http.Request) {
 		}
 		out = append(out, row)
 	}
+
+	if wantsCSV(r) {
+		writeCSV(w, "ai-cost-blocks",
+			[]string{"id", "created_at", "user_id", "username", "email", "feature", "reason", "usage_usd", "cap_usd"},
+			len(out),
+			func(i int) []string {
+				row := out[i]
+				return []string{
+					row.ID, row.CreatedAt, deref(row.UserID), row.Username, row.Email,
+					row.Feature, row.Reason,
+					strconv.FormatFloat(row.UsageUSD, 'f', 4, 64),
+					strconv.FormatFloat(row.CapUSD, 'f', 2, 64),
+				}
+			})
+		return
+	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+// EventsExport handles GET /admin/ai-usage/events?days=30&format=csv.
+//
+// Returns one row per LLM call with full metadata. Capped at 100k rows so
+// an admin can't accidentally request a multi-GB export. Always serves CSV
+// (the live dashboard uses /summary instead).
+func (h *AdminAIUsageHandler) EventsExport(w http.ResponseWriter, r *http.Request) {
+	days := 30
+	if raw := strings.TrimSpace(r.URL.Query().Get("days")); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil && n > 0 && n <= 365 {
+			days = n
+		}
+	}
+
+	type eventRow struct {
+		ID               string
+		CreatedAt        string
+		UserID           *string
+		Username         *string
+		Feature          string
+		Provider         string
+		Model            string
+		PromptTokens     int
+		CompletionTokens int
+		CostUSD          float64
+		LatencyMs        int
+		Error            string
+	}
+	q := `
+		SELECT
+		  e.id,
+		  to_char(e.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at,
+		  e.user_id,
+		  u.username,
+		  e.feature,
+		  e.provider,
+		  e.model,
+		  e.prompt_tokens,
+		  e.completion_tokens,
+		  e.cost_usd::float8,
+		  e.latency_ms,
+		  e.error
+		FROM ai_usage_events e
+		LEFT JOIN users u ON u.id = e.user_id
+		WHERE e.created_at >= NOW() - (?::int) * INTERVAL '1 day'
+		ORDER BY e.created_at DESC
+		LIMIT 100000`
+	var rows []eventRow
+	if err := h.db.WithContext(r.Context()).Raw(q, days).Scan(&rows).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load ai usage events", err)
+		return
+	}
+
+	writeCSV(w, "ai-usage-events",
+		[]string{"id", "created_at", "user_id", "username", "feature", "provider", "model", "prompt_tokens", "completion_tokens", "cost_usd", "latency_ms", "error"},
+		len(rows),
+		func(i int) []string {
+			row := rows[i]
+			uname := ""
+			if row.Username != nil {
+				uname = *row.Username
+			}
+			return []string{
+				row.ID, row.CreatedAt, deref(row.UserID), uname,
+				row.Feature, row.Provider, row.Model,
+				intStr(row.PromptTokens), intStr(row.CompletionTokens),
+				strconv.FormatFloat(row.CostUSD, 'f', 6, 64),
+				intStr(row.LatencyMs), row.Error,
+			}
+		})
 }
