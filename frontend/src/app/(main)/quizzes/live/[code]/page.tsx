@@ -57,6 +57,8 @@ type LiveQuestion = {
   comprehensionSubQuestions?: LiveCompSubQ[];
   timeLimit: number;
   imageUrl?: string;
+  audioUrl?: string;
+  videoUrl?: string;
 };
 
 type QuestionEvt = {
@@ -609,7 +611,7 @@ function QuestionScreen({
 
       {/* Question */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {q.imageUrl && q.questionType !== "hotspot" ? (
+      {q.imageUrl && q.questionType !== "hotspot" && q.questionType !== "labeling" ? (
         <img
           src={q.imageUrl}
           alt=""
@@ -619,12 +621,30 @@ function QuestionScreen({
           style={{ maxHeight: 200 }}
         />
       ) : null}
+      {q.audioUrl ? (
+        <audio
+          controls
+          preload="metadata"
+          src={q.audioUrl}
+          className="w-full"
+        />
+      ) : null}
+      {q.videoUrl ? (
+        <video
+          controls
+          preload="metadata"
+          src={q.videoUrl}
+          className="w-full rounded-[1.2rem]"
+          style={{ maxHeight: 320 }}
+        />
+      ) : null}
       <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
         <p className="text-lg font-semibold leading-snug text-[var(--text-primary)]">{q.questionText}</p>
       </div>
 
-      {/* Answer inputs */}
-      {q.questionType === "mcq" && (
+      {/* Answer inputs. audio/video render the same MCQ grid as plain MCQ — the
+          media player above provides the question context. */}
+      {(q.questionType === "mcq" || q.questionType === "audio" || q.questionType === "video") && (
         <div className="grid grid-cols-2 gap-3">
           {OPTION_KEYS.map((opt, i) => {
             const val = optValues[opt];
