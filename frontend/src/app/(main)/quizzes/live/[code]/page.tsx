@@ -122,6 +122,7 @@ function LiveGameInner() {
   const [reorderSubmitted, setReorderSubmitted] = useState(false);
   const [matchDraft, setMatchDraft] = useState<Record<string, string>>({});
   const [compDraft, setCompDraft] = useState<Record<string, string>>({});
+  const [labelingDraft, setLabelingDraft] = useState<Record<string, string>>({});
   const [wsError, setWsError] = useState("");
   // "connected" | "reconnecting" | "disconnected"
   const [wsStatus, setWsStatus] = useState<"connected" | "reconnecting" | "disconnected">("connected");
@@ -275,6 +276,14 @@ function LiveGameInner() {
           setCompDraft(draft);
         } else {
           setCompDraft({});
+        }
+        // Init labeling draft: one entry per zone keyed by stringified zone ID.
+        if (q.questionType === "labeling" && q.hotspotZones) {
+          const draft: Record<string, string> = {};
+          for (const z of q.hotspotZones) draft[String(z.id)] = "";
+          setLabelingDraft(draft);
+        } else {
+          setLabelingDraft({});
         }
         setPhase("question");
         startRef.current = Date.now();
@@ -447,10 +456,12 @@ function LiveGameInner() {
           reorderSubmitted={reorderSubmitted}
           matchDraft={matchDraft}
           compDraft={compDraft}
+          labelingDraft={labelingDraft}
           onBlankChange={setBlankInput}
           onReorderChange={setReorderDraft}
           onMatchChange={setMatchDraft}
           onCompChange={setCompDraft}
+          onLabelingChange={setLabelingDraft}
           onSelect={(opt) => {
             setSelectedOpt(opt);
             submitAnswer(opt);
@@ -468,6 +479,12 @@ function LiveGameInner() {
             // Comprehension reuses textAnswer with a JSON-encoded {sqID: answer} map,
             // matching the backend's liveComprehensionCorrect contract.
             submitAnswer(undefined, JSON.stringify(compDraft));
+            setSelectedOpt("submitted");
+          }}
+          onLabelingSubmit={() => {
+            // Labeling submits the same {zoneID: label} JSON shape as solo play —
+            // backend's liveLabelingCorrect parses it identically.
+            submitAnswer(undefined, JSON.stringify(labelingDraft));
             setSelectedOpt("submitted");
           }}
         />
@@ -546,9 +563,9 @@ const OPTION_KEYS = ["a", "b", "c", "d", "e"] as const;
 
 function QuestionScreen({
   evt, timeLeft, selectedOpt, blankInput, reorderDraft, reorderSubmitted,
-  matchDraft, compDraft,
-  onBlankChange, onReorderChange, onMatchChange, onCompChange,
-  onSelect, onBlankSubmit, onReorderSubmit, onMatchSubmit, onCompSubmit,
+  matchDraft, compDraft, labelingDraft,
+  onBlankChange, onReorderChange, onMatchChange, onCompChange, onLabelingChange,
+  onSelect, onBlankSubmit, onReorderSubmit, onMatchSubmit, onCompSubmit, onLabelingSubmit,
 }: {
   evt: QuestionEvt;
   timeLeft: number;
@@ -558,15 +575,18 @@ function QuestionScreen({
   reorderSubmitted: boolean;
   matchDraft: Record<string, string>;
   compDraft: Record<string, string>;
+  labelingDraft: Record<string, string>;
   onBlankChange: (v: string) => void;
   onReorderChange: (items: string[]) => void;
   onMatchChange: (draft: Record<string, string>) => void;
   onCompChange: (draft: Record<string, string>) => void;
+  onLabelingChange: (draft: Record<string, string>) => void;
   onSelect: (opt: string) => void;
   onBlankSubmit: () => void;
   onReorderSubmit: () => void;
   onMatchSubmit: () => void;
   onCompSubmit: () => void;
+  onLabelingSubmit: () => void;
 }) {
   const { t } = useLocale();
   const q = evt.question;
@@ -886,6 +906,82 @@ function QuestionScreen({
           onSubmit={onCompSubmit}
         />
       )}
+
+      {q.questionType === "labeling" && q.imageUrl && q.hotspotZones && (
+        <LiveLabelingInput
+          t={t}
+          imageUrl={q.imageUrl}
+          zones={q.hotspotZones}
+          draft={labelingDraft}
+          submitted={!!selectedOpt}
+          onDraftChange={onLabelingChange}
+          onSubmit={onLabelingSubmit}
+        />
+      )}
+    </div>
+  );
+}
+
+function LiveLabelingInput({
+  t,
+  imageUrl,
+  zones,
+  draft,
+  submitted,
+  onDraftChange,
+  onSubmit,
+}: {
+  t: (k: string) => string;
+  imageUrl: string;
+  zones: HotspotZone[];
+  draft: Record<string, string>;
+  submitted: boolean;
+  onDraftChange: (d: Record<string, string>) => void;
+  onSubmit: () => void;
+}) {
+  // Submit is gated on every zone having a non-empty trimmed answer; the
+  // backend grades all-or-nothing so a partial submission is always wrong.
+  const allFilled = zones.every((z) => (draft[String(z.id)] ?? "").trim() !== "");
+
+  return (
+    <div className="space-y-4">
+      <div className="relative select-none overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imageUrl} alt="" className="pointer-events-none w-full" draggable={false} />
+        {zones.map((zone) => (
+          <div
+            key={zone.id}
+            style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
+            className="pointer-events-none absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-[var(--primary)] text-xs font-bold text-white shadow"
+          >
+            {zone.id}
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        {zones.map((zone) => (
+          <div key={zone.id} className="flex items-center gap-3">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-white">
+              {zone.id}
+            </span>
+            <input
+              type="text"
+              value={draft[String(zone.id)] ?? ""}
+              disabled={submitted}
+              onChange={(e) => onDraftChange({ ...draft, [String(zone.id)]: e.target.value })}
+              placeholder={t("quiz.labeling.typeLabel") || "Type label…"}
+              className="flex-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none disabled:opacity-60"
+            />
+          </div>
+        ))}
+      </div>
+
+      <Button type="button" onClick={onSubmit} disabled={submitted || !allFilled} className="w-full">
+        {submitted
+          ? (t("quiz.live.submitted") || "Submitted")
+          : (t("quiz.matching.submitAll") || "Submit all")}
+      </Button>
     </div>
   );
 }
