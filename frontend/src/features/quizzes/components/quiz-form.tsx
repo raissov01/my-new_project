@@ -31,6 +31,7 @@ import {
   Music,
   Video,
   Paintbrush,
+  Mic,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -274,6 +275,19 @@ function applyTypeChange(
         matchPairs: [],
       };
     case "drawing":
+      return {
+        ...base,
+        optionA: "",
+        optionB: "",
+        optionC: "",
+        optionD: "",
+        correctOption: "",
+        blankAnswer: "",
+        reorderItems: [],
+        matchPairs: [],
+      };
+    case "voice_response":
+      // Speaking practice: prompt-only, no options or canonical answer.
       return {
         ...base,
         optionA: "",
@@ -770,6 +784,7 @@ const TYPE_OPTIONS: TypeOption[] = [
   { key: "audio", labelKey: "quiz.typeAudio", icon: Music },
   { key: "video", labelKey: "quiz.typeVideo", icon: Video },
   { key: "drawing", labelKey: "quiz.typeDrawing", icon: Paintbrush },
+  { key: "voice_response", labelKey: "quiz.typeVoiceResponse", icon: Mic },
 ];
 
 function QuestionEditor({

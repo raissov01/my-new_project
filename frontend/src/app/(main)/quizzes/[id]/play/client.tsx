@@ -744,6 +744,16 @@ export function PlayQuizClient({
     [recordAnswer]
   );
 
+  const recordVoiceResponse = useCallback(
+    (audioUrl: string | null) => {
+      // Voice response is non-graded (IELTS speaking practice). The audio URL
+      // is stored for later teacher review; we mark it "correct" to avoid the
+      // red flash that would imply automatic grading.
+      recordAnswer({ selectedOption: null, textAnswer: audioUrl, orderAnswer: null }, true);
+    },
+    [recordAnswer]
+  );
+
   // Timeout handler: fires a "null" answer of the right shape for the
   // current question type so the backend still gets a row per question.
   const handleTimeout = useCallback(() => {
@@ -790,8 +800,11 @@ export function PlayQuizClient({
       case "drawing":
         recordDrawing(null);
         return;
+      case "voice_response":
+        recordVoiceResponse(null);
+        return;
     }
-  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot, recordPoll, recordDropdown, recordCategorization, recordDrawing, recordAnswer]);
+  }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot, recordPoll, recordDropdown, recordCategorization, recordDrawing, recordVoiceResponse, recordAnswer]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
   // Practice mode disables the timer entirely so students can dwell on
@@ -1251,6 +1264,12 @@ export function PlayQuizClient({
                 setDrawnDataUrl(dataUrl);
                 recordDrawing(dataUrl);
               }}
+            />
+          ) : questionType === "voice_response" ? (
+            <VoiceResponsePlayBody
+              t={t}
+              revealed={revealed}
+              onSubmit={recordVoiceResponse}
             />
           ) : (
             <ReorderBody
@@ -2674,6 +2693,156 @@ function DrawingPlayBody({
       <Button type="button" onClick={handleSubmit} disabled={!hasDrawn}>
         {t("quiz.drawing.submit")}
       </Button>
+    </div>
+  );
+}
+
+// VoiceResponsePlayBody is the IELTS-style speaking-practice recorder. The
+// student records audio via MediaRecorder, plays it back to verify, then
+// uploads the blob to the existing /quizzes/audio endpoint. The returned URL
+// is stored in the attempt's text_answer for later teacher review — there is
+// no automatic grading.
+function VoiceResponsePlayBody({
+  t,
+  revealed,
+  onSubmit,
+}: {
+  t: (key: string) => string;
+  revealed: boolean;
+  onSubmit: (audioUrl: string | null) => void;
+}) {
+  const [recState, setRecState] = useState<"idle" | "recording" | "recorded" | "uploading" | "submitted" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [blob, setBlob] = useState<Blob | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [seconds, setSeconds] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Release object URLs and any active mic stream when the component unmounts
+  // so we don't keep the device's recording indicator on after the question advances.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      streamRef.current?.getTracks().forEach((tr) => tr.stop());
+      if (tickRef.current) clearInterval(tickRef.current);
+    };
+  }, [previewUrl]);
+
+  async function startRec() {
+    setError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const rec = new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      rec.onstop = () => {
+        const b = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
+        setBlob(b);
+        const url = URL.createObjectURL(b);
+        setPreviewUrl(url);
+        setRecState("recorded");
+        streamRef.current?.getTracks().forEach((tr) => tr.stop());
+        streamRef.current = null;
+        if (tickRef.current) {
+          clearInterval(tickRef.current);
+          tickRef.current = null;
+        }
+      };
+      recorderRef.current = rec;
+      setSeconds(0);
+      tickRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
+      rec.start();
+      setRecState("recording");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "microphone unavailable");
+      setRecState("error");
+    }
+  }
+
+  function stopRec() {
+    recorderRef.current?.stop();
+  }
+
+  function reset() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setBlob(null);
+    setPreviewUrl(null);
+    setSeconds(0);
+    setRecState("idle");
+  }
+
+  async function submit() {
+    if (!blob) return;
+    setRecState("uploading");
+    try {
+      const form = new FormData();
+      form.append("audio", blob, `voice-${Date.now()}.webm`);
+      const res = await fetch("/api/v1/quizzes/audio", { method: "POST", body: form });
+      if (!res.ok) throw new Error(`upload failed: ${res.status}`);
+      const data = (await res.json()) as { url?: string };
+      if (!data.url) throw new Error("missing url");
+      setRecState("submitted");
+      onSubmit(data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "upload failed");
+      setRecState("error");
+    }
+  }
+
+  if (revealed) {
+    return (
+      <div className="mt-4 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
+          {t("quiz.voice.submitted") || "Recording submitted (non-graded)"}
+        </p>
+        {previewUrl && <audio src={previewUrl} controls className="w-full" />}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-3">
+      <p className="text-xs text-[var(--text-muted)]">
+        {t("quiz.voice.hint") || "Speak your answer. Recording is non-graded — for IELTS speaking practice."}
+      </p>
+      {recState === "idle" && (
+        <Button type="button" onClick={startRec}>
+          {t("quiz.voice.start") || "🎤 Start recording"}
+        </Button>
+      )}
+      {recState === "recording" && (
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" />
+          <span className="font-mono tabular-nums text-sm">{seconds}s</span>
+          <Button type="button" variant="outline" onClick={stopRec}>
+            {t("quiz.voice.stop") || "Stop"}
+          </Button>
+        </div>
+      )}
+      {recState === "recorded" && previewUrl && (
+        <div className="space-y-2">
+          <audio src={previewUrl} controls className="w-full" />
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={reset}>
+              {t("quiz.voice.retake") || "Re-record"}
+            </Button>
+            <Button type="button" onClick={submit}>
+              {t("quiz.voice.submit") || "Submit"}
+            </Button>
+          </div>
+        </div>
+      )}
+      {recState === "uploading" && <p className="text-sm">{t("quiz.voice.uploading") || "Uploading..."}</p>}
+      {recState === "submitted" && (
+        <p className="text-sm text-emerald-600">{t("quiz.voice.done") || "Submitted ✓"}</p>
+      )}
+      {error && <p className="text-sm text-rose-600">{error}</p>}
     </div>
   );
 }

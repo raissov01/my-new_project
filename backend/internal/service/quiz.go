@@ -49,6 +49,7 @@ const (
 	QTypeAudio          = "audio"
 	QTypeVideo          = "video"
 	QTypeDrawing        = "drawing"
+	QTypeVoiceResponse  = "voice_response"
 )
 
 func (s *Quiz) GetOverview(ctx context.Context, userID string, filters repository.QuizListFilters) ([]model.QuizOverview, error) {
@@ -437,6 +438,11 @@ func (s *Quiz) validateAndNormalize(
 
 		case QTypeDrawing:
 			// Non-graded open-ended: no options or correct answer required.
+
+		case QTypeVoiceResponse:
+			// Non-graded speaking practice (IELTS use case): the prompt itself
+			// drives the response. Student records audio in the player; the
+			// recording URL is stored in the attempt's text_answer column.
 
 		default:
 			return nil, fmt.Errorf("question %d: unsupported question type %q", i+1, qType)
