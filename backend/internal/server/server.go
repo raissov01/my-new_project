@@ -215,6 +215,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		Mining:             handler.NewMining(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		Billing:            handler.NewBilling(gormDB, cfg.LemonSqueezyWebhookSecret, cfg.LemonSqueezyCheckoutURL),
 		Push:               handler.NewPush(gormDB, cfg.VAPIDPublicKey, cfg.VAPIDPrivateKey),
+		Notification:       handler.NewNotification(gormDB),
 		Contact:            handler.NewContact(emailSender, cfg.ContactEmail),
 		DebugDatabase:      buildDebugDatabaseHandler(pool),
 	}

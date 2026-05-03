@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Bell, BellOff, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/components/providers/locale-provider";
 import {
   isPushSupported,
   getPushSubscription,
@@ -18,11 +19,11 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 interface Props {
-  t: (key: string) => string;
   vapidPublicKey: string;
 }
 
-export function NotificationsSection({ t, vapidPublicKey }: Props) {
+export function NotificationsSection({ vapidPublicKey }: Props) {
+  const { t } = useLocale();
   const [supported, setSupported] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");

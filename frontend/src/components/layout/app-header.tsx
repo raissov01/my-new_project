@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useLocale } from "@/components/providers/locale-provider";
 import { AvatarMenu } from "@/components/layout/avatar-menu";
+import { NotificationBell } from "@/components/layout/notification-bell";
 
 export function AppHeader() {
   const { user } = useAuth();
@@ -63,39 +64,7 @@ export function AppHeader() {
       <div style={{ flex: 1 }} />
 
       {/* Notification bell */}
-      <button
-        type="button"
-        aria-label={t("header.notifications")}
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          border: "1.5px solid var(--line)",
-          background: "var(--paper-2)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          color: "var(--ink-soft)",
-          position: "relative",
-          flexShrink: 0,
-        }}
-      >
-        <Bell size={16} />
-        {/* unread dot */}
-        <span
-          style={{
-            position: "absolute",
-            top: 7,
-            right: 7,
-            width: 7,
-            height: 7,
-            borderRadius: "50%",
-            background: "var(--terra)",
-            border: "1.5px solid var(--paper)",
-          }}
-        />
-      </button>
+      {user ? <NotificationBell variant="appHeader" /> : null}
 
       {/* Account menu — opens dropdown with profile, settings, theme, language, logout */}
       {user ? (

@@ -136,7 +136,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
           {/* Push Notifications */}
           <NotificationsSection
-            t={t}
             vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""}
           />
 

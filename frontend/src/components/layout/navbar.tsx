@@ -23,7 +23,6 @@ import {
   Crown,
   Sun,
   Moon,
-  Bell,
   Languages,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
@@ -33,6 +32,7 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useGhostMode } from "@/features/auth/hooks/use-ghost-mode";
 import { Button } from "@/components/ui/button";
 import { AvatarMenu } from "@/components/layout/avatar-menu";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { BrandLogo } from "@/components/layout";
 import { DEV_MODE } from "@/lib/shared/auth/dev-mode";
 import { StreakBadge } from "@/components/gamification/StreakBadge";
@@ -333,14 +333,7 @@ export function Navbar() {
               )}
 
               {/* Notification bell */}
-              {user && (
-                <button
-                  className="relative flex h-9 w-9 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/5 hover:text-white"
-                  aria-label={t("nav.notifications")}
-                >
-                  <Bell className="h-4 w-4" />
-                </button>
-              )}
+              {user && <NotificationBell variant="navbar" />}
 
               {loading ? (
                 <>

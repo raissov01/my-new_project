@@ -56,6 +56,7 @@ type Dependencies struct {
 	Mining             *MiningHandler
 	Billing            *BillingHandler
 	Push               *PushHandler
+	Notification       *NotificationHandler
 	Contact            *ContactHandler
 	DebugDatabase      http.HandlerFunc
 }
@@ -312,6 +313,11 @@ func RegisterRoutes(router *gin.Engine) {
 		// Web Push subscriptions
 		internal.POST("/push/subscribe", wrapHTTP(deps.Push.Subscribe))
 		internal.DELETE("/push/subscribe", wrapHTTP(deps.Push.Unsubscribe))
+
+		// In-app notifications (bell dropdown)
+		internal.GET("/notifications", wrapHTTP(deps.Notification.List))
+		internal.POST("/notifications/read-all", wrapHTTP(deps.Notification.MarkAllRead))
+		internal.POST("/notifications/:id/read", wrapHTTP(deps.Notification.MarkRead))
 
 		// Sentence Mining
 		miningLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()
