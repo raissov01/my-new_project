@@ -219,6 +219,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		AdminAPIMetrics:    handler.NewAdminAPIMetrics(),
 		AdminAIUsage:       handler.NewAdminAIUsage(gormDB),
 		AdminDeliverability: handler.NewAdminDeliverability(gormDB),
+		AdminDatabase:       handler.NewAdminDatabase(gormDB),
 		ResendWebhook: handler.NewResendWebhook(gormDB, cfg.ResendWebhookSecret),
 		AdminStorage: handler.NewAdminStorage(gormDB, []handler.NamedPath{
 			{Name: "Quiz images", Path: "uploads/quiz-images", RefColumn: "image_url"},

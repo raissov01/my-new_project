@@ -58,6 +58,7 @@ type Dependencies struct {
 	AdminJobs          *AdminJobsHandler
 	AdminDeliverability *AdminDeliverabilityHandler
 	AdminStorage       *AdminStorageHandler
+	AdminDatabase      *AdminDatabaseHandler
 	ResendWebhook      *ResendWebhookHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
@@ -391,6 +392,8 @@ func RegisterRoutes(router *gin.Engine) {
 		g.GET("/storage", wrapHTTP(deps.AdminStorage.Summary))
 		g.DELETE("/storage/orphans", wrapHTTP(deps.AdminStorage.DeleteOrphan))
 		g.POST("/storage/orphans/bulk", wrapHTTP(deps.AdminStorage.DeleteOrphansBulk))
+		// Postgres internals (table sizes, dead tuples, current activity)
+		g.GET("/database", wrapHTTP(deps.AdminDatabase.Summary))
 	}
 
 	admin := api.Group("/admin")

@@ -17,6 +17,7 @@ import {
   Clock,
   Mail,
   HardDrive,
+  Database,
   ArrowLeft,
   LogOut,
   Menu,
@@ -106,6 +107,7 @@ export function AdminSidebar() {
     { href: "/admin/jobs", label: "Jobs", icon: Clock },
     { href: "/admin/deliverability", label: "Deliverability", icon: Mail },
     { href: "/admin/storage", label: "Storage", icon: HardDrive },
+    { href: "/admin/database", label: "Database", icon: Database },
   ];
 
   const manageItems: NavItem[] = [
