@@ -3,6 +3,7 @@ import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { ReviewClient } from "./ReviewClient";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Review Questions — Admin" };
 
 interface PendingQuestion {

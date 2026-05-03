@@ -1,0 +1,212 @@
+[
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "My brother ___ to play football every Saturday.",
+    "correctAnswer": "likes",
+    "distractors": [
+      "like",
+      "liked",
+      "liking"
+    ],
+    "explanation": "'likes' is the correct form for he/she/it.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "We usually eat ___ for breakfast in our family.",
+    "correctAnswer": "eggs",
+    "distractors": [
+      "egg",
+      "eating",
+      "eat"
+    ],
+    "explanation": "'eggs' is plural and fits the context.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "She is going to the park ___ her friends this weekend.",
+    "correctAnswer": "with",
+    "distractors": [
+      "at",
+      "on",
+      "to"
+    ],
+    "explanation": "'with' indicates being together.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "I ___ my job because I want to travel more.",
+    "correctAnswer": "need",
+    "distractors": [
+      "needing",
+      "needs",
+      "needed"
+    ],
+    "explanation": "'need' is the base form for 'I'.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "The weather is usually ___ in summer.",
+    "correctAnswer": "hot",
+    "distractors": [
+      "cold",
+      "rainy",
+      "snowy"
+    ],
+    "explanation": "'hot' describes the typical summer temperature.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "She ___ to the gym three times a week.",
+    "correctAnswer": "goes",
+    "distractors": [
+      "going",
+      "goed",
+      "go"
+    ],
+    "explanation": "'goes' is the present simple form for she.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "I bought ___ apples and some bananas.",
+    "correctAnswer": "three",
+    "distractors": [
+      "threee",
+      "threes",
+      "three's"
+    ],
+    "explanation": "'three' is the correct numeral.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "They enjoyed ___ the new movie last night.",
+    "correctAnswer": "watching",
+    "distractors": [
+      "watch",
+      "watched",
+      "watches"
+    ],
+    "explanation": "'watching' is the gerund form needed here.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "My parents are ___ a new house this year.",
+    "correctAnswer": "buying",
+    "distractors": [
+      "buy",
+      "buys",
+      "bought"
+    ],
+    "explanation": "'buying' is the present continuous form.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "It often ___ in winter in this city.",
+    "correctAnswer": "snows",
+    "distractors": [
+      "snowed",
+      "snow",
+      "snowing"
+    ],
+    "explanation": "'snows' is the correct form for it.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "Greg is very good ___ playing the guitar.",
+    "correctAnswer": "at",
+    "distractors": [
+      "in",
+      "on",
+      "for"
+    ],
+    "explanation": "'at' is the correct preposition to use here.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "My sister ___ likes to cook Italian food.",
+    "correctAnswer": "really",
+    "distractors": [
+      "real",
+      "reality",
+      "realize"
+    ],
+    "explanation": "'really' emphasizes 'likes'.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "I have ___ friends in different countries.",
+    "correctAnswer": "many",
+    "distractors": [
+      "much",
+      "more",
+      "a lot"
+    ],
+    "explanation": "'many' is used with countable nouns.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "We will go to the beach if it ___ sunny tomorrow.",
+    "correctAnswer": "is",
+    "distractors": [
+      "are",
+      "was",
+      "be"
+    ],
+    "explanation": "'is' is the correct verb for the present.",
+    "reviewed": false
+  },
+  {
+    "level": "A2",
+    "category": "grammar",
+    "format": "fill_blank",
+    "prompt": "The train to the city ___ at 9:00 am.",
+    "correctAnswer": "leaves",
+    "distractors": [
+      "leave",
+      "leaved",
+      "leaving"
+    ],
+    "explanation": "'leaves' is the correct form for it.",
+    "reviewed": false
+  }
+]

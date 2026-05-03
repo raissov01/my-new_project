@@ -1,0 +1,212 @@
+[
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "My sister is very ___; she helps everyone in the family with their problems.",
+    "correctAnswer": "supportive",
+    "distractors": [
+      "sensitive",
+      "demanding",
+      "selfish"
+    ],
+    "explanation": "'supportive' describes someone who provides help and encouragement.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The dish was so ___ that I asked for the recipe immediately.",
+    "correctAnswer": "delicious",
+    "distractors": [
+      "spicy",
+      "sour",
+      "bitter"
+    ],
+    "explanation": "'delicious' describes food that tastes very good.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "They plan to ___ Europe next summer to explore different cultures.",
+    "correctAnswer": "travel",
+    "distractors": [
+      "visit",
+      "stay",
+      "work"
+    ],
+    "explanation": "'travel' means to go from one place to another, often over a distance.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "He works in a fast-paced environment, which can be quite ___ at times.",
+    "correctAnswer": "stressful",
+    "distractors": [
+      "boring",
+      "relaxing",
+      "predictable"
+    ],
+    "explanation": "'stressful' describes a situation that causes stress.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "I enjoy ___ in my free time, especially painting and drawing.",
+    "correctAnswer": "hobbies",
+    "distractors": [
+      "work",
+      "exercise",
+      "sleeping"
+    ],
+    "explanation": "'hobbies' refer to activities done for enjoyment during free time.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The latest smartphone has many ___ features that make it user-friendly.",
+    "correctAnswer": "innovative",
+    "distractors": [
+      "old-fashioned",
+      "ordinary",
+      "limited"
+    ],
+    "explanation": "'innovative' means introducing new ideas or methods.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "Today’s weather is quite ___; it feels like summer even in spring.",
+    "correctAnswer": "warm",
+    "distractors": [
+      "cold",
+      "stormy",
+      "foggy"
+    ],
+    "explanation": "'warm' describes a temperature that is comfortable but not hot.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "Eating fruits and vegetables is essential for ___ health.",
+    "correctAnswer": "good",
+    "distractors": [
+      "poor",
+      "bad",
+      "weak"
+    ],
+    "explanation": "'good health' refers to a state of physical well-being.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The government has implemented new policies to protect the ___ from pollution.",
+    "correctAnswer": "environment",
+    "distractors": [
+      "economy",
+      "society",
+      "technology"
+    ],
+    "explanation": "'environment' refers to the natural world, including land, air, and water.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The festival celebrates local ___, attracting visitors from around the world.",
+    "correctAnswer": "culture",
+    "distractors": [
+      "tradition",
+      "landmarks",
+      "food"
+    ],
+    "explanation": "'culture' encompasses the ideas, customs, and social behavior of a particular people.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "After lunch, I felt really ___ and had to take a short nap.",
+    "correctAnswer": "sleepy",
+    "distractors": [
+      "energetic",
+      "excited",
+      "bored"
+    ],
+    "explanation": "'sleepy' describes the feeling of needing sleep.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "To keep the house clean, it’s important to ___ the floors regularly.",
+    "correctAnswer": "mop",
+    "distractors": [
+      "ignore",
+      "repair",
+      "decorate"
+    ],
+    "explanation": "'mop' means to clean a surface with a mop, usually a floor.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The company is looking for someone who is ___ in both English and Spanish.",
+    "correctAnswer": "fluent",
+    "distractors": [
+      "silent",
+      "confident",
+      "limited"
+    ],
+    "explanation": "'fluent' means able to speak a language easily and accurately.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "He enjoys ___ new recipes and experimenting with different ingredients.",
+    "correctAnswer": "trying",
+    "distractors": [
+      "making",
+      "reading",
+      "running"
+    ],
+    "explanation": "'trying' refers to the act of attempting something new.",
+    "reviewed": false
+  },
+  {
+    "level": "B2",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The presentation was ___; he engaged the audience with his enthusiasm.",
+    "correctAnswer": "captivating",
+    "distractors": [
+      "boring",
+      "complicated",
+      "simple"
+    ],
+    "explanation": "'captivating' means attracting and holding interest or attention.",
+    "reviewed": false
+  }
+]

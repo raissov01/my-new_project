@@ -1,0 +1,282 @@
+[
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "My brother is very ___, he loves to help others and always listens to their problems.",
+    "correctAnswer": "kind",
+    "distractors": [
+      "rude",
+      "lazy",
+      "selfish"
+    ],
+    "explanation": "'kind' means being friendly and generous to others.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "I always carry a ___ when I travel, it helps me find my way around new places.",
+    "correctAnswer": "map",
+    "distractors": [
+      "book",
+      "camera",
+      "passport"
+    ],
+    "explanation": "'map' refers to a visual representation of an area, helping in navigation.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "Eating too much sugar can lead to health problems like ___ and diabetes.",
+    "correctAnswer": "obesity",
+    "distractors": [
+      "calmness",
+      "happiness",
+      "strength"
+    ],
+    "explanation": "'obesity' refers to having an excessive amount of body fat.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "He works at a tech company and uses different types of ___ to improve productivity.",
+    "correctAnswer": "software",
+    "distractors": [
+      "hardware",
+      "furniture",
+      "clothes"
+    ],
+    "explanation": "'software' refers to programs and applications used on computers.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "We need to ___ the recycling program to reduce waste in our community.",
+    "correctAnswer": "improve",
+    "distractors": [
+      "cancel",
+      "ignore",
+      "create"
+    ],
+    "explanation": "'improve' means to make something better.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "My sister loves painting, it's her favorite ___ after work.",
+    "correctAnswer": "hobby",
+    "distractors": [
+      "job",
+      "break",
+      "habit"
+    ],
+    "explanation": "'hobby' refers to a leisure activity pursued for enjoyment.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The weather today is very ___. It’s cloudy and looks like it might rain soon.",
+    "correctAnswer": "gloomy",
+    "distractors": [
+      "sunny",
+      "clear",
+      "hot"
+    ],
+    "explanation": "'gloomy' describes a situation that is dark and depressing, often cloudy.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "To stay healthy, you should eat a balanced diet and ___ regularly.",
+    "correctAnswer": "exercise",
+    "distractors": [
+      "sleep",
+      "work",
+      "study"
+    ],
+    "explanation": "'exercise' means to engage in physical activity to improve health.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "Many cultures celebrate their traditions with ___ and festivals throughout the year.",
+    "correctAnswer": "customs",
+    "distractors": [
+      "secrets",
+      "lies",
+      "rules"
+    ],
+    "explanation": "'customs' refer to traditional practices or behaviors of a particular society.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "I always check the ___ before I leave to make sure I dress appropriately.",
+    "correctAnswer": "forecast",
+    "distractors": [
+      "schedule",
+      "recipe",
+      "map"
+    ],
+    "explanation": "'forecast' is a prediction about future weather conditions.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "She wanted to ___ her studies in business administration to get a better job.",
+    "correctAnswer": "continue",
+    "distractors": [
+      "stop",
+      "start",
+      "finish"
+    ],
+    "explanation": "'continue' means to keep going with something already started.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The children are very excited because they will go on a ___ to the amusement park tomorrow.",
+    "correctAnswer": "trip",
+    "distractors": [
+      "meal",
+      "party",
+      "meeting"
+    ],
+    "explanation": "'trip' refers to a journey or excursion, especially for pleasure.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "Please make sure to ___ your appointment, as it is important for your health.",
+    "correctAnswer": "attend",
+    "distractors": [
+      "cancel",
+      "ignore",
+      "miss"
+    ],
+    "explanation": "'attend' means to be present at an event or place.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "We need to find ways to protect the environment, like reducing ___ and using less plastic.",
+    "correctAnswer": "pollution",
+    "distractors": [
+      "education",
+      "development",
+      "conversation"
+    ],
+    "explanation": "'pollution' refers to harmful substances or contaminants in the environment.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "I prefer to have ___ food because it’s often healthier than processed food.",
+    "correctAnswer": "fresh",
+    "distractors": [
+      "frozen",
+      "canned",
+      "old"
+    ],
+    "explanation": "'fresh' describes food that is recently picked or made, not processed.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "My father is a great cook; he can ___ delicious meals with just a few ingredients.",
+    "correctAnswer": "make",
+    "distractors": [
+      "buy",
+      "choose",
+      "find"
+    ],
+    "explanation": "'make' in this context means to prepare or produce something, especially food.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "The new smartphone has many advanced ___ that make it easier to use.",
+    "correctAnswer": "features",
+    "distractors": [
+      "pictures",
+      "users",
+      "charges"
+    ],
+    "explanation": "'features' refer to the distinctive attributes or aspects of a product.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "She always keeps her desk ___ and organized so that she can work better.",
+    "correctAnswer": "clean",
+    "distractors": [
+      "messy",
+      "heavy",
+      "bright"
+    ],
+    "explanation": "'clean' means free from dirt or clutter, which aids productivity.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "During our vacation, we decided to visit a famous ___ in the city to learn more about its history.",
+    "correctAnswer": "museum",
+    "distractors": [
+      "park",
+      "market",
+      "studio"
+    ],
+    "explanation": "'museum' is a place where historical, scientific, or artistic objects are displayed.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "fill_blank",
+    "prompt": "It’s essential to drink plenty of water to stay ___ and healthy.",
+    "correctAnswer": "hydrated",
+    "distractors": [
+      "tired",
+      "weak",
+      "busy"
+    ],
+    "explanation": "'hydrated' means having enough water in the body, which is vital for health.",
+    "reviewed": false
+  }
+]

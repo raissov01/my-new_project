@@ -1,0 +1,202 @@
+[
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "Although they ___ busy, they managed to finish the project on time.",
+    "correctAnswer": "were",
+    "distractors": [
+      "are",
+      "be",
+      "was"
+    ],
+    "explanation": "'were' is the correct past tense of 'to be' for plural subjects.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "Which of the following is the correct form of the verb in this sentence? 'If he ___ harder, he would have passed the exam.'",
+    "correctAnswer": "had studied",
+    "distractors": [
+      "studies",
+      "studied",
+      "was studying"
+    ],
+    "explanation": "The third conditional requires 'had' plus the past participle.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "The new restaurant, which is located by the river, has been receiving positive reviews. It ___ known for its excellent seafood.",
+    "correctAnswer": "is",
+    "distractors": [
+      "was",
+      "will be",
+      "has been"
+    ],
+    "explanation": "'is' is the appropriate present tense for describing a current state.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "They have promised to complete the task ___ the deadline.",
+    "correctAnswer": "by",
+    "distractors": [
+      "in",
+      "on",
+      "at"
+    ],
+    "explanation": "'by' indicates the latest point in time by which something must be done.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "Despite the heavy rain, she decided to go running, which was quite ___ of her.",
+    "correctAnswer": "foolish",
+    "distractors": [
+      "wise",
+      "cautious",
+      "brave"
+    ],
+    "explanation": "'foolish' means lacking good sense, which fits the context of the action.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "The technology sector is rapidly evolving, and those who fail to adapt ___ left behind.",
+    "correctAnswer": "will be",
+    "distractors": [
+      "are",
+      "were",
+      "have been"
+    ],
+    "explanation": "Future passive construction requires 'will be' followed by the past participle.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "The artist's latest exhibition, which ___ to the environment, has attracted a lot of media attention.",
+    "correctAnswer": "addresses",
+    "distractors": [
+      "addressed",
+      "addressing",
+      "was addressing"
+    ],
+    "explanation": "The present tense 'addresses' fits the context of an ongoing action related to the exhibition.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "Because of the unexpected snowstorm, the flight was delayed, ___ to the passengers' frustration.",
+    "correctAnswer": "much",
+    "distractors": [
+      "few",
+      "little",
+      "many"
+    ],
+    "explanation": "'much' is used with uncountable nouns to imply a large degree or extent.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "True or False: 'If I were you, I would take that job offer.' This sentence uses the first conditional.",
+    "correctAnswer": "False",
+    "explanation": "This sentence uses the second conditional to express an unreal situation.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "The report claims that climate change ___ a significant impact on global weather patterns.",
+    "correctAnswer": "has",
+    "distractors": [
+      "have",
+      "is having",
+      "had"
+    ],
+    "explanation": "Present perfect tense 'has' indicates an ongoing effect from the past to the present.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "While traveling abroad, it is essential to be ___ of local customs and traditions.",
+    "correctAnswer": "aware",
+    "distractors": [
+      "careful",
+      "sensitive",
+      "conscious"
+    ],
+    "explanation": "'aware' means having knowledge or perception of a situation or fact.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "True or False: The sentence 'He used to play football every weekend' indicates a past habit that no longer occurs.",
+    "correctAnswer": "True",
+    "explanation": "'Used to' indicates a past habit that has changed.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "The new policy is aimed at reducing waste, encouraging everyone to be more ___ about recycling.",
+    "correctAnswer": "mindful",
+    "distractors": [
+      "careful",
+      "resentful",
+      "thoughtful"
+    ],
+    "explanation": "'Mindful' refers to being conscious and aware, fitting the recycling context.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "As technology ___, privacy concerns have become more pronounced.",
+    "correctAnswer": "advances",
+    "distractors": [
+      "advanced",
+      "advancing",
+      "advance"
+    ],
+    "explanation": "The present simple 'advances' indicates a general truth about ongoing development.",
+    "reviewed": false
+  },
+  {
+    "level": "C1",
+    "category": "grammar",
+    "format": "multiple_choice",
+    "prompt": "The weather forecast predicts that it ___ rain tomorrow.",
+    "correctAnswer": "will",
+    "distractors": [
+      "is",
+      "was",
+      "has"
+    ],
+    "explanation": "'Will' is used for predicting future events.",
+    "reviewed": false
+  }
+]

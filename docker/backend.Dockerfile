@@ -23,6 +23,7 @@ RUN apk --no-cache add ca-certificates wget
 WORKDIR /app
 COPY --from=builder /server ./server
 COPY --from=builder /migrate ./migrate
+COPY --from=builder /app/seed ./seed
 
 EXPOSE 5000
 CMD ["./server"]

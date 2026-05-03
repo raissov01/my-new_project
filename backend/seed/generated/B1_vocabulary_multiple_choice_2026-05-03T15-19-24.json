@@ -1,0 +1,207 @@
+[
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "My brother is the youngest member of our ___.",
+    "correctAnswer": "family",
+    "distractors": [
+      "friends",
+      "colleagues",
+      "neighbours"
+    ],
+    "explanation": "'family' refers to a group of related people.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "Can you please ___ the salt? It’s too bland.",
+    "correctAnswer": "pass",
+    "distractors": [
+      "take",
+      "put",
+      "leave"
+    ],
+    "explanation": "'pass' means to hand something to someone.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "The best way to travel is by ___.",
+    "correctAnswer": "train",
+    "distractors": [
+      "car",
+      "bicycle",
+      "plane"
+    ],
+    "explanation": "'train' is a common mode of public transport.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "If you want to succeed at work, you need to be ___.",
+    "correctAnswer": "dedicated",
+    "distractors": [
+      "lazy",
+      "careless",
+      "quick"
+    ],
+    "explanation": "'dedicated' means committed to a task or purpose.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "One of my hobbies is ___ photos of nature.",
+    "correctAnswer": "taking",
+    "distractors": [
+      "making",
+      "buying",
+      "drawing"
+    ],
+    "explanation": "'taking' refers to capturing images with a camera.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "The new smartphone has an advanced ___ that allows great photos.",
+    "correctAnswer": "camera",
+    "distractors": [
+      "battery",
+      "screen",
+      "charger"
+    ],
+    "explanation": "'camera' is the device used to take pictures.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "It’s very cold today; I think it might ___.",
+    "correctAnswer": "snow",
+    "distractors": [
+      "rain",
+      "sun",
+      "storm"
+    ],
+    "explanation": "'snow' refers to frozen precipitation.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "You should eat a lot of fruits and vegetables for good ___.",
+    "correctAnswer": "health",
+    "distractors": [
+      "wealth",
+      "happiness",
+      "strength"
+    ],
+    "explanation": "'health' refers to physical well-being.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "We should recycle to protect the ___.",
+    "correctAnswer": "environment",
+    "distractors": [
+      "government",
+      "society",
+      "economy"
+    ],
+    "explanation": "'environment' refers to the natural world.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "The festival celebrates our local ___.",
+    "correctAnswer": "culture",
+    "distractors": [
+      "tradition",
+      "economy",
+      "history"
+    ],
+    "explanation": "'culture' refers to the ideas, customs, and social behaviours of a group.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "She wanted to ___ her skills in English.",
+    "correctAnswer": "improve",
+    "distractors": [
+      "decline",
+      "forget",
+      "ignore"
+    ],
+    "explanation": "'improve' means to make better.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "He ___ his lunch at the desk every day.",
+    "correctAnswer": "eats",
+    "distractors": [
+      "cooks",
+      "bakes",
+      "finishes"
+    ],
+    "explanation": "'eats' refers to consuming food.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "They have a big ___ of books in their library.",
+    "correctAnswer": "collection",
+    "distractors": [
+      "crowd",
+      "batch",
+      "group"
+    ],
+    "explanation": "'collection' refers to a group of similar items.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "I don’t like ___ in the morning; it makes me tired.",
+    "correctAnswer": "running",
+    "distractors": [
+      "sleeping",
+      "talking",
+      "studying"
+    ],
+    "explanation": "'running' is a form of exercise that some find tiring.",
+    "reviewed": false
+  },
+  {
+    "level": "B1",
+    "category": "vocabulary",
+    "format": "multiple_choice",
+    "prompt": "True or False: Technology only has positive effects on society.",
+    "correctAnswer": "False",
+    "explanation": "Technology can have both positive and negative effects.",
+    "reviewed": false
+  }
+]
