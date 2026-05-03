@@ -389,6 +389,8 @@ func RegisterRoutes(router *gin.Engine) {
 		g.GET("/deliverability/daily", wrapHTTP(deps.AdminDeliverability.Daily))
 		// Disk usage / uploads inventory
 		g.GET("/storage", wrapHTTP(deps.AdminStorage.Summary))
+		g.DELETE("/storage/orphans", wrapHTTP(deps.AdminStorage.DeleteOrphan))
+		g.POST("/storage/orphans/bulk", wrapHTTP(deps.AdminStorage.DeleteOrphansBulk))
 	}
 
 	admin := api.Group("/admin")

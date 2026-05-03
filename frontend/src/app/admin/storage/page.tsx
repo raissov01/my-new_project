@@ -3,6 +3,7 @@ import { HardDrive, AlertTriangle, FolderOpen } from "lucide-react";
 import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { AdminPageHeader } from "../_components/coming-soon";
+import { BulkDeleteOrphans, DeleteOrphanButton } from "./OrphanActions";
 
 export const metadata = { title: "Storage — Admin" };
 export const dynamic = "force-dynamic";
@@ -175,10 +176,16 @@ function DirCard({ dir }: { dir: DirReport }) {
                   <td className="px-3 py-2 text-right text-[var(--text-secondary)]">
                     {f.modified.slice(0, 10)}
                   </td>
+                  <td className="px-3 py-2 text-right">
+                    <DeleteOrphanButton dir={dir.name} name={f.name} />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <div className="border-t border-amber-200 bg-amber-50">
+            <BulkDeleteOrphans dir={dir.name} />
+          </div>
         </details>
       )}
     </section>
