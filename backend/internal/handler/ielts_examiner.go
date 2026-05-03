@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
@@ -516,7 +517,13 @@ func (h *IELTSExaminerHandler) callLLM(prompt string) (string, string, error) {
 func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error) {
 	// Primary: OpenAI (GPT-5.4)
 	if strings.TrimSpace(h.openAIKey) != "" {
-		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, masterIELTSSystemPrompt, prompt, h.timeout)
+		start := time.Now()
+		raw, usage, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, masterIELTSSystemPrompt, prompt, h.timeout)
+		aicost.Record(h.db, aicost.Event{
+			Feature: "ielts_examiner", Model: h.openAIModel,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(start), Err: err,
+		})
 		if err == nil {
 			return raw, h.openAIModel, nil
 		}
@@ -527,8 +534,10 @@ func (h *IELTSExaminerHandler) callLLMOnce(prompt string) (string, string, error
 }
 
 // callClaudeChatCompletion calls the Claude API via do-ai.run (OpenAI-compatible Chat Completions format).
-// If systemPrompt is empty, only the user message is sent.
-func callClaudeChatCompletion(apiKey, model, apiURL, systemPrompt, prompt string, timeout time.Duration) (string, error) {
+// If systemPrompt is empty, only the user message is sent. Returns the cleaned
+// content plus token usage from the upstream response so callers can record
+// cost telemetry; usage is zero when the upstream omits a `usage` block.
+func callClaudeChatCompletion(apiKey, model, apiURL, systemPrompt, prompt string, timeout time.Duration) (string, openaiUsage, error) {
 	messages := []map[string]string{}
 	if strings.TrimSpace(systemPrompt) != "" {
 		messages = append(messages, map[string]string{"role": "system", "content": systemPrompt})
@@ -545,7 +554,7 @@ func callClaudeChatCompletion(apiKey, model, apiURL, systemPrompt, prompt string
 	bodyBytes, _ := json.Marshal(body)
 	req, err := http.NewRequest(http.MethodPost, apiURL, bytes.NewReader(bodyBytes))
 	if err != nil {
-		return "", fmt.Errorf("build request: %w", err)
+		return "", openaiUsage{}, fmt.Errorf("build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
@@ -553,13 +562,13 @@ func callClaudeChatCompletion(apiKey, model, apiURL, systemPrompt, prompt string
 	client := &http.Client{Timeout: timeout}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("claude request failed: %w", err)
+		return "", openaiUsage{}, fmt.Errorf("claude request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		errBody, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("claude returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
+		return "", openaiUsage{}, fmt.Errorf("claude returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
 	}
 
 	var chatResp struct {
@@ -568,23 +577,30 @@ func callClaudeChatCompletion(apiKey, model, apiURL, systemPrompt, prompt string
 				Content string `json:"content"`
 			} `json:"message"`
 		} `json:"choices"`
+		Usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+		} `json:"usage"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
-		return "", fmt.Errorf("decode response: %w", err)
+		return "", openaiUsage{}, fmt.Errorf("decode response: %w", err)
 	}
+
+	usage := openaiUsage{Prompt: chatResp.Usage.PromptTokens, Completion: chatResp.Usage.CompletionTokens}
 
 	if len(chatResp.Choices) == 0 || strings.TrimSpace(chatResp.Choices[0].Message.Content) == "" {
-		return "", fmt.Errorf("claude returned empty output")
+		return "", usage, fmt.Errorf("claude returned empty output")
 	}
 
-	return cleanJSON(chatResp.Choices[0].Message.Content), nil
+	return cleanJSON(chatResp.Choices[0].Message.Content), usage, nil
 }
 
 // callOpenAIChatCompletion uses the standard Chat Completions API — faster and
 // more reliable than the Responses API for structured JSON output.
-// If systemPrompt is empty, only the user message is sent.
-func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeout time.Duration) (string, error) {
+// If systemPrompt is empty, only the user message is sent. Returns the
+// cleaned content plus token usage so callers can record cost telemetry.
+func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeout time.Duration) (string, openaiUsage, error) {
 	messages := []map[string]string{}
 	if strings.TrimSpace(systemPrompt) != "" {
 		messages = append(messages, map[string]string{"role": "system", "content": systemPrompt})
@@ -600,7 +616,7 @@ func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeou
 	bodyBytes, _ := json.Marshal(body)
 	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(bodyBytes))
 	if err != nil {
-		return "", fmt.Errorf("build request: %w", err)
+		return "", openaiUsage{}, fmt.Errorf("build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
@@ -608,13 +624,13 @@ func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeou
 	client := &http.Client{Timeout: timeout}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("openai request failed: %w", err)
+		return "", openaiUsage{}, fmt.Errorf("openai request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		errBody, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
+		return "", openaiUsage{}, fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(errBody[:min(len(errBody), 300)]))
 	}
 
 	var chatResp struct {
@@ -623,17 +639,23 @@ func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeou
 				Content string `json:"content"`
 			} `json:"message"`
 		} `json:"choices"`
+		Usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+		} `json:"usage"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
-		return "", fmt.Errorf("decode response: %w", err)
+		return "", openaiUsage{}, fmt.Errorf("decode response: %w", err)
 	}
+
+	usage := openaiUsage{Prompt: chatResp.Usage.PromptTokens, Completion: chatResp.Usage.CompletionTokens}
 
 	if len(chatResp.Choices) == 0 || strings.TrimSpace(chatResp.Choices[0].Message.Content) == "" {
-		return "", fmt.Errorf("openai returned empty output")
+		return "", usage, fmt.Errorf("openai returned empty output")
 	}
 
-	return cleanJSON(chatResp.Choices[0].Message.Content), nil
+	return cleanJSON(chatResp.Choices[0].Message.Content), usage, nil
 }
 
 // cleanJSON strips markdown backticks that LLMs sometimes add around JSON.

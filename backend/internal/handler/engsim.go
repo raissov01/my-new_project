@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 	"gorm.io/gorm"
@@ -740,13 +741,25 @@ func (h *EngSimHandler) callAI(systemPrompt, userPrompt string) (string, error) 
 
 	// Try Claude
 	if h.claudeKey != "" {
-		result, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, systemPrompt, userPrompt, h.timeout)
+		start := time.Now()
+		result, usage, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, systemPrompt, userPrompt, h.timeout)
+		aicost.Record(h.db, aicost.Event{
+			Feature: "engsim", Model: h.claudeModel,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(start), Err: err,
+		})
 		if err == nil {
 			return result, nil
 		}
 		// Try fallback model
 		if h.claudeFallback != "" {
-			result, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, systemPrompt, userPrompt, h.timeout)
+			startFB := time.Now()
+			result, usage, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, systemPrompt, userPrompt, h.timeout)
+			aicost.Record(h.db, aicost.Event{
+				Feature: "engsim", Model: h.claudeFallback,
+				PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+				Latency: time.Since(startFB), Err: err,
+			})
 			if err == nil {
 				return result, nil
 			}
@@ -755,7 +768,14 @@ func (h *EngSimHandler) callAI(systemPrompt, userPrompt string) (string, error) 
 
 	// Try OpenAI
 	if h.openAIKey != "" {
-		return callOpenAIChatCompletion(h.openAIKey, h.openAIModel, systemPrompt, userPrompt, h.timeout)
+		start := time.Now()
+		result, usage, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, systemPrompt, userPrompt, h.timeout)
+		aicost.Record(h.db, aicost.Event{
+			Feature: "engsim", Model: h.openAIModel,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(start), Err: err,
+		})
+		return result, err
 	}
 
 	return "", fmt.Errorf("no AI provider configured")

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
@@ -57,7 +58,13 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 
 	// Primary: Claude (DO AI) — model configured via CLAUDE_MODEL env.
 	if strings.TrimSpace(h.claudeKey) != "" && strings.TrimSpace(h.claudeURL) != "" {
-		raw, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, "", prompt, perProviderTimeout)
+		callStart := time.Now()
+		raw, usage, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, "", prompt, perProviderTimeout)
+		aicost.Record(h.db, aicost.Event{
+			Feature: "ielts_study_plan", Model: h.claudeModel,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(callStart), Err: err,
+		})
 		if err == nil {
 			log.Printf("[study-plan-llm] success via Claude: model=%s time=%v len=%d", h.claudeModel, time.Since(start), len(raw))
 			return raw, h.claudeModel, nil
@@ -66,7 +73,13 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 
 		// Claude fallback model
 		if strings.TrimSpace(h.claudeFallback) != "" && h.claudeFallback != h.claudeModel {
-			raw, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, "", prompt, perProviderTimeout)
+			callStart := time.Now()
+			raw, usage, err = callClaudeChatCompletion(h.claudeKey, h.claudeFallback, h.claudeURL, "", prompt, perProviderTimeout)
+			aicost.Record(h.db, aicost.Event{
+				Feature: "ielts_study_plan", Model: h.claudeFallback,
+				PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+				Latency: time.Since(callStart), Err: err,
+			})
 			if err == nil {
 				log.Printf("[study-plan-llm] success via Claude fallback: model=%s time=%v len=%d", h.claudeFallback, time.Since(start), len(raw))
 				return raw, h.claudeFallback, nil
@@ -77,7 +90,13 @@ func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
 
 	// Fallback: OpenAI.
 	if strings.TrimSpace(h.openAIKey) != "" {
-		raw, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, "", prompt, perProviderTimeout)
+		callStart := time.Now()
+		raw, usage, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, "", prompt, perProviderTimeout)
+		aicost.Record(h.db, aicost.Event{
+			Feature: "ielts_study_plan", Model: h.openAIModel,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(callStart), Err: err,
+		})
 		if err == nil {
 			log.Printf("[study-plan-llm] success via OpenAI: model=%s time=%v len=%d", h.openAIModel, time.Since(start), len(raw))
 			return raw, h.openAIModel, nil

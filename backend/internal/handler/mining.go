@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"gorm.io/gorm"
 )
 
@@ -90,8 +91,13 @@ Text:
 	req.Header.Set("Authorization", "Bearer "+h.openAIKey)
 	req.Header.Set("Content-Type", "application/json")
 
+	start := time.Now()
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		aicost.Record(h.db, aicost.Event{
+			Feature: "vocabulary_mining", Model: h.openAIModel,
+			Latency: time.Since(start), Err: err,
+		})
 		return fallbackExtract(text), nil
 	}
 	defer resp.Body.Close()
@@ -101,23 +107,36 @@ Text:
 		Choices []struct {
 			Message struct{ Content string } `json:"message"`
 		} `json:"choices"`
+		Usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+		} `json:"usage"`
 	}
 	if err2 := json.Unmarshal(raw, &result); err2 != nil || len(result.Choices) == 0 {
+		aicost.Record(h.db, aicost.Event{
+			Feature: "vocabulary_mining", Model: h.openAIModel,
+			Latency: time.Since(start), Err: fmt.Errorf("decode failed or empty"),
+		})
 		return fallbackExtract(text), nil
 	}
+	aicost.Record(h.db, aicost.Event{
+		Feature: "vocabulary_mining", Model: h.openAIModel,
+		PromptTokens: result.Usage.PromptTokens, CompletionTokens: result.Usage.CompletionTokens,
+		Latency: time.Since(start),
+	})
 
 	content := result.Choices[0].Message.Content
-	start := 0
+	jstart := 0
 	for i, c := range content {
-		if c == '[' { start = i; break }
+		if c == '[' { jstart = i; break }
 	}
-	end := len(content)
+	jend := len(content)
 	for i := len(content) - 1; i >= 0; i-- {
-		if content[i] == ']' { end = i + 1; break }
+		if content[i] == ']' { jend = i + 1; break }
 	}
 
 	var words []ExtractedWord
-	if err3 := json.Unmarshal([]byte(content[start:end]), &words); err3 != nil {
+	if err3 := json.Unmarshal([]byte(content[jstart:jend]), &words); err3 != nil {
 		return fallbackExtract(text), nil
 	}
 	return words, nil
