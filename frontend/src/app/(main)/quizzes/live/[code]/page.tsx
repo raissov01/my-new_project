@@ -938,6 +938,117 @@ function QuestionScreen({
           onSubmit={onLabelingSubmit}
         />
       )}
+
+      {q.questionType === "drawing" && (
+        <LiveDrawingInput
+          submitted={!!selectedOpt}
+          onSubmit={() => {
+            // Drawing is non-graded in live mode — submit an empty answer just
+            // to advance the round in sync with the rest of the players. The
+            // canvas stays purely client-side; we don't ship the dataURL.
+            onSelect("submitted");
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function LiveDrawingInput({
+  submitted,
+  onSubmit,
+}: {
+  submitted: boolean;
+  onSubmit: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawingRef = useRef(false);
+  const lastRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+  const pos = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((e.clientY - rect.top) / rect.height) * canvas.height,
+    };
+  };
+
+  const onDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (submitted) return;
+    e.preventDefault();
+    drawingRef.current = true;
+    lastRef.current = pos(e);
+  };
+  const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!drawingRef.current || submitted) return;
+    e.preventDefault();
+    const p = pos(e);
+    const last = lastRef.current;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!p || !last || !ctx) return;
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.strokeStyle = "#111827";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    lastRef.current = p;
+  };
+  const onUp = () => {
+    drawingRef.current = false;
+    lastRef.current = null;
+  };
+  const clear = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-amber-300">
+        Drawing is non-graded in live mode — submit to advance the round.
+      </p>
+      <canvas
+        ref={canvasRef}
+        width={640}
+        height={360}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerLeave={onUp}
+        className="w-full touch-none rounded-[var(--radius-md)] border border-[var(--border)] bg-white"
+        style={{ aspectRatio: "16 / 9" }}
+      />
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={clear}
+          disabled={submitted}
+          className="flex-1"
+        >
+          Clear
+        </Button>
+        <Button type="button" onClick={onSubmit} disabled={submitted} className="flex-1">
+          {submitted ? "Submitted" : "Submit"}
+        </Button>
+      </div>
     </div>
   );
 }
