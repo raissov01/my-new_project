@@ -19,12 +19,15 @@ func NewAdminDeliverability(db *gorm.DB) *AdminDeliverabilityHandler {
 }
 
 type deliveryWindow struct {
-	Channel string  `json:"channel"`
-	Total   int64   `json:"total"`
-	Sent    int64   `json:"sent"`
-	Errors  int64   `json:"errors"`
-	Expired int64   `json:"expired"`
-	Rate    float64 `json:"successRate"`
+	Channel   string  `json:"channel"`
+	Total     int64   `json:"total"`
+	Sent      int64   `json:"sent"`
+	Errors    int64   `json:"errors"`
+	Expired   int64   `json:"expired"`
+	Delivered int64   `json:"delivered"`
+	Opened    int64   `json:"opened"`
+	Clicked   int64   `json:"clicked"`
+	Rate      float64 `json:"successRate"`
 }
 
 type deliveryKindRow struct {
@@ -61,20 +64,26 @@ func (h *AdminDeliverabilityHandler) Summary(w http.ResponseWriter, r *http.Requ
 	windowSQL := `
 		SELECT
 		  channel,
-		  COUNT(*)                                   AS total,
-		  COUNT(*) FILTER (WHERE status = 'sent')    AS sent,
-		  COUNT(*) FILTER (WHERE status = 'error')   AS errors,
-		  COUNT(*) FILTER (WHERE status = 'expired') AS expired
+		  COUNT(*)                                     AS total,
+		  COUNT(*) FILTER (WHERE status = 'sent')      AS sent,
+		  COUNT(*) FILTER (WHERE status = 'error')     AS errors,
+		  COUNT(*) FILTER (WHERE status = 'expired')   AS expired,
+		  COUNT(*) FILTER (WHERE status = 'delivered') AS delivered,
+		  COUNT(*) FILTER (WHERE status = 'opened')    AS opened,
+		  COUNT(*) FILTER (WHERE status = 'clicked')   AS clicked
 		FROM delivery_events
 		WHERE created_at >= NOW() - ?::interval
 		GROUP BY channel
 		ORDER BY channel`
 	type windowScan struct {
-		Channel string
-		Total   int64
-		Sent    int64
-		Errors  int64
-		Expired int64
+		Channel   string
+		Total     int64
+		Sent      int64
+		Errors    int64
+		Expired   int64
+		Delivered int64
+		Opened    int64
+		Clicked   int64
 	}
 	loadWindow := func(interval string) ([]deliveryWindow, error) {
 		var rows []windowScan
@@ -83,17 +92,25 @@ func (h *AdminDeliverabilityHandler) Summary(w http.ResponseWriter, r *http.Requ
 		}
 		out := make([]deliveryWindow, 0, len(rows))
 		for _, sRow := range rows {
+			// Success rate counts both our optimistic "sent" and Resend's
+			// "delivered" — the latter is the upstream truth, but we surface
+			// "sent" too because every send tries first appears that way.
+			successful := sRow.Sent + sRow.Delivered
+			total := sRow.Total
 			rate := 0.0
-			if sRow.Total > 0 {
-				rate = float64(sRow.Sent) / float64(sRow.Total)
+			if total > 0 {
+				rate = float64(successful) / float64(total)
 			}
 			out = append(out, deliveryWindow{
-				Channel: sRow.Channel,
-				Total:   sRow.Total,
-				Sent:    sRow.Sent,
-				Errors:  sRow.Errors,
-				Expired: sRow.Expired,
-				Rate:    rate,
+				Channel:   sRow.Channel,
+				Total:     sRow.Total,
+				Sent:      sRow.Sent,
+				Errors:    sRow.Errors,
+				Expired:   sRow.Expired,
+				Delivered: sRow.Delivered,
+				Opened:    sRow.Opened,
+				Clicked:   sRow.Clicked,
+				Rate:      rate,
 			})
 		}
 		return out, nil
@@ -158,7 +175,7 @@ func (h *AdminDeliverabilityHandler) Summary(w http.ResponseWriter, r *http.Requ
 		  error,
 		  to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at
 		FROM delivery_events
-		WHERE status IN ('error', 'expired')
+		WHERE status IN ('error', 'expired', 'delayed')
 		ORDER BY created_at DESC
 		LIMIT 50`
 	var failures []deliveryFailureRow

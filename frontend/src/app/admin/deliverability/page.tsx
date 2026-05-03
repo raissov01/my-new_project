@@ -13,6 +13,9 @@ interface Window {
   sent: number;
   errors: number;
   expired: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
   successRate: number;
 }
 
@@ -237,6 +240,12 @@ function channelTiles(rows: Window[]) {
           {r.sent.toLocaleString()} sent · {r.errors.toLocaleString()} errors
           {r.expired > 0 && ` · ${r.expired.toLocaleString()} expired`}
         </div>
+        {r.channel === "email" && (r.delivered > 0 || r.opened > 0 || r.clicked > 0) && (
+          <div className="mt-1 text-[10px] text-[var(--text-secondary)]">
+            ✓ {r.delivered.toLocaleString()} delivered · {r.opened.toLocaleString()} opened ·{" "}
+            {r.clicked.toLocaleString()} clicked
+          </div>
+        )}
       </div>
     );
   });

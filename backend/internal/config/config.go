@@ -35,9 +35,10 @@ type Config struct {
 	FrontendURL        string
 
 	// Resend HTTP API for transactional email (replaces SMTP).
-	ResendAPIKey string
-	ResendFrom   string
-	ContactEmail string // inbox to receive contact form submissions
+	ResendAPIKey        string
+	ResendFrom          string
+	ResendWebhookSecret string // Svix-format secret used to verify Resend webhook signatures
+	ContactEmail        string // inbox to receive contact form submissions
 
 	// Lemon Squeezy billing
 	LemonSqueezyWebhookSecret string
@@ -80,9 +81,10 @@ func Load() (*Config, error) {
 		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", "http://localhost:5000/api/v1/auth/google/callback"),
 		FrontendURL:        getEnv("FRONTEND_URL", "http://localhost:3000"),
 
-		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
-		ResendFrom:   getEnv("RESEND_FROM", ""),
-		ContactEmail: getEnv("CONTACT_EMAIL", "raissov1@gmail.com"),
+		ResendAPIKey:        os.Getenv("RESEND_API_KEY"),
+		ResendFrom:          getEnv("RESEND_FROM", ""),
+		ResendWebhookSecret: os.Getenv("RESEND_WEBHOOK_SECRET"),
+		ContactEmail:        getEnv("CONTACT_EMAIL", "raissov1@gmail.com"),
 
 		LemonSqueezyWebhookSecret: os.Getenv("LEMONSQUEEZY_WEBHOOK_SECRET"),
 		LemonSqueezyCheckoutURL:   os.Getenv("LEMONSQUEEZY_CHECKOUT_URL"),

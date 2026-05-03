@@ -58,6 +58,7 @@ type Dependencies struct {
 	AdminJobs          *AdminJobsHandler
 	AdminDeliverability *AdminDeliverabilityHandler
 	AdminStorage       *AdminStorageHandler
+	ResendWebhook      *ResendWebhookHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
 	Billing            *BillingHandler
@@ -100,6 +101,10 @@ func RegisterRoutes(router *gin.Engine) {
 	// ── Billing ──────────────────────────────────────────────────────────
 	// Webhook is public but signature-verified inside the handler.
 	api.POST("/billing/webhook", wrapHTTP(deps.Billing.Webhook))
+
+	// ── Resend webhook ───────────────────────────────────────────────────
+	// Public; svix-signature verified inside the handler.
+	api.POST("/webhooks/resend", wrapHTTP(deps.ResendWebhook.Receive))
 	// Status is internal-auth protected (Next.js server-to-server).
 	api.GET("/billing/status", middleware.InternalAuth(deps.InternalAPIToken), wrapHTTP(deps.Billing.Status))
 
