@@ -11,6 +11,8 @@ import {
   Users,
   ClipboardCheck,
   ScrollText,
+  HeartPulse,
+  Gauge,
   ArrowLeft,
   LogOut,
   Menu,
@@ -94,6 +96,8 @@ export function AdminSidebar() {
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/admin/live", label: "Live activity", icon: Activity },
+    { href: "/admin/system", label: "System", icon: HeartPulse },
+    { href: "/admin/api-metrics", label: "API metrics", icon: Gauge },
   ];
 
   const manageItems: NavItem[] = [

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/midoriya/flashlearn-backend/internal/auth"
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/presence"
 	"gorm.io/gorm"
 )
 
@@ -134,6 +135,8 @@ func InternalAuth(internalToken string) gin.HandlerFunc {
 			return
 		}
 
+		presence.Touch(userID)
+
 		req := c.Request.WithContext(context.WithValue(c.Request.Context(), userIDKey, userID))
 		c.Request = req
 		c.Set("userID", userID)
@@ -158,6 +161,7 @@ func InternalAuthGuestOK(internalToken string) gin.HandlerFunc {
 
 		userID := strings.TrimSpace(c.GetHeader("X-User-ID"))
 		if userID != "" {
+			presence.Touch(userID)
 			req := c.Request.WithContext(context.WithValue(c.Request.Context(), userIDKey, userID))
 			c.Request = req
 			c.Set("userID", userID)

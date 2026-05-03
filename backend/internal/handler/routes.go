@@ -52,6 +52,8 @@ type Dependencies struct {
 	AdminQuizzes       *AdminQuizzesHandler
 	AdminAuditLog      *AdminAuditLogHandler
 	AdminLiveWS        *AdminLiveWSHandler
+	AdminSystem        *AdminSystemHandler
+	AdminAPIMetrics    *AdminAPIMetricsHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
 	Billing            *BillingHandler
@@ -358,6 +360,11 @@ func RegisterRoutes(router *gin.Engine) {
 		g.PATCH("/quizzes/:id", wrapHTTP(deps.AdminQuizzes.Patch))
 		// Audit log
 		g.GET("/audit-log", wrapHTTP(deps.AdminAuditLog.List))
+		// System health & errors
+		g.GET("/system/health", wrapHTTP(deps.AdminSystem.Health))
+		g.GET("/system/errors", wrapHTTP(deps.AdminSystem.Errors))
+		// Per-route API metrics
+		g.GET("/api-metrics", wrapHTTP(deps.AdminAPIMetrics.Snapshot))
 	}
 
 	admin := api.Group("/admin")

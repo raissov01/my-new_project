@@ -19,6 +19,7 @@ import (
 	"github.com/midoriya/flashlearn-backend/internal/email"
 	"github.com/midoriya/flashlearn-backend/internal/handler"
 	"github.com/midoriya/flashlearn-backend/internal/hub"
+	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/repository"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 	"github.com/rs/cors"
@@ -61,7 +62,7 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	router := gin.New()
-	router.Use(gin.Logger(), gin.Recovery())
+	router.Use(gin.Logger(), gin.Recovery(), middleware.APIMetrics())
 
 	handler.SetDependencies(buildDependencies(cfg, pool, gormDB))
 	handler.RegisterRoutes(router)
@@ -211,6 +212,8 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		AdminQuizzes:       handler.NewAdminQuizzes(gormDB),
 		AdminAuditLog:      handler.NewAdminAuditLog(gormDB),
 		AdminLiveWS:        handler.NewAdminLiveWS(gormDB, adminLiveHub, cfg.JWTSecret),
+		AdminSystem:        handler.NewAdminSystem(pool),
+		AdminAPIMetrics:    handler.NewAdminAPIMetrics(),
 		DailyNews:          handler.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		Mining:             handler.NewMining(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		Billing:            handler.NewBilling(gormDB, cfg.LemonSqueezyWebhookSecret, cfg.LemonSqueezyCheckoutURL),

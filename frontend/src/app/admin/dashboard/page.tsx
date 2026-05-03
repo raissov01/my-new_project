@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, BarChart3, ClipboardCheck, ShieldCheck } from "lucide-react";
+import { Activity, BarChart3, ClipboardCheck, Gauge, HeartPulse, ShieldCheck } from "lucide-react";
 
 export const metadata = { title: "Admin Dashboard" };
 
@@ -17,6 +17,20 @@ const tiles = [
     icon: ClipboardCheck,
     href: "/admin/review-questions",
     cta: "Open review queue",
+  },
+  {
+    title: "System health",
+    body: "Process uptime, runtime stats, DB pool, online users, and recent backend logs.",
+    icon: HeartPulse,
+    href: "/admin/system",
+    cta: "Open system health",
+  },
+  {
+    title: "API metrics",
+    body: "Per-route traffic, latency p50/p95, and error rate observed in this process.",
+    icon: Gauge,
+    href: "/admin/api-metrics",
+    cta: "Open API metrics",
   },
 ];
 

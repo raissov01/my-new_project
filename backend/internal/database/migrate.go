@@ -2,16 +2,47 @@ package database
 
 import (
 	"log"
+	"sync"
+	"time"
 
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
 )
 
-// AutoMigrate creates/updates all database tables from GORM models.
-func AutoMigrate(db *gorm.DB) error {
-	log.Println("Running GORM auto-migration...")
+// migrationStatusMu guards the package-level migration status variables.
+// Read by the admin panel; written once on each AutoMigrate call.
+var (
+	migrationStatusMu sync.RWMutex
+	lastMigrationAt   time.Time
+	lastMigrationDur  time.Duration
+	lastMigrationErr  string
+)
 
-	err := db.AutoMigrate(
+// MigrationStatus reports when AutoMigrate last finished and whether it succeeded.
+func MigrationStatus() (at time.Time, dur time.Duration, errMsg string) {
+	migrationStatusMu.RLock()
+	defer migrationStatusMu.RUnlock()
+	return lastMigrationAt, lastMigrationDur, lastMigrationErr
+}
+
+// AutoMigrate creates/updates all database tables from GORM models.
+func AutoMigrate(db *gorm.DB) (err error) {
+	log.Println("Running GORM auto-migration...")
+	migrateStart := time.Now()
+	defer func() {
+		dur := time.Since(migrateStart)
+		migrationStatusMu.Lock()
+		lastMigrationAt = time.Now()
+		lastMigrationDur = dur
+		if err != nil {
+			lastMigrationErr = err.Error()
+		} else {
+			lastMigrationErr = ""
+		}
+		migrationStatusMu.Unlock()
+	}()
+
+	err = db.AutoMigrate(
 		&models.User{},
 		&models.QuizLiveSession{},
 		&models.QuizLiveParticipant{},
