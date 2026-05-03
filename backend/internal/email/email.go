@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/midoriya/flashlearn-backend/internal/delivery"
+	"gorm.io/gorm"
 )
 
 // Sender sends transactional email via the Resend HTTP API (https://resend.com/docs/api-reference/emails/send-email).
@@ -18,11 +21,14 @@ type Sender struct {
 	from        string
 	frontendURL string
 	client      *http.Client
+	db          *gorm.DB
 }
 
 // NewSender creates an email sender. Returns nil if Resend is not configured
-// (apiKey or from empty) so callers can no-op gracefully in dev.
-func NewSender(apiKey, from, frontendURL string) *Sender {
+// (apiKey or from empty) so callers can no-op gracefully in dev. db is
+// optional; when set every Send writes a delivery_events row for the admin
+// deliverability dashboard.
+func NewSender(apiKey, from, frontendURL string, db *gorm.DB) *Sender {
 	if apiKey == "" || from == "" {
 		return nil
 	}
@@ -35,15 +41,58 @@ func NewSender(apiKey, from, frontendURL string) *Sender {
 		from:        from,
 		frontendURL: url,
 		client:      &http.Client{Timeout: 15 * time.Second},
+		db:          db,
 	}
+}
+
+// deliver POSTs an HTML email to Resend and records the outcome into
+// delivery_events. kind is the campaign label ("verify_email", "streak_warning",
+// etc.) used by the admin dashboard to break down success rate.
+func (s *Sender) deliver(kind, to, subject, html string) error {
+	payload, err := json.Marshal(map[string]any{
+		"from":    s.from,
+		"to":      []string{to},
+		"subject": subject,
+		"html":    html,
+	})
+	if err != nil {
+		delivery.Record(s.db, delivery.Event{Channel: "email", Kind: kind, Recipient: to, Err: fmt.Errorf("marshal: %w", err)})
+		return fmt.Errorf("marshal payload: %w", err)
+	}
+	req, err := http.NewRequest(http.MethodPost, "https://api.resend.com/emails", bytes.NewReader(payload))
+	if err != nil {
+		delivery.Record(s.db, delivery.Event{Channel: "email", Kind: kind, Recipient: to, Err: err})
+		return fmt.Errorf("build request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		delivery.Record(s.db, delivery.Event{Channel: "email", Kind: kind, Recipient: to, Err: err})
+		return fmt.Errorf("resend request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		hostErr := fmt.Errorf("resend %d: %s", resp.StatusCode, truncate(string(body), 300))
+		delivery.Record(s.db, delivery.Event{
+			Channel: "email", Kind: kind, Recipient: to,
+			StatusCode: resp.StatusCode, Err: hostErr,
+		})
+		return hostErr
+	}
+
+	delivery.Record(s.db, delivery.Event{
+		Channel: "email", Kind: kind, Recipient: to, StatusCode: resp.StatusCode,
+	})
+	return nil
 }
 
 // SendVerificationEmail sends an HTML email containing a 6-digit verification code.
 func (s *Sender) SendVerificationEmail(toEmail, fullName, code string) error {
-	displayName := fullName
-	if displayName == "" {
-		displayName = strings.Split(toEmail, "@")[0]
-	}
+	name := displayName(fullName, toEmail)
 
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html>
@@ -68,44 +117,14 @@ func (s *Sender) SendVerificationEmail(toEmail, fullName, code string) error {
     — StudyWithRaissov
   </p>
 </body>
-</html>`, displayName, code)
+</html>`, name, code)
 
-	payload, err := json.Marshal(map[string]any{
-		"from":    s.from,
-		"to":      []string{toEmail},
-		"subject": fmt.Sprintf("Your StudyWithRaissov code: %s", code),
-		"html":    html,
-	})
-	if err != nil {
-		return fmt.Errorf("marshal payload: %w", err)
-	}
-
-	req, err := http.NewRequest(http.MethodPost, "https://api.resend.com/emails", bytes.NewReader(payload))
-	if err != nil {
-		return fmt.Errorf("build request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+s.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("resend request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("resend %d: %s", resp.StatusCode, truncate(string(body), 300))
-	}
-	return nil
+	return s.deliver("verify_email", toEmail, fmt.Sprintf("Your StudyWithRaissov code: %s", code), html)
 }
 
 // SendPasswordResetEmail sends an HTML email containing a 6-digit password reset code.
 func (s *Sender) SendPasswordResetEmail(toEmail, fullName, code string) error {
-	displayName := fullName
-	if displayName == "" {
-		displayName = strings.Split(toEmail, "@")[0]
-	}
+	name := displayName(fullName, toEmail)
 
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html>
@@ -130,70 +149,14 @@ func (s *Sender) SendPasswordResetEmail(toEmail, fullName, code string) error {
     — StudyWithRaissov
   </p>
 </body>
-</html>`, displayName, code)
+</html>`, name, code)
 
-	payload, err := json.Marshal(map[string]any{
-		"from":    s.from,
-		"to":      []string{toEmail},
-		"subject": fmt.Sprintf("Your StudyWithRaissov password reset code: %s", code),
-		"html":    html,
-	})
-	if err != nil {
-		return fmt.Errorf("marshal payload: %w", err)
-	}
-
-	req, err := http.NewRequest(http.MethodPost, "https://api.resend.com/emails", bytes.NewReader(payload))
-	if err != nil {
-		return fmt.Errorf("build request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+s.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("resend request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("resend %d: %s", resp.StatusCode, truncate(string(body), 300))
-	}
-	return nil
+	return s.deliver("password_reset", toEmail, fmt.Sprintf("Your StudyWithRaissov password reset code: %s", code), html)
 }
 
-// sendHTML is the internal helper that POSTs to Resend.
 // SendContactEmail forwards a contact-form submission to the admin inbox.
 func (s *Sender) SendContactEmail(toEmail, subject, html string) error {
-	return s.sendHTML(toEmail, subject, html)
-}
-
-func (s *Sender) sendHTML(to, subject, html string) error {
-	payload, err := json.Marshal(map[string]any{
-		"from":    s.from,
-		"to":      []string{to},
-		"subject": subject,
-		"html":    html,
-	})
-	if err != nil {
-		return fmt.Errorf("marshal: %w", err)
-	}
-	req, err := http.NewRequest(http.MethodPost, "https://api.resend.com/emails", bytes.NewReader(payload))
-	if err != nil {
-		return fmt.Errorf("build request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+s.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("resend: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("resend %d: %s", resp.StatusCode, truncate(string(body), 300))
-	}
-	return nil
+	return s.deliver("contact_form", toEmail, subject, html)
 }
 
 func displayName(fullName, email string) string {
@@ -223,7 +186,7 @@ func (s *Sender) SendStreakWarningEmail(toEmail, fullName string, streakDays int
     <a href="%s/settings" style="color:#a0a0b8;">Unsubscribe from streak reminders</a>
   </p>
 </body></html>`, streakDays, name, s.frontendURL, s.frontendURL)
-	return s.sendHTML(toEmail, fmt.Sprintf("🔥 Don't break your %d-day streak!", streakDays), html)
+	return s.deliver("streak_warning", toEmail, fmt.Sprintf("🔥 Don't break your %d-day streak!", streakDays), html)
 }
 
 // SendComebackEmail sends a re-engagement email based on days inactive.
@@ -257,7 +220,7 @@ func (s *Sender) SendComebackEmail(toEmail, fullName string, streakDays, daysIna
     <a href="%s/settings" style="color:#a0a0b8;">Unsubscribe</a>
   </p>
 </body></html>`, body, s.frontendURL, s.frontendURL)
-	return s.sendHTML(toEmail, subject, html)
+	return s.deliver("comeback", toEmail, subject, html)
 }
 
 // SendLeagueResultEmail notifies a user of their weekly league standing.
@@ -267,29 +230,29 @@ func (s *Sender) SendLeagueResultEmail(toEmail, fullName string, rank int, oldTi
 	action := fmt.Sprintf("You finished <strong>#%d</strong> in <strong>%s League</strong> this week.", rank, strings.Title(oldTier))
 	if promoted {
 		action += fmt.Sprintf(" You've been promoted to <strong>%s League</strong>! 🎉", strings.Title(newTier))
-		icon = "⬆️"
+		icon = "🚀"
 	}
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;padding:40px 20px;color:#1a1a2e;">
-  <div style="font-size:48px;text-align:center;margin-bottom:16px;">%s</div>
-  <h2 style="text-align:center;margin:0 0 16px;">League Results, %s!</h2>
-  <p style="font-size:15px;line-height:1.6;color:#4a4a6a;text-align:center;margin:0 0 32px;">%s</p>
-  <div style="text-align:center;margin-bottom:32px;">
-    <a href="%s/leagues" style="display:inline-block;padding:14px 32px;background:#8b5cf6;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
-      View new league →
+  <div style="font-size:64px;text-align:center;margin-bottom:16px;">%s</div>
+  <h2 style="text-align:center;margin:0 0 16px;">%s, your week is in!</h2>
+  <p style="font-size:15px;line-height:1.6;color:#4a4a6a;text-align:center;margin:0 0 32px;">
+    %s
+  </p>
+  <div style="text-align:center;">
+    <a href="%s/leaderboard" style="display:inline-block;padding:14px 32px;background:#6366f1;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
+      See the leaderboard →
     </a>
   </div>
-  <p style="font-size:12px;color:#a0a0b8;text-align:center;">
-    <a href="%s/settings" style="color:#a0a0b8;">Unsubscribe</a>
-  </p>
-</body></html>`, icon, name, action, s.frontendURL, s.frontendURL)
-	return s.sendHTML(toEmail, fmt.Sprintf("%s League results are in!", icon), html)
+</body></html>`, icon, name, action, s.frontendURL)
+	subject := fmt.Sprintf("%s Weekly league results — you finished #%d", icon, rank)
+	return s.deliver("league_result", toEmail, subject, html)
 }
 
 func truncate(s string, n int) string {
-	if len(s) > n {
-		return s[:n] + "..."
+	if len(s) <= n {
+		return s
 	}
-	return s
+	return s[:n] + "…"
 }

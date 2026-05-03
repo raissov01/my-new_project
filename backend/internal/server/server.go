@@ -64,7 +64,7 @@ func New(cfg *config.Config) (*Server, error) {
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery(), middleware.APIMetrics())
 
-	gameSvc := service.NewGamification(gormDB, email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL))
+	gameSvc := service.NewGamification(gormDB, email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL, gormDB))
 	newsSvc := service.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout)
 	scheduler := cron.New(gameSvc, newsSvc, gormDB)
 
@@ -169,7 +169,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 
 	chatRepo := repository.NewChat(gormDB)
 
-	emailSender := email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL)
+	emailSender := email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL, gormDB)
 
 	adminLiveHub := hub.NewAdminLiveHub()
 
@@ -218,6 +218,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		AdminSystem:        handler.NewAdminSystem(pool),
 		AdminAPIMetrics:    handler.NewAdminAPIMetrics(),
 		AdminAIUsage:       handler.NewAdminAIUsage(gormDB),
+		AdminDeliverability: handler.NewAdminDeliverability(gormDB),
 		DailyNews:          handler.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		Mining:             handler.NewMining(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout),
 		Billing:            handler.NewBilling(gormDB, cfg.LemonSqueezyWebhookSecret, cfg.LemonSqueezyCheckoutURL),

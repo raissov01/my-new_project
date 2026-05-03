@@ -56,6 +56,7 @@ type Dependencies struct {
 	AdminAPIMetrics    *AdminAPIMetricsHandler
 	AdminAIUsage       *AdminAIUsageHandler
 	AdminJobs          *AdminJobsHandler
+	AdminDeliverability *AdminDeliverabilityHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
 	Billing            *BillingHandler
@@ -377,6 +378,9 @@ func RegisterRoutes(router *gin.Engine) {
 		g.GET("/jobs", wrapHTTP(deps.AdminJobs.Summary))
 		g.GET("/jobs/history", wrapHTTP(deps.AdminJobs.History))
 		g.POST("/jobs/:name/run", wrapHTTP(deps.AdminJobs.RunNow))
+		// Email + push deliverability
+		g.GET("/deliverability", wrapHTTP(deps.AdminDeliverability.Summary))
+		g.GET("/deliverability/daily", wrapHTTP(deps.AdminDeliverability.Daily))
 	}
 
 	admin := api.Group("/admin")

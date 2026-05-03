@@ -2,9 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	webpush "github.com/SherClockHolmes/webpush-go"
+	"github.com/midoriya/flashlearn-backend/internal/delivery"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -109,12 +111,34 @@ func (h *PushHandler) SendToUser(userID string, payload PushPayload) {
 			TTL:             30,
 		})
 		if err != nil {
+			delivery.Record(h.db, delivery.Event{
+				Channel: "push", Kind: "in_app_notify",
+				Recipient: s.Endpoint, UserID: userID, Err: err,
+			})
 			continue
 		}
+		statusCode := resp.StatusCode
 		resp.Body.Close()
-		// 410 Gone = subscription expired; remove it.
-		if resp.StatusCode == http.StatusGone {
+
+		// 410 Gone = subscription expired; remove it and record as expired.
+		if statusCode == http.StatusGone {
 			h.db.Delete(&s)
+			delivery.Record(h.db, delivery.Event{
+				Channel: "push", Kind: "in_app_notify",
+				Recipient: s.Endpoint, UserID: userID,
+				StatusCode: statusCode, ExpiredOverride: true,
+			})
+			continue
 		}
+
+		ev := delivery.Event{
+			Channel: "push", Kind: "in_app_notify",
+			Recipient: s.Endpoint, UserID: userID,
+			StatusCode: statusCode,
+		}
+		if statusCode >= 400 {
+			ev.Err = fmt.Errorf("webpush %d", statusCode)
+		}
+		delivery.Record(h.db, ev)
 	}
 }

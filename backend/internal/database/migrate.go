@@ -121,6 +121,8 @@ func AutoMigrate(db *gorm.DB) (err error) {
 		&models.AICostBlock{},
 		// Background job audit (cron scheduler)
 		&models.JobRun{},
+		// Email + push delivery audit
+		&models.DeliveryEvent{},
 		// Admin
 		&models.AdminAuditLog{},
 	)
