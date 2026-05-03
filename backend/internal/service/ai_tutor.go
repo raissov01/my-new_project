@@ -108,6 +108,10 @@ func (s *AITutorService) SendMessage(ctx context.Context, convID, userID, userTe
 	// Build system prompt
 	systemPrompt := sc.PersonaPrompt
 
+	if err := aicost.CheckBudget(s.db, userID, "ai_tutor_chat"); err != nil {
+		return "", aicost.ErrBudgetExceeded
+	}
+
 	reply, err := s.callLLM(ctx, systemPrompt, msgs, userID, "ai_tutor_chat")
 	if err != nil {
 		return "", err

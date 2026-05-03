@@ -91,6 +91,11 @@ func (s *QuizAIGenerateService) Generate(userID, text, subject string, count int
 		return nil, ErrDailyLimitReached
 	}
 
+	// Cost guardrail (admin-configurable USD cap).
+	if err := aicost.CheckBudget(s.db, userID, "quiz_generate"); err != nil {
+		return nil, ErrBudgetExceeded
+	}
+
 	// Trim text to max allowed runes.
 	text = limitRunes(text, maxQuizGenTextRunes)
 
@@ -127,6 +132,11 @@ func (s *QuizAIGenerateService) Generate(userID, text, subject string, count int
 
 // ErrDailyLimitReached is returned when a user exceeds their daily generation quota.
 var ErrDailyLimitReached = fmt.Errorf("daily generation limit reached")
+
+// ErrBudgetExceeded is returned when the per-user or global USD cap from
+// ai_cost_settings is hit. Distinct from ErrDailyLimitReached so callers can
+// surface a different message ("billing cap" vs "daily count").
+var ErrBudgetExceeded = fmt.Errorf("ai daily budget reached")
 
 // ── Prompt builder ────────────────────────────────────────────────────────────
 

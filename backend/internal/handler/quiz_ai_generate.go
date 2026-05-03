@@ -50,6 +50,10 @@ func (h *QuizAIGenerateHandler) Generate(w http.ResponseWriter, r *http.Request)
 			writeError(w, http.StatusTooManyRequests, "daily generation limit reached (10 per day)", nil)
 			return
 		}
+		if errors.Is(err, service.ErrBudgetExceeded) {
+			writeError(w, http.StatusTooManyRequests, "AI daily budget reached — try again later or contact an admin", nil)
+			return
+		}
 		writeError(w, http.StatusBadGateway, "AI generation failed: "+err.Error(), err)
 		return
 	}

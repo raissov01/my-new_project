@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { Coins, Sparkles, AlertCircle, Cpu } from "lucide-react";
+import { Coins, Sparkles, AlertCircle, Cpu, ShieldOff } from "lucide-react";
 import { requireAdmin } from "@/server/auth";
 import { fetchBackendJson } from "@/server/integrations/go-backend/server";
 import { AdminPageHeader } from "../_components/coming-soon";
 import { LineChart } from "../_components/line-chart";
+import { CapsForm } from "./CapsForm";
 
 export const metadata = { title: "AI cost — Admin" };
 export const dynamic = "force-dynamic";
@@ -42,6 +43,24 @@ interface DailyPoint {
   errors: number;
 }
 
+interface CapSettings {
+  dailyUserUsdCap: number;
+  dailyGlobalUsdCap: number;
+  updatedAt: string;
+}
+
+interface BlockRow {
+  id: string;
+  userId?: string;
+  username?: string;
+  email?: string;
+  feature: string;
+  reason: string;
+  usageUsd: number;
+  capUsd: number;
+  createdAt: string;
+}
+
 export default async function AdminAIUsagePage() {
   const auth = await requireAdmin();
   if (auth.redirectTo) redirect(auth.redirectTo);
@@ -49,15 +68,25 @@ export default async function AdminAIUsagePage() {
 
   let summary: SummaryResponse | null = null;
   let daily: DailyPoint[] = [];
+  let settings: CapSettings = { dailyUserUsdCap: 0, dailyGlobalUsdCap: 0, updatedAt: "" };
+  let blocks: BlockRow[] = [];
   let loadError: string | null = null;
   try {
-    [summary, daily] = await Promise.all([
+    [summary, daily, settings, blocks] = await Promise.all([
       fetchBackendJson<SummaryResponse>({
         path: `/api/v1/admin/ai-usage/summary`,
         userId: auth.user.id,
       }),
       fetchBackendJson<DailyPoint[]>({
         path: `/api/v1/admin/ai-usage/daily?days=30`,
+        userId: auth.user.id,
+      }),
+      fetchBackendJson<CapSettings>({
+        path: `/api/v1/admin/ai-usage/settings`,
+        userId: auth.user.id,
+      }),
+      fetchBackendJson<BlockRow[]>({
+        path: `/api/v1/admin/ai-usage/blocks?limit=50`,
         userId: auth.user.id,
       }),
     ]);
@@ -85,6 +114,12 @@ export default async function AdminAIUsagePage() {
           {loadError}
         </div>
       )}
+
+      <CapsForm
+        initialUserCap={settings.dailyUserUsdCap}
+        initialGlobalCap={settings.dailyGlobalUsdCap}
+        updatedAt={settings.updatedAt}
+      />
 
       {summary && (
         <>
@@ -135,7 +170,65 @@ export default async function AdminAIUsagePage() {
           </div>
         </>
       )}
+
+      <BlocksTable rows={blocks} />
     </div>
+  );
+}
+
+function BlocksTable({ rows }: { rows: BlockRow[] }) {
+  return (
+    <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)]">
+      <header className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-3">
+        <ShieldOff className="h-4 w-4 text-[var(--text-secondary)]" />
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Recent guardrail blocks</h2>
+        <span className="ml-auto text-xs text-[var(--text-secondary)]">last 50</span>
+      </header>
+      {rows.length === 0 ? (
+        <div className="p-6 text-center text-sm text-[var(--text-secondary)]">
+          No guardrail blocks recorded — no AI calls have hit the configured caps yet.
+        </div>
+      ) : (
+        <table className="w-full text-sm">
+          <thead className="bg-[var(--bg-soft)] text-xs uppercase tracking-wide text-[var(--text-secondary)]">
+            <tr>
+              <th className="px-3 py-2 text-left font-semibold">When</th>
+              <th className="px-3 py-2 text-left font-semibold">User</th>
+              <th className="px-3 py-2 text-left font-semibold">Feature</th>
+              <th className="px-3 py-2 text-left font-semibold">Reason</th>
+              <th className="px-3 py-2 text-right font-semibold">Usage</th>
+              <th className="px-3 py-2 text-right font-semibold">Cap</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--border)] font-mono text-xs">
+            {rows.map((b) => (
+              <tr key={b.id}>
+                <td className="px-3 py-2 text-[var(--text-secondary)]">
+                  {b.createdAt.slice(0, 19).replace("T", " ")}
+                </td>
+                <td className="px-3 py-2 text-[var(--text-primary)]">
+                  {b.username || b.email || b.userId || "anonymous"}
+                </td>
+                <td className="px-3 py-2 text-[var(--text-primary)]">{b.feature}</td>
+                <td className="px-3 py-2">
+                  <span
+                    className={`rounded-[var(--radius-sm)] px-1.5 py-0.5 text-[10px] font-bold ${
+                      b.reason === "global_cap"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {b.reason}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums">${b.usageUsd.toFixed(2)}</td>
+                <td className="px-3 py-2 text-right tabular-nums">${b.capUsd.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
   );
 }
 

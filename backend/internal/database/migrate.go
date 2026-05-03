@@ -116,6 +116,9 @@ func AutoMigrate(db *gorm.DB) (err error) {
 		&models.Notification{},
 		// AI usage tracking (admin cost dashboard)
 		&models.AIUsageEvent{},
+		// AI cost guardrails — daily caps + blocked-attempt log
+		&models.AICostSetting{},
+		&models.AICostBlock{},
 		// Admin
 		&models.AdminAuditLog{},
 	)

@@ -5,7 +5,7 @@ import { getBackendBaseUrl, getBackendInternalToken } from "./env";
 type BackendFetchOptions = {
   path: string;
   userId: string;
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: BodyInit | null;
   headers?: HeadersInit;
   timeoutMs?: number;

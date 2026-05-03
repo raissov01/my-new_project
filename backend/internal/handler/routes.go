@@ -369,6 +369,9 @@ func RegisterRoutes(router *gin.Engine) {
 		// AI usage / cost tracking
 		g.GET("/ai-usage/summary", wrapHTTP(deps.AdminAIUsage.Summary))
 		g.GET("/ai-usage/daily", wrapHTTP(deps.AdminAIUsage.Daily))
+		g.GET("/ai-usage/settings", wrapHTTP(deps.AdminAIUsage.Settings))
+		g.PATCH("/ai-usage/settings", wrapHTTP(deps.AdminAIUsage.UpdateSettings))
+		g.GET("/ai-usage/blocks", wrapHTTP(deps.AdminAIUsage.Blocks))
 	}
 
 	admin := api.Group("/admin")

@@ -104,6 +104,11 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 	text := limitTextForGeneration(req.Text, req.CardCount)
 
+	if err := aicost.CheckBudget(h.db, userID, "flashcard_generate"); err != nil {
+		writeError(w, http.StatusTooManyRequests, "AI daily budget reached — try again later or contact an admin", err)
+		return
+	}
+
 	cards, modelName, err := h.generateCards(text, req.Mode, req.Language, req.CardCount, userID)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, "AI generation failed: "+err.Error(), err)

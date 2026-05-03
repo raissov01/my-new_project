@@ -2,9 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 	"gorm.io/gorm"
@@ -114,6 +116,10 @@ func (h *AITutorHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	reply, err := h.svc.SendMessage(r.Context(), convID, userID, body.Text)
 	if err != nil {
+		if errors.Is(err, aicost.ErrBudgetExceeded) {
+			jsonErr(w, "AI daily budget reached — try again later or contact an admin", http.StatusTooManyRequests)
+			return
+		}
 		jsonErr(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
