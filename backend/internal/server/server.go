@@ -219,9 +219,9 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		AdminAPIMetrics:    handler.NewAdminAPIMetrics(),
 		AdminAIUsage:       handler.NewAdminAIUsage(gormDB),
 		AdminDeliverability: handler.NewAdminDeliverability(gormDB),
-		AdminStorage: handler.NewAdminStorage([]handler.NamedPath{
-			{Name: "Quiz images", Path: "uploads/quiz-images"},
-			{Name: "Quiz audio", Path: "uploads/quiz-audio"},
+		AdminStorage: handler.NewAdminStorage(gormDB, []handler.NamedPath{
+			{Name: "Quiz images", Path: "uploads/quiz-images", RefColumn: "image_url"},
+			{Name: "Quiz audio", Path: "uploads/quiz-audio", RefColumn: "audio_url"},
 			{Name: "Telegram media", Path: "telegram-media"},
 			{Name: "Listening clips", Path: "/usr/share/nginx/audio"},
 		}),

@@ -12,6 +12,7 @@ interface FileInfo {
   path: string;
   bytes: number;
   modified: string;
+  orphan?: boolean;
 }
 
 interface DirReport {
@@ -21,6 +22,9 @@ interface DirReport {
   totalBytes: number;
   fileCount: number;
   largest: FileInfo[];
+  orphanCount: number;
+  orphanBytes: number;
+  orphans?: FileInfo[];
   error?: string;
 }
 
@@ -111,6 +115,11 @@ function DirCard({ dir }: { dir: DirReport }) {
           <div className="text-[10px] text-[var(--text-secondary)]">
             {dir.exists ? `${dir.fileCount.toLocaleString()} files` : "not provisioned"}
           </div>
+          {dir.exists && dir.orphanCount > 0 && (
+            <div className="mt-1 text-[10px] font-semibold text-amber-700">
+              {dir.orphanCount.toLocaleString()} orphan · {fmtBytes(dir.orphanBytes)}
+            </div>
+          )}
         </div>
       </header>
 
@@ -132,7 +141,14 @@ function DirCard({ dir }: { dir: DirReport }) {
           <tbody className="divide-y divide-[var(--border)] font-mono text-xs">
             {dir.largest.map((f) => (
               <tr key={f.path}>
-                <td className="px-3 py-2 break-all text-[var(--text-primary)]">{f.name}</td>
+                <td className="px-3 py-2 break-all text-[var(--text-primary)]">
+                  {f.name}
+                  {f.orphan && (
+                    <span className="ml-2 rounded-[var(--radius-sm)] bg-amber-100 px-1 py-0.5 text-[9px] font-bold text-amber-800">
+                      orphan
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2 text-right tabular-nums">{fmtBytes(f.bytes)}</td>
                 <td className="px-3 py-2 text-right text-[var(--text-secondary)]">
                   {f.modified.slice(0, 10)}
@@ -144,6 +160,27 @@ function DirCard({ dir }: { dir: DirReport }) {
       ) : dir.exists ? (
         <div className="p-4 text-center text-xs text-[var(--text-secondary)]">Empty.</div>
       ) : null}
+
+      {dir.orphans && dir.orphans.length > 0 && (
+        <details className="border-t border-[var(--border)]">
+          <summary className="cursor-pointer bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-800">
+            Top {dir.orphans.length} orphan candidates (no DB reference)
+          </summary>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-[var(--border)] font-mono text-xs">
+              {dir.orphans.map((f) => (
+                <tr key={f.path}>
+                  <td className="px-3 py-2 break-all text-[var(--text-primary)]">{f.name}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{fmtBytes(f.bytes)}</td>
+                  <td className="px-3 py-2 text-right text-[var(--text-secondary)]">
+                    {f.modified.slice(0, 10)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )}
     </section>
   );
 }
