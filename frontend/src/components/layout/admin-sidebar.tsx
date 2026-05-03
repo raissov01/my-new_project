@@ -14,6 +14,7 @@ import {
   HeartPulse,
   Gauge,
   Coins,
+  Clock,
   ArrowLeft,
   LogOut,
   Menu,
@@ -100,6 +101,7 @@ export function AdminSidebar() {
     { href: "/admin/system", label: "System", icon: HeartPulse },
     { href: "/admin/api-metrics", label: "API metrics", icon: Gauge },
     { href: "/admin/ai-usage", label: "AI cost", icon: Coins },
+    { href: "/admin/jobs", label: "Jobs", icon: Clock },
   ];
 
   const manageItems: NavItem[] = [

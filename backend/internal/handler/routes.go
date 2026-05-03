@@ -55,6 +55,7 @@ type Dependencies struct {
 	AdminSystem        *AdminSystemHandler
 	AdminAPIMetrics    *AdminAPIMetricsHandler
 	AdminAIUsage       *AdminAIUsageHandler
+	AdminJobs          *AdminJobsHandler
 	DailyNews          *DailyNewsHandler
 	Mining             *MiningHandler
 	Billing            *BillingHandler
@@ -372,6 +373,10 @@ func RegisterRoutes(router *gin.Engine) {
 		g.GET("/ai-usage/settings", wrapHTTP(deps.AdminAIUsage.Settings))
 		g.PATCH("/ai-usage/settings", wrapHTTP(deps.AdminAIUsage.UpdateSettings))
 		g.GET("/ai-usage/blocks", wrapHTTP(deps.AdminAIUsage.Blocks))
+		// Background jobs (cron scheduler)
+		g.GET("/jobs", wrapHTTP(deps.AdminJobs.Summary))
+		g.GET("/jobs/history", wrapHTTP(deps.AdminJobs.History))
+		g.POST("/jobs/:name/run", wrapHTTP(deps.AdminJobs.RunNow))
 	}
 
 	admin := api.Group("/admin")

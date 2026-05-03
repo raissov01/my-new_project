@@ -3,31 +3,35 @@
 package cron
 
 import (
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/midoriya/flashlearn-backend/internal/models"
 	"github.com/midoriya/flashlearn-backend/internal/service"
+	"gorm.io/gorm"
 )
 
 // Scheduler holds the gamification and daily-news services and runs timed jobs.
 type Scheduler struct {
 	svc     *service.GamificationService
 	newsSvc *service.DailyNewsService
+	db      *gorm.DB
 	stop    chan struct{}
 }
 
-func New(svc *service.GamificationService, newsSvc *service.DailyNewsService) *Scheduler {
-	return &Scheduler{svc: svc, newsSvc: newsSvc, stop: make(chan struct{})}
+func New(svc *service.GamificationService, newsSvc *service.DailyNewsService, db *gorm.DB) *Scheduler {
+	return &Scheduler{svc: svc, newsSvc: newsSvc, db: db, stop: make(chan struct{})}
 }
 
 // Start launches all background goroutines. Call Stop() to halt.
 func (s *Scheduler) Start() {
 	log.Println("cron: starting scheduler")
-	go s.runDaily("streak-warning",  22, 0,  s.svc.SendStreakWarningBatch)
-	go s.runDaily("comeback-emails",  9, 0,  s.svc.SendComebackBatch)
+	go s.runDaily("streak-warning", 22, 0, s.svc.SendStreakWarningBatch)
+	go s.runDaily("comeback-emails", 9, 0, s.svc.SendComebackBatch)
 	go s.runWeekly("league-week", time.Sunday, 23, 59, func() { _ = s.svc.ProcessLeagueWeek() })
-	go s.runWeekly("weekend-xp",  time.Friday, 18,  0, func() { _ = s.svc.CreateWeekendXPEvent() })
-	go s.runDaily("daily-news",    6, 0, func() { _ = s.newsSvc.GenerateToday() })
+	go s.runWeekly("weekend-xp", time.Friday, 18, 0, func() { _ = s.svc.CreateWeekendXPEvent() })
+	go s.runDaily("daily-news", 6, 0, func() { _ = s.newsSvc.GenerateToday() })
 }
 
 // Stop signals all goroutines to exit cleanly.
@@ -42,8 +46,7 @@ func (s *Scheduler) runDaily(name string, hour, minute int, fn func()) {
 		log.Printf("cron: %s scheduled at %s", name, next.Format(time.RFC3339))
 		select {
 		case <-time.After(time.Until(next)):
-			log.Printf("cron: running %s", name)
-			fn()
+			s.runJob(name, fn)
 		case <-s.stop:
 			return
 		}
@@ -57,12 +60,63 @@ func (s *Scheduler) runWeekly(name string, weekday time.Weekday, hour, minute in
 		log.Printf("cron: %s scheduled at %s", name, next.Format(time.RFC3339))
 		select {
 		case <-time.After(time.Until(next)):
-			log.Printf("cron: running %s", name)
-			fn()
+			s.runJob(name, fn)
 		case <-s.stop:
 			return
 		}
 	}
+}
+
+// RunNow triggers a named job out-of-band (used by the admin "Run now" button).
+// The schedule loop keeps ticking — this just adds an extra invocation.
+func (s *Scheduler) RunNow(name string) error {
+	switch name {
+	case "streak-warning":
+		go s.runJob(name, s.svc.SendStreakWarningBatch)
+	case "comeback-emails":
+		go s.runJob(name, s.svc.SendComebackBatch)
+	case "league-week":
+		go s.runJob(name, func() { _ = s.svc.ProcessLeagueWeek() })
+	case "weekend-xp":
+		go s.runJob(name, func() { _ = s.svc.CreateWeekendXPEvent() })
+	case "daily-news":
+		go s.runJob(name, func() { _ = s.newsSvc.GenerateToday() })
+	default:
+		return fmt.Errorf("unknown job: %s", name)
+	}
+	return nil
+}
+
+// JobNames returns the canonical list of jobs the scheduler knows about, in
+// display order. The admin UI iterates this so a job that has never run yet
+// still gets a row.
+func (s *Scheduler) JobNames() []string {
+	return []string{"daily-news", "streak-warning", "comeback-emails", "weekend-xp", "league-week"}
+}
+
+// runJob wraps fn with start/finish logging and a job_runs row so the admin
+// panel can show last-run/last-error per job. Panics are caught and recorded
+// as errors instead of crashing the scheduler goroutine.
+func (s *Scheduler) runJob(name string, fn func()) {
+	log.Printf("cron: running %s", name)
+	start := time.Now()
+	row := models.JobRun{Name: name, StartedAt: start, Status: "success"}
+	defer func() {
+		if r := recover(); r != nil {
+			row.Status = "error"
+			row.Error = fmt.Sprintf("panic: %v", r)
+			log.Printf("cron: %s panic: %v", name, r)
+		}
+		end := time.Now()
+		row.FinishedAt = end
+		row.DurationMs = int(end.Sub(start).Milliseconds())
+		if s.db != nil {
+			if err := s.db.Create(&row).Error; err != nil {
+				log.Printf("cron: failed to record job_run for %s: %v", name, err)
+			}
+		}
+	}()
+	fn()
 }
 
 // nextOccurrence returns the next UTC time for hh:mm today-or-tomorrow.

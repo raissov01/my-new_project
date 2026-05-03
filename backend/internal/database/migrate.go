@@ -119,6 +119,8 @@ func AutoMigrate(db *gorm.DB) (err error) {
 		// AI cost guardrails — daily caps + blocked-attempt log
 		&models.AICostSetting{},
 		&models.AICostBlock{},
+		// Background job audit (cron scheduler)
+		&models.JobRun{},
 		// Admin
 		&models.AdminAuditLog{},
 	)

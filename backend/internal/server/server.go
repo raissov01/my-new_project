@@ -64,12 +64,15 @@ func New(cfg *config.Config) (*Server, error) {
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery(), middleware.APIMetrics())
 
-	handler.SetDependencies(buildDependencies(cfg, pool, gormDB))
-	handler.RegisterRoutes(router)
-
 	gameSvc := service.NewGamification(gormDB, email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL))
 	newsSvc := service.NewDailyNews(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.AIRequestTimeout)
-	scheduler := cron.New(gameSvc, newsSvc)
+	scheduler := cron.New(gameSvc, newsSvc, gormDB)
+
+	deps := buildDependencies(cfg, pool, gormDB)
+	deps.AdminJobs = handler.NewAdminJobs(gormDB, scheduler)
+	handler.SetDependencies(deps)
+	handler.RegisterRoutes(router)
+
 	scheduler.Start()
 
 	httpServer := &http.Server{
