@@ -57,7 +57,7 @@ export default async function NUETPracticePage() {
             </p>
           </div>
           <Link
-            href="/nuet/pdf-tests"
+            href="/nuet/simulator"
             className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
           >
             <GraduationCap className="h-4 w-4" />

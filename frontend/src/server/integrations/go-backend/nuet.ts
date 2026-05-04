@@ -60,7 +60,10 @@ export type NUETAttempt = {
   topicTitle?: string;
   section: "full" | "math" | "critical_thinking";
   status: "in_progress" | "completed" | "abandoned";
+  strictMode: boolean;
   answers?: string;
+  questionSet?: string;
+  results?: string;
   correctMath: number;
   correctCt: number;
   scoreMath: number;
@@ -70,12 +73,16 @@ export type NUETAttempt = {
   violationCount: number;
   startedAt: string;
   completedAt?: string;
+  lastSavedAt?: string;
   createdAt: string;
   scoreAvailable: boolean;
   scoreReason?: string;
   evaluations?: Array<{
     question: number;
+    questionId?: string;
     section: "math" | "critical_thinking";
+    prompt?: string;
+    explanation?: string;
     expected: string;
     received: string;
     correct: boolean;
@@ -96,6 +103,22 @@ export type NUETQuestion = {
 export type NUETPracticeAnswerInput = {
   questionId: string;
   choice: "A" | "B" | "C" | "D" | "E";
+};
+
+export type NUETSimulatorQuestion = {
+  id: string;
+  number: number;
+  section: "math" | "critical_thinking";
+  difficulty: "beginner" | "medium" | "advanced";
+  prompt: string;
+  options: string[];
+};
+
+export type NUETSimulatorStartResponse = {
+  attempt: NUETAttempt;
+  questions: NUETSimulatorQuestion[];
+  durationMinutes: number;
+  strictMode: boolean;
 };
 
 export async function listNUETTopics(

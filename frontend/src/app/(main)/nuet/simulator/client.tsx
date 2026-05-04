@@ -1,274 +1,341 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, ExternalLink, FileText, Loader2, Trophy } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  Flag,
+  Loader2,
+  ShieldAlert,
+  ShieldCheck,
+  Trophy,
+} from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
+import { useExamMode } from "@/features/ielts/use-exam-mode";
 import {
   abandonNUETAttempt,
-  autosaveNUETAttempt,
-  completeNUETAttempt,
-  startNUETAttempt,
+  autosaveNUETSimulator,
+  completeNUETSimulator,
+  logNUETSimulatorViolation,
+  startNUETSimulator,
   type NUETAttemptActionResult,
+  type NUETSimulatorQuestion,
 } from "./actions";
 
-type NUETPDFTest = {
-  id: string;
-  name: string;
-  testType: "trial_test" | "mock_test";
-  pdfPath: string;
-  mathCount: number;
-  ctCount: number;
-  questionCount: number;
-  answerKeyCount: number;
-  isScorable: boolean;
-};
-
 type Stage = "configure" | "starting" | "exam" | "submitting" | "results";
+type SectionChoice = "full" | "math" | "ct";
 
 const answerChoices = ["A", "B", "C", "D", "E"] as const;
 
-export function NUETSimulatorClient({ tests }: { tests: NUETPDFTest[] }) {
+export function NUETSimulatorClient() {
   const { t } = useLocale();
   const [stage, setStage] = useState<Stage>("configure");
-  const [selectedTestId, setSelectedTestId] = useState<string>(tests[0]?.id ?? "");
+  const [section, setSection] = useState<SectionChoice>("full");
+  const [strictMode, setStrictMode] = useState(true);
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<NUETSimulatorQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [timeTakenSecs, setTimeTakenSecs] = useState(0);
+  const [marked, setMarked] = useState<Set<string>>(new Set());
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [durationMinutes, setDurationMinutes] = useState(120);
   const [result, setResult] = useState<NUETAttemptActionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [autosaveLabel, setAutosaveLabel] = useState<string>("");
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
+  const [autosaveLabel, setAutosaveLabel] = useState("");
+  const [violationBanner, setViolationBanner] = useState<string | null>(null);
+  const [expandedReview, setExpandedReview] = useState<Record<number, boolean>>({});
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autosaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const answersRef = useRef<Record<string, string>>({});
+  const markedRef = useRef<Set<string>>(new Set());
+  const timeLeftRef = useRef(0);
+  const submittingRef = useRef(false);
 
-  const selectedTest = tests.find((item) => item.id === selectedTestId) ?? null;
-  const totalQuestions = selectedTest?.questionCount ?? 60;
-  const mathCount = selectedTest?.mathCount ?? 30;
+  const activeQuestion = questions[currentIndex] ?? null;
+  const answeredCount = useMemo(() => Object.values(answers).filter(Boolean).length, [answers]);
+  const flaggedCount = marked.size;
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (pendingSaveRef.current) clearTimeout(pendingSaveRef.current);
-    };
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    markedRef.current = marked;
+  }, [marked]);
+
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
+  const clearIntervals = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (autosaveRef.current) {
+      clearInterval(autosaveRef.current);
+      autosaveRef.current = null;
+    }
   }, []);
+
+  const finishAttempt = useCallback(
+    async (reason?: string) => {
+      if (!attemptId || submittingRef.current) return;
+      submittingRef.current = true;
+      clearIntervals();
+      setStage("submitting");
+      setError(reason ?? null);
+
+      try {
+        const completed = await completeNUETSimulator(attemptId, {
+          answers: answersRef.current,
+          marked: Array.from(markedRef.current),
+          timeTakenSecs: durationMinutes * 60 - timeLeft,
+        });
+        setResult(completed);
+        setStage("results");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to complete simulator");
+        setStage("exam");
+      } finally {
+        submittingRef.current = false;
+      }
+    },
+    [attemptId, clearIntervals, durationMinutes, timeLeft]
+  );
+
+  const examMode = useExamMode({
+    enabled: stage === "exam" && strictMode,
+    attemptId: attemptId ?? undefined,
+    policy: {
+      fullscreenRequired: strictMode,
+      autoTerminateAt: 5,
+    },
+    onViolation: ({ type, count }) => {
+      setViolationBanner(
+        t("nuet.simulator.violationBanner")
+          .replace("{type}", type.replaceAll("_", " "))
+          .replace("{count}", String(count))
+      );
+
+      if (!attemptId) return;
+      void logNUETSimulatorViolation(attemptId, {
+        type,
+        details: `NUET strict mode detected ${type}`,
+      }).then((response) => {
+        if (response.status === "abandoned") {
+          setError(t("nuet.simulator.terminated"));
+          setStage("configure");
+          clearIntervals();
+        }
+      }).catch(() => {
+        // keep local banner even if logging failed
+      });
+    },
+    onTerminate: () => {
+      setError(t("nuet.simulator.terminated"));
+      setStage("configure");
+      clearIntervals();
+    },
+  });
 
   useEffect(() => {
     if (stage !== "exam") {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
       return;
     }
-    intervalRef.current = setInterval(() => {
-      setTimeTakenSecs((current) => current + 1);
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((current) => {
+        if (current <= 1) {
+          window.setTimeout(() => {
+            void finishAttempt(t("nuet.simulator.autoSubmitted"));
+          }, 0);
+          return 0;
+        }
+        return current - 1;
+      });
     }, 1000);
+
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
-  }, [stage]);
+  }, [finishAttempt, stage, t]);
 
   useEffect(() => {
     if (stage !== "exam" || !attemptId) {
+      if (autosaveRef.current) {
+        clearInterval(autosaveRef.current);
+        autosaveRef.current = null;
+      }
       return;
     }
-    if (pendingSaveRef.current) {
-      clearTimeout(pendingSaveRef.current);
-    }
-    pendingSaveRef.current = setTimeout(() => {
-      void autosaveNUETAttempt(attemptId, {
-        answers,
-        timeTakenSecs,
+
+    autosaveRef.current = setInterval(() => {
+      void autosaveNUETSimulator(attemptId, {
+        answers: answersRef.current,
+        marked: Array.from(markedRef.current),
+        timeTakenSecs: durationMinutes * 60 - timeLeftRef.current,
       })
         .then(() => {
-          if (!mountedRef.current) return;
-          setAutosaveLabel("Saved");
-          window.setTimeout(() => {
-            if (mountedRef.current) setAutosaveLabel("");
-          }, 1200);
+          setAutosaveLabel(t("nuet.simulator.saved"));
+          window.setTimeout(() => setAutosaveLabel(""), 1500);
         })
         .catch(() => {
-          if (mountedRef.current) setAutosaveLabel("Save failed");
+          setAutosaveLabel(t("nuet.simulator.saveFailed"));
         });
-    }, 800);
+    }, 30_000);
 
     return () => {
-      if (pendingSaveRef.current) {
-        clearTimeout(pendingSaveRef.current);
+      if (autosaveRef.current) {
+        clearInterval(autosaveRef.current);
+        autosaveRef.current = null;
       }
     };
-  }, [answers, attemptId, stage, timeTakenSecs]);
+  }, [attemptId, durationMinutes, stage, t]);
 
   async function handleStart() {
-    if (!selectedTest) {
-      return;
-    }
     setStage("starting");
     setError(null);
-    setAnswers({});
-    setTimeTakenSecs(0);
-    setResult(null);
-
+    setViolationBanner(null);
+    setExpandedReview({});
     try {
-      const attempt = await startNUETAttempt({
-        attemptType: "pdf_test",
-        pdfTestId: selectedTest.id,
-        section: "full",
+      const response = await startNUETSimulator({
+        section,
+        strict: strictMode,
       });
-      if (!mountedRef.current) return;
-      setAttemptId(attempt.id);
+      setAttemptId(response.attempt.id);
+      setQuestions(response.questions);
+      setAnswers({});
+      setMarked(new Set());
+      setCurrentIndex(0);
+      setDurationMinutes(response.durationMinutes);
+      setTimeLeft(response.durationMinutes * 60);
+      setResult(null);
+      if (strictMode) {
+        await examMode.requestFullscreen();
+      }
       setStage("exam");
     } catch (err) {
-      if (!mountedRef.current) return;
-      setError(err instanceof Error ? err.message : "Failed to start attempt");
+      setError(err instanceof Error ? err.message : "Failed to start simulator");
       setStage("configure");
     }
   }
 
-  async function handleSubmit() {
-    if (!attemptId) {
-      return;
-    }
-    setStage("submitting");
-    setError(null);
-
-    try {
-      const completed = await completeNUETAttempt(attemptId, {
-        answers,
-        timeTakenSecs,
-      });
-      if (!mountedRef.current) return;
-      setResult(completed);
-      setStage("results");
-    } catch (err) {
-      if (!mountedRef.current) return;
-      setError(err instanceof Error ? err.message : "Failed to submit attempt");
-      setStage("exam");
-    }
-  }
-
-  async function handleBackToConfig() {
+  async function handleBack() {
+    clearIntervals();
     if (attemptId && stage === "exam") {
       try {
         await abandonNUETAttempt(attemptId);
       } catch {
-        // Ignore cleanup failures; the user can still continue.
+        // ignore
       }
     }
-    if (!mountedRef.current) return;
     setAttemptId(null);
+    setQuestions([]);
     setAnswers({});
-    setTimeTakenSecs(0);
+    setMarked(new Set());
+    setCurrentIndex(0);
+    setTimeLeft(0);
     setResult(null);
-    setError(null);
     setAutosaveLabel("");
+    setViolationBanner(null);
     setStage("configure");
   }
 
-  function updateAnswer(question: number, letter: string) {
-    setAnswers((current) => ({ ...current, [String(question)]: letter }));
+  function toggleMarked(questionId: string) {
+    setMarked((current) => {
+      const next = new Set(current);
+      if (next.has(questionId)) next.delete(questionId);
+      else next.add(questionId);
+      return next;
+    });
   }
 
-  if (tests.length === 0) {
-    return (
-      <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-sm text-[var(--text-secondary)]">
-        NUET PDF tests are not seeded yet. Run `go run ./cmd/seed-nuet-pdf-tests ./nuet-materials/files` from `backend/`.
-      </div>
-    );
+  function jumpTo(index: number) {
+    setCurrentIndex(index);
   }
 
   if (stage === "configure" || stage === "starting") {
     return (
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
-            <FileText className="h-4 w-4 text-[var(--primary)]" />
-            PDF test library
-          </div>
-          <div className="mt-4 grid gap-3">
-            {tests.map((test) => {
-              const active = test.id === selectedTestId;
-              return (
-                <button
-                  key={test.id}
-                  type="button"
-                  onClick={() => setSelectedTestId(test.id)}
-                  className={`rounded-xl border p-4 text-left transition ${
-                    active
-                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
-                      : "border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--primary)]"
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">{test.name}</p>
-                      <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                        {test.testType === "mock_test" ? "Mock test" : "Trial test"} · {test.questionCount} questions
-                      </p>
-                    </div>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest ${
-                        test.isScorable
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}
-                    >
-                      {test.isScorable ? "Scored" : "Practice only"}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+            {t("nuet.simulator.welcomeLabel")}
+          </p>
+          <h2 className="mt-2 text-2xl font-bold text-[var(--text-primary)]">
+            {t("nuet.simulator.welcomeTitle")}
+          </h2>
+          <p className="mt-3 text-sm text-[var(--text-secondary)]">
+            {t("nuet.simulator.welcomeBody")}
+          </p>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {([
+              { key: "full", label: t("nuet.simulator.full") },
+              { key: "math", label: t("nuet.sectionMath") },
+              { key: "ct", label: t("nuet.sectionCT") },
+            ] as const).map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setSection(item.key)}
+                className={`rounded-xl border p-4 text-left transition ${
+                  section === item.key
+                    ? "border-[var(--primary)] bg-[var(--primary-soft)]"
+                    : "border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--primary)]"
+                }`}
+              >
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{item.label}</p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                  {item.key === "full" ? "120 min · 60 questions" : "60 min · 30 questions"}
+                </p>
+              </button>
+            ))}
           </div>
         </section>
 
-        <aside className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          {selectedTest ? (
-            <>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
-                Selected test
-              </p>
-              <h2 className="mt-2 text-xl font-bold text-[var(--text-primary)]">{selectedTest.name}</h2>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <InfoTile label={t("nuet.sectionMath")} value={`${selectedTest.mathCount} Q`} />
-                <InfoTile label={t("nuet.sectionCT")} value={`${selectedTest.ctCount} Q`} />
-                <InfoTile label={t("nuet.statDuration")} value="120 min" />
-                <InfoTile label={t("nuet.statMaxScore")} value="240" />
+        <aside className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{t("nuet.simulator.strictMode")}</p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">{t("nuet.simulator.strictModeBody")}</p>
               </div>
+              <button
+                type="button"
+                onClick={() => setStrictMode((current) => !current)}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
+                  strictMode ? "bg-[var(--primary)]" : "bg-[var(--border)]"
+                }`}
+                aria-pressed={strictMode}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                    strictMode ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
 
-              <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4 text-sm text-[var(--text-secondary)]">
-                {selectedTest.isScorable ? (
-                  <p>Answer key detected for all questions. Your score will be checked automatically on submit.</p>
-                ) : (
-                  <p>
-                    This PDF can still be used for timed practice, but the stored answer key only covers {selectedTest.answerKeyCount} / {selectedTest.questionCount} questions right now.
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <a
-                  href={`/api/v1/files/${encodeURI(selectedTest.pdfPath)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open PDF
-                </a>
-                <Button onClick={() => void handleStart()} isLoading={stage === "starting"}>
-                  Start
-                </Button>
-              </div>
-            </>
-          ) : null}
+          <ul className="mt-5 space-y-2 text-sm text-[var(--text-secondary)]">
+            <li>{t("nuet.simulator.ruleFullscreen")}</li>
+            <li>{t("nuet.simulator.ruleTabSwitch")}</li>
+            <li>{t("nuet.simulator.rulePaste")}</li>
+            <li>{t("nuet.simulator.ruleViolations")}</li>
+          </ul>
 
           {error ? (
             <p className="mt-4 flex items-start gap-2 text-sm text-rose-600">
@@ -276,244 +343,351 @@ export function NUETSimulatorClient({ tests }: { tests: NUETPDFTest[] }) {
               {error}
             </p>
           ) : null}
+
+          <div className="mt-6">
+            <Button onClick={() => void handleStart()} isLoading={stage === "starting"} className="w-full">
+              {t("nuet.simulator.start")}
+            </Button>
+          </div>
         </aside>
       </div>
     );
   }
 
-  if (stage === "results" && result && selectedTest) {
-    const answeredCount = Object.values(answers).filter(Boolean).length;
+  if (stage === "results" && result) {
+    const passed = result.scoreTotal >= 120;
     return (
       <div className="mt-6 space-y-6">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Attempt finished</p>
-              <h2 className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{selectedTest.name}</h2>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{t("nuet.simulator.resultLabel")}</p>
+              <h2 className={`mt-2 text-4xl font-bold ${passed ? "text-emerald-600" : "text-amber-600"}`}>
+                {result.scoreTotal} / 240
+              </h2>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                {passed ? t("nuet.simulator.grantReached") : t("nuet.simulator.keepPushing")}
+              </p>
             </div>
-            <Trophy className="h-10 w-10 text-[var(--primary)]" />
+            <Trophy className={`h-12 w-12 ${passed ? "text-emerald-500" : "text-amber-500"}`} />
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-4">
-            <InfoTile label="Answered" value={`${answeredCount}/${totalQuestions}`} />
-            <InfoTile label={t("nuet.sectionMath")} value={`${result.scoreMath}/120`} />
-            <InfoTile label={t("nuet.sectionCT")} value={`${result.scoreCt}/120`} />
-            <InfoTile label="Total" value={`${result.scoreTotal}/240`} />
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <ResultTile label={t("nuet.sectionMath")} value={`${result.scoreMath}/120`} />
+            <ResultTile label={t("nuet.sectionCT")} value={`${result.scoreCt}/120`} />
+            <ResultTile label={t("nuet.history.correct")} value={String(result.correctMath + result.correctCt)} />
           </div>
 
-          <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4 text-sm text-[var(--text-secondary)]">
-            {result.scoreAvailable ? (
-              <p>Automatic scoring completed. Review the section breakdown below.</p>
-            ) : (
-              <p>{result.scoreReason || "Answers were saved, but this PDF does not have a complete answer key yet."}</p>
-            )}
+          <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4">
+            <div className="space-y-4">
+              <ScoreBar
+                label={t("nuet.sectionMath")}
+                value={result.scoreMath}
+                max={120}
+                color="var(--success)"
+              />
+              <ScoreBar
+                label={t("nuet.sectionCT")}
+                value={result.scoreCt}
+                max={120}
+                color="var(--yellow)"
+              />
+            </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Button onClick={() => void handleBackToConfig()}>Choose another test</Button>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button onClick={() => void handleBack()}>{t("nuet.simulator.retry")}</Button>
             <Link
-              href="/nuet/dashboard"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
+              href="/nuet/history"
+              className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
             >
-              Go to dashboard
+              {t("nuet.simulator.viewHistory")}
             </Link>
           </div>
         </div>
 
-        {result.scoreAvailable && result.evaluations?.length ? (
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Answer review</h3>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {result.evaluations.map((item) => (
-                <div
-                  key={item.question}
-                  className={`rounded-xl border p-3 text-sm ${
-                    item.correct
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                      : "border-rose-200 bg-rose-50 text-rose-800"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold">Q{item.question}</span>
-                    {item.correct ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                  </div>
-                  <p className="mt-2 text-xs uppercase tracking-wide">
-                    {item.section === "math" ? t("nuet.sectionMath") : t("nuet.sectionCT")}
-                  </p>
-                  <p className="mt-1">Your answer: {item.received || "—"}</p>
-                  <p>Correct: {item.expected}</p>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("nuet.simulator.reviewTitle")}</h3>
+          <div className="mt-4 space-y-3">
+            {result.evaluations?.map((item) => {
+              const open = expandedReview[item.question] ?? false;
+              return (
+                <div key={item.question} className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedReview((current) => ({ ...current, [item.question]: !open }))}
+                    className="flex w-full items-start justify-between gap-3 text-left"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
+                        #{item.question} {item.prompt}
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                        {item.correct ? t("nuet.simulator.correct") : t("nuet.simulator.incorrect")} · {t("nuet.simulator.correctAnswer")} {item.expected}
+                      </p>
+                    </div>
+                    {item.correct ? (
+                      <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 shrink-0 text-amber-600" />
+                    )}
+                  </button>
+                  {open ? (
+                    <div className="mt-3 border-t border-[var(--border)] pt-3 text-sm text-[var(--text-secondary)]">
+                      <p>{t("nuet.simulator.yourAnswer")} {item.received || "—"}</p>
+                      <p className="mt-1">{item.explanation}</p>
+                    </div>
+                  ) : null}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        ) : null}
+        </div>
       </div>
     );
   }
 
-  const remainingSecs = Math.max(0, 120 * 60 - timeTakenSecs);
-  const answeredCount = Object.values(answers).filter(Boolean).length;
-
   return (
-    <div className="mt-6 space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-        <div className="flex items-center gap-3">
+    <div className="mt-6 grid gap-5 lg:grid-cols-[280px_1fr]">
+      <aside className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+        <div className="flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={() => void handleBackToConfig()}
+            onClick={() => void handleBack()}
             className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)]"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {t("nuet.simulator.exit")}
           </button>
-          <div>
-            <p className="text-sm font-semibold text-[var(--text-primary)]">{selectedTest?.name}</p>
-            <p className="text-xs text-[var(--text-secondary)]">
-              {selectedTest?.testType === "mock_test" ? "Mock test" : "Trial test"} · {answeredCount}/{totalQuestions} answered
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-sm font-semibold text-[var(--text-primary)]">
             <Clock3 className="mr-1 inline h-4 w-4" />
-            {formatTime(remainingSecs)}
+            {formatTime(timeLeft)}
           </div>
-          {autosaveLabel ? (
-            <span className="text-xs text-[var(--text-muted)]">{autosaveLabel}</span>
-          ) : null}
         </div>
-      </div>
 
-      {!selectedTest?.isScorable ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          Automatic scoring is not complete for this PDF yet. Your answers will still be saved when you submit.
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          <MetricPill label={t("nuet.simulator.answered")} value={`${answeredCount}/${questions.length}`} />
+          <MetricPill label={t("nuet.simulator.flagged")} value={String(flaggedCount)} />
+          <MetricPill label={t("ielts.dashboard.violations")} value={String(examMode.violationCount)} />
         </div>
-      ) : null}
 
-      {error ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-          {error}
-        </div>
-      ) : null}
-
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Answer sheet</h2>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Fill every question directly here while keeping the source PDF open in another tab.
-            </p>
+        {violationBanner ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+            {violationBanner}
           </div>
-          {selectedTest ? (
-            <a
-              href={`/api/v1/files/${encodeURI(selectedTest.pdfPath)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Open PDF
-            </a>
-          ) : null}
-        </div>
+        ) : null}
+        {autosaveLabel ? <p className="text-xs text-[var(--text-muted)]">{autosaveLabel}</p> : null}
 
-        <div className="mt-6 space-y-6">
-          <QuestionSection
-            title={t("nuet.sectionMath")}
-            from={1}
-            to={mathCount}
-            answers={answers}
-            onChange={updateAnswer}
-          />
-          <QuestionSection
-            title={t("nuet.sectionCT")}
-            from={mathCount + 1}
-            to={totalQuestions}
-            answers={answers}
-            onChange={updateAnswer}
-          />
+        <div className="grid grid-cols-5 gap-2">
+          {questions.map((question, index) => {
+            const answered = Boolean(answers[question.id]);
+            const flagged = marked.has(question.id);
+            return (
+              <button
+                key={question.id}
+                type="button"
+                onClick={() => jumpTo(index)}
+                className={`aspect-square rounded-lg border text-xs font-semibold transition ${
+                  currentIndex === index
+                    ? "border-[var(--primary)] ring-2 ring-[var(--primary-soft)]"
+                    : flagged
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : answered
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                        : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]"
+                }`}
+              >
+                {index + 1}
+              </button>
+            );
+          })}
         </div>
+      </aside>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
-          <p className="text-sm text-[var(--text-secondary)]">
-            {answeredCount} / {totalQuestions} questions answered
-          </p>
-          <Button onClick={() => void handleSubmit()} isLoading={stage === "submitting"}>
-            {stage === "submitting" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Submit attempt
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+        {activeQuestion ? (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+                  {activeQuestion.section === "math" ? t("nuet.sectionMath") : t("nuet.sectionCT")}
+                </p>
+                <h2 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
+                  #{currentIndex + 1}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleMarked(activeQuestion.id)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm ${
+                  marked.has(activeQuestion.id)
+                    ? "border-rose-300 bg-rose-50 text-rose-700"
+                    : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]"
+                }`}
+              >
+                <Flag className="h-4 w-4" />
+                {t("nuet.simulator.mark")}
+              </button>
+            </div>
 
-function QuestionSection({
-  title,
-  from,
-  to,
-  answers,
-  onChange,
-}: {
-  title: string;
-  from: number;
-  to: number;
-  answers: Record<string, string>;
-  onChange: (question: number, letter: string) => void;
-}) {
-  return (
-    <section>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-[var(--text-primary)]">{title}</h3>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
-          Q{from} - Q{to}
-        </span>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: to - from + 1 }, (_, index) => {
-          const question = from + index;
-          const selected = answers[String(question)] || "";
-          return (
-            <div key={question} className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-3">
-              <div className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Question {question}</div>
-              <div className="grid grid-cols-5 gap-2">
-                {answerChoices.map((letter) => {
-                  const active = selected === letter;
-                  return (
-                    <button
-                      key={letter}
-                      type="button"
-                      onClick={() => onChange(question, letter)}
-                      className={`aspect-square rounded-lg border text-sm font-semibold transition ${
-                        active
-                          ? "border-[var(--primary)] bg-[var(--primary)] text-white"
-                          : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
-                      }`}
-                    >
+            <p className="mt-5 text-lg leading-8 text-[var(--text-primary)]">{activeQuestion.prompt}</p>
+
+            <div className="mt-6 space-y-3">
+              {activeQuestion.options.map((option, optionIndex) => {
+                const letter = answerChoices[optionIndex];
+                const active = answers[activeQuestion.id] === letter;
+                return (
+                  <button
+                    key={letter}
+                    type="button"
+                    onClick={() => setAnswers((current) => ({ ...current, [activeQuestion.id]: letter }))}
+                    className={`flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left transition ${
+                      active
+                        ? "border-[var(--primary)] bg-[var(--primary-soft)]"
+                        : "border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--primary)]"
+                    }`}
+                  >
+                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-xs font-semibold">
                       {letter}
-                    </button>
-                  );
-                })}
+                    </span>
+                    <span className="text-sm text-[var(--text-primary)]">{option}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentIndex((current) => Math.max(0, current - 1))}
+                disabled={currentIndex === 0}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                {t("nuet.simulator.prev")}
+              </Button>
+
+              <div className="flex flex-wrap gap-3">
+                <Button variant="ghost" onClick={() => toggleMarked(activeQuestion.id)}>
+                  <Flag className="h-4 w-4" />
+                  {marked.has(activeQuestion.id) ? t("nuet.simulator.unmark") : t("nuet.simulator.mark")}
+                </Button>
+                {currentIndex === questions.length - 1 ? (
+                  <Button onClick={() => void finishAttempt()} isLoading={stage === "submitting"}>
+                    {t("nuet.simulator.submit")}
+                  </Button>
+                ) : (
+                  <Button onClick={() => setCurrentIndex((current) => Math.min(questions.length - 1, current + 1))}>
+                    {t("nuet.simulator.next")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
+          </>
+        ) : (
+          <div className="flex min-h-[300px] items-center justify-center text-sm text-[var(--text-secondary)]">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {t("nuet.simulator.loadingQuestions")}
+          </div>
+        )}
+      </section>
 
-function InfoTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-3">
-      <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-[var(--text-primary)]">{value}</p>
+      {examMode.warningMessage ? (
+        <div className="lg:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="flex items-start gap-2">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p>{examMode.warningMessage}</p>
+              <button type="button" onClick={examMode.clearWarning} className="mt-2 text-xs underline">
+                {t("nuet.simulator.dismiss")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {examMode.showExitConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-1 h-5 w-5 text-[var(--primary)]" />
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("nuet.simulator.leaveTitle")}</h3>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">{t("nuet.simulator.leaveBody")}</p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="ghost" onClick={examMode.cancelExit}>
+                {t("nuet.simulator.stay")}
+              </Button>
+              <Button
+                onClick={() => {
+                  void examMode.confirmExit();
+                  void handleBack();
+                }}
+              >
+                {t("nuet.simulator.leave")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function formatTime(totalSeconds: number): string {
-  const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+function formatTime(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds]
+    .map((value) => value.toString().padStart(2, "0"))
+    .join(":");
+}
+
+function MetricPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
+      <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{value}</p>
+    </div>
+  );
+}
+
+function ResultTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
+      <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1 text-xl font-bold text-[var(--text-primary)]">{value}</p>
+    </div>
+  );
+}
+
+function ScoreBar({
+  label,
+  value,
+  max,
+  color,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+}) {
+  const ratio = max > 0 ? value / max : 0;
+  const percent = Math.max(0, Math.min(100, ratio * 100));
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="font-medium text-[var(--text-primary)]">{label}</span>
+        <span className="font-mono text-[var(--text-secondary)]">
+          {value}/{max}
+        </span>
+      </div>
+      <div className="mt-2 h-2 w-full rounded-full bg-[var(--bg-soft)]">
+        <div className="h-full rounded-full" style={{ width: `${percent}%`, background: color }} />
+      </div>
+    </div>
+  );
 }

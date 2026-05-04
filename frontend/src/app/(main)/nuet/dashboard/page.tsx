@@ -136,7 +136,7 @@ export default async function NUETDashboardPage() {
       {/* CTAs */}
       <section className="mt-8 grid gap-4 sm:grid-cols-2">
         <Link
-          href="/nuet/pdf-tests"
+          href="/nuet/simulator"
           className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 transition hover:border-[var(--primary)]"
         >
           <GraduationCap className="h-6 w-6 text-[var(--primary)]" />

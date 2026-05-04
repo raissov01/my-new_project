@@ -37,7 +37,10 @@ export type NUETAttemptActionResult = {
   topicId?: string;
   section: "full" | "math" | "critical_thinking";
   status: "in_progress" | "completed" | "abandoned";
+  strictMode: boolean;
   answers?: string;
+  questionSet?: string;
+  results?: string;
   correctMath: number;
   correctCt: number;
   scoreMath: number;
@@ -47,17 +50,43 @@ export type NUETAttemptActionResult = {
   violationCount: number;
   startedAt: string;
   completedAt?: string;
+  lastSavedAt?: string;
   createdAt: string;
   scoreAvailable: boolean;
   scoreReason?: string;
   evaluations?: Array<{
     question: number;
+    questionId?: string;
     section: "math" | "critical_thinking";
+    prompt?: string;
+    explanation?: string;
     expected: string;
     received: string;
     correct: boolean;
   }>;
 };
+
+export type NUETSimulatorQuestion = {
+  id: string;
+  number: number;
+  section: "math" | "critical_thinking";
+  difficulty: "beginner" | "medium" | "advanced";
+  prompt: string;
+  options: string[];
+};
+
+type SimulatorStartPayload = {
+  section: "full" | "math" | "ct";
+  strict: boolean;
+};
+
+type SimulatorSavePayload = {
+  answers: Record<string, string>;
+  marked: string[];
+  timeTakenSecs: number;
+};
+
+type SimulatorCompletePayload = SimulatorSavePayload;
 
 async function requireUser() {
   const user = await getCurrentUser();
@@ -140,5 +169,65 @@ export async function submitNUETPDFTestAttempt(payload: PDFTestAttemptPayload) {
     body: JSON.stringify(payload),
     headers: { "Content-Type": "application/json" },
     timeoutMs: 30_000,
+  });
+}
+
+export async function startNUETSimulator(payload: SimulatorStartPayload) {
+  const user = await requireUser();
+
+  return fetchBackendJson<{
+    attempt: NUETAttemptActionResult;
+    questions: NUETSimulatorQuestion[];
+    durationMinutes: number;
+    strictMode: boolean;
+  }>({
+    path: "/api/v1/nuet/simulator/start",
+    userId: user.id,
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 30_000,
+  });
+}
+
+export async function autosaveNUETSimulator(attemptId: string, payload: SimulatorSavePayload) {
+  const user = await requireUser();
+
+  return fetchBackendJson<{ saved: boolean; lastSavedAt: string }>({
+    path: `/api/v1/nuet/simulator/${attemptId}/save`,
+    userId: user.id,
+    method: "PUT",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 20_000,
+  });
+}
+
+export async function completeNUETSimulator(attemptId: string, payload: SimulatorCompletePayload) {
+  const user = await requireUser();
+
+  return fetchBackendJson<NUETAttemptActionResult>({
+    path: `/api/v1/nuet/simulator/${attemptId}/complete`,
+    userId: user.id,
+    method: "PUT",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 30_000,
+  });
+}
+
+export async function logNUETSimulatorViolation(
+  attemptId: string,
+  payload: { type: "tab_switch" | "fullscreen_exit" | "copy" | "paste" | "right_click" | "dev_tools" | "blur"; details?: string }
+) {
+  const user = await requireUser();
+
+  return fetchBackendJson<{ id: string; violationCount: number; status: "in_progress" | "abandoned" | "completed" }>({
+    path: `/api/v1/nuet/simulator/${attemptId}/violations`,
+    userId: user.id,
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 20_000,
   });
 }

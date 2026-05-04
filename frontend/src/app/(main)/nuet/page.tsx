@@ -49,7 +49,7 @@ export default async function NUETHubPage() {
       titleKey: "nuet.mod.mockExam",
       descKey: "nuet.mod.mockExamDesc",
       meta: "60 MCQ · 120 min",
-      href: "/nuet/pdf-tests",
+      href: "/nuet/simulator",
       tone: "orange" as const,
     },
     {
@@ -78,7 +78,7 @@ export default async function NUETHubPage() {
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
-            href="/nuet/pdf-tests"
+            href="/nuet/simulator"
             className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
           >
             <GraduationCap className="h-4 w-4" />

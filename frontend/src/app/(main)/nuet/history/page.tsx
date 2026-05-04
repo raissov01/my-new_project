@@ -5,6 +5,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { listNUETAttempts } from "@/server/integrations/go-backend/nuet";
+import { NUETHistoryClient } from "./client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -54,53 +55,9 @@ export default async function NUETHistoryPage() {
       </h1>
       <p className="mt-2 max-w-3xl text-sm text-[var(--text-secondary)]">{t("nuet.history.subtitle")}</p>
 
-      <div className="mt-8 space-y-3">
-        {data.attempts.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-sm text-[var(--text-secondary)]">
-            {t("nuet.history.empty")}
-          </div>
-        ) : null}
-
-        {data.attempts.map((attempt) => (
-          <article key={attempt.id} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-base font-semibold text-[var(--text-primary)]">
-                  {attempt.attemptType === "pdf_test"
-                    ? attempt.pdfTestName || t("nuet.pdfTest.title")
-                    : attempt.topicTitle || t("nuet.mod.practice")}
-                </p>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                  {attempt.attemptType} · {new Date(attempt.createdAt).toLocaleString(locale)}
-                </p>
-              </div>
-              <span className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1 text-sm font-semibold text-[var(--text-primary)]">
-                {attempt.scoreTotal}
-              </span>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-4">
-              <InfoTile label={t("nuet.history.status")} value={attempt.status} />
-              <InfoTile label={t("nuet.sectionMath")} value={String(attempt.scoreMath)} />
-              <InfoTile label={t("nuet.sectionCT")} value={String(attempt.scoreCt)} />
-              <InfoTile label={t("nuet.history.correct")} value={String(attempt.correctMath + attempt.correctCt)} />
-            </div>
-
-            {!attempt.scoreAvailable && attempt.scoreReason ? (
-              <p className="mt-4 text-sm text-amber-700">{attempt.scoreReason}</p>
-            ) : null}
-          </article>
-        ))}
+      <div className="mt-8">
+        <NUETHistoryClient attempts={data.attempts} locale={locale} />
       </div>
-    </div>
-  );
-}
-
-function InfoTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
-      <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }

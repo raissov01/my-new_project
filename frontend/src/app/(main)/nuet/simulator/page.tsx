@@ -3,15 +3,14 @@ import Link from "next/link";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { listNUETPDFTests } from "@/server/integrations/go-backend/nuet";
 import { NUETSimulatorClient } from "./client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
   return {
-    title: `${t("nuet.heroTitle")} | Simulator`,
-    description: t("nuet.mod.mockExamDesc"),
+    title: t("nuet.simulator.metaTitle"),
+    description: t("nuet.simulator.metaDesc"),
     alternates: { canonical: "/nuet/simulator" },
   };
 }
@@ -32,8 +31,6 @@ export default async function NUETSimulatorPage() {
     );
   }
 
-  const tests = await listNUETPDFTests(user.id).catch(() => ({ items: [] }));
-
   return (
     <div className="page-shell py-6 sm:py-8">
       <div className="rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--bg-soft)] to-[var(--bg-surface)] p-5 sm:p-6">
@@ -43,10 +40,10 @@ export default async function NUETSimulatorPage() {
               {t("nuet.backToHub")}
             </Link>
             <h1 className="mt-2 text-2xl font-bold text-[var(--text-primary)] sm:text-3xl">
-              {t("nuet.startMock")}
+              {t("nuet.simulator.title")}
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">
-              {t("nuet.heroSubtitle")}
+              {t("nuet.simulator.subtitle")}
             </p>
           </div>
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 font-mono text-xs uppercase tracking-widest text-[var(--text-muted)]">
@@ -55,7 +52,7 @@ export default async function NUETSimulatorPage() {
         </div>
       </div>
 
-      <NUETSimulatorClient tests={tests.items} />
+      <NUETSimulatorClient />
     </div>
   );
 }
