@@ -9,6 +9,7 @@ import {
   BotMessageSquare,
   Headphones,
   BookMarked,
+  GraduationCap,
   CalendarDays,
   User,
   Crown,
@@ -110,12 +111,14 @@ export function AppSidebar() {
     ? [
         { href: homeHref, label: t("nav.home"), icon: Home },
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked },
+        { href: "/nuet", label: t("nav.nuetPrep"), icon: GraduationCap },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig },
         { href: "/chat", label: t("nav.aiChat"), icon: MessageSquareText },
       ]
     : [
         { href: "/", label: t("nav.home"), icon: Home, exact: true },
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked },
+        { href: "/nuet", label: t("nav.nuetPrep"), icon: GraduationCap },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig },
         { href: "/guide", label: t("nav.guide"), icon: HelpCircle },
       ];
