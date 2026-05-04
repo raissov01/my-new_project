@@ -50,7 +50,7 @@ export default async function NUETPracticeTopicPage({
 
   const questionData = await listNUETQuestions(user.id, {
     topicSlug: slug,
-    limit: 20,
+    limit: 10,
   }).catch(() => ({ items: [] }));
 
   return (

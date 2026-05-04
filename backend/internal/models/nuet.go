@@ -67,7 +67,10 @@ type NUETAttempt struct {
 	TopicID        *string    `gorm:"type:uuid"                                      json:"topicId,omitempty"`
 	Section        string     `gorm:"type:varchar(32);not null;default:'full'"       json:"section"`
 	Status         string     `gorm:"type:varchar(16);not null;default:'in_progress'" json:"status"`
+	StrictMode     bool       `gorm:"not null;default:false"                         json:"strictMode"`
 	Answers        *string    `gorm:"type:jsonb"                                     json:"answers"`
+	QuestionSet    *string    `gorm:"type:jsonb"                                     json:"questionSet,omitempty"`
+	Results        *string    `gorm:"type:jsonb"                                     json:"results,omitempty"`
 	CorrectMath    int        `gorm:"not null;default:0"                             json:"correctMath"`
 	CorrectCT      int        `gorm:"column:correct_ct;not null;default:0"           json:"correctCt"`
 	ScoreMath      int        `gorm:"not null;default:0"                             json:"scoreMath"`
@@ -77,7 +80,19 @@ type NUETAttempt struct {
 	ViolationCount int        `gorm:"not null;default:0"                             json:"violationCount"`
 	StartedAt      time.Time  `gorm:"not null;default:now()"                         json:"startedAt"`
 	CompletedAt    *time.Time `                                                      json:"completedAt,omitempty"`
+	LastSavedAt    time.Time  `gorm:"autoUpdateTime"                                 json:"lastSavedAt"`
 	CreatedAt      time.Time  `gorm:"autoCreateTime"                                 json:"createdAt"`
 }
 
 func (NUETAttempt) TableName() string { return "nuet_attempts" }
+
+type NUETViolation struct {
+	ID         string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	AttemptID  string    `gorm:"type:uuid;not null;index"                       json:"attemptId"`
+	UserID     string    `gorm:"type:uuid;not null;index"                       json:"userId"`
+	Type       string    `gorm:"not null;check:type IN ('tab_switch','fullscreen_exit','copy','paste','right_click','dev_tools','blur')" json:"type"`
+	Details    *string   `gorm:"type:text"                                       json:"details,omitempty"`
+	OccurredAt time.Time `gorm:"autoCreateTime"                                  json:"occurredAt"`
+}
+
+func (NUETViolation) TableName() string { return "nuet_simulator_violations" }

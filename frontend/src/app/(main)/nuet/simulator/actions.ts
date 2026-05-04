@@ -17,6 +17,19 @@ type SaveAttemptPayload = {
 
 type CompleteAttemptPayload = SaveAttemptPayload;
 
+type PracticeAttemptPayload = {
+  topicSlug: string;
+  answers: Array<{
+    questionId: string;
+    choice: "A" | "B" | "C" | "D" | "E";
+  }>;
+};
+
+type PDFTestAttemptPayload = {
+  pdfTestId: string;
+  answers: Array<"A" | "B" | "C" | "D" | "E" | "">;
+};
+
 export type NUETAttemptActionResult = {
   id: string;
   attemptType: "full_mock" | "pdf_test" | "topic_practice" | "section_practice";
@@ -101,5 +114,31 @@ export async function abandonNUETAttempt(attemptId: string) {
     userId: user.id,
     method: "PUT",
     timeoutMs: 20_000,
+  });
+}
+
+export async function submitNUETPracticeAttempt(payload: PracticeAttemptPayload) {
+  const user = await requireUser();
+
+  return fetchBackendJson<NUETAttemptActionResult>({
+    path: "/api/v1/nuet/attempts/practice",
+    userId: user.id,
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 30_000,
+  });
+}
+
+export async function submitNUETPDFTestAttempt(payload: PDFTestAttemptPayload) {
+  const user = await requireUser();
+
+  return fetchBackendJson<NUETAttemptActionResult>({
+    path: "/api/v1/nuet/attempts/pdf-test",
+    userId: user.id,
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 30_000,
   });
 }

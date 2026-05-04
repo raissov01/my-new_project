@@ -1,0 +1,60 @@
+2026/05/03 20:05:01 [bot-scrape] authenticated, resolving @nuetchalka_bot
+2026/05/03 20:05:01 [bot-scrape] bot resolved: @nuetchalka_bot id=8113168138
+2026/05/03 20:05:01 [bot-scrape] sending /start
+2026/05/03 20:05:04 [bot-scrape] [d=0] /start — 10 cb (10 actionable)
+2026/05/03 20:05:06 [bot-scrape] [d=1] /start > 📘 Topics — 19 cb (18 actionable)
+2026/05/03 20:05:15 [bot-scrape]   downloaded → nuet-materials/files/NUET 2024 Math Specification.pdf
+2026/05/03 20:06:01 [bot-scrape]   recovery to /start > 📘 Topics failed: send /start: rpcDoRequest: rpc error code 420: FLOOD_WAIT (1938) — skipping remaining siblings
+2026/05/03 20:06:02 [bot-scrape]   recovery to /start failed: send /start: rpcDoRequest: rpc error code 420: FLOOD_WAIT (1937) — skipping remaining siblings
+2026/05/03 20:06:02 [bot-scrape] done — output: ./nuet-materials (visited 2 distinct menus)
+2026/05/03 20:11:00 [bot-scrape] authenticated, resolving @nuetchalka_bot
+2026/05/03 20:11:00 [bot-scrape] bot resolved: @nuetchalka_bot id=8113168138
+2026/05/03 20:11:00 [bot-scrape] sending /start
+2026/05/03 20:11:00 [bot-scrape] FLOOD_WAIT 27m19s on send "/start" — waiting
+2026/05/03 20:38:23 [bot-scrape] [d=0] /start — 10 cb (10 actionable)
+2026/05/03 20:38:26 [bot-scrape] [d=1] /start > 📘 Topics — 19 cb (18 actionable)
+2026/05/03 20:38:30 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:40:33 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:40:36 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:40:38 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:40:41 [bot-scrape]   downloaded → nuet-materials/files/8.Geometry-QP-P4.pdf
+2026/05/03 20:40:43 [bot-scrape]   downloaded → nuet-materials/files/9.Perimeters,Area and Volumes-QP-P4.pdf
+2026/05/03 20:40:44 [bot-scrape]   downloaded → nuet-materials/files/10.Trigonometry-QP-P4.pdf
+2026/05/03 20:40:45 [bot-scrape]   downloaded → nuet-materials/files/12.Probability-QP-P4.pdf
+2026/05/03 20:40:45 [bot-scrape]   downloaded → nuet-materials/files/8.Probability-QP-P2.pdf
+2026/05/03 20:40:46 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:40:48 [bot-scrape]   downloaded → nuet-materials/files/Russian.pdf
+2026/05/03 20:40:48 [bot-scrape]   downloaded → nuet-materials/files/Sat Maths Formulas.pdf
+2026/05/03 20:40:48 [bot-scrape]   downloaded → nuet-materials/files/GCSE Higher.pdf
+2026/05/03 20:40:49 [bot-scrape]   downloaded → nuet-materials/files/Circles.PNG
+2026/05/03 20:40:49 [bot-scrape]   downloaded → nuet-materials/files/Formulas.docx
+2026/05/03 20:40:51 [bot-scrape]   downloaded → nuet-materials/files/1300 Math Formulas.pdf
+2026/05/03 20:40:51 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:40:54 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 1.pdf
+2026/05/03 20:40:54 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 2.pdf
+2026/05/03 20:40:54 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 3.pdf
+2026/05/03 20:40:54 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 4.pdf
+2026/05/03 20:40:54 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 5.pdf
+2026/05/03 20:40:55 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 6.pdf
+2026/05/03 20:40:55 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 7.pdf
+2026/05/03 20:40:55 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 8.pdf
+2026/05/03 20:40:55 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 9.pdf
+2026/05/03 20:40:55 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 10.pdf
+2026/05/03 20:40:56 [bot-scrape]   downloaded → nuet-materials/files/Trial Test 11.pdf
+2026/05/03 20:40:56 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:40:58 [bot-scrape]   downloaded → nuet-materials/files/NUET_MOCK_1 (Questions and Answers) (1).pdf
+2026/05/03 20:40:59 [bot-scrape]   downloaded → nuet-materials/files/NUET_MOCK_2 (Questions and Answers).pdf
+2026/05/03 20:40:59 [bot-scrape]   downloaded → nuet-materials/files/NUET_MOCK_3 (Questions and Answers).pdf
+2026/05/03 20:40:59 [bot-scrape]   downloaded → nuet-materials/files/NUET_MOCK_4 (Questions and Answers).pdf
+2026/05/03 20:40:59 [bot-scrape]   downloaded → nuet-materials/files/NUET_MOCK_5 (Questions and Answers).pdf
+2026/05/03 20:40:59 [bot-scrape]   downloaded → nuet-materials/files/NUET_MOCK_6 (Questions and Answers).pdf
+2026/05/03 20:40:59 [bot-scrape]   downloaded → nuet-materials/files/NUET_MOCK_7 (Questions and Answers).pdf
+2026/05/03 20:41:00 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:41:05 [bot-scrape]   downloaded → nuet-materials/files/8_GEOMETRY.pdf
+2026/05/03 20:41:07 [bot-scrape]   downloaded → nuet-materials/files/9_ALGEBRA.pdf
+2026/05/03 20:41:09 [bot-scrape]   downloaded → nuet-materials/files/9_GEOMETRY.pdf
+2026/05/03 20:41:09 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:41:21 [bot-scrape]   downloaded → nuet-materials/files/Analytic_Analysis_of_LINES_and_CIRCLES.pdf
+2026/05/03 20:41:21 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:41:26 [bot-scrape]   recovered to a different state than expected
+2026/05/03 20:41:26 [bot-scrape] done — output: ./nuet-materials (visited 2 distinct menus)

@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronRight, RotateCcw, XCircle } from "lucide-react";
+import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import type { NUETQuestion, NUETTopic } from "@/server/integrations/go-backend/nuet";
-import { completeNUETAttempt, startNUETAttempt } from "../../simulator/actions";
+import { submitNUETPracticeAttempt } from "../../simulator/actions";
 
 type Stage = "ready" | "submitting" | "results";
 
@@ -16,30 +17,41 @@ export function NUETPracticeClient({
   topic: NUETTopic;
   questions: NUETQuestion[];
 }) {
+  const { t } = useLocale();
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [result, setResult] = useState<Awaited<ReturnType<typeof completeNUETAttempt>> | null>(null);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [result, setResult] = useState<Awaited<ReturnType<typeof submitNUETPracticeAttempt>> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [stage, setStage] = useState<Stage>("ready");
 
-  const answeredCount = useMemo(
-    () => Object.values(answers).filter(Boolean).length,
-    [answers]
+  const currentQuestion = questions[currentIndex];
+  const selectedChoice = currentQuestion ? answers[currentQuestion.id] ?? "" : "";
+  const isChecked = currentQuestion ? checked[currentQuestion.id] ?? false : false;
+  const correctCount = useMemo(
+    () =>
+      Object.entries(answers).filter(([questionId, choice]) => {
+        const question = questions.find((item) => item.id === questionId);
+        return question?.answer === choice;
+      }).length,
+    [answers, questions]
   );
+  const checkedCount = Object.keys(checked).length;
+  const lastQuestion = currentIndex === questions.length - 1;
 
-  async function handleSubmit() {
+  async function handleFinalSubmit() {
     setStage("submitting");
     setError(null);
 
     try {
-      const attempt = await startNUETAttempt({
-        attemptType: "topic_practice",
-        topicId: topic.id,
-        section: topic.section,
-      });
-
-      const completed = await completeNUETAttempt(attempt.id, {
-        answers,
-        timeTakenSecs: 0,
+      const completed = await submitNUETPracticeAttempt({
+        topicSlug: topic.slug,
+        answers: questions
+          .filter((question) => answers[question.id])
+          .map((question) => ({
+            questionId: question.id,
+            choice: answers[question.id] as "A" | "B" | "C" | "D" | "E",
+          })),
       });
       setResult(completed);
       setStage("results");
@@ -49,8 +61,25 @@ export function NUETPracticeClient({
     }
   }
 
+  function handleCheck() {
+    if (!currentQuestion || !selectedChoice) {
+      return;
+    }
+    setChecked((current) => ({ ...current, [currentQuestion.id]: true }));
+  }
+
+  function handleNext() {
+    if (lastQuestion) {
+      void handleFinalSubmit();
+      return;
+    }
+    setCurrentIndex((current) => current + 1);
+  }
+
   function resetPractice() {
+    setCurrentIndex(0);
     setAnswers({});
+    setChecked({});
     setResult(null);
     setError(null);
     setStage("ready");
@@ -59,9 +88,9 @@ export function NUETPracticeClient({
   if (questions.length === 0) {
     return (
       <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-sm text-[var(--text-secondary)]">
-        <p>No questions have been seeded for this topic yet.</p>
-        <Link href="/nuet/simulator" className="mt-4 inline-flex text-[var(--primary)] hover:underline">
-          Open the full mock simulator instead
+        <p>{t("nuet.practice.empty")}</p>
+        <Link href="/nuet/pdf-tests" className="mt-4 inline-flex text-[var(--primary)] hover:underline">
+          {t("nuet.practice.emptyCta")}
         </Link>
       </div>
     );
@@ -74,12 +103,12 @@ export function NUETPracticeClient({
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Practice result</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{t("nuet.practice.resultLabel")}</p>
               <h2 className="mt-2 text-2xl font-bold text-[var(--text-primary)]">
-                {result.correctMath + result.correctCt} / {total} correct
+                {result.correctMath + result.correctCt} / {total}
               </h2>
               <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                Topic score: {result.scoreTotal}
+                {t("nuet.practice.scoreLine").replace("{score}", String(result.scoreTotal))}
               </p>
             </div>
             <CheckCircle2 className="h-10 w-10 text-emerald-600" />
@@ -87,19 +116,19 @@ export function NUETPracticeClient({
           <div className="mt-5 flex flex-wrap gap-3">
             <Button onClick={resetPractice}>
               <RotateCcw className="h-4 w-4" />
-              Try again
+              {t("nuet.practice.tryAgain")}
             </Button>
             <Link
-              href={`/nuet/topics/${topic.slug}`}
+              href="/nuet/history"
               className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
             >
-              Review explanation
+              {t("nuet.practice.viewHistory")}
             </Link>
           </div>
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">Question review</h3>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("nuet.practice.reviewTitle")}</h3>
           <div className="mt-4 space-y-3">
             {questions.map((question, index) => {
               const evaluation = result.evaluations?.[index];
@@ -108,16 +137,14 @@ export function NUETPracticeClient({
                 <div
                   key={question.id}
                   className={`rounded-xl border p-4 ${
-                    evaluation?.correct
-                      ? "border-emerald-200 bg-emerald-50"
-                      : "border-rose-200 bg-rose-50"
+                    evaluation?.correct ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"
                   }`}
                 >
                   <p className="text-sm font-semibold text-[var(--text-primary)]">
                     {index + 1}. {question.prompt}
                   </p>
                   <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                    Your answer: {selected || "—"} · Correct answer: {evaluation?.expected || "—"}
+                    {t("nuet.practice.yourAnswer")} {selected || "—"} · {t("nuet.practice.correctAnswer")} {evaluation?.expected || "—"}
                   </p>
                   {question.explanation ? (
                     <p className="mt-2 text-sm text-[var(--text-secondary)]">{question.explanation}</p>
@@ -136,14 +163,19 @@ export function NUETPracticeClient({
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Starter practice</p>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              Answer all questions, then submit to get instant feedback for this topic.
-            </p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{t("nuet.practice.runnerLabel")}</p>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">{t("nuet.practice.runnerDesc")}</p>
           </div>
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)]">
-            {answeredCount} / {questions.length} answered
+            {t("nuet.practice.progress")
+              .replace("{current}", String(currentIndex + 1))
+              .replace("{total}", String(questions.length))}
           </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <StatPill label={t("nuet.practice.checked")} value={`${checkedCount}/${questions.length}`} />
+          <StatPill label={t("nuet.practice.correct")} value={`${correctCount}/${questions.length}`} />
+          <StatPill label={t("nuet.practice.section")} value={topic.section === "math" ? t("nuet.sectionMath") : t("nuet.sectionCT")} />
         </div>
       </div>
 
@@ -156,47 +188,89 @@ export function NUETPracticeClient({
         </div>
       ) : null}
 
-      <div className="space-y-4">
-        {questions.map((question, index) => (
-          <section key={question.id} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-            <p className="text-base font-semibold text-[var(--text-primary)]">
-              {index + 1}. {question.prompt}
-            </p>
-            <div className="mt-4 grid gap-2">
-              {question.options.map((option, optionIndex) => {
-                const letter = String.fromCharCode(65 + optionIndex);
-                const active = answers[question.id] === letter;
-                return (
-                  <button
-                    key={letter}
-                    type="button"
-                    onClick={() => setAnswers((current) => ({ ...current, [question.id]: letter }))}
-                    className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition ${
-                      active
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+        <p className="text-base font-semibold text-[var(--text-primary)]">
+          {currentIndex + 1}. {currentQuestion.prompt}
+        </p>
+        <div className="mt-4 grid gap-2">
+          {currentQuestion.options.map((option, optionIndex) => {
+            const letter = String.fromCharCode(65 + optionIndex);
+            const active = selectedChoice === letter;
+            const showCorrect = isChecked && currentQuestion.answer === letter;
+            const showWrong = isChecked && selectedChoice === letter && currentQuestion.answer !== letter;
+            return (
+              <button
+                key={letter}
+                type="button"
+                disabled={isChecked}
+                onClick={() => setAnswers((current) => ({ ...current, [currentQuestion.id]: letter }))}
+                className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition ${
+                  showCorrect
+                    ? "border-emerald-500 bg-emerald-50"
+                    : showWrong
+                      ? "border-rose-500 bg-rose-50"
+                      : active
                         ? "border-[var(--primary)] bg-[var(--primary-soft)]"
                         : "border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--primary)]"
-                    }`}
-                  >
-                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-xs font-semibold">
-                      {letter}
-                    </span>
-                    <span className="text-sm text-[var(--text-primary)]">{option}</span>
-                  </button>
-                );
-              })}
+                } ${isChecked ? "cursor-default" : ""}`}
+              >
+                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-xs font-semibold">
+                  {letter}
+                </span>
+                <span className="text-sm text-[var(--text-primary)]">{option}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {isChecked ? (
+          <div className={`mt-5 rounded-xl border p-4 ${selectedChoice === currentQuestion.answer ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}>
+            <div className="flex items-start gap-3">
+              {selectedChoice === currentQuestion.answer ? (
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+              ) : (
+                <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+              )}
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">
+                  {selectedChoice === currentQuestion.answer ? t("nuet.practice.correctState") : t("nuet.practice.incorrectState")}
+                </p>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  {t("nuet.practice.correctAnswer")} {currentQuestion.answer}
+                </p>
+                {currentQuestion.explanation ? (
+                  <p className="mt-2 text-sm text-[var(--text-secondary)]">{currentQuestion.explanation}</p>
+                ) : null}
+              </div>
             </div>
-          </section>
-        ))}
-      </div>
+          </div>
+        ) : null}
+      </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
         <p className="text-sm text-[var(--text-secondary)]">
-          You can submit now or finish the remaining questions first.
+          {isChecked ? t("nuet.practice.readyForNext") : t("nuet.practice.pickOne")}
         </p>
-        <Button onClick={() => void handleSubmit()} isLoading={stage === "submitting"}>
-          Submit practice
-        </Button>
+        {isChecked ? (
+          <Button onClick={handleNext} isLoading={stage === "submitting"}>
+            {lastQuestion ? t("nuet.practice.finish") : t("nuet.practice.next")}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button onClick={handleCheck} disabled={!selectedChoice}>
+            {t("nuet.practice.check")}
+          </Button>
+        )}
       </div>
+    </div>
+  );
+}
+
+function StatPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
+      <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }

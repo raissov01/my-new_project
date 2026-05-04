@@ -1,0 +1,2 @@
+go: error reading go.mod: missing module declaration. To specify the module path:
+	go mod edit -module=example.com/mod

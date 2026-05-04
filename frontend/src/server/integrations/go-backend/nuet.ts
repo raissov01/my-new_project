@@ -54,7 +54,10 @@ export type NUETAttempt = {
   userId: string;
   attemptType: "full_mock" | "pdf_test" | "topic_practice" | "section_practice";
   pdfTestId?: string;
+  pdfTestName?: string;
   topicId?: string;
+  topicSlug?: string;
+  topicTitle?: string;
   section: "full" | "math" | "critical_thinking";
   status: "in_progress" | "completed" | "abandoned";
   answers?: string;
@@ -86,7 +89,13 @@ export type NUETQuestion = {
   difficulty: "beginner" | "medium" | "advanced";
   prompt: string;
   options: string[];
+  answer: "A" | "B" | "C" | "D" | "E";
   explanation: string;
+};
+
+export type NUETPracticeAnswerInput = {
+  questionId: string;
+  choice: "A" | "B" | "C" | "D" | "E";
 };
 
 export async function listNUETTopics(
@@ -145,6 +154,13 @@ export async function listNUETPDFTests(userId: string): Promise<{ items: NUETPDF
   });
 }
 
+export async function getNUETPDFTest(userId: string, id: string): Promise<NUETPDFTest> {
+  return fetchBackendJson<NUETPDFTest>({
+    path: `/api/v1/nuet/pdf-tests/${encodeURIComponent(id)}`,
+    userId,
+  });
+}
+
 export async function listNUETQuestions(
   userId: string,
   params: {
@@ -162,6 +178,34 @@ export async function listNUETQuestions(
 
   return fetchBackendJson<{ items: NUETQuestion[]; topic?: NUETTopic }>({
     path: `/api/v1/nuet/questions?${qs.toString()}`,
+    userId,
+  });
+}
+
+export async function listNUETAttempts(
+  userId: string,
+  params: {
+    limit?: number;
+    offset?: number;
+    status?: "in_progress" | "completed" | "abandoned";
+    attemptType?: "full_mock" | "pdf_test" | "topic_practice" | "section_practice";
+  } = {}
+): Promise<{ attempts: NUETAttempt[]; total: number; limit: number; offset: number }> {
+  const qs = new URLSearchParams();
+  qs.set("limit", String(params.limit ?? 10));
+  qs.set("offset", String(params.offset ?? 0));
+  if (params.status) qs.set("status", params.status);
+  if (params.attemptType) qs.set("attemptType", params.attemptType);
+
+  return fetchBackendJson<{ attempts: NUETAttempt[]; total: number; limit: number; offset: number }>({
+    path: `/api/v1/nuet/attempts?${qs.toString()}`,
+    userId,
+  });
+}
+
+export async function getNUETAttempt(userId: string, id: string): Promise<NUETAttempt> {
+  return fetchBackendJson<NUETAttempt>({
+    path: `/api/v1/nuet/attempts/${encodeURIComponent(id)}`,
     userId,
   });
 }
