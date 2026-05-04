@@ -12,6 +12,7 @@ import {
   HelpCircle,
   LibraryBig,
   BookMarked,
+  GraduationCap,
   MessageSquareText,
   Gamepad2,
   ListChecks,
@@ -222,6 +223,7 @@ export function Navbar() {
     : [
         { href: "/", label: t("nav.home"), icon: Home, exact: true },
         { href: "/ielts", label: t("nav.ieltsPrep"), icon: BookMarked, exact: false },
+        { href: "/nuet", label: t("nav.nuetPrep"), icon: GraduationCap, exact: false },
         { href: "/flashcards", label: t("nav.flashcards"), icon: LibraryBig, exact: false },
       ];
 

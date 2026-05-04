@@ -1,0 +1,308 @@
+{
+  "path": [
+    "/start"
+  ],
+  "text": "🎀 Hello and welcome! 🌙\n\nThank you for using this NUET Math Bot ✨\n\nI hope this bot helps you prepare more comfortably and keep all the important materials in one place 📚\n\nHere you can find:\n• NUET Math topics with explanations\n• the official specification file\n• formula sheets and quick reference files\n• books and theory materials\n• notes and short revision documents\n• topic-based practice PDFs\n• trial tests\n• NUET mock tests\n• useful external resources for extra preparation\n\nPlease choose the section you need from the menu below 🌷",
+  "children": [
+    {
+      "path": [
+        "/start",
+        "📘 Topics"
+      ],
+      "text": "📘 NUET Math Topics 🌙\n\nBelow you can find the main topics that may appear in the NUET Math exam.\n\nYou can also open the official specification file from this section.",
+      "children": [
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "📄 NUET Math Specification"
+          ],
+          "text": "📄 NUET Math Specification 🌙\n\nThis is the official specification file for NUET Math.\n\nUse it to check the exam content, structure and general scope of the syllabus.",
+          "files": [
+            "nuet-materials/files/NUET 2024 Math Specification.pdf"
+          ]
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "1) Direct and Inverse Proportion"
+          ],
+          "text": "🌙 Direct and Inverse Proportion\n\nIn this topic, you need to understand how two quantities are related. In direct proportion, both quantities change in the same direction. In inverse proportion, when one quantity increases, the other decreases.\n\nYou should be able to:\n• identify whether the relationship is direct or inverse\n• set up a proportion from a table or a word problem\n• find missing values correctly\n• solve practical questions involving cost, work, time, speed or quantity\n\nPay close attention to wording, because exam questions often hide the proportion inside a real-life situation.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "2) Recurring Decimals"
+          ],
+          "text": "🌙 Recurring Decimals\n\nThis topic is about decimals in which one digit or a block of digits repeats forever. You need to understand the notation and convert recurring decimals into fractions.\n\nYou should revise:\n• how to identify the repeating part\n• notation for recurring decimals\n• converting simple recurring decimals into fractions\n• converting mixed recurring decimals into fractions\n\nThis topic is mainly about method, so make sure you understand each algebraic step clearly.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "3) Algebraic Simplification (with x variable)"
+          ],
+          "text": "🌙 Algebraic Simplification\n\nThis topic checks whether you can work accurately with algebraic expressions. You need to simplify expressions step by step and avoid combining terms incorrectly.\n\nYou should revise:\n• collecting like terms\n• expanding brackets\n• factorising simple expressions\n• simplifying algebraic fractions when possible\n• handling expressions with x carefully\n\nA common mistake is combining unlike terms, so always check that the variables and powers match.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "4) Circle Theorems (especially with chords)"
+          ],
+          "text": "🎀 Main Menu 🌙\n\nPlease choose the section you want to open.\n\n📘 NUET Math Topics 🌙\n\nBelow you can find the main topics that may appear in the NUET Math exam.\n\nYou can also open the official specification file from this section.\n\n🌙 Recurring Decimals\n\nThis topic is about decimals in which one digit or a block of digits repeats forever. You need to understand the notation and convert recurring decimals into fractions.\n\nYou should revise:\n• how to identify the repeating part\n• notation for recurring decimals\n• converting simple recurring decimals into fractions\n• converting mixed recurring decimals into fractions\n\nThis topic is mainly about method, so make sure you understand each algebraic step clearly.\n\nNo extra files have been added for this topic yet.\n\n🎀 Main Menu 🌙\n\nPlease choose the section you want to open.\n\n📘 NUET Math Topics 🌙\n\nBelow you can find the main topics that may appear in the NUET Math exam.\n\nYou can also open the official specification file from this section.\n\n🌙 Algebraic Simplification\n\nThis topic checks whether you can work accurately with algebraic expressions. You need to simplify expressions step by step and avoid combining terms incorrectly.\n\nYou should revise:\n• collecting like terms\n• expanding brackets\n• factorising simple expressions\n• simplifying algebraic fractions when possible\n• handling expressions with x carefully\n\nA common mistake is combining unlike terms, so always check that the variables and powers match.\n\nNo extra files have been added for this topic yet.\n\n🎀 Main Menu 🌙\n\nPlease choose the section you want to open.\n\n📘 NUET Math Topics 🌙\n\nBelow you can find the main topics that may appear in the NUET Math exam.\n\nYou can also open the official specification file from this section.\n\n🌙 Circle Theorems\n\nThis is one of the most important geometry topics. You need to know the standard circle theorems and use them correctly in diagrams.\n\nYou should revise:\n• angle at the center and angle at the circumference\n• angles in the same segment\n• angle in a semicircle\n• cyclic quadrilateral theorem\n• tangent and radius relationships\n• chord properties and intersecting chords\n\nDo not revise this topic only by reading theory. Practice with diagrams, because the exam usually tests recognition of the correct theorem.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "5) Percentages Word Problem (decrease/increase)"
+          ],
+          "text": "🌙 Percentages Word Problems\n\nThis topic focuses on using percentages in practical situations such as discounts, increase, decrease, profit and original price questions.\n\nYou should revise:\n• finding a percentage of a quantity\n• percentage increase and decrease\n• finding the new value after change\n• finding the original value\n• interpreting wording carefully in real-life questions\n\nA common mistake is using the wrong base value, so always check which number the percentage refers to.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "6) Rounding to Significant Figures / Standard Form"
+          ],
+          "text": "🌙 Rounding and Standard Form\n\nThis topic tests your accuracy with very large and very small numbers. You should know how to round correctly and how to write numbers in standard form.\n\nYou should revise:\n• significant figures\n• difference between decimal places and significant figures\n• writing numbers in standard form\n• converting standard form back to ordinary form\n• simple calculations with numbers in standard form\n\nRead the instruction carefully, because many mistakes happen when students confuse decimal places and significant figures.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "7) Graph Transformation (usually Parabola)"
+          ],
+          "text": "🌙 Graph Transformation\n\nThis topic is about understanding how a graph changes when the equation changes. You should connect the algebraic form of a function with the movement of the graph.\n\nYou should revise:\n• translations up, down, left and right\n• reflections in the x-axis and y-axis\n• stretches and compressions\n• transformations of parabolas and basic functions\n\nTry to understand the meaning of each change instead of memorizing rules mechanically.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "8) Vertex / Turning Point of Parabola"
+          ],
+          "text": "🌙 Vertex / Turning Point of a Parabola\n\nThis topic focuses on quadratic graphs. You need to identify the turning point, understand the axis of symmetry and connect the equation with the shape of the graph.\n\nYou should revise:\n• finding the turning point from a graph\n• understanding vertex form\n• axis of symmetry\n• maximum and minimum values\n• sketching a quadratic graph correctly\n\nThis topic often appears together with graph interpretation and quadratic equations.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "9) Vectors"
+          ],
+          "text": "🌙 Vectors\n\nVectors describe movement with both magnitude and direction. You should be able to use vector notation and solve geometric problems involving vectors.\n\nYou should revise:\n• vector notation\n• addition and subtraction of vectors\n• multiplying a vector by a scalar\n• magnitude of a vector\n• vector problems in geometry\n\nWork step by step and keep track of direction carefully.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "10) Bearings"
+          ],
+          "text": "🌙 Bearings\n\nThis topic deals with direction measured clockwise from north. You need to read, draw and use three-figure bearings correctly.\n\nYou should revise:\n• what a bearing means\n• measuring clockwise from north\n• writing bearings as three-figure angles\n• drawing bearings accurately\n• solving direction and distance problems\n\nA common mistake is measuring from the wrong starting line, so always begin from north.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "11) Parallel and Perpendicular Lines"
+          ],
+          "text": "🌙 Parallel and Perpendicular Lines\n\nThis topic connects straight-line equations with geometric properties. You should understand how gradients show whether lines are parallel or perpendicular.\n\nYou should revise:\n• gradient of a line\n• condition for parallel lines\n• condition for perpendicular lines\n• equations of straight lines\n• finding an unknown line from given conditions\n\nRemember that parallel lines have equal gradients, while perpendicular lines have gradients related by negative reciprocal values.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "12) Coordinate Geometry"
+          ],
+          "text": "🌙 Coordinate Geometry\n\nThis topic involves solving geometric problems using coordinates and formulas. You should connect points, lines and distance with algebraic methods.\n\nYou should revise:\n• midpoint formula\n• distance formula\n• gradient formula\n• equation of a line\n• interpreting the geometry behind coordinate calculations\n\nPractice full questions, because coordinate geometry often combines several formulas in one problem.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "13) Rhombus / Kite / Trapezium"
+          ],
+          "text": "🌙 Rhombus, Kite and Trapezium\n\nThis topic is about the properties of common quadrilaterals. You need to recognize their side, angle, diagonal and symmetry properties.\n\nYou should revise:\n• properties of a rhombus\n• properties of a kite\n• properties of a trapezium\n• diagonals and angle relationships\n• area and perimeter when relevant\n\nQuestions may ask you to identify a shape from its properties, not only from its name.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "14) Trigonometry in Right-Angled Triangle"
+          ],
+          "text": "🌙 Trigonometry in Right-Angled Triangles\n\nThis is a core topic in geometry. You need to use sine, cosine and tangent to find missing sides and angles.\n\nYou should revise:\n• SOH CAH TOA\n• opposite, adjacent and hypotenuse\n• finding a missing side\n• finding a missing angle\n• applied problems using right-angled triangles\n\nThe main difficulty is choosing the correct ratio, so always label the triangle first.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "15) Exponents with bases 2, 3 and 5"
+          ],
+          "text": "🌙 Exponents with Bases 2, 3 and 5\n\nThis topic tests whether you understand the laws of indices and can rewrite expressions using the same base.\n\nYou should revise:\n• multiplication and division of powers\n• power of a power\n• zero and negative powers where relevant\n• rewriting numbers using bases 2, 3 and 5\n• simplifying exponential expressions step by step\n\nFocus on the laws of indices rather than memorizing isolated tricks.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "16) Real-life Graphs (Velocity-Time)"
+          ],
+          "text": "🌙 Real-life Graphs, Especially Velocity-Time\n\nThis topic tests whether you understand what a graph means in a real situation. It is not only about shape, but also about interpretation.\n\nYou should revise:\n• distance-time graphs\n• velocity-time graphs\n• meaning of gradient\n• meaning of area under a velocity-time graph\n• comparing motion across different parts of a graph\n\nBe careful not to confuse distance-time graphs with velocity-time graphs.\n\nNo extra files have been added for this topic yet."
+        },
+        {
+          "path": [
+            "/start",
+            "📘 Topics",
+            "17) Compound 3D Figure (Cylinder / Sphere / Cone)"
+          ],
+          "text": "🎀 Main Menu 🌙\n\nPlease choose the section you want to open.\n\n📘 NUET Math Topics 🌙\n\nBelow you can find the main topics that may appear in the NUET Math exam.\n\nYou can also open the official specification file from this section.\n\n🌙 Exponents with Bases 2, 3 and 5\n\nThis topic tests whether you understand the laws of indices and can rewrite expressions using the same base.\n\nYou should revise:\n• multiplication and division of powers\n• power of a power\n• zero and negative powers where relevant\n• rewriting numbers using bases 2, 3 and 5\n• simplifying exponential expressions step by step\n\nFocus on the laws of indices rather than memorizing isolated tricks.\n\nNo extra files have been added for this topic yet.\n\n🎀 Main Menu 🌙\n\nPlease choose the section you want to open.\n\n📘 NUET Math Topics 🌙\n\nBelow you can find the main topics that may appear in the NUET Math exam.\n\nYou can also open the official specification file from this section.\n\n🌙 Real-life Graphs, Especially Velocity-Time\n\nThis topic tests whether you understand what a graph means in a real situation. It is not only about shape, but also about interpretation.\n\nYou should revise:\n• distance-time graphs\n• velocity-time graphs\n• meaning of gradient\n• meaning of area under a velocity-time graph\n• comparing motion across different parts of a graph\n\nBe careful not to confuse distance-time graphs with velocity-time graphs.\n\nNo extra files have been added for this topic yet.\n\n🎀 Main Menu 🌙\n\nPlease choose the section you want to open.\n\n📘 NUET Math Topics 🌙\n\nBelow you can find the main topics that may appear in the NUET Math exam.\n\nYou can also open the official specification file from this section.\n\n🌙 Compound 3D Figures\n\nThis topic involves solids made from more than one 3D shape. You need to break the figure into parts and apply formulas correctly.\n\nYou should revise:\n• volume of a cylinder, cone and sphere\n• surface area where relevant\n• splitting a solid into simpler parts\n• adding or subtracting volumes\n• checking units carefully\n\nThese questions are often more about structure than memorization, so first decide what shapes are present.\n\nNo extra files have been added for this topic yet."
+        }
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "🌐 Resources"
+      ],
+      "text": "🌐 Useful Resources 🌙\n\nThis section contains websites that can help with NUET Math preparation.\n\nThese resources are useful for topic explanation, worked examples, extra practice, graphing and revision support.\n\nTap any resource below to open it.\n\nChoose a resource:",
+      "urlButtons": [
+        {
+          "label": "🌙 Maths Genie",
+          "url": "https://www.mathsgenie.co.uk/gcse.php"
+        },
+        {
+          "label": "🌙 Mathspace",
+          "url": "https://mathspace.co/textbooks/syllabuses/Syllabus-1083"
+        },
+        {
+          "label": "🌙 Khan Academy",
+          "url": "https://www.khanacademy.org/math"
+        },
+        {
+          "label": "🌙 Math is Fun",
+          "url": "https://www.mathsisfun.com/"
+        },
+        {
+          "label": "🌙 Corbettmaths",
+          "url": "https://corbettmaths.com/"
+        },
+        {
+          "label": "🌙 ExamSolutions",
+          "url": "https://www.examsolutions.net/"
+        },
+        {
+          "label": "🌙 Desmos Graphing Calculator",
+          "url": "https://www.desmos.com/calculator"
+        }
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "📂 Materials"
+      ],
+      "text": "📂 Materials 🌙\n\nThis section provides access to the main external preparation collection.\n\nHere you can open the Vitaliy collection and use it as an extra source of NUET Math materials, exercises and revision content.\n\nOpen the collection below:",
+      "urlButtons": [
+        {
+          "label": "🌙 Vitaliy Collection",
+          "url": "https://decorous-giant-147.notion.site/NUET-Math-14178777b7b980bb932ceef73dc354e0"
+        }
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "📄 Topic PDFs"
+      ],
+      "text": "📄 Topic PDFs 🌙\n\nThis section contains topic-based practice files.\n\nThese PDFs are useful when you want to focus on one specific topic or type of question instead of solving a full test.",
+      "files": [
+        "nuet-materials/files/8.Geometry-QP-P4.pdf",
+        "nuet-materials/files/9.Perimeters,Area and Volumes-QP-P4.pdf",
+        "nuet-materials/files/10.Trigonometry-QP-P4.pdf",
+        "nuet-materials/files/12.Probability-QP-P4.pdf",
+        "nuet-materials/files/8.Probability-QP-P2.pdf"
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "📐 Formulas"
+      ],
+      "text": "📐 Formulas 🌙\n\nThis section contains formula sheets, quick-reference files and short summary materials.\n\nUse it when you want to revise important formulas, geometry facts, algebra rules or compact revision tables.",
+      "files": [
+        "nuet-materials/files/Russian.pdf",
+        "nuet-materials/files/Sat Maths Formulas.pdf",
+        "nuet-materials/files/GCSE Higher.pdf",
+        "nuet-materials/files/Circles.PNG",
+        "nuet-materials/files/Formulas.docx",
+        "nuet-materials/files/1300 Math Formulas.pdf"
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "🧪 Trial Tests"
+      ],
+      "text": "🧪 Trial Tests 🌙\n\nThis section contains trial tests for test-style practice.\n\nUse them to check your level, find weak areas and improve your speed under timed conditions.",
+      "files": [
+        "nuet-materials/files/Trial Test 1.pdf",
+        "nuet-materials/files/Trial Test 2.pdf",
+        "nuet-materials/files/Trial Test 3.pdf",
+        "nuet-materials/files/Trial Test 4.pdf",
+        "nuet-materials/files/Trial Test 5.pdf",
+        "nuet-materials/files/Trial Test 6.pdf",
+        "nuet-materials/files/Trial Test 7.pdf",
+        "nuet-materials/files/Trial Test 8.pdf",
+        "nuet-materials/files/Trial Test 9.pdf",
+        "nuet-materials/files/Trial Test 10.pdf",
+        "nuet-materials/files/Trial Test 11.pdf"
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "🎓 NUET Mock Tests"
+      ],
+      "text": "🎓 NUET Mock Tests 🌙\n\nThis section contains mock tests with questions and answers.\n\nThese files are useful for full exam practice, revision before the real exam and checking how well you can combine different topics.",
+      "files": [
+        "nuet-materials/files/NUET_MOCK_1 (Questions and Answers) (1).pdf",
+        "nuet-materials/files/NUET_MOCK_2 (Questions and Answers).pdf",
+        "nuet-materials/files/NUET_MOCK_3 (Questions and Answers).pdf",
+        "nuet-materials/files/NUET_MOCK_4 (Questions and Answers).pdf",
+        "nuet-materials/files/NUET_MOCK_5 (Questions and Answers).pdf",
+        "nuet-materials/files/NUET_MOCK_6 (Questions and Answers).pdf",
+        "nuet-materials/files/NUET_MOCK_7 (Questions and Answers).pdf"
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "📚 Books"
+      ],
+      "text": "📚 Books and Study Materials 🌙\n\nThis section contains longer theory materials, revision books and supporting PDFs.\n\nUse these files when you want more detailed explanation of a topic, more examples, or a broader revision of the syllabus.",
+      "files": [
+        "nuet-materials/files/8_GEOMETRY.pdf",
+        "nuet-materials/files/9_ALGEBRA.pdf",
+        "nuet-materials/files/9_GEOMETRY.pdf"
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "📝 Notes"
+      ],
+      "text": "📝 Notes 🌙\n\nThis section contains your notes and short revision materials.\n\nThese files are useful for quick review, repeating key points and revising before solving practice questions.",
+      "files": [
+        "nuet-materials/files/Analytic_Analysis_of_LINES_and_CIRCLES.pdf"
+      ]
+    },
+    {
+      "path": [
+        "/start",
+        "💌 Contact and Suggestions"
+      ],
+      "text": "💌 Contact and Suggestions 🌙\n\nIf you want to suggest improvements, send useful materials, report missing files or discuss collaboration, you can contact the author here:\n\n@rnbnnnn\n\nYou can write if you want to:\n• suggest new topics or sections\n• send useful NUET Math files\n• report mistakes in the bot structure or file names\n• suggest improvements for the bot\n• discuss adding more materials\n\n🌷 If you would like to support the author:\nCard number: 4400 4303 3701 1917\nCardholder: Нурай Р."
+    }
+  ]
+}

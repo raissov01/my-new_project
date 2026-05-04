@@ -65,6 +65,7 @@ type Dependencies struct {
 	Billing            *BillingHandler
 	Push               *PushHandler
 	Notification       *NotificationHandler
+	NUET               *NUETHandler
 	Contact            *ContactHandler
 	DebugDatabase      http.HandlerFunc
 }
@@ -330,6 +331,19 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/notifications", wrapHTTP(deps.Notification.List))
 		internal.POST("/notifications/read-all", wrapHTTP(deps.Notification.MarkAllRead))
 		internal.POST("/notifications/:id/read", wrapHTTP(deps.Notification.MarkRead))
+
+		// NUET (Nazarbayev University Entrance Test) preparation module
+		internal.GET("/nuet/topics", wrapHTTP(deps.NUET.ListTopics))
+		internal.GET("/nuet/topics/:slug", wrapHTTP(deps.NUET.GetTopic))
+		internal.GET("/nuet/pdf-tests", wrapHTTP(deps.NUET.ListPDFTests))
+		internal.GET("/nuet/materials", wrapHTTP(deps.NUET.ListMaterials))
+		internal.POST("/nuet/attempts", wrapHTTP(deps.NUET.StartAttempt))
+		internal.PUT("/nuet/attempts/:attemptID/save", wrapHTTP(deps.NUET.AutoSaveAttempt))
+		internal.PUT("/nuet/attempts/:attemptID/complete", wrapHTTP(deps.NUET.CompleteAttempt))
+		internal.PUT("/nuet/attempts/:attemptID/abandon", wrapHTTP(deps.NUET.AbandonAttempt))
+		internal.GET("/nuet/attempts/:attemptID", wrapHTTP(deps.NUET.GetAttempt))
+		internal.GET("/nuet/attempts", wrapHTTP(deps.NUET.ListAttempts))
+		internal.GET("/nuet/dashboard", wrapHTTP(deps.NUET.GetDashboard))
 
 		// Sentence Mining
 		miningLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()
