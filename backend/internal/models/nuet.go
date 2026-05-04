@@ -91,7 +91,7 @@ type NUETViolation struct {
 	AttemptID  string    `gorm:"type:uuid;not null;index"                       json:"attemptId"`
 	UserID     string    `gorm:"type:uuid;not null;index"                       json:"userId"`
 	Type       string    `gorm:"not null;check:type IN ('tab_switch','fullscreen_exit','copy','paste','right_click','dev_tools','blur')" json:"type"`
-	Details    *string   `gorm:"type:text"                                       json:"details,omitempty"`
+	Details    *string   `gorm:"type:jsonb"                                      json:"details,omitempty"`
 	OccurredAt time.Time `gorm:"autoCreateTime"                                  json:"occurredAt"`
 }
 
