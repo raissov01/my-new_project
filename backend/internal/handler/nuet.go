@@ -50,6 +50,16 @@ type nuetAttemptResponse struct {
 	Evaluations    []nuetAnswerEvaluation `json:"evaluations,omitempty"`
 }
 
+type nuetQuestionItem struct {
+	ID          string   `json:"id"`
+	TopicID     string   `json:"topicId"`
+	Section     string   `json:"section"`
+	Difficulty  string   `json:"difficulty"`
+	Prompt      string   `json:"prompt"`
+	Options     []string `json:"options"`
+	Explanation string   `json:"explanation"`
+}
+
 // ── Topics ───────────────────────────────────────────────────────────
 
 // GET /nuet/topics?section=math|critical_thinking
@@ -79,6 +89,56 @@ func (h *NUETHandler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonOK(w, topic)
+}
+
+// GET /nuet/questions?topicSlug=...&limit=20
+func (h *NUETHandler) ListQuestions(w http.ResponseWriter, r *http.Request) {
+	q := h.db.Model(&models.NUETQuestion{}).Order("created_at ASC")
+	var topic models.NUETTopic
+
+	if topicSlug := strings.TrimSpace(r.URL.Query().Get("topicSlug")); topicSlug != "" {
+		if err := h.db.Where("slug = ?", topicSlug).First(&topic).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				jsonErr(w, "topic not found", http.StatusNotFound)
+				return
+			}
+			jsonErr(w, "failed to load topic", http.StatusInternalServerError)
+			return
+		}
+		q = q.Where("topic_id = ?", topic.ID)
+	} else if topicID := strings.TrimSpace(r.URL.Query().Get("topicId")); topicID != "" {
+		q = q.Where("topic_id = ?", topicID)
+	}
+
+	if section := strings.TrimSpace(r.URL.Query().Get("section")); section != "" {
+		q = q.Where("section = ?", section)
+	}
+
+	limit := parseIntDefault(r.URL.Query().Get("limit"), 20, 1, 100)
+	var questions []models.NUETQuestion
+	if err := q.Limit(limit).Find(&questions).Error; err != nil {
+		jsonErr(w, "failed to load questions", http.StatusInternalServerError)
+		return
+	}
+
+	items := make([]nuetQuestionItem, 0, len(questions))
+	for _, question := range questions {
+		items = append(items, nuetQuestionItem{
+			ID:          question.ID,
+			TopicID:     derefNUETString(question.TopicID),
+			Section:     question.Section,
+			Difficulty:  question.Difficulty,
+			Prompt:      question.Prompt,
+			Options:     parseNUETStringArray(question.Options),
+			Explanation: question.Explanation,
+		})
+	}
+
+	resp := map[string]any{"items": items}
+	if topic.ID != "" {
+		resp["topic"] = topic
+	}
+	jsonOK(w, resp)
 }
 
 // ── PDF mock catalog ─────────────────────────────────────────────────
@@ -276,6 +336,14 @@ func (h *NUETHandler) StartAttempt(w http.ResponseWriter, r *http.Request) {
 		}
 		topicID = &topic.ID
 	}
+	if req.AttemptType == "topic_practice" && topicID == nil {
+		writeError(w, http.StatusBadRequest, "topicId is required for topic_practice", nil)
+		return
+	}
+	if req.AttemptType == "pdf_test" && pdfTestID == nil {
+		writeError(w, http.StatusBadRequest, "pdfTestId is required for pdf_test", nil)
+		return
+	}
 
 	emptyAnswers := "{}"
 	attempt := models.NUETAttempt{
@@ -429,6 +497,25 @@ func (h *NUETHandler) CompleteAttempt(w http.ResponseWriter, r *http.Request) {
 		updates["score_math"] = result.ScoreMath
 		updates["score_ct"] = result.ScoreCT
 		updates["score_total"] = result.ScoreTotal
+	} else if attempt.AttemptType == "topic_practice" && attempt.TopicID != nil && *attempt.TopicID != "" {
+		var questions []models.NUETQuestion
+		if err := h.db.Where("topic_id = ?", *attempt.TopicID).Order("created_at ASC").Find(&questions).Error; err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to load topic questions", err)
+			return
+		}
+		if len(questions) == 0 {
+			scoreReason = "No practice questions are available for this topic yet."
+		} else {
+			result := scoreNUETTopicQuestions(questions, answers)
+			evaluations = result.Evaluations
+			scoreAvailable = result.ScoreAvailable
+			scoreReason = result.ScoreReason
+			updates["correct_math"] = result.CorrectMath
+			updates["correct_ct"] = result.CorrectCT
+			updates["score_math"] = result.ScoreMath
+			updates["score_ct"] = result.ScoreCT
+			updates["score_total"] = result.ScoreTotal
+		}
 	}
 
 	if err := h.db.Model(&attempt).Updates(updates).Error; err != nil {
@@ -717,6 +804,37 @@ func scoreNUETPDFTest(test models.NUETPDFTest, answers map[string]string) nuetSc
 	return result
 }
 
+func scoreNUETTopicQuestions(questions []models.NUETQuestion, answers map[string]string) nuetScoreResult {
+	result := nuetScoreResult{
+		ScoreAvailable: true,
+		Evaluations:    make([]nuetAnswerEvaluation, 0, len(questions)),
+	}
+	for i, question := range questions {
+		expected := normalizeAnswerLetter(question.Answer)
+		received := normalizeAnswerLetter(answers[question.ID])
+		correct := received != "" && received == expected
+		if correct {
+			if question.Section == "math" {
+				result.CorrectMath++
+			} else {
+				result.CorrectCT++
+			}
+		}
+		result.Evaluations = append(result.Evaluations, nuetAnswerEvaluation{
+			Question: i + 1,
+			Section:  question.Section,
+			Expected: expected,
+			Received: received,
+			Correct:  correct,
+		})
+	}
+
+	result.ScoreMath = result.CorrectMath * 4
+	result.ScoreCT = result.CorrectCT * 4
+	result.ScoreTotal = result.ScoreMath + result.ScoreCT
+	return result
+}
+
 func parseNUETAnswers(raw *string) map[string]string {
 	if raw == nil || strings.TrimSpace(*raw) == "" {
 		return nil
@@ -726,6 +844,17 @@ func parseNUETAnswers(raw *string) map[string]string {
 		return nil
 	}
 	return answers
+}
+
+func parseNUETStringArray(raw *string) []string {
+	if raw == nil || strings.TrimSpace(*raw) == "" {
+		return nil
+	}
+	var items []string
+	if err := json.Unmarshal([]byte(*raw), &items); err == nil {
+		return items
+	}
+	return strings.Split(*raw, "\n")
 }
 
 func parseNUETAnswerKeys(raw *string) []string {
@@ -756,6 +885,13 @@ func normalizeAnswerLetter(value string) string {
 	default:
 		return ""
 	}
+}
+
+func derefNUETString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return strings.TrimSpace(*value)
 }
 
 func parseIntDefault(s string, def, min, max int) int {

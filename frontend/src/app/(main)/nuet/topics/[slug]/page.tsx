@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BookOpen, Brain, FileText } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, FileText, PlayCircle } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
@@ -77,6 +77,13 @@ export default async function NUETTopicPage({
             {topic.description}
           </p>
         ) : null}
+        <Link
+          href={`/nuet/practice/${topic.slug}`}
+          className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+        >
+          <PlayCircle className="h-4 w-4" />
+          {t("nuet.mod.practice")}
+        </Link>
       </header>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">

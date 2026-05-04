@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Brain, GraduationCap } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, GraduationCap, PlayCircle } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
@@ -50,10 +50,10 @@ export default async function NUETPracticePage() {
               Practice mode
             </p>
             <h2 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
-              Topic practice is wired in, and the question bank is the next content layer to fill.
+              Topic practice is now live with a starter bank, and we can keep expanding it topic by topic.
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">
-              While we populate per-topic multiple choice questions, the fastest working path is the PDF simulator with timed full-length mocks.
+              Pick a topic to open a short graded set, or use the PDF simulator when you want a full timed mock.
             </p>
           </div>
           <Link
@@ -101,10 +101,11 @@ function TopicColumn({
         {topics.map((topic) => (
           <Link
             key={topic.slug}
-            href={`/nuet/topics/${topic.slug}`}
-            className="block rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)] transition hover:border-[var(--primary)]"
+            href={`/nuet/practice/${topic.slug}`}
+            className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)] transition hover:border-[var(--primary)]"
           >
-            {topic.title}
+            <span>{topic.title}</span>
+            <PlayCircle className="h-4 w-4 text-[var(--primary)]" />
           </Link>
         ))}
       </div>

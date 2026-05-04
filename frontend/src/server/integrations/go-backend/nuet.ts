@@ -79,6 +79,16 @@ export type NUETAttempt = {
   }>;
 };
 
+export type NUETQuestion = {
+  id: string;
+  topicId: string;
+  section: "math" | "critical_thinking";
+  difficulty: "beginner" | "medium" | "advanced";
+  prompt: string;
+  options: string[];
+  explanation: string;
+};
+
 export async function listNUETTopics(
   userId: string,
   section?: NUETSection
@@ -131,6 +141,27 @@ export async function getNUETDashboard(userId: string): Promise<NUETDashboard> {
 export async function listNUETPDFTests(userId: string): Promise<{ items: NUETPDFTest[] }> {
   return fetchBackendJson<{ items: NUETPDFTest[] }>({
     path: "/api/v1/nuet/pdf-tests",
+    userId,
+  });
+}
+
+export async function listNUETQuestions(
+  userId: string,
+  params: {
+    topicSlug?: string;
+    topicId?: string;
+    section?: "math" | "critical_thinking";
+    limit?: number;
+  } = {}
+): Promise<{ items: NUETQuestion[]; topic?: NUETTopic }> {
+  const qs = new URLSearchParams();
+  if (params.topicSlug) qs.set("topicSlug", params.topicSlug);
+  if (params.topicId) qs.set("topicId", params.topicId);
+  if (params.section) qs.set("section", params.section);
+  qs.set("limit", String(params.limit ?? 20));
+
+  return fetchBackendJson<{ items: NUETQuestion[]; topic?: NUETTopic }>({
+    path: `/api/v1/nuet/questions?${qs.toString()}`,
     userId,
   });
 }

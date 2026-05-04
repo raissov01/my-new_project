@@ -335,6 +335,7 @@ func RegisterRoutes(router *gin.Engine) {
 		// NUET (Nazarbayev University Entrance Test) preparation module
 		internal.GET("/nuet/topics", wrapHTTP(deps.NUET.ListTopics))
 		internal.GET("/nuet/topics/:slug", wrapHTTP(deps.NUET.GetTopic))
+		internal.GET("/nuet/questions", wrapHTTP(deps.NUET.ListQuestions))
 		internal.GET("/nuet/pdf-tests", wrapHTTP(deps.NUET.ListPDFTests))
 		internal.GET("/nuet/materials", wrapHTTP(deps.NUET.ListMaterials))
 		internal.POST("/nuet/attempts", wrapHTTP(deps.NUET.StartAttempt))
