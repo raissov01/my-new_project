@@ -495,9 +495,8 @@ function QuestionPrompt({ prompt }: { prompt: string }) {
 function FigureContent({ figure }: { figure: string }) {
   if (isAbsoluteParabolaFigure(figure)) {
     return (
-      <div>
+      <div className="flex justify-start">
         <CoordinateGraph />
-        <p className="mt-2 text-xs leading-5 text-amber-800">{figure}</p>
       </div>
     );
   }
@@ -510,21 +509,30 @@ function FigureContent({ figure }: { figure: string }) {
 
 function CoordinateGraph() {
   return (
-    <svg viewBox="0 0 320 220" role="img" aria-label="Coordinate graph through (-3,0), (0,9), and (3,0)" className="h-56 w-full max-w-md rounded-lg bg-white">
-      <line x1="35" y1="170" x2="290" y2="170" stroke="#111827" strokeWidth="2" />
-      <line x1="160" y1="20" x2="160" y2="200" stroke="#111827" strokeWidth="2" />
-      <path d="M285 170 L274 164 M285 170 L274 176 M160 20 L154 31 M160 20 L166 31" fill="none" stroke="#111827" strokeWidth="2" />
-      <path d="M45 20 C58 88 82 145 100 170" fill="none" stroke="#111827" strokeWidth="3" />
-      <path d="M100 170 C122 78 198 78 220 170" fill="none" stroke="#111827" strokeWidth="3" />
-      <path d="M220 170 C238 145 262 88 275 20" fill="none" stroke="#111827" strokeWidth="3" />
-      <circle cx="100" cy="170" r="4" fill="#111827" />
-      <circle cx="160" cy="70" r="4" fill="#111827" />
-      <circle cx="220" cy="170" r="4" fill="#111827" />
-      <text x="284" y="190" fontSize="16" fill="#111827">x</text>
-      <text x="172" y="34" fontSize="16" fill="#111827">y</text>
-      <text x="75" y="194" fontSize="15" fill="#111827">(-3,0)</text>
-      <text x="174" y="64" fontSize="15" fill="#111827">(0,9)</text>
-      <text x="202" y="194" fontSize="15" fill="#111827">(3,0)</text>
+    <svg
+      viewBox="0 0 340 260"
+      role="img"
+      aria-label="Coordinate graph through (-3,0), (0,9), and (3,0)"
+      className="h-72 w-full max-w-sm rounded-lg bg-white"
+    >
+      <defs>
+        <marker id="nuet-mock-x-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0 0 L8 4 L0 8 Z" fill="#111827" />
+        </marker>
+        <marker id="nuet-mock-y-arrow" markerWidth="8" markerHeight="8" refX="4" refY="1" orient="auto">
+          <path d="M0 8 L4 0 L8 8 Z" fill="#111827" />
+        </marker>
+      </defs>
+      <line x1="52" y1="178" x2="300" y2="178" stroke="#111827" strokeWidth="2.4" markerEnd="url(#nuet-mock-x-arrow)" />
+      <line x1="172" y1="226" x2="172" y2="34" stroke="#111827" strokeWidth="2.4" markerEnd="url(#nuet-mock-y-arrow)" />
+      <path d="M74 36 C83 83 95 135 112 178" fill="none" stroke="#111827" strokeWidth="3" strokeLinecap="round" />
+      <path d="M112 178 C128 86 216 86 232 178" fill="none" stroke="#111827" strokeWidth="3" strokeLinecap="round" />
+      <path d="M232 178 C249 135 261 83 270 36" fill="none" stroke="#111827" strokeWidth="3" strokeLinecap="round" />
+      <text x="297" y="199" fontSize="17" fontStyle="italic" fill="#111827">x</text>
+      <text x="184" y="40" fontSize="17" fontStyle="italic" fill="#111827">y</text>
+      <text x="70" y="203" fontSize="16" fill="#111827">(-3,0)</text>
+      <text x="185" y="78" fontSize="16" fill="#111827">(0,9)</text>
+      <text x="214" y="203" fontSize="16" fill="#111827">(3,0)</text>
     </svg>
   );
 }
