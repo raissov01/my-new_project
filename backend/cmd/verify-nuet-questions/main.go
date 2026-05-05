@@ -126,7 +126,7 @@ func findOptionIssues(questions []models.NUETQuestion) []questionIssue {
 	issues := make([]questionIssue, 0)
 	for _, question := range questions {
 		options := parseStringArray(question.Options)
-		if len(options) != 5 {
+		if len(options) < 4 || len(options) > 8 {
 			issues = append(issues, questionIssue{
 				Position: question.Position,
 				Note:     fmt.Sprintf("options.length=%d", len(options)),
@@ -140,10 +140,11 @@ func findAnswerIssues(questions []models.NUETQuestion) []questionIssue {
 	issues := make([]questionIssue, 0)
 	for _, question := range questions {
 		answer := normalizeAnswer(question.Answer)
-		if answer == "" {
+		options := parseStringArray(question.Options)
+		if answer == "" || int(answer[0]-'A') >= len(options) {
 			issues = append(issues, questionIssue{
 				Position: question.Position,
-				Note:     fmt.Sprintf("invalid answer=%q", question.Answer),
+				Note:     fmt.Sprintf("invalid answer=%q options.length=%d", question.Answer, len(options)),
 			})
 		}
 	}
@@ -183,7 +184,7 @@ func normalizeAnswer(value string) string {
 		return ""
 	}
 	switch value[0] {
-	case 'A', 'B', 'C', 'D', 'E':
+	case 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H':
 		return value[:1]
 	default:
 		return ""

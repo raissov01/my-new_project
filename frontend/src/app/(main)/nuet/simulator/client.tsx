@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { BlockMath, InlineMath } from "react-katex";
+import "katex/dist/katex.min.css";
 import {
   AlertCircle,
   ArrowLeft,
@@ -30,7 +32,7 @@ import {
 type Stage = "configure" | "starting" | "exam" | "submitting" | "results";
 type SectionChoice = "full" | "math" | "ct";
 
-const answerChoices = ["A", "B", "C", "D", "E"] as const;
+const ANSWER_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 
 export function NUETSimulatorClient() {
   const { t } = useLocale();
@@ -533,11 +535,11 @@ export function NUETSimulatorClient() {
               </button>
             </div>
 
-            <p className="mt-5 text-lg leading-8 text-[var(--text-primary)]">{activeQuestion.prompt}</p>
+            <QuestionPrompt prompt={activeQuestion.prompt} />
 
             <div className="mt-6 space-y-3">
-              {activeQuestion.options.map((option, optionIndex) => {
-                const letter = answerChoices[optionIndex];
+              {visibleOptions(activeQuestion.options).map((option, optionIndex) => {
+                const letter = ANSWER_LETTERS[optionIndex];
                 const active = answers[activeQuestion.id] === letter;
                 return (
                   <button
@@ -553,7 +555,9 @@ export function NUETSimulatorClient() {
                     <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-xs font-semibold">
                       {letter}
                     </span>
-                    <span className="text-sm text-[var(--text-primary)]">{option}</span>
+                    <span className="text-sm text-[var(--text-primary)]">
+                      <MathText text={option} />
+                    </span>
                   </button>
                 );
               })}
@@ -646,6 +650,93 @@ function formatTime(totalSeconds: number) {
   return [hours, minutes, seconds]
     .map((value) => value.toString().padStart(2, "0"))
     .join(":");
+}
+
+function QuestionPrompt({ prompt }: { prompt: string }) {
+  const { text, figure } = splitPromptAndFigure(prompt);
+  return (
+    <div className="mt-5">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4 text-base leading-8 text-[var(--text-primary)]">
+        <MathText text={text} />
+      </div>
+      {figure ? (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <span className="font-semibold">Figure:</span> {figure}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function MathText({ text }: { text: string }) {
+  const safeText = protectCurrencyDollars(text);
+  const parts = safeText.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\])/g).filter(Boolean);
+  return (
+    <span className="whitespace-pre-wrap">
+      {parts.map((part, index) => {
+        if (part.startsWith("$$") && part.endsWith("$$")) {
+          return (
+            <BlockMath
+              key={`block-${index}`}
+              math={part.slice(2, -2)}
+              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
+            />
+          );
+        }
+        if (part.startsWith("$") && part.endsWith("$")) {
+          return (
+            <InlineMath
+              key={`inline-dollar-${index}`}
+              math={part.slice(1, -1)}
+              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
+            />
+          );
+        }
+        if (part.startsWith("\\(") && part.endsWith("\\)")) {
+          return (
+            <InlineMath
+              key={`inline-paren-${index}`}
+              math={part.slice(2, -2)}
+              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
+            />
+          );
+        }
+        if (part.startsWith("\\[") && part.endsWith("\\]")) {
+          return (
+            <BlockMath
+              key={`block-bracket-${index}`}
+              math={part.slice(2, -2)}
+              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
+            />
+          );
+        }
+        return <span key={`text-${index}`}>{restoreCurrencyDollars(part)}</span>;
+      })}
+    </span>
+  );
+}
+
+function visibleOptions(options: string[]) {
+  return options.map((option) => option.trim()).filter(Boolean);
+}
+
+function protectCurrencyDollars(text: string) {
+  return text.replace(/\$(?=\d)/g, "__NUET_DOLLAR__");
+}
+
+function restoreCurrencyDollars(text: string) {
+  return text.replace(/__NUET_DOLLAR__/g, "$");
+}
+
+function splitPromptAndFigure(prompt: string) {
+  const match = prompt.match(/\n?\[Figure:\s*([\s\S]*?)\]\s*$/);
+  if (!match) {
+    return { text: prompt, figure: "" };
+  }
+  return {
+    text: prompt.slice(0, match.index).trim(),
+    figure: match[1].trim(),
+  };
 }
 
 function MetricPill({ label, value }: { label: string; value: string }) {

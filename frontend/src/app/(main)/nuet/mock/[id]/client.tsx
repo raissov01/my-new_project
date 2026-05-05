@@ -13,7 +13,7 @@ import {
   type NUETMockQuestion,
 } from "./actions";
 
-const ANSWER_LETTERS = ["A", "B", "C", "D", "E"] as const;
+const ANSWER_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 
 type Stage = "loading" | "exam" | "submitting" | "results" | "error";
 
@@ -412,8 +412,8 @@ export function NUETMockClient({
             <QuestionPrompt prompt={activeQuestion.prompt} />
 
             <div className="mt-6 space-y-3">
-              {ANSWER_LETTERS.map((letter, optionIndex) => {
-                const option = activeQuestion.options[optionIndex] ?? "";
+              {visibleOptions(activeQuestion.options).map((option, optionIndex) => {
+                const letter = ANSWER_LETTERS[optionIndex];
                 const active = answers[activeQuestion.id] === letter;
                 return (
                   <button
@@ -429,7 +429,9 @@ export function NUETMockClient({
                     <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-xs font-semibold">
                       {letter}
                     </span>
-                    <span className="text-sm text-[var(--text-primary)]">{option || "—"}</span>
+                    <span className="text-sm text-[var(--text-primary)]">
+                      <MathText text={option} />
+                    </span>
                   </button>
                 );
               })}
@@ -491,7 +493,8 @@ function QuestionPrompt({ prompt }: { prompt: string }) {
 }
 
 function MathText({ text }: { text: string }) {
-  const parts = text.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+\$)/g).filter(Boolean);
+  const safeText = protectCurrencyDollars(text);
+  const parts = safeText.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\])/g).filter(Boolean);
   return (
     <div className="whitespace-pre-wrap">
       {parts.map((part, index) => {
@@ -513,10 +516,40 @@ function MathText({ text }: { text: string }) {
             />
           );
         }
-        return <span key={`text-${index}`}>{part}</span>;
+        if (part.startsWith("\\(") && part.endsWith("\\)")) {
+          return (
+            <InlineMath
+              key={`inline-paren-${index}`}
+              math={part.slice(2, -2)}
+              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
+            />
+          );
+        }
+        if (part.startsWith("\\[") && part.endsWith("\\]")) {
+          return (
+            <BlockMath
+              key={`block-bracket-${index}`}
+              math={part.slice(2, -2)}
+              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
+            />
+          );
+        }
+        return <span key={`text-${index}`}>{restoreCurrencyDollars(part)}</span>;
       })}
     </div>
   );
+}
+
+function visibleOptions(options: string[]) {
+  return options.map((option) => option.trim()).filter(Boolean);
+}
+
+function protectCurrencyDollars(text: string) {
+  return text.replace(/\$(?=\d)/g, "__NUET_DOLLAR__");
+}
+
+function restoreCurrencyDollars(text: string) {
+  return text.replace(/__NUET_DOLLAR__/g, "$");
 }
 
 function splitPromptAndFigure(prompt: string): { text: string; figure: string | null } {

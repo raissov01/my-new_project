@@ -1944,7 +1944,7 @@ func normalizeAnswerLetter(value string) string {
 		return ""
 	}
 	switch value[0] {
-	case 'A', 'B', 'C', 'D', 'E':
+	case 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H':
 		return value[:1]
 	default:
 		return ""
