@@ -279,6 +279,10 @@ func AutoMigrate(db *gorm.DB) (err error) {
 		return err
 	}
 
+	if err := SeedNUETExtractedQuestions(db); err != nil {
+		return err
+	}
+
 	if err := SeedEngSimCurriculum(db); err != nil {
 		return err
 	}
