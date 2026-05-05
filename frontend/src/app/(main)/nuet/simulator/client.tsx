@@ -215,13 +215,16 @@ export function NUETSimulatorClient() {
         section,
         strict: strictMode,
       });
-      setAttemptId(response.attempt.id);
-      setQuestions(response.questions);
+      if (!response.ok) {
+        throw new Error(response.error);
+      }
+      setAttemptId(response.data.attempt.id);
+      setQuestions(response.data.questions);
       setAnswers({});
       setMarked(new Set());
       setCurrentIndex(0);
-      setDurationMinutes(response.durationMinutes);
-      setTimeLeft(response.durationMinutes * 60);
+      setDurationMinutes(response.data.durationMinutes);
+      setTimeLeft(response.data.durationMinutes * 60);
       setResult(null);
       if (strictMode) {
         await examMode.requestFullscreen();

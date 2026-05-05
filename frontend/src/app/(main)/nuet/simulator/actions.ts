@@ -80,6 +80,17 @@ type SimulatorStartPayload = {
   strict: boolean;
 };
 
+export type NUETSimulatorStartResponse = {
+  attempt: NUETAttemptActionResult;
+  questions: NUETSimulatorQuestion[];
+  durationMinutes: number;
+  strictMode: boolean;
+};
+
+export type NUETSimulatorStartResult =
+  | { ok: true; data: NUETSimulatorStartResponse }
+  | { ok: false; error: string };
+
 type SimulatorSavePayload = {
   answers: Record<string, string>;
   marked: string[];
@@ -172,22 +183,21 @@ export async function submitNUETPDFTestAttempt(payload: PDFTestAttemptPayload) {
   });
 }
 
-export async function startNUETSimulator(payload: SimulatorStartPayload) {
-  const user = await requireUser();
-
-  return fetchBackendJson<{
-    attempt: NUETAttemptActionResult;
-    questions: NUETSimulatorQuestion[];
-    durationMinutes: number;
-    strictMode: boolean;
-  }>({
-    path: "/api/v1/nuet/simulator/start",
-    userId: user.id,
-    method: "POST",
-    body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json" },
-    timeoutMs: 30_000,
-  });
+export async function startNUETSimulator(payload: SimulatorStartPayload): Promise<NUETSimulatorStartResult> {
+  try {
+    const user = await requireUser();
+    const data = await fetchBackendJson<NUETSimulatorStartResponse>({
+      path: "/api/v1/nuet/simulator/start",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+      timeoutMs: 30_000,
+    });
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to start simulator" };
+  }
 }
 
 export async function autosaveNUETSimulator(attemptId: string, payload: SimulatorSavePayload) {
