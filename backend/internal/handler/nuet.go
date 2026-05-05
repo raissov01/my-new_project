@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,14 +37,14 @@ type nuetPDFTestItem struct {
 }
 
 type nuetAnswerEvaluation struct {
-	Question int    `json:"question"`
-	QuestionID string `json:"questionId,omitempty"`
-	Section  string `json:"section"`
-	Prompt   string `json:"prompt,omitempty"`
+	Question    int    `json:"question"`
+	QuestionID  string `json:"questionId,omitempty"`
+	Section     string `json:"section"`
+	Prompt      string `json:"prompt,omitempty"`
 	Explanation string `json:"explanation,omitempty"`
-	Expected string `json:"expected"`
-	Received string `json:"received"`
-	Correct  bool   `json:"correct"`
+	Expected    string `json:"expected"`
+	Received    string `json:"received"`
+	Correct     bool   `json:"correct"`
 }
 
 type nuetAttemptResponse struct {
@@ -114,11 +115,41 @@ type nuetSimulatorQuestion struct {
 	Options    []string `json:"options"`
 }
 
+type nuetMockResultItem struct {
+	QuestionID  string `json:"questionId"`
+	Expected    string `json:"expected"`
+	Given       string `json:"given"`
+	Correct     bool   `json:"correct"`
+	Explanation string `json:"explanation"`
+}
+
+type nuetMockStartResponse struct {
+	Attempt         nuetAttemptResponse     `json:"attempt"`
+	TestName        string                  `json:"testName"`
+	Questions       []nuetSimulatorQuestion `json:"questions"`
+	DurationMinutes int                     `json:"durationMinutes"`
+}
+
+type nuetMockSaveRequest struct {
+	Answers       map[string]string `json:"answers"`
+	TimeTakenSecs int               `json:"timeTakenSecs"`
+}
+
+type nuetMockCompleteRequest struct {
+	Answers       map[string]string `json:"answers"`
+	TimeTakenSecs int               `json:"timeTakenSecs"`
+}
+
+type nuetMockCompleteResponse struct {
+	Attempt nuetAttemptResponse  `json:"attempt"`
+	Results []nuetMockResultItem `json:"results"`
+}
+
 type nuetSimulatorStartResponse struct {
-	Attempt         nuetAttemptResponse      `json:"attempt"`
-	Questions       []nuetSimulatorQuestion  `json:"questions"`
-	DurationMinutes int                      `json:"durationMinutes"`
-	StrictMode      bool                     `json:"strictMode"`
+	Attempt         nuetAttemptResponse     `json:"attempt"`
+	Questions       []nuetSimulatorQuestion `json:"questions"`
+	DurationMinutes int                     `json:"durationMinutes"`
+	StrictMode      bool                    `json:"strictMode"`
 }
 
 type nuetSimulatorState struct {
@@ -227,6 +258,7 @@ func (h *NUETHandler) ListPDFTests(w http.ResponseWriter, r *http.Request) {
 	for _, test := range tests {
 		keys := parseNUETAnswerKeys(test.AnswerKeys)
 		questionCount := test.MathCount + test.CTCount
+		validKeyCount := countNUETAnswerKeys(keys)
 		items = append(items, nuetPDFTestItem{
 			ID:             test.ID,
 			Name:           test.Name,
@@ -235,8 +267,8 @@ func (h *NUETHandler) ListPDFTests(w http.ResponseWriter, r *http.Request) {
 			MathCount:      test.MathCount,
 			CTCount:        test.CTCount,
 			QuestionCount:  questionCount,
-			AnswerKeyCount: len(keys),
-			IsScorable:     len(keys) == questionCount,
+			AnswerKeyCount: validKeyCount,
+			IsScorable:     len(keys) == questionCount && validKeyCount == questionCount,
 		})
 	}
 
@@ -263,6 +295,7 @@ func (h *NUETHandler) GetPDFTest(w http.ResponseWriter, r *http.Request) {
 
 	keys := parseNUETAnswerKeys(test.AnswerKeys)
 	questionCount := test.MathCount + test.CTCount
+	validKeyCount := countNUETAnswerKeys(keys)
 	jsonOK(w, nuetPDFTestItem{
 		ID:             test.ID,
 		Name:           test.Name,
@@ -271,8 +304,267 @@ func (h *NUETHandler) GetPDFTest(w http.ResponseWriter, r *http.Request) {
 		MathCount:      test.MathCount,
 		CTCount:        test.CTCount,
 		QuestionCount:  questionCount,
-		AnswerKeyCount: len(keys),
-		IsScorable:     len(keys) == questionCount,
+		AnswerKeyCount: validKeyCount,
+		IsScorable:     len(keys) == questionCount && validKeyCount == questionCount,
+	})
+}
+
+// POST /nuet/mock/:id/start
+func (h *NUETHandler) StartMockAttempt(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	testID := strings.TrimSpace(r.PathValue("id"))
+	if testID == "" {
+		writeError(w, http.StatusBadRequest, "id required", nil)
+		return
+	}
+
+	var test models.NUETPDFTest
+	if err := h.db.Where("id = ?", testID).First(&test).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			writeError(w, http.StatusNotFound, "pdf test not found", nil)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "failed to load pdf test", err)
+		return
+	}
+
+	expectedCount := test.MathCount + test.CTCount
+	if expectedCount == 0 {
+		expectedCount = 60
+	}
+	questions, err := h.loadNUETQuestionsByPDFTestID(test.ID, expectedCount)
+	if err != nil {
+		writeError(w, http.StatusConflict, err.Error(), nil)
+		return
+	}
+
+	questionIDs := make([]string, 0, len(questions))
+	items := make([]nuetSimulatorQuestion, 0, len(questions))
+	for index, question := range questions {
+		number := index + 1
+		if question.Position > 0 {
+			number = question.Position
+		}
+		questionIDs = append(questionIDs, question.ID)
+		items = append(items, nuetSimulatorQuestion{
+			ID:         question.ID,
+			Number:     number,
+			Section:    question.Section,
+			Difficulty: question.Difficulty,
+			Prompt:     question.Prompt,
+			Options:    parseNUETStringArray(question.Options),
+		})
+	}
+
+	stateJSON := marshalNUETJSON(map[string]string{})
+	questionSetJSON := marshalNUETJSON(questionIDs)
+	resultsJSON := marshalNUETJSON([]nuetMockResultItem{})
+	testIDRef := test.ID
+	attempt := models.NUETAttempt{
+		UserID:        userID,
+		AttemptType:   "full_mock",
+		PDFTestID:     &testIDRef,
+		Section:       "full",
+		Status:        "in_progress",
+		Answers:       &stateJSON,
+		QuestionSet:   &questionSetJSON,
+		Results:       &resultsJSON,
+		TimeTakenSecs: 0,
+	}
+	if err := h.db.Create(&attempt).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to create mock attempt", err)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, nuetMockStartResponse{
+		Attempt:         buildNUETAttemptResponse(attempt, nil, &nuetScoreMeta{ScoreAvailable: false}, &nuetAttemptNames{PDFTestName: test.Name}),
+		TestName:        test.Name,
+		Questions:       items,
+		DurationMinutes: 120,
+	})
+}
+
+// PUT /nuet/mock/attempts/:attemptId/save
+func (h *NUETHandler) SaveMockAttempt(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	attemptID := strings.TrimSpace(r.PathValue("attemptId"))
+	if attemptID == "" {
+		writeError(w, http.StatusBadRequest, "attemptId required", nil)
+		return
+	}
+
+	var req nuetMockSaveRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	var attempt models.NUETAttempt
+	if err := h.db.Where("id = ? AND user_id = ?", attemptID, userID).First(&attempt).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			writeError(w, http.StatusNotFound, "attempt not found", nil)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "failed to load attempt", err)
+		return
+	}
+	if attempt.Status != "in_progress" {
+		writeError(w, http.StatusConflict, "attempt is not in progress", nil)
+		return
+	}
+	if attempt.PDFTestID == nil || *attempt.PDFTestID == "" {
+		writeError(w, http.StatusConflict, "attempt is not a PDF mock attempt", nil)
+		return
+	}
+
+	answersJSON := marshalNUETJSON(normalizeNUETResponseMap(req.Answers))
+	now := time.Now()
+	if err := h.db.Model(&attempt).Updates(map[string]any{
+		"answers":         &answersJSON,
+		"time_taken_secs": req.TimeTakenSecs,
+		"last_saved_at":   &now,
+	}).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to save attempt", err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"saved":       true,
+		"lastSavedAt": now,
+	})
+}
+
+// POST /nuet/mock/attempts/:attemptId/complete
+func (h *NUETHandler) CompleteMockAttempt(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	attemptID := strings.TrimSpace(r.PathValue("attemptId"))
+	if attemptID == "" {
+		writeError(w, http.StatusBadRequest, "attemptId required", nil)
+		return
+	}
+
+	var req nuetMockCompleteRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	var attempt models.NUETAttempt
+	if err := h.db.Where("id = ? AND user_id = ?", attemptID, userID).First(&attempt).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			writeError(w, http.StatusNotFound, "attempt not found", nil)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "failed to load attempt", err)
+		return
+	}
+	if attempt.Status != "in_progress" {
+		writeError(w, http.StatusConflict, "attempt is not in progress", nil)
+		return
+	}
+	if attempt.PDFTestID == nil || *attempt.PDFTestID == "" {
+		writeError(w, http.StatusConflict, "attempt is not a PDF mock attempt", nil)
+		return
+	}
+
+	answers := req.Answers
+	if answers == nil {
+		answers = parseNUETAnswers(attempt.Answers)
+	}
+	answers = normalizeNUETResponseMap(answers)
+
+	questionIDs := parseNUETQuestionSet(attempt.QuestionSet)
+	if len(questionIDs) == 0 {
+		var fallback []models.NUETQuestion
+		if err := h.db.Where("pdf_test_id = ?", *attempt.PDFTestID).Order("position ASC").Find(&fallback).Error; err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to load question set", err)
+			return
+		}
+		for _, question := range fallback {
+			questionIDs = append(questionIDs, question.ID)
+		}
+	}
+	if len(questionIDs) == 0 {
+		writeError(w, http.StatusConflict, "question set missing for attempt", nil)
+		return
+	}
+
+	questionMap, err := h.loadNUETQuestionsByIDs(questionIDs)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load questions", err)
+		return
+	}
+	score := scoreNUETSimulatorQuestions(questionMap, questionIDs, answers)
+	results := make([]nuetMockResultItem, 0, len(score.Evaluations))
+	for _, eval := range score.Evaluations {
+		explanation := ""
+		if question, ok := questionMap[eval.QuestionID]; ok {
+			explanation = question.Explanation
+		}
+		results = append(results, nuetMockResultItem{
+			QuestionID:  eval.QuestionID,
+			Expected:    eval.Expected,
+			Given:       eval.Received,
+			Correct:     eval.Correct,
+			Explanation: explanation,
+		})
+	}
+
+	answersJSON := marshalNUETJSON(answers)
+	resultsJSON := marshalNUETJSON(results)
+	now := time.Now()
+	if err := h.db.Model(&attempt).Updates(map[string]any{
+		"answers":         &answersJSON,
+		"results":         &resultsJSON,
+		"status":          "completed",
+		"time_taken_secs": req.TimeTakenSecs,
+		"completed_at":    &now,
+		"correct_math":    score.CorrectMath,
+		"correct_ct":      score.CorrectCT,
+		"score_math":      score.CorrectMath * 120 / 30,
+		"score_ct":        score.CorrectCT * 120 / 30,
+		"score_total":     (score.CorrectMath * 120 / 30) + (score.CorrectCT * 120 / 30),
+	}).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to complete attempt", err)
+		return
+	}
+
+	if err := h.db.Where("id = ?", attemptID).First(&attempt).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to reload attempt", err)
+		return
+	}
+
+	names := h.lookupNUETAttemptNames(attempt)
+	if names == nil {
+		names = &nuetAttemptNames{}
+	}
+	if names.PDFTestName == "" {
+		var test models.NUETPDFTest
+		if err := h.db.Select("name").Where("id = ?", *attempt.PDFTestID).First(&test).Error; err == nil {
+			names.PDFTestName = test.Name
+		}
+	}
+
+	writeJSON(w, http.StatusOK, nuetMockCompleteResponse{
+		Attempt: buildNUETAttemptResponse(attempt, score.Evaluations, &nuetScoreMeta{
+			ScoreAvailable: true,
+		}, names),
+		Results: results,
 	})
 }
 
@@ -323,14 +615,14 @@ func (h *NUETHandler) StartSimulator(w http.ResponseWriter, r *http.Request) {
 	questionSetJSON := marshalNUETJSON(questionIDs)
 	resultJSON := marshalNUETJSON(map[string]any{})
 	attempt := models.NUETAttempt{
-		UserID:       userID,
-		AttemptType:  "full_mock",
-		Section:      section,
-		Status:       "in_progress",
-		StrictMode:   req.Strict,
-		Answers:      &stateJSON,
-		QuestionSet:  &questionSetJSON,
-		Results:      &resultJSON,
+		UserID:        userID,
+		AttemptType:   "full_mock",
+		Section:       section,
+		Status:        "in_progress",
+		StrictMode:    req.Strict,
+		Answers:       &stateJSON,
+		QuestionSet:   &questionSetJSON,
+		Results:       &resultJSON,
 		TimeTakenSecs: 0,
 	}
 
@@ -1290,7 +1582,7 @@ func (h *NUETHandler) lookupNUETScoreMeta(attempt models.NUETAttempt) *nuetScore
 
 	total := test.MathCount + test.CTCount
 	answerKeys := parseNUETAnswerKeys(test.AnswerKeys)
-	if len(answerKeys) == total {
+	if len(answerKeys) == total && countNUETAnswerKeys(answerKeys) == total {
 		return &nuetScoreMeta{ScoreAvailable: true}
 	}
 	return &nuetScoreMeta{
@@ -1394,10 +1686,45 @@ func (h *NUETHandler) loadNUETQuestionsByIDs(ids []string) (map[string]models.NU
 	return byID, nil
 }
 
+func (h *NUETHandler) loadNUETQuestionsByPDFTestID(pdfTestID string, expectedCount int) ([]models.NUETQuestion, error) {
+	var questions []models.NUETQuestion
+	if err := h.db.Where("pdf_test_id = ?", pdfTestID).Order("position ASC, created_at ASC").Find(&questions).Error; err != nil {
+		return nil, err
+	}
+	if len(questions) != expectedCount {
+		return nil, &nuetStaticError{
+			message: fmt.Sprintf("expected %d extracted questions for this test, found %d", expectedCount, len(questions)),
+		}
+	}
+
+	seen := make(map[int]bool, len(questions))
+	for _, question := range questions {
+		if question.Position < 1 || question.Position > expectedCount {
+			return nil, &nuetStaticError{
+				message: fmt.Sprintf("invalid question position %d in extracted set", question.Position),
+			}
+		}
+		if seen[question.Position] {
+			return nil, &nuetStaticError{
+				message: fmt.Sprintf("duplicate question position %d in extracted set", question.Position),
+			}
+		}
+		seen[question.Position] = true
+	}
+	for position := 1; position <= expectedCount; position++ {
+		if !seen[position] {
+			return nil, &nuetStaticError{
+				message: fmt.Sprintf("missing extracted question position %d", position),
+			}
+		}
+	}
+	return questions, nil
+}
+
 func scoreNUETPDFTest(test models.NUETPDFTest, answers map[string]string) nuetScoreResult {
 	keys := parseNUETAnswerKeys(test.AnswerKeys)
 	totalQuestions := test.MathCount + test.CTCount
-	if len(keys) != totalQuestions {
+	if len(keys) != totalQuestions || countNUETAnswerKeys(keys) != totalQuestions {
 		return nuetScoreResult{
 			ScoreAvailable: false,
 			ScoreReason:    "This PDF test does not have a complete answer key yet.",
@@ -1456,14 +1783,14 @@ func scoreNUETTopicQuestions(questions []models.NUETQuestion, answers map[string
 			}
 		}
 		result.Evaluations = append(result.Evaluations, nuetAnswerEvaluation{
-			Question: i + 1,
-			QuestionID: question.ID,
-			Section:  question.Section,
-			Prompt:   question.Prompt,
+			Question:    i + 1,
+			QuestionID:  question.ID,
+			Section:     question.Section,
+			Prompt:      question.Prompt,
 			Explanation: question.Explanation,
-			Expected: expected,
-			Received: received,
-			Correct:  correct,
+			Expected:    expected,
+			Received:    received,
+			Correct:     correct,
 		})
 	}
 
@@ -1595,13 +1922,20 @@ func parseNUETAnswerKeys(raw *string) []string {
 	if err := json.Unmarshal([]byte(*raw), &keys); err != nil {
 		return nil
 	}
-	out := make([]string, 0, len(keys))
+	for i, key := range keys {
+		keys[i] = normalizeAnswerLetter(key)
+	}
+	return keys
+}
+
+func countNUETAnswerKeys(keys []string) int {
+	count := 0
 	for _, key := range keys {
-		if letter := normalizeAnswerLetter(key); letter != "" {
-			out = append(out, letter)
+		if key != "" {
+			count++
 		}
 	}
-	return out
+	return count
 }
 
 func normalizeAnswerLetter(value string) string {

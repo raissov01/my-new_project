@@ -15,59 +15,59 @@ type Dependencies struct {
 	Environment      string
 	GormDB           *gorm.DB
 
-	Auth               *AuthHandler
-	GoogleOAuth        *GoogleOAuthHandler
-	IELTSMaterial      *IELTSMaterialHandler
-	IELTSExaminer      *IELTSExaminerHandler
-	IELTSAttempt       *IELTSAttemptHandler
-	IELTSStudyPlan     *IELTSStudyPlanHandler
-	IELTSDashboard     *IELTSDashboardHandler
-	IELTSQuestionAdmin *IELTSQuestionAdminHandler
-	Leaderboard        *Leaderboard
-	Profile            *Profile
-	Set                *Set
-	Dashboard          *Dashboard
-	Classroom          *Classroom
-	Progress           *Progress
-	Flashcard          *FlashcardHandler
-	Quiz               *QuizHandler
-	QuizUsageEvent     *QuizUsageEventHandler
-	Challenge          *ChallengeHandler
-	ProfileWrite       *ProfileWriteHandler
-	AI                 *AIHandler
-	Chat               *ChatHandler
-	Files              *FilesHandler
-	QuizImage          *QuizImageHandler
-	QuizAudio          *QuizAudioHandler
-	QuizLive           *QuizLiveHandler
-	QuizAIGenerate     *QuizAIGenerateHandler
-	EngSim             *EngSimHandler
-	MaterialNotes      *MaterialNotesHandler
-	Gamification       *GamificationHandler
-	Listening          *ListeningHandler
-	AITutor            *AITutorHandler
-	QuestionReview     *QuestionReviewHandler
-	AdminAnalytics     *AdminQuizizzAnalyticsHandler
-	AdminUsers         *AdminUsersHandler
-	AdminQuizzes       *AdminQuizzesHandler
-	AdminAuditLog      *AdminAuditLogHandler
-	AdminLiveWS        *AdminLiveWSHandler
-	AdminSystem        *AdminSystemHandler
-	AdminAPIMetrics    *AdminAPIMetricsHandler
-	AdminAIUsage       *AdminAIUsageHandler
-	AdminJobs          *AdminJobsHandler
+	Auth                *AuthHandler
+	GoogleOAuth         *GoogleOAuthHandler
+	IELTSMaterial       *IELTSMaterialHandler
+	IELTSExaminer       *IELTSExaminerHandler
+	IELTSAttempt        *IELTSAttemptHandler
+	IELTSStudyPlan      *IELTSStudyPlanHandler
+	IELTSDashboard      *IELTSDashboardHandler
+	IELTSQuestionAdmin  *IELTSQuestionAdminHandler
+	Leaderboard         *Leaderboard
+	Profile             *Profile
+	Set                 *Set
+	Dashboard           *Dashboard
+	Classroom           *Classroom
+	Progress            *Progress
+	Flashcard           *FlashcardHandler
+	Quiz                *QuizHandler
+	QuizUsageEvent      *QuizUsageEventHandler
+	Challenge           *ChallengeHandler
+	ProfileWrite        *ProfileWriteHandler
+	AI                  *AIHandler
+	Chat                *ChatHandler
+	Files               *FilesHandler
+	QuizImage           *QuizImageHandler
+	QuizAudio           *QuizAudioHandler
+	QuizLive            *QuizLiveHandler
+	QuizAIGenerate      *QuizAIGenerateHandler
+	EngSim              *EngSimHandler
+	MaterialNotes       *MaterialNotesHandler
+	Gamification        *GamificationHandler
+	Listening           *ListeningHandler
+	AITutor             *AITutorHandler
+	QuestionReview      *QuestionReviewHandler
+	AdminAnalytics      *AdminQuizizzAnalyticsHandler
+	AdminUsers          *AdminUsersHandler
+	AdminQuizzes        *AdminQuizzesHandler
+	AdminAuditLog       *AdminAuditLogHandler
+	AdminLiveWS         *AdminLiveWSHandler
+	AdminSystem         *AdminSystemHandler
+	AdminAPIMetrics     *AdminAPIMetricsHandler
+	AdminAIUsage        *AdminAIUsageHandler
+	AdminJobs           *AdminJobsHandler
 	AdminDeliverability *AdminDeliverabilityHandler
-	AdminStorage       *AdminStorageHandler
-	AdminDatabase      *AdminDatabaseHandler
-	ResendWebhook      *ResendWebhookHandler
-	DailyNews          *DailyNewsHandler
-	Mining             *MiningHandler
-	Billing            *BillingHandler
-	Push               *PushHandler
-	Notification       *NotificationHandler
-	NUET               *NUETHandler
-	Contact            *ContactHandler
-	DebugDatabase      http.HandlerFunc
+	AdminStorage        *AdminStorageHandler
+	AdminDatabase       *AdminDatabaseHandler
+	ResendWebhook       *ResendWebhookHandler
+	DailyNews           *DailyNewsHandler
+	Mining              *MiningHandler
+	Billing             *BillingHandler
+	Push                *PushHandler
+	Notification        *NotificationHandler
+	NUET                *NUETHandler
+	Contact             *ContactHandler
+	DebugDatabase       http.HandlerFunc
 }
 
 var deps Dependencies
@@ -115,6 +115,7 @@ func RegisterRoutes(router *gin.Engine) {
 
 	// ── Public file serving (materials PDFs) ────────────────────────────
 	api.GET("/files/*filepath", wrapHTTP(deps.Files.Serve))
+	api.HEAD("/files/*filepath", wrapHTTP(deps.Files.Serve))
 
 	// ── Public quiz-question image/audio serving ────────────────────────
 	// Upload is authenticated (see the internal group below); serving is
@@ -338,6 +339,9 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/nuet/questions", wrapHTTP(deps.NUET.ListQuestions))
 		internal.GET("/nuet/pdf-tests", wrapHTTP(deps.NUET.ListPDFTests))
 		internal.GET("/nuet/pdf-tests/:id", wrapHTTP(deps.NUET.GetPDFTest))
+		internal.POST("/nuet/mock/:id/start", wrapHTTP(deps.NUET.StartMockAttempt))
+		internal.PUT("/nuet/mock/attempts/:attemptId/save", wrapHTTP(deps.NUET.SaveMockAttempt))
+		internal.POST("/nuet/mock/attempts/:attemptId/complete", wrapHTTP(deps.NUET.CompleteMockAttempt))
 		internal.GET("/nuet/materials", wrapHTTP(deps.NUET.ListMaterials))
 		internal.POST("/nuet/simulator/start", wrapHTTP(deps.NUET.StartSimulator))
 		internal.PUT("/nuet/simulator/:attemptID/save", wrapHTTP(deps.NUET.SaveSimulator))

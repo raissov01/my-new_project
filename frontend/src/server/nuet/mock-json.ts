@@ -37,6 +37,17 @@ export type NUETParsedMock = {
 
 const JSON_DIR = path.join(process.cwd(), "..", "backend", "nuet-materials", "json");
 
+function normalizeMockName(value: string): string {
+  const trimmed = value.trim().replace(/\.pdf$/i, "");
+  const trial = trimmed.match(/^Trial Test\s+(\d+)$/i);
+  if (trial) return `Trial Test ${trial[1]}`;
+
+  const mock = trimmed.match(/^NUET(?:_|\s)MOCK(?:_|\s)?(\d+)/i);
+  if (mock) return `NUET Mock ${mock[1]}`;
+
+  return trimmed;
+}
+
 async function readJSON<T>(filePath: string): Promise<T | null> {
   try {
     const raw = await fs.readFile(filePath, "utf8");
@@ -59,7 +70,10 @@ export async function getNUETParsedMockByJSONFile(jsonFile: string): Promise<NUE
 
 export async function getNUETParsedMockByName(name: string): Promise<NUETParsedMock | null> {
   const index = await listNUETParsedMocks();
-  const match = index.find((item) => path.basename(item.source_file, ".pdf") === name);
+  const normalizedName = normalizeMockName(name);
+  const match = index.find((item) => normalizeMockName(path.basename(item.source_file, ".pdf")) === normalizedName);
   if (!match) return null;
   return getNUETParsedMockByJSONFile(match.json_file);
 }
+
+export { normalizeMockName };

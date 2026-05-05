@@ -5,7 +5,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { listNUETPDFTests } from "@/server/integrations/go-backend/nuet";
-import { listNUETParsedMocks } from "@/server/nuet/mock-json";
+import { listNUETParsedMocks, normalizeMockName } from "@/server/nuet/mock-json";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -27,7 +27,7 @@ export default async function NUETPDFTestsPage() {
   ]);
 
   const parsedByName = new Map(
-    parsedIndex.map((item) => [item.source_file.replace(/\.pdf$/i, ""), item])
+    parsedIndex.map((item) => [normalizeMockName(item.source_file), item])
   );
 
   return (
@@ -51,11 +51,11 @@ export default async function NUETPDFTestsPage() {
         {data.items.map((test) => (
           <Link
             key={test.id}
-            href={`/nuet/pdf-tests/${test.id}`}
+            href={`/nuet/mock/${test.id}`}
             className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 transition hover:border-[var(--primary)]"
           >
             {(() => {
-              const parsed = parsedByName.get(test.name);
+              const parsed = parsedByName.get(normalizeMockName(test.name));
               return (
                 <>
             <div className="flex flex-wrap items-center justify-between gap-3">

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,8 +22,14 @@ func NewFiles(baseDir string) *FilesHandler {
 func (h *FilesHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	// Extract the file path from the URL after /api/v1/files/
 	reqPath := r.PathValue("filepath")
+	if reqPath == "" {
+		reqPath = strings.TrimPrefix(r.URL.EscapedPath(), "/api/v1/files/")
+	}
 	// Gin wildcard params start with "/" — strip it
 	reqPath = strings.TrimPrefix(reqPath, "/")
+	if decoded, err := url.PathUnescape(reqPath); err == nil {
+		reqPath = decoded
+	}
 	if reqPath == "" {
 		http.Error(w, `{"error":"file path required"}`, http.StatusBadRequest)
 		return

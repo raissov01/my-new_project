@@ -1,5 +1,20 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Local Go toolchain caches
+.tools/
+
+# Compiled Go binaries inside backend/ (sources live under cmd/)
+/backend/extract-nuet-questions
+/backend/seed-nuet
+/backend/seed-nuet-pdf-tests
+/backend/seed-nuet-questions
+/backend/verify-nuet-pdf-tests
+/backend/verify-nuet-questions
+/backend/tag-telegram-posts
+/backend/bot-scrape
+/backend/telegram-import
+/backend/telegram-auth
+
 # dependencies
 /node_modules
 /frontend/node_modules

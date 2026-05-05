@@ -26,6 +26,8 @@ func (NUETTopic) TableName() string { return "nuet_topics" }
 type NUETQuestion struct {
 	ID           string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	TopicID      *string   `gorm:"type:uuid"                                      json:"topicId,omitempty"`
+	PDFTestID    *string   `gorm:"type:uuid;column:pdf_test_id"                   json:"pdfTestId,omitempty"`
+	Position     int       `gorm:"not null;default:0"                             json:"position"`
 	Section      string    `gorm:"type:varchar(32);not null"                      json:"section"`
 	QuestionType string    `gorm:"type:varchar(32);not null;default:'multiple_choice'" json:"questionType"`
 	Difficulty   string    `gorm:"type:varchar(16);not null;default:'medium'"     json:"difficulty"`

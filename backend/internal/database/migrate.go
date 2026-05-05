@@ -42,6 +42,39 @@ func AutoMigrate(db *gorm.DB) (err error) {
 		migrationStatusMu.Unlock()
 	}()
 
+	// Older NUET foundation migrations created Postgres default unique
+	// constraint names (`*_key`). GORM's current uniqueIndex naming expects
+	// `uni_*`, and on startup it tries to reconcile them. Renaming the legacy
+	// constraints up front avoids a noisy boot-time failure.
+	db.Exec(`
+	DO $$
+	BEGIN
+		IF EXISTS (
+			SELECT 1
+			FROM pg_constraint
+			WHERE conname = 'nuet_topics_slug_key'
+		) AND NOT EXISTS (
+			SELECT 1
+			FROM pg_constraint
+			WHERE conname = 'uni_nuet_topics_slug'
+		) THEN
+			ALTER TABLE nuet_topics RENAME CONSTRAINT nuet_topics_slug_key TO uni_nuet_topics_slug;
+		END IF;
+
+		IF EXISTS (
+			SELECT 1
+			FROM pg_constraint
+			WHERE conname = 'nuet_pdf_tests_name_key'
+		) AND NOT EXISTS (
+			SELECT 1
+			FROM pg_constraint
+			WHERE conname = 'uni_nuet_pdf_tests_name'
+		) THEN
+			ALTER TABLE nuet_pdf_tests RENAME CONSTRAINT nuet_pdf_tests_name_key TO uni_nuet_pdf_tests_name;
+		END IF;
+	END $$;
+	`)
+
 	err = db.AutoMigrate(
 		&models.User{},
 		&models.QuizLiveSession{},
@@ -135,6 +168,12 @@ func AutoMigrate(db *gorm.DB) (err error) {
 	}
 
 	log.Println("GORM auto-migration complete")
+
+	// NUET PDF extraction linkage: each extracted question can belong to a
+	// specific PDF test with a fixed 1..60 position.
+	db.Exec(`ALTER TABLE nuet_questions ADD COLUMN IF NOT EXISTS pdf_test_id UUID REFERENCES nuet_pdf_tests(id) ON DELETE CASCADE`)
+	db.Exec(`ALTER TABLE nuet_questions ADD COLUMN IF NOT EXISTS position INT NOT NULL DEFAULT 0`)
+	db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS nuet_q_pdf_pos_uniq ON nuet_questions(pdf_test_id, position) WHERE pdf_test_id IS NOT NULL`)
 
 	// Role support: normal registration/self-service remains student/teacher,
 	// but trusted DB-managed accounts may now be admins.
