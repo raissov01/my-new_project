@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, GraduationCap, Library, Trophy, Target } from "lucide-react";
+import { ArrowLeft, BookOpen, GraduationCap, Library, ScrollText, Trophy, Target } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
@@ -134,7 +134,7 @@ export default async function NUETDashboardPage() {
       </section>
 
       {/* CTAs */}
-      <section className="mt-8 grid gap-4 sm:grid-cols-2">
+      <section className="mt-8 grid gap-4 sm:grid-cols-3">
         <Link
           href="/nuet/simulator"
           className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 transition hover:border-[var(--primary)]"
@@ -157,6 +157,18 @@ export default async function NUETDashboardPage() {
           </h3>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
             {t("nuet.mod.topicsDesc")}
+          </p>
+        </Link>
+        <Link
+          href="/nuet/pdf-tests"
+          className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 transition hover:border-[var(--primary)]"
+        >
+          <ScrollText className="h-6 w-6 text-[var(--primary)]" />
+          <h3 className="mt-3 text-lg font-semibold text-[var(--text-primary)]">
+            {t("nuet.pdfTest.title")}
+          </h3>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            {t("nuet.pdfTest.subtitleShort")}
           </p>
         </Link>
       </section>

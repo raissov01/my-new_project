@@ -1,0 +1,1715 @@
+{
+  "source_file": "NUET_MOCK_2 (Questions and Answers).pdf",
+  "name": "NUET_MOCK_2 (Questions and Answers)",
+  "test_type": "mock_test",
+  "parser": "mock_layout_parser",
+  "question_count": 59,
+  "answer_count": 45,
+  "warnings": [
+    "3 question(s) had non A-E raw answers"
+  ],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Simplify fully oc s i o k K e i k Ki ek n M oc is k no M",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 2,
+      "prompt": "Here is a pattern of numbers: s i o k K e k i n M o K ek n M oc i K ise i n o o K sek i n o M oc k i k o M c 2 3 4 5 6 7 8 9 k K s e i o k What number will appear directly below 169? ise i o k n M oc is k n o M c Mathematics K i k k e o The pattern of numbers is continued in the same way. December 24, 2024 ise i o 3𝑚 2 𝑛 · 9𝑚𝑛3 · (9𝑚𝑛2 ) −2 NUET Mock №2 n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c",
+      "options": [],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 3,
+      "prompt": "There are three towns: Astana, Almaty and Aktobe. i n k e The distance from Astana to Almaty is the same as the distance from Astana to Aktobe. k e o i s The distance from Astana to Aktobe is 1300 km. c k s i Aktobe is on west from Astana and Almaty is on bearing of 150° from Astana. i K o What is the distance from Almaty to Aktobe in kilometres? o M √ k K s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "1300 3 i K o √                              e K i M s"
+        },
+        {
+          "label": "B",
+          "text": "650 3 k √ i"
+        },
+        {
+          "label": "C",
+          "text": "1300 2 k o c i"
+        },
+        {
+          "label": "D",
+          "text": "1300 k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "2600                     e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "𝑥 2 − 𝑏𝑥 + 5 = 0, where 𝑏 is positive constant, has two solutions that differ by 4. k Ki ek n M oc M k What is the value of 𝑏? e K K sek i n o M oc k e M ck K se i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "4 K ek n M oc s n i"
+        },
+        {
+          "label": "B",
+          "text": "-6 k o"
+        },
+        {
+          "label": "C",
+          "text": "6 o i n i K n"
+        },
+        {
+          "label": "D",
+          "text": "-4 K k o c k"
+        },
+        {
+          "label": "E",
+          "text": "10 o F. 8 o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 2 oc c o                        e             k       K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                             k       n"
+        },
+        {
+          "label": "E",
+          "text": "83"
+        },
+        {
+          "label": "D",
+          "text": "15"
+        },
+        {
+          "label": "C",
+          "text": "12"
+        },
+        {
+          "label": "B",
+          "text": "58"
+        },
+        {
+          "label": "A",
+          "text": "38 i oc            is       k i    n o      M        c k        K       s e        i       o 𝑘 𝑘 𝑘 𝑘 𝑘 𝑘 2 G. 𝑟 = 𝑞𝐸 F. 𝑟 = 𝑞𝐸"
+        },
+        {
+          "label": "E",
+          "text": "𝑟 = 𝑞𝐸"
+        },
+        {
+          "label": "D",
+          "text": "𝑟 = 𝑞𝐸"
+        },
+        {
+          "label": "C",
+          "text": "𝑟 = 𝑞𝐸"
+        },
+        {
+          "label": "A",
+          "text": "𝑟 = 𝑞𝐸"
+        },
+        {
+          "label": "B",
+          "text": "𝑟 = 𝑇4𝜋𝑞𝐵 2 2 2 2 √ 2 𝑞𝐵 − 𝑇2𝜋𝑚 2 − 𝑇2𝜋𝑚 𝑞𝐵 − 𝑇4𝜋𝑞𝐵 + 𝑇4𝜋𝑞𝐵 𝑘 2𝑚 2𝑚 2 𝑚 − 𝑞𝐸 2 − 𝑇4𝜋2 𝑞𝐵𝑚2 2 2 n − 𝑇4𝜋𝑞2 𝑚𝐵 M 2 2 2 k Ki ek n M oc s                o                        K       is       k i        o K ek n M oc  i                       k           i       e k       n         M       o i                                      K                                      o"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Find tan 𝜃, if 𝐴𝐵 = 8 2 and 𝐴𝑀 = 11 𝑇 = 2𝜋 se i n o i k M c √︄ K sek i n o M oc k K s i o k Rearrange the formula to make 𝑟 the subject. 𝑚 k e o Page 3 ise i o o n M \u0012 k n M c i k o c 𝑘 s k 𝑞𝐵2 𝑞𝐸 ise i o k K e i o −𝑟 \u0013 n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 5,
+      "prompt": "Here is the formula for the period of oscillation of a charged particle in a magnetron: oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 7,
+      "prompt": "Find an equation for the line perpendicular to 4𝑥 −5𝑦 = 20 and sharing the same 𝑦-intercept o i M i k n",
+      "options": [
+        {
+          "label": "A",
+          "text": "5𝑦 − 4𝑥 = 80 k o e k se i n o"
+        },
+        {
+          "label": "B",
+          "text": "−5𝑥 + 4𝑦 = −20 M s c i n k"
+        },
+        {
+          "label": "C",
+          "text": "5𝑥 − 4𝑦 = 80                                e k e o i s"
+        },
+        {
+          "label": "D",
+          "text": "4𝑥 + 5𝑦 = 16 c k s i i K o"
+        },
+        {
+          "label": "E",
+          "text": "5𝑥 + 4𝑦 = −16 o M k K s n i K o e K i M s k i k"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "A draft person makes a scale drawing of 100 meter × 30 meter building, where 1 centimeter o c k i represents 2.5 meters. How many centimeters are in the smaller dimension of the building? i n K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "18 centimeters e k no M ck K se i o c s c i"
+        },
+        {
+          "label": "B",
+          "text": "12 centimeters o n K e M"
+        },
+        {
+          "label": "C",
+          "text": "480 centimeters i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "D",
+          "text": "8 centimeters K k M"
+        },
+        {
+          "label": "E",
+          "text": "40 centimeters k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n 1"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "Find the smallest positive integer 𝑥 so that the fraction 10+𝑥 has a finite decimal i K n K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 o c k"
+        },
+        {
+          "label": "B",
+          "text": "2 o o i"
+        },
+        {
+          "label": "C",
+          "text": "10 i k k k"
+        },
+        {
+          "label": "D",
+          "text": "6 k M"
+        },
+        {
+          "label": "E",
+          "text": "15 c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 4 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "Which is the largest prime factor of 46 − 1? o i M i k n",
+      "options": [
+        {
+          "label": "A",
+          "text": "13 k o e k se i n o"
+        },
+        {
+          "label": "B",
+          "text": "17 M s c i n k"
+        },
+        {
+          "label": "C",
+          "text": "5                                           e k e o i s"
+        },
+        {
+          "label": "D",
+          "text": "3 c k s i i K o"
+        },
+        {
+          "label": "E",
+          "text": "23 o M F. 31 k K s n i K o e K i M s k i k o c k  i"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "Let 𝑥 and 𝑦 be positive integers such that 1𝑥 + 1𝑦 = 20 1 i n . What is the maximum possible value K k of 𝑦? e k no M ck K se i o c s c i",
+      "options": [
+        {
+          "label": "A",
+          "text": "40 o n K e M"
+        },
+        {
+          "label": "B",
+          "text": "60 i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "C",
+          "text": "240 K k M"
+        },
+        {
+          "label": "D",
+          "text": "420 k Ki ek n M oc M k e"
+        },
+        {
+          "label": "E",
+          "text": "480 K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "A cuboid-shaped container that is not filled o c k completely contains 120 m3 of water. The depth o of the water is either 2 m or 3 m or 5 m, de- o i i k pending on which side the container is actually k k standing on (drawings not to scale). k M How big is the volume of the container? c i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "160 m3 ise i o i s s i o"
+        },
+        {
+          "label": "B",
+          "text": "240 m3 i o ise i o"
+        },
+        {
+          "label": "C",
+          "text": "180 m3 M s n"
+        },
+        {
+          "label": "D",
+          "text": "220 m3 s"
+        },
+        {
+          "label": "E",
+          "text": "200 m3 ki o k i o n oc Page 5 oc c o          k             K e i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                             k       n"
+        },
+        {
+          "label": "B",
+          "text": "8"
+        },
+        {
+          "label": "A",
+          "text": "4 i n 8 7 M F. 46"
+        },
+        {
+          "label": "E",
+          "text": "45 99"
+        },
+        {
+          "label": "D",
+          "text": "16 90"
+        },
+        {
+          "label": "C",
+          "text": "17 99"
+        },
+        {
+          "label": "B",
+          "text": "17"
+        },
+        {
+          "label": "E",
+          "text": "14"
+        },
+        {
+          "label": "D",
+          "text": "12"
+        },
+        {
+          "label": "C",
+          "text": "10 32 k                                                              o"
+        },
+        {
+          "label": "A",
+          "text": "180 oc            is         i      o               c k        K       s e        i                                                                                                                                                                             13. The expression 7𝑛+12 k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 6 ise i o                  o                                  n"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Which of the answers below is equal to 0.1(7) ? k n M c K is k i o M ck ise i o k e o What is the sum of all such integer values of the expression? n M oc is k i n o M c k K i ki o o k K ek n M o c i i s 2𝑛+3 takes integer values for certain integer values of 𝑛. no M ck K se i o o k K e oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e 𝐴𝐶 = 10 M ck K se i o o i k n i k n M c s o G. 40° F. 30°",
+      "options": [
+        {
+          "label": "E",
+          "text": "25°"
+        },
+        {
+          "label": "D",
+          "text": "20°"
+        },
+        {
+          "label": "B",
+          "text": "15°"
+        },
+        {
+          "label": "A",
+          "text": "10° oc             s                o                          K                  i"
+        },
+        {
+          "label": "C",
+          "text": "17.5° i                        k                  e Find angle 𝐹𝐸 𝐴. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 7 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o o                       k         n         M                           i"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "The line 𝐵𝐶 is a tangent at the point B to a circle with centre A. ki o n M c k K ise i o o c k K o no M ck K se i o i k n M c k K ise oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n B. 9",
+      "options": [
+        {
+          "label": "A",
+          "text": "8 n        M"
+        },
+        {
+          "label": "E",
+          "text": "31"
+        },
+        {
+          "label": "D",
+          "text": "12"
+        },
+        {
+          "label": "C",
+          "text": "45"
+        },
+        {
+          "label": "B",
+          "text": "20"
+        },
+        {
+          "label": "A",
+          "text": "19"
+        },
+        {
+          "label": "E",
+          "text": "12"
+        },
+        {
+          "label": "D",
+          "text": "11"
+        },
+        {
+          "label": "C",
+          "text": "10 oc            is       k i      o               c k        K       s e        i       o pens in my desk? k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 8 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se replaced it with a pencil and now the ratio is 7 : 8. What is the total number of pencils and"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "In my desk, the number of pencils and pens was in the ratio 4 : 5. I took out a pen and",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 16,
+      "prompt": "If 𝑥, 𝑦, and 𝑧 are positive integers and 2𝑥 · 3𝑦 · 5𝑧 = 54000, what is the value of 𝑥 + 𝑦 + 𝑧,? oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k e K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o n",
+      "options": [],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F",
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 19,
+      "prompt": "Given that k",
+      "options": [
+        {
+          "label": "E",
+          "text": "8"
+        },
+        {
+          "label": "D",
+          "text": "0"
+        },
+        {
+          "label": "B",
+          "text": "4"
+        },
+        {
+          "label": "E",
+          "text": "4"
+        },
+        {
+          "label": "C",
+          "text": "2"
+        },
+        {
+          "label": "A",
+          "text": "1 i n        M"
+        },
+        {
+          "label": "C",
+          "text": "-2"
+        },
+        {
+          "label": "A",
+          "text": "-4 F. -4"
+        },
+        {
+          "label": "D",
+          "text": "-1"
+        },
+        {
+          "label": "B",
+          "text": "-2 k                        c                                     o G. 0.8 i                                                    s H. -0.8 oc             s         i      o                 k        K         e        i What is the value of 𝑥 ? i        k         n       M What is the value of 𝑥 − 𝑦? k Ki ek n M oc s        i       o               k        K        s e       i n      o          o K ek n M oc i                                      K       i         k                 M i se i n o k                   M      o c 1252𝑥−2 · K sek i n o M oc k k      K       s e        i       o           o       k Page 9 1 ise i o                  o                        k         n        M 252𝑥+1 ise i ok    n        M        ck        K    is e        i        o           o     ck = 625𝑥"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "60% of a number is equal to one-thirds of a second number. n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se The whole number ratio of the first number to the second number in its lowest terms is 𝑥 : 𝑦 oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k e K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o k n",
+      "options": [
+        {
+          "label": "C",
+          "text": "0"
+        },
+        {
+          "label": "B",
+          "text": "6 i n        M"
+        },
+        {
+          "label": "E",
+          "text": "-9"
+        },
+        {
+          "label": "D",
+          "text": "-3"
+        },
+        {
+          "label": "A",
+          "text": "15 oc            is       k i      o               c k        K       s e        i       o 3 4 3 3 3 3 F. 𝑥 > 119"
+        },
+        {
+          "label": "E",
+          "text": "𝑥 < 119"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 > 109"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 < 119"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 < 109"
+        },
+        {
+          "label": "A",
+          "text": "𝑥 > 119"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Solve the inequality: i k n M What is the value of 𝑝 + 𝑞? k Ki ek n M oc s i o k K s e i n o o k M 5 2 i The first translation is by the vector K ek n M oc i K o The second translation is by the vector se i n o i k M c \u0012 \u0012 K sek i n o M oc k K s i o k 𝑞 4 1 k e o 2𝑝 Page 10 −3𝑞 −5𝑝 ise i o o n M \u0013 \u0013 k n M c K is k i o ck ise i o k e o (𝑥 − 3) − (𝑥 + 7) < 3 n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 21,
+      "prompt": "The point (−2, 6) is translated to the point (4, −3) by two successive translations. oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o n the x-axis. i k n M",
+      "options": [
+        {
+          "label": "C",
+          "text": "80"
+        },
+        {
+          "label": "A",
+          "text": "48 i        k                        c                  s                  o"
+        },
+        {
+          "label": "E",
+          "text": "160"
+        },
+        {
+          "label": "D",
+          "text": "120 i √ oc             s                o                          K"
+        },
+        {
+          "label": "B",
+          "text": "(8, 1)"
+        },
+        {
+          "label": "B",
+          "text": "48 2 i                        k                  e"
+        },
+        {
+          "label": "C",
+          "text": "(4, -1)"
+        },
+        {
+          "label": "A",
+          "text": "(-9, -8)"
+        },
+        {
+          "label": "D",
+          "text": "(6, -10)"
+        },
+        {
+          "label": "E",
+          "text": "(-6, -11) n Find the area 𝐴( 𝐴𝐵𝐶𝐷). k Ki ek n M oc K       is       k i        o      M s        i       o               k                   e         n         M       o"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "ABCD is a right trapezoid where i k 𝑚(∠𝐶) = 135◦ , K ek n M oc i K se i n o o K sek i n o M oc k is k i o M c k",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 23,
+      "prompt": "The vertices of a rectangle have coordinates: k K e o Page 11 ise i o k n M oc is k n o M c What are the coordinates of the final position of 𝑅? |𝐷𝐶 | = 6 cm, ise i o k K e i o k i 𝑃(3, 4), 𝑄(3, 9), 𝑅(8, 9), 𝑆(8, 4). n M o i k n M c √ ki o c k K se i o o k K o n M i |𝐵𝐶 | = 8 2 cm. no M ck K se i o i k c k K se 𝑃𝑄𝑅𝑆 is transformed by a clockwise rotation of 90° about 𝑃 followed by a reflection in oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o n i k of V. i k M c k K se i M ck K se i o o k n",
+      "options": [
+        {
+          "label": "E",
+          "text": "0"
+        },
+        {
+          "label": "B",
+          "text": "7"
+        },
+        {
+          "label": "A",
+          "text": "5"
+        },
+        {
+          "label": "E",
+          "text": "𝑉2"
+        },
+        {
+          "label": "D",
+          "text": "𝑉3"
+        },
+        {
+          "label": "A",
+          "text": "𝑉 i n 3 4 M"
+        },
+        {
+          "label": "C",
+          "text": "2𝑉"
+        },
+        {
+          "label": "B",
+          "text": "3𝑉"
+        },
+        {
+          "label": "D",
+          "text": "10 k"
+        },
+        {
+          "label": "C",
+          "text": "−3 oc            is         i      o               c k        K       s e        i       o Find the value of 𝑞 + 𝑝. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "The equation of a line is given as: K ek n M oc i K ise i n o o K sek i n o M oc k K is k i o M c k k e o Page 12 of the region between cylinder and cone in terms",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 24,
+      "prompt": "The volume of the cylinder is V. Find the volume ise i o k n M oc is k n o M c 𝑞𝑥 + 𝑝𝑦 = 5. The line passes through the points (2, 3) and (4, 7). ise i o k K e i o k n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k e K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o k n",
+      "options": [
+        {
+          "label": "B",
+          "text": "5 i n        M"
+        },
+        {
+          "label": "E",
+          "text": "-3"
+        },
+        {
+          "label": "C",
+          "text": "-2"
+        },
+        {
+          "label": "A",
+          "text": "-7"
+        },
+        {
+          "label": "D",
+          "text": "10 oc            is       k        o               c          K       s          i       o"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 > 67"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 < 73 i                        k                  e"
+        },
+        {
+          "label": "E",
+          "text": "𝑥 > 12"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 > −5"
+        },
+        {
+          "label": "A",
+          "text": "𝑥 < −6"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "Solve the inequality: n Find the value of 3𝑝 + 𝑞. M",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 27,
+      "prompt": "The quadratic expression: k Ki ek n M oc s o K is k i o i k e o 2 1 k n M has been transformed to the form: K ek n M oc i K ise i n o o K sek i n o M oc k is k o M c 3 2 k K e i o k Page 13 ise i o k n M oc is k n o M c 𝑝(𝑥 + 𝑞) 2 − 𝑟 i k 𝑥 2 − 12𝑥 + 35 ise i o k K e o (𝑥 − 2) − (3 − 𝑥) < 𝑥 − 4 n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k e K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n n F. 𝑚 i k M c s o",
+      "options": [
+        {
+          "label": "B",
+          "text": "16 𝑚"
+        },
+        {
+          "label": "A",
+          "text": "15 𝑚 i H. 56 ( 𝑚 G. 16 ( 𝑚"
+        },
+        {
+          "label": "C",
+          "text": "16 ( 𝑚 K 𝐴𝑋 𝑋 such that 𝑋𝐶 oc             s                o"
+        },
+        {
+          "label": "E",
+          "text": "16 (5®"
+        },
+        {
+          "label": "D",
+          "text": "15 (4®"
+        },
+        {
+          "label": "C",
+          "text": "𝑎 ≠ 3"
+        },
+        {
+          "label": "B",
+          "text": "𝑎 < 0 i                        k                  e ® + 56 𝑛® ® − 56 𝑛® ® − 56 𝑛® ® + 𝑛®) ® + 𝑛®) ® + 𝑛®) ® ®"
+        },
+        {
+          "label": "E",
+          "text": "0 < 𝑎 < 3 = 15 . 𝑛 − 𝑚) 𝑛 − 𝑚)"
+        },
+        {
+          "label": "D",
+          "text": "𝑎 ≠ 3, 𝑎 ≠ 0 i        k         n       M have two distinct real roots? k Ki ek n M oc s        i       o               k        K        s e       i n      o          o K ek n M oc i                                              i         k                 M Express the vector 𝑋®𝐷 in terms of 𝑚 K                                      o"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "For what values of 𝑎 does the equation: se i n o K sek i n o M oc k is k o M c ® and 𝑛®. k K e i o k Page 14 ise i o k n M oc is k i n o M ck ise i o k K e o (1 − 𝑎)𝑥 2 + (𝑎 + 1)𝑥 − 2 = 0 o n M i",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 29,
+      "prompt": "There is a parallelogram 𝐴𝐵𝐶𝐷 oriented clockwise. 𝐴𝐵 = 𝑚, n M c K is k i o c k K ki o o k i ek n M o c is no M ck K se i o o k K e ® 𝐴𝐷 = 𝑛®. There is a point oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n oc is k i n o M c k K s e i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑃 = 𝑅5 5 F. 𝑃 = 𝑅50 2 H. 𝑃 = 2𝑅"
+        },
+        {
+          "label": "B",
+          "text": "𝑃 = 4𝑅 𝑅2 25 2"
+        },
+        {
+          "label": "E",
+          "text": "𝑃 = 800 1 2"
+        },
+        {
+          "label": "D",
+          "text": "𝑃 = 4𝑅5 2 G. 𝑃 = 25𝑅 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑃 = 800𝑅 2 When 𝑃 = 2, 𝑄 = 4. When 𝑄 = 2, 𝑅 = 5. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e                           o"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "H",
+      "warnings": [
+        "non-MCQ raw answer detected: H"
+      ]
+    },
+    {
+      "number": 30,
+      "prompt": "𝑃 is directly proportional to 𝑄 2 . 𝑄 is inversely proportional to 𝑅. K ek n M oc i i k n M K se i n o k M o c K sek i n o M oc k k K is e i o o k Page 15 ise i o k n M oc is k i n o M ck ise i o k K e o n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K Critical Thinking o i M i k n k o e",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 1,
+      "prompt": "Abigail counted to 2400 by 6’s beginning with 6. Sebastian counted to 2400 by 4’s starting k se i n o M s with 4. How many of the numbers counted by Abigail were also counted by Sebastian? c i n k",
+      "options": [
+        {
+          "label": "A",
+          "text": "180                                          e k e o i s c"
+        },
+        {
+          "label": "B",
+          "text": "230 k s i i K o"
+        },
+        {
+          "label": "C",
+          "text": "120 o M k K s"
+        },
+        {
+          "label": "D",
+          "text": "350 n i K o e K"
+        },
+        {
+          "label": "E",
+          "text": "400 i M s k i F. 200 k o c k  i i n K k e k no M ck K se i o c s c i o n K"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 2,
+      "prompt": "A tech company claims that implementing AI in customer service will drastically improve e M i s customer satisfaction by reducing wait times and providing accurate responses. The com- k Ki ek n M oc k i pany presents data showing that AI systems handle inquiries faster than human agents. K k M However, critics note that AI lacks the empathy and understanding required to handle k Ki ek n M oc M k complex or emotionally charged situations. The company argues that speed and efficiency e K K sek i n o M oc k e are the most important factors for improving customer satisfaction. M ck K se i o K ek n M oc s n Which one of the following best expresses the flaw in the above argument? i k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "The argument does not consider the cost of implementing AI systems. o i n"
+        },
+        {
+          "label": "B",
+          "text": "The argument fails to address situations where human judgment is necessary. i K n K k"
+        },
+        {
+          "label": "C",
+          "text": "The argument does not provide examples of industries where AI has succeeded. o c k o"
+        },
+        {
+          "label": "D",
+          "text": "The argument assumes that all customer inquiries are straightforward. o i"
+        },
+        {
+          "label": "E",
+          "text": "The argument assumes that speed is more important to customers than empath i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 16 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "Recent studies reveal that the consumption of sugary beverages significantly increases the o i M i k risk of developing chronic illnesses like diabetes and heart disease. Efforts to educate n k o e the public on healthier alternatives have shown limited success, mainly due to aggressive k se i n o M s marketing by beverage companies. To address this, governments should impose higher c i n k taxes on sugary drinks to deter consumption and fund public health initiatives. e k e o i s What is the main conclusion of the passage below? c k s i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Public education efforts alone cannot reduce sugary drink consumption. o M"
+        },
+        {
+          "label": "B",
+          "text": "Higher taxes on sugary drinks can effectively reduce consumption and support k K s n public health. i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "Sugary beverages are the leading cause of chronic illnesses. k i k"
+        },
+        {
+          "label": "D",
+          "text": "Aggressive marketing is the primary reason for increased sugary drink consump- o c i tion. k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "Governments should ban sugary beverages entirely to protect public health. e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "Two standard dice are placed on a table, with one on top of the other, so that only nine of k Ki ek n M oc M k the faces of the dice may be seen. The touching faces have the same number on them. The e K K sek i n o M oc k e sum of the numbers on the visible face is 33 M ck K se i o K ek n M oc s n What is the number on the touching faces? i k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "1 o i n"
+        },
+        {
+          "label": "B",
+          "text": "2 i K n K k"
+        },
+        {
+          "label": "C",
+          "text": "3 o c k o"
+        },
+        {
+          "label": "D",
+          "text": "4 o i"
+        },
+        {
+          "label": "E",
+          "text": "5 i k k k F. 6 k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 17 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "Critics of standardized testing argue that it places undue stress on students and fails to o i M i k capture the complexity of their abilities. In particular, they point out that these tests n k o e emphasize rote memorization over critical thinking and problem-solving skills. As a k se i n o M s result, a group of educators has proposed replacing standardized testing with a more c i n k holistic approach, such as portfolio assessments and project-based evaluations. e k e o i s Which one of the following is an underlying assumption of the argument above? c k s i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Stress from standardized testing is the primary barrier to student success. o M"
+        },
+        {
+          "label": "B",
+          "text": "Standardized tests do not evaluate non-academic abilities. k K s n i K o e"
+        },
+        {
+          "label": "C",
+          "text": "Holistic assessment methods will provide a more accurate picture of students’ K i M s skills. k i k"
+        },
+        {
+          "label": "D",
+          "text": "Educators universally agree on eliminating standardized testing. o c i"
+        },
+        {
+          "label": "E",
+          "text": "Portfolio assessments are already proven to be superior to standardized tests. k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "The table below shows ’audience numbers’ and ’time per visit’ for a number of popular K k M social networking sites. A comparison of figures for the month of February is shown for k Ki ek n M oc M k two consecutive years. e K K sek i n o M oc k e M ck K se i o K ek n M oc February 2008 February 2007 s n Site i Audience Time per visit Audience Time per visit k o (000’s) (hr:min:sec) (000’s) (hr:min:sec) o myspace.com 55,419 2:12:19 53,362 2:00:24 i n i K n Facebook 20,043 1:06:43 9,923 1:04:54 K k LinkedIn 7,392 0:10:31 1,990 0:05:10 o c k Flixster 2,619 0:07:38 1,591 0:12:28 o o i Reunion.com 4,323 0:04:34 4,348 0:04:49 i k Meetup.com 1,940 0:12:16 1,215 0:07:07 k k k Last.fm 1,938 0:06:43 1,508 0:02:24 M c myYearbook 1,738 0:07:02 2,368 0:09:04 i o ise i o i s How many sites had an increase in both ’audience numbers’ and ’time per visit’ from 2007 s i o to 2008? i o ise i o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 s n"
+        },
+        {
+          "label": "B",
+          "text": "6 s"
+        },
+        {
+          "label": "C",
+          "text": "2"
+        },
+        {
+          "label": "D",
+          "text": "3 ki o k i o n oc Page 18 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "E",
+          "text": "1 o i M i k n F. 4 k o e k se i n o M s c i n k e k e o i s c k s i i K o"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "Scientists have long debated the role of artificial light pollution on ecosystems. Recent o M research highlights how excessive artificial light disrupts the natural behaviors of nocturnal k K s n animals, such as hunting and mating patterns. It also shows that light pollution alters i K o e K the growth cycles of plants by affecting their exposure to natural light. To mitigate these i M s k harmful effects, cities should adopt policies that regulate and reduce unnecessary outdoor i k lighting, especially in sensitive ecological areas. o c k i Which one of the following best expresses the main conclusion of the above argument? i n K k e",
+      "options": [
+        {
+          "label": "A",
+          "text": "Cities should implement policies to reduce unnecessary outdoor lighting in k no M ck K se i o c s ecological areas. c i o n K e"
+        },
+        {
+          "label": "B",
+          "text": "Artificial light pollution disrupts the behavior of nocturnal animals. M i s k Ki ek n M oc k"
+        },
+        {
+          "label": "C",
+          "text": "Plants are affected by artificial light, which alters their growth cycles. i K k M"
+        },
+        {
+          "label": "D",
+          "text": "Light pollution has been widely studied and debated by scientists. k Ki ek n M oc M k"
+        },
+        {
+          "label": "E",
+          "text": "Outdoor lighting is unnecessary in most urban areas. e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Five friends are dealt two cards each from a set of twelve cards. The cards are numbered 1 o c k to 12 inclusive. In turn, the friends declare the sum of the values of their two cards, Linus o scores 4, Lewis scores 11, Pam scores 16, Willy scores 19 and Clint scores 20. o i Which of the following statements is true? i k k k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Linus has card 2 k M c"
+        },
+        {
+          "label": "B",
+          "text": "Lewis has card 3 i o"
+        },
+        {
+          "label": "C",
+          "text": "Pam has card 5 ise i o i s s i o"
+        },
+        {
+          "label": "D",
+          "text": "Willy has card 7 i o"
+        },
+        {
+          "label": "E",
+          "text": "Clint has card 11 ise i o M s n s ki o k i o n oc Page 19 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "Jodi has a set of ten fridge magnets showing the integers from 0 to 9 inclusive. o i M i k n In how many different ways can she split the set into five pairs so that the sum of each pair k o e k is a multiple of 5? se i n o M s c i n",
+      "options": [
+        {
+          "label": "A",
+          "text": "1 k e k e"
+        },
+        {
+          "label": "B",
+          "text": "2 o i s c k s i"
+        },
+        {
+          "label": "C",
+          "text": "3 i K o o M"
+        },
+        {
+          "label": "D",
+          "text": "4 k K s n i K"
+        },
+        {
+          "label": "E",
+          "text": "5 o e K i M s k i k o c k  i i n K k e"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "A recent study claims that regular exercise reduces the risk of heart disease by improving k no M ck K se i o c s cardiovascular health and maintaining a healthy weight. However, some individuals argue c i o n K that the time commitment and physical strain discourage people from exercising regularly. e M i s To promote widespread physical activity, it is suggested that governments invest in public k Ki ek n M oc k i fitness programs and offer subsidies for gym memberships. K k M Which of the following strengthens the conclusion that governments should invest in k Ki ek n M oc M promoting exercise? k e K K sek i n o M oc k e M ck K se i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Studies show that people with gym memberships are not significantly healthier K ek n M oc s n than those without. i k o"
+        },
+        {
+          "label": "B",
+          "text": "Countries with public fitness initiatives have seen a reduction in heart disease o i n rates over the past decade. i K n K k"
+        },
+        {
+          "label": "C",
+          "text": "Many individuals prefer non-physical methods, such as dieting, to maintain a o c k healthy lifestyle. o o i"
+        },
+        {
+          "label": "D",
+          "text": "Public fitness programs often require large financial investments without guar- i k anteed participation. k k k"
+        },
+        {
+          "label": "E",
+          "text": "Exercise is already widely promoted by non-government organizations. M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 20 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "Alpha, Beta and Gamma are the three political parties in the Parliament. o i M i k There are 360 seats in the Parliament. Before last week’s General Election, each party held n k o 120 seats. e k se i n o M s In last week’s election: c i n k There was no change in 216 seats. e k e Alpha gained 15 seats from Beta and 23 seats from Gamma. o i s c k s Beta gained 31 seats from Alpha and 41 seats from Gamma. i i K o Gamma gained 24 seats from Alpha and 10 seats from Beta. o M k K s Which pie chart, suitably labelled, shows the current state of the parties in the Parliament? n i K o e K i M s k i k o c k i i n K k e k no M ck K se i o c s",
+      "options": [
+        {
+          "label": "A",
+          "text": "c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k"
+        },
+        {
+          "label": "B",
+          "text": "e M ck K se i o K ek n M oc s n i k o o i n i K n K k o c k"
+        },
+        {
+          "label": "C",
+          "text": "o o i i k k k k M c i o"
+        },
+        {
+          "label": "D",
+          "text": "ise i o i s s i o i o ise i o M s n s"
+        },
+        {
+          "label": "E",
+          "text": "ki o k i o n oc Page 21 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "Food manufacturers should reduce sugar levels in processed foods. This is because there i n k e are too many overweight and obese people. Since people are unable or unwilling to make k e o i s sensible decisions for themselves, manufacturers must take responsibility for rectifying a c k s i problem to which they contribute. i K o o M Which one of the following illustrates the principle used in the above argument? k K s n i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Cigarette packets should have plain packaging and display government health e K i M s warnings. k i"
+        },
+        {
+          "label": "B",
+          "text": "In order to reduce sugar intake, foods with high sugar content should be taxed k o more heavily c k  i i n"
+        },
+        {
+          "label": "C",
+          "text": "Power tools should have clear instructions in order to reduce the number of K k e k accidents caused by incorrect use. no M ck K se i o c s c i o n"
+        },
+        {
+          "label": "D",
+          "text": "To reduce the number of deaths caused by excessive speed, car manufacturers K e M should incorporate speed limiters in vehicles. i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "E",
+          "text": "Labelling on food should be improved so that consumers are clear about the level K k M of sugar in a product. k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "This is a view of a cross section of part of an aluminium window frame. i n i K n K k o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n The cross section is uniform throughout its length. s Which one of the following is NOT a possible side view of this part of the aluminium window frame? ki o k i o n oc Page 22 oc c o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e",
+      "options": [
+        {
+          "label": "C",
+          "text": ""
+        },
+        {
+          "label": "B",
+          "text": ""
+        },
+        {
+          "label": "A",
+          "text": "M ck K se i o                                    o                   i         k       n oc            is       k i    n o      M        c k        K       s e        i       o k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 23 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se oc           i s       k      n o      M        c          K      is        k i       o k Ki ek n M oc        i                        k           i      e k        n c             s                o                         K s                i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c i n k e k e o i s c k s i i K o o M k K s n i K o e K i M s k i"
+        },
+        {
+          "label": "D",
+          "text": "k o c k  i i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n"
+        },
+        {
+          "label": "E",
+          "text": "i k o o i n i K n K k o c k o"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "David normally takes 45 minutes to walk at a steady speed in a straight line from his house, o i past his friend Barry’s house and then past a shop to reach his college. i k k Today, however, he stopped at Barry’s house on the way and had to wait 3 minutes for him k k to be ready to leave. They stopped at the shop to buy their lunch, which took another 3 M c i minutes. o It normally takes David 20 minutes to walk from his home directly to the shop and Barry ise i o i s normally takes 32 minutes to walk directly from his home to the college and they both walk s i o i at the same steady speed. o ise i o M How long does it take them to walk from Barry’s house to the shop? s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "7 minutes s"
+        },
+        {
+          "label": "B",
+          "text": "1 minute"
+        },
+        {
+          "label": "C",
+          "text": "13 minutes ki o k i o n oc Page 24 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "D",
+          "text": "4 minutes o i M i k n"
+        },
+        {
+          "label": "E",
+          "text": "10 minutes k o e k se i n o M s c i n k e k e o i s c k s i i K o"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "What is the secret of success? The question is as old as philosophy itself. The Greeks o M argued that it boiled down to the possession and exercise of certain character traits, such as k K s n generosity and bravery. But new research emerging from social psychology suggests you i K o e K have to be selfconfident to be successful. The study, involving over 200 successful people i M s k from all walks of life, comprised detailed interviews and the observation of mental and i k physical problem solving. The research found that all of the participants had a strong belief o c i in their own abilities and persevered in the face of challenges because they thought they k i n could do it. If you want to be successful, then, you must have faith in your own abilities. K k e k no M ck K se i o c s Which one of the following is the best statement of the flaw in the above argument? c i o n K",
+      "options": [
+        {
+          "label": "A",
+          "text": "It assumes that self-confidence is responsible for success, and not vice versa. e M i s"
+        },
+        {
+          "label": "B",
+          "text": "It relies on different senses of the expression ’self-confidence’ k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "C",
+          "text": "It ignores the significance of other factors, such as luck. M k Ki ek n M oc M k"
+        },
+        {
+          "label": "D",
+          "text": "It assumes that everyone can become self-confident. e K K sek i n o M oc k e M ck K se i o"
+        },
+        {
+          "label": "E",
+          "text": "It justifies a claim on the basis of how things were in the past. K ek n M oc s n i k o o i n i K n K k o c k"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "There are 10 students in a class and they like visiting each other. A visit means that one o student visits the home of another student. We know that each student in the class has o i visited the same number of students. No two students in the class have both visited each i k k other. k k M What is the maximum number of students that a student in this class could have visited? c i",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 o ise i o i s"
+        },
+        {
+          "label": "B",
+          "text": "4 s i o i o"
+        },
+        {
+          "label": "C",
+          "text": "5 ise i o M"
+        },
+        {
+          "label": "D",
+          "text": "8 s n"
+        },
+        {
+          "label": "E",
+          "text": "9 s ki o k i o n oc Page 25 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "The presence of a mind requires the presence of self-consciousness. Machines do not have i n k e self-consciousness, therefore machines do not have minds. k e o i s c k s Which one of the following most closely parallels the reasoning used in the above argument? i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "The morally best option is that which maximises benefit. Larger charities are o M able to provide the most benefit from donations, therefore it is morally best to k K s n i K o choose larger charities to donate to. e K i M s"
+        },
+        {
+          "label": "B",
+          "text": "There is no obligation to keep promises to someone after they have died, since k i the virtue of keeping promises is to promote the promisee’s wellbeing, and their k o capacity for wellbeing ceases upon death. c k  i i n"
+        },
+        {
+          "label": "C",
+          "text": "To count as an emotion, a mental state needs to have representational content. K k e k Depression does not have representational content, therefore depression is not no M ck K se i o c s c an emotion. i o n K e M"
+        },
+        {
+          "label": "D",
+          "text": "Trust and reliance are not the same thing, because trust is a mental attitude, i s k Ki ek n M oc k whereas reliance is not. i K k M"
+        },
+        {
+          "label": "E",
+          "text": "Only true beliefs can be knowledge. My belief that the world is spherical is true, k Ki ek n M oc M therefore I know that the world is spherical. k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "In a survey of cats’ eating habits, 10% of the cats tested showed a clear preference for K k Moggiemeat, 20% preferred Fuss-a-Puss and 40% preferred Yummy Paws. An additional o c k 6 cats did not seem to care at all which of the three foods they ate, while the remaining 27 o cats in the survey would not touch any of these foods. o i i k How many cats were involved in the survey? k k k",
+      "options": [
+        {
+          "label": "A",
+          "text": "33 M c i"
+        },
+        {
+          "label": "B",
+          "text": "63 o ise i o i s"
+        },
+        {
+          "label": "C",
+          "text": "90 s i o i o"
+        },
+        {
+          "label": "D",
+          "text": "103 ise i o M"
+        },
+        {
+          "label": "E",
+          "text": "110 s n s ki o k i o n oc Page 26 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "’Internet addiction’ is about to be classified as a recognised psychiatric disorder. Internet o i M i k addiction is characterised by a number of signs: excessive use of the internet; anger or n k o e depression if access is lost; isolation from friends and family; and, most significantly, poor k se i n o M s educational achievement. This should make us cautious about incorporating computer- c i n k based learning into all aspects of education. Educationalists should consider the long-term e k e problems associated with extensive internet use as well as its immediate attractions. o i s c k s i Which one of the following is an assumption of the above argument? i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "Students are unable to regulate their internet use k K s n"
+        },
+        {
+          "label": "B",
+          "text": "It is a bad idea to incorporate computer-based learning into education i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "Classifiying internet addiction as a recognised psychiatric disorder will help lead k i to a cure. k o c i"
+        },
+        {
+          "label": "D",
+          "text": "All computer-based learning includes internet use. k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "Excessive internet use is the only cause of poor educational achievement. e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Next week the European Parliament will vote on whether to ban trawling, a method of fishing k Ki ek n M oc M k that involves pulling large fishing nets behind boats. The fishing industry is opposed to e K K sek i n o M oc k e a ban and has argued strongly against it. Trawling is not as damaging to ecosystems as M ck K se i o K ek n M oc s environmentalists claim. Trawling the seabed doesn’t always create ’dead zones’ in the n i ocean. It can boost fish numbers, since the species that are more resistant to the effects of k o trawling can proliferate. So trawling on flat sandy beds in shallow areas can benefit marine o i n life. i K n K k Which one of the following, if true, most weakens the above argument? o c k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Trawling creates new habitats by making parts of the sea more habitable o o i"
+        },
+        {
+          "label": "B",
+          "text": "Trawling in deep waters is expensive and an ineffective use of fishing resources. i k k k"
+        },
+        {
+          "label": "C",
+          "text": "Trawling nets have a destructive impact on many endangered species. k M"
+        },
+        {
+          "label": "D",
+          "text": "Trawling in shallow waters can damage the bottom of fishermen’s boats. c i o"
+        },
+        {
+          "label": "E",
+          "text": "Trawling in shallow waters can alter the ecology in beneficial ways. ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 27 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "Childhood obesity is still a problem. This is often blamed on the fact that children have o i M i k easy access to a range of unhealthy foods and increasingly have more money available to n k o e them to spend on fattening and sugar-filled foods. A solution seems obvious—raise the k se i n o M s prices of all these foods so that parents will have more control over what their children c i n k eat and will find it more economical to buy healthy foods. Unfortunately, this is unlikely e k e to work as the problem is also caused by the fact that unhealthy foods tend to be more o i s c k s convenient and that is what many parents consider when deciding what foods to provide. i i K o A wider range of ready-to-eat healthy food options would be a good start to solving the o M problem of child obesity. k K s n i K o e Which one of the following best expresses the main conclusion of the above argument? K i M s k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Parents should have more control over the food that their children eat. i k"
+        },
+        {
+          "label": "B",
+          "text": "The price of unhealthy foods should be raised. o c k  i"
+        },
+        {
+          "label": "C",
+          "text": "There should be more ”ready-to-eat” healthy meals available. i n K k e k"
+        },
+        {
+          "label": "D",
+          "text": "Children have too much access to fattening and sugar-filled foods. no M ck K se i o c s c i o n"
+        },
+        {
+          "label": "E",
+          "text": "Child obesity is still a problem. K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "In recent years, wearable health technology has become increasingly popular. These M ck K se i o K ek n M oc s devices can track vital statistics such as heart rate, sleep patterns, and physical activity n i levels. Although they provide users with valuable insights into their health, many experts k o warn that relying solely on these gadgets could lead to overdiagnosis and unnecessary o i n anxiety. To maximize their benefits, wearable technology should be used as a supplement i K n K k to professional medical advice, not a replacement. o c k What is the main conclusion of the passage below? o o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Wearable health technology has become increasingly popular in recent years. i i k k"
+        },
+        {
+          "label": "B",
+          "text": "Overreliance on wearable health devices can lead to overdiagnosis and anxiety. k k M"
+        },
+        {
+          "label": "C",
+          "text": "Professional medical advice is more reliable than wearable health technology. c i o"
+        },
+        {
+          "label": "D",
+          "text": "Wearable health devices should complement, not replace, professional medical ise i o i s guidance. s i o"
+        },
+        {
+          "label": "E",
+          "text": "Tracking vital statistics is an essential feature of wearable health technology. i o ise i o M s n s ki o k i o n oc Page 28 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "A café owner makes 50 mini pizzas and 50 flapjacks for sale during the day. The pizzas o i M i k are sold for $2.00 each and the flapjacks are sold for $1.00 each. However, by the end of n k o e lunchtime, there are 10 mini pizzas still unsold and 15 flapjacks unsold, so the price of k se i n o M s each is halved for the afternoon. At the end of the day, there are still 2 mini pizzas and 1 c i n k flapjack left, which are given away free to the last customer. e k e o i s If the original 50 mini pizzas and 50 flapjacks had a combined production cost of $30.00, c k s i how much profit is made on the sale of the mini pizzas and flapjacks for the day? i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "$100.00 k K s n"
+        },
+        {
+          "label": "B",
+          "text": "$102.50 i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "$115.00 k i k"
+        },
+        {
+          "label": "D",
+          "text": "$120.00 o c i"
+        },
+        {
+          "label": "E",
+          "text": "$130.00 k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "The UK Department of Education is encouraging pupils aged 14 to 18 to learn poetry K k M by heart in order to recite it at a new national competition. This government initiative is k Ki ek n M oc M k designed to boost the confidence of young people and increase their awareness of poetry. e K K sek i n o M oc k e By taking part in this initiative and by reciting poetry, young people will improve their M ck K se i o K ek n M oc s appreciation of poetry. n i k Which one of the following identifies a flaw in the above argument? o o i",
+      "options": [
+        {
+          "label": "A",
+          "text": "Young people are already aware of poetry. n i K n K k"
+        },
+        {
+          "label": "B",
+          "text": "You don’t have to recite poetry to appreciate it. o c k"
+        },
+        {
+          "label": "C",
+          "text": "Awareness is not the same as appreciation. o o i"
+        },
+        {
+          "label": "D",
+          "text": "The young people who are willing to recite poetry are already confident. i k k"
+        },
+        {
+          "label": "E",
+          "text": "Learning something in order to recite it is not the same as being creative yourself. k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 29 oc c o          k       K     e i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e"
+        },
+        {
+          "label": "D",
+          "text": ""
+        },
+        {
+          "label": "C",
+          "text": ""
+        },
+        {
+          "label": "B",
+          "text": ""
+        },
+        {
+          "label": "A",
+          "text": "M ck K se i o                                    o                   i         k       n oc            is       k i    n o      M        c k        K       s e        i       o to her conference room. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 30 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se Which one of the following arrangements could not be made using the two L-shaped tables?"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "Marina purchased a pair of L-shaped tables thinking that they would add an unusual touch oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c i n k e k e o i s c k s i i K o o M k K s n",
+      "options": [
+        {
+          "label": "E",
+          "text": "i K o e K i M s k i k o c k  i i n K k e"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": [
+        "only 1 option(s) detected"
+      ]
+    },
+    {
+      "number": 26,
+      "prompt": "Drivers found to be committing offences such as speeding are now offered the choice k no M ck K se i o c s between paying the police for a re-education course or taking the traditional penalty of c i o n paying a fine and receiving penalty points on their licence. It is no surprise that the number K e M of motorists opting for re-education courses has tripled in five years, but the high cost of i s k Ki ek n M oc k i such courses has led to accusations that police forces might use the new system for their K k own benefit. They could easily set up speed traps, catch a number of motorists slightly M k Ki ek n M oc M over the limit, and generate easy income for themselves. Re-education courses are a good k e K idea in theory, but open to abuse by cash-starved police forces. K sek i n o M oc k e M ck K se i o K ek n M oc s Which one of the following is an underlying assumption of the above argument? n i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "The cost of running re-education courses is less than the combined contributions o o of participants. i n i K n K k"
+        },
+        {
+          "label": "B",
+          "text": "Re-education is more effective than punishment in preventing further motoring o c k offences. o"
+        },
+        {
+          "label": "C",
+          "text": "Police forces are more interested in generating income than in preventing motor- o i ing offences. i k k k"
+        },
+        {
+          "label": "D",
+          "text": "The number of driving offences committed in the last five years has tripled. k M c"
+        },
+        {
+          "label": "E",
+          "text": "Fear of losing a driving licence is greater than fear of financial hardship. i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 31 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "Peter has drawn two diagrams showing information about the two cars owned by his parents: o i M i k n k o e k se i n o M s c i n k e k e o i s c k s i i K o o M k K s n i K o e K i M s Which one of the following statements is? k i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "The more expensive car is newer. o c k  i"
+        },
+        {
+          "label": "B",
+          "text": "The cheaper car is bigger. i n K k e k"
+        },
+        {
+          "label": "C",
+          "text": "The older car is slower. no M ck K se i o c s c i o"
+        },
+        {
+          "label": "D",
+          "text": "The newer car is bigger. n K e M"
+        },
+        {
+          "label": "E",
+          "text": "The slower car is smaller. i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "A school party consisting of 4 teachers and 20 students is visiting the theatre. Of the n i students, 8 are aged 15 years and 12 are aged 16 years. The following table shows the entry k o prices to the theatre. o i n i K n K k o c k o o i i k k k k M c i o ise i o i s What is the least amount that the school party must pay for entry to the theatre? s i o i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "$525 ise i o M s"
+        },
+        {
+          "label": "B",
+          "text": "$530 n"
+        },
+        {
+          "label": "C",
+          "text": "$545 s"
+        },
+        {
+          "label": "D",
+          "text": "$550"
+        },
+        {
+          "label": "E",
+          "text": "$560 ki o k i o n oc Page 32 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "It has emerged that prisoners have helped to maintain one of Britain’s busiest railway i n k e lines. Inmates from an open prison have worked night-shifts on the main line from k e o i s London to Glasgow. This is the same line where a train left the tracks earlier this year, c k s i killing one person and injuring several others. It is all very well to have offenders being i K o rehabilitated through work, but what appears to be happening here is that rail contractors o M k K s are cynically using prisoners as cheap labour. This is unacceptable, not just for safety n i K o e reasons – important as they are – but because ultimately it is an infringement of workers’ K i M s rights. If these prisoners are being paid less, or treated differently from regular workers, k i the practice must stop once and for all. k o c i Which one of the following expresses the general principle that underlies the above argu- k i n ment? K k e k no M ck K se i o c s",
+      "options": [
+        {
+          "label": "A",
+          "text": "Labour is labour and should have the same value whoever is performing it. c i o n K"
+        },
+        {
+          "label": "B",
+          "text": "Public safety issues must always be given priority over economic advantages. e M i s"
+        },
+        {
+          "label": "C",
+          "text": "Rehabilitation should be for the prisoner’s benefit, not the employer’s. k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "D",
+          "text": "Prisoners who are given work should not take jobs away from other workers. M k Ki ek n M oc M"
+        },
+        {
+          "label": "E",
+          "text": "Maintenance of public services should be in the hands of skilled professionals k e K K sek i n o M oc k only.       e M ck K se i o K ek n M oc s n i k o o i n i K n K k"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "Recently, packets of Amblers crisps have had ‘money-off’ coupons inside them. Some o c k coupons are worth 9p, some are worth 14p and some are worth 20p. o o i George has been collecting these coupons. He has more 14p coupons than 9p coupons, and i k more 9p coupons than 20p coupons. The total value of all of his coupons is exactly £1.50. k k k How many coupons has George collected? M c i",
+      "options": [
+        {
+          "label": "A",
+          "text": "9 o ise i o i s"
+        },
+        {
+          "label": "B",
+          "text": "10 s i o i o"
+        },
+        {
+          "label": "C",
+          "text": "11 ise i o M"
+        },
+        {
+          "label": "D",
+          "text": "12 s n"
+        },
+        {
+          "label": "E",
+          "text": "13 s ki o k i o n oc Page 33 oc c o          k       K     e i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i M ck K se i o                                    o        k          i       e k       n oc            is       k i    n o      M        c k        K       s e        i       o k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 34 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se oc           i s       k      n o      M        c          K      is        k i       o k Ki ek n M oc        i                        k           i      e k        n c             s                o                         K s                i o"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    }
+  ]
+}

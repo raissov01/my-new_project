@@ -1,0 +1,781 @@
+{
+  "source_file": "Trial Test 6.pdf",
+  "name": "Trial Test 6",
+  "test_type": "trial_test",
+  "parser": "trial_layout_parser",
+  "question_count": 32,
+  "answer_count": 0,
+  "warnings": [],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Evaluate ( 2- 5)*( 20+ 8)",
+      "options": [
+        {
+          "label": "A",
+          "text": "11 + 2"
+        },
+        {
+          "label": "B",
+          "text": "-6"
+        },
+        {
+          "label": "C",
+          "text": "4"
+        },
+        {
+          "label": "D",
+          "text": "15 + 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Rearrange to make x the subject: 2 𝑦=5− 𝑥 + 11 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑦 − 10𝑦 + 14 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑦 − 5𝑦 + 14 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑦 − 10𝑦 + 16 2"
+        },
+        {
+          "label": "D",
+          "text": "𝑦 − 5𝑦 + 14"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "Find 5n+2m 𝑛 2𝑛 56 5 * 125 =5 𝑚 1 3 = 9",
+      "options": [
+        {
+          "label": "A",
+          "text": "44"
+        },
+        {
+          "label": "B",
+          "text": "36"
+        },
+        {
+          "label": "C",
+          "text": "38 tg: @melonkid411"
+        },
+        {
+          "label": "D",
+          "text": "48"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "The 3rd and 7th term of an arithmetic progression are -9 and 11 respectively. What is the 15th term?",
+      "options": [
+        {
+          "label": "A",
+          "text": "67"
+        },
+        {
+          "label": "B",
+          "text": "35"
+        },
+        {
+          "label": "C",
+          "text": "53"
+        },
+        {
+          "label": "D",
+          "text": "51"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "An electronic device makes a beep after every 60 sec. Another device makes a beep after 62 sec. They beeped together at 10 a.m. The time(in min) after which they will next make a beep together at earliest is",
+      "options": [
+        {
+          "label": "A",
+          "text": "10:53"
+        },
+        {
+          "label": "B",
+          "text": "10:16"
+        },
+        {
+          "label": "C",
+          "text": "10:31"
+        },
+        {
+          "label": "D",
+          "text": "10:42"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "The given figure consists of three semi-circular arcs and one circle. The smaller arcs are equal If AB=6 cm, AC=4 cm then what is the complete length of the two figures?",
+      "options": [
+        {
+          "label": "A",
+          "text": "6π tg: @melonkid411"
+        },
+        {
+          "label": "B",
+          "text": "5π"
+        },
+        {
+          "label": "C",
+          "text": "4π"
+        },
+        {
+          "label": "D",
+          "text": "8π"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "The line joining the point P (3,-4) to Q (Q,0) has a gradient of 2. What is the value of q?",
+      "options": [
+        {
+          "label": "A",
+          "text": "8"
+        },
+        {
+          "label": "B",
+          "text": "6"
+        },
+        {
+          "label": "C",
+          "text": "5"
+        },
+        {
+          "label": "D",
+          "text": "3 4      2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "How many times do the function 𝑓(𝑥) =− 𝑥 + 2𝑥 + 3intercept the x-axis?",
+      "options": [
+        {
+          "label": "A",
+          "text": "1"
+        },
+        {
+          "label": "B",
+          "text": "2"
+        },
+        {
+          "label": "C",
+          "text": "3"
+        },
+        {
+          "label": "D",
+          "text": "0"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "In a cone, the diameter of a base is d. If the height is two times the diameter, what is the volume of this cone, in terms of d? 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "π𝑑 2 π𝑑"
+        },
+        {
+          "label": "B",
+          "text": "2 tg: @melonkid411 2 π𝑑"
+        },
+        {
+          "label": "C",
+          "text": "6 2"
+        },
+        {
+          "label": "D",
+          "text": "2π𝑑"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "A tank is 3/5 filled with water. When 500 ml of water is poured out of the tank, the tank becomes 1/2 full. What is the capacity of the tank in litres?",
+      "options": [
+        {
+          "label": "A",
+          "text": "1.5"
+        },
+        {
+          "label": "B",
+          "text": "5"
+        },
+        {
+          "label": "C",
+          "text": "7.5"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "A sphere is inscribed in a cylinder. Find the ratio of volume of sphere to volume of cylinder.",
+      "options": [
+        {
+          "label": "A",
+          "text": "3:4"
+        },
+        {
+          "label": "B",
+          "text": "1:3"
+        },
+        {
+          "label": "C",
+          "text": "1:2"
+        },
+        {
+          "label": "D",
+          "text": "2:3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "Convert 18 km/h to m/s",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 m/s"
+        },
+        {
+          "label": "B",
+          "text": "15 m/s tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "10 m/s"
+        },
+        {
+          "label": "D",
+          "text": "20 m/s"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "Find the number of diagonals in a regular polygon which has an external angle of 45 degrees.",
+      "options": [
+        {
+          "label": "A",
+          "text": "20"
+        },
+        {
+          "label": "B",
+          "text": "22"
+        },
+        {
+          "label": "C",
+          "text": "30"
+        },
+        {
+          "label": "D",
+          "text": "24"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "For all numbers x and y the definition of the operation ♦ is x♦y=xy(x+4). If (−6)♦a=−60, then what is the value of a ?",
+      "options": [
+        {
+          "label": "A",
+          "text": "0"
+        },
+        {
+          "label": "B",
+          "text": "-1"
+        },
+        {
+          "label": "C",
+          "text": "3"
+        },
+        {
+          "label": "D",
+          "text": "-5"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "One type of liquid contains 20% water and the second type of liquid contains 35% water.A glass filled with 8 parts of the first liquid and 5 parts of the second liquid.The water percentage in the new mixture is",
+      "options": [
+        {
+          "label": "A",
+          "text": "25.56"
+        },
+        {
+          "label": "B",
+          "text": "25.67 tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "25.76"
+        },
+        {
+          "label": "D",
+          "text": "25.75"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "What is the area of the largest square, in terms of r, that can be inscribed in a semicircle of radius 'r' units? 4 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 𝑟 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑟 3    2"
+        },
+        {
+          "label": "C",
+          "text": "5 𝑟 2     2"
+        },
+        {
+          "label": "D",
+          "text": "5 𝑟"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "A right-angled triangle is shown. Calculate the area of the triangle.",
+      "options": [
+        {
+          "label": "A",
+          "text": "9 − 6"
+        },
+        {
+          "label": "B",
+          "text": "9 − 3"
+        },
+        {
+          "label": "C",
+          "text": "15 + 5 6"
+        },
+        {
+          "label": "D",
+          "text": "9 + 6 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "EG is parallel to DH, and the lengths of segments DE and EF are as marked. If the area of EGF is a, what is the area of DFH in terms of a? 16𝑎",
+      "options": [
+        {
+          "label": "A",
+          "text": "25 16𝑎"
+        },
+        {
+          "label": "B",
+          "text": "20 5𝑎"
+        },
+        {
+          "label": "C",
+          "text": "4 25𝑎"
+        },
+        {
+          "label": "D",
+          "text": "16"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "The graph could be the graph of which of the following functions? tg: @melonkid411 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "(𝑥 − 9) 2"
+        },
+        {
+          "label": "B",
+          "text": "9 − 𝑥 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑓(𝑥) =− |𝑥 + 9| 2"
+        },
+        {
+          "label": "D",
+          "text": "𝑓(𝑥) = | − 𝑥 + 9|"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Ten years ago, Ron’s age was twice that of Hermione. Today, the ratio of their ages is 7:4. What is the sum of their ages today?",
+      "options": [
+        {
+          "label": "A",
+          "text": "90"
+        },
+        {
+          "label": "B",
+          "text": "130"
+        },
+        {
+          "label": "C",
+          "text": "110"
+        },
+        {
+          "label": "D",
+          "text": "120"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "Calculate 6 4",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 3,
+      "prompt": "246*10 +3.246*10 11",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 1,
+      "prompt": "623*10 Give your answer as an ordinary number, correct to 3 significant figures.",
+      "options": [
+        {
+          "label": "A",
+          "text": "0.0000102"
+        },
+        {
+          "label": "B",
+          "text": "0.0000202"
+        },
+        {
+          "label": "C",
+          "text": "0.0000302"
+        },
+        {
+          "label": "D",
+          "text": "0.0000402 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "The figure shows a symmetrical trapezium with AD=18x cm, BC=10x cm and BA=CD=L cm. The perpendicular distance between AD and BC is 3 x cm. Find an expression, in terms of x, for the area of ABCD. 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "84𝑥 2"
+        },
+        {
+          "label": "B",
+          "text": "10. 5𝑥 2"
+        },
+        {
+          "label": "C",
+          "text": "21𝑥 2"
+        },
+        {
+          "label": "D",
+          "text": "42𝑥"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "Consider the shape below. Which expression best represents the shaded area? 2 1 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑎 + 4 π𝑎 3     2"
+        },
+        {
+          "label": "B",
+          "text": "2 𝑎 tg: @melonkid411 2       1   2"
+        },
+        {
+          "label": "C",
+          "text": "𝑎 + 2 π𝑎 5       2"
+        },
+        {
+          "label": "D",
+          "text": "2 𝑎"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "In the figure, O is the center of the circle. If AB has a length of 16 and OB has a length of 10, what is the length of CD?",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 3"
+        },
+        {
+          "label": "B",
+          "text": "4"
+        },
+        {
+          "label": "C",
+          "text": "2"
+        },
+        {
+          "label": "D",
+          "text": "4 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "The vertices of a rectangle have coordinates: P (4,5) Q (4,8) R (10,8) S (10,5) tg: @melonkid411 PQRS is transformed by a clockwise rotation of 90 about P followed by a reflection in the x-axis. What are the coordinates of the final position of R?",
+      "options": [
+        {
+          "label": "A",
+          "text": "(-8,-10)"
+        },
+        {
+          "label": "B",
+          "text": "(-1,11)"
+        },
+        {
+          "label": "C",
+          "text": "(4, -1)"
+        },
+        {
+          "label": "D",
+          "text": "(7,1)"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "An equilateral triangle of side 8 cm is drawn so that its vertices lie on the circumference of a circle, as shown in the diagram. What is the total of the three areas shaded in the diagram, in cm squared?",
+      "options": [
+        {
+          "label": "A",
+          "text": "48(4π − 3) 16"
+        },
+        {
+          "label": "B",
+          "text": "3 (4π − 6)"
+        },
+        {
+          "label": "C",
+          "text": "24(π − 3) 16"
+        },
+        {
+          "label": "D",
+          "text": "3 (4π − 3 3)"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "In triangle PQR tg: @melonkid411 Angle QPR is 60 degrees, PQR is 45 degrees, QRP is 75 degrees, RQ is 6 units. Find the length of side PR.",
+      "options": [
+        {
+          "label": "A",
+          "text": "2"
+        },
+        {
+          "label": "B",
+          "text": "2"
+        },
+        {
+          "label": "C",
+          "text": "6"
+        },
+        {
+          "label": "D",
+          "text": "3 1"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "Two variable are connected by the relation: 𝐴 ∼ 2 . B is increased by 40%. 𝐵 Describe the change in A in percentage terms.",
+      "options": [
+        {
+          "label": "A",
+          "text": "29% decrease"
+        },
+        {
+          "label": "B",
+          "text": "51% decrease"
+        },
+        {
+          "label": "C",
+          "text": "49% decrease"
+        },
+        {
+          "label": "D",
+          "text": "44% decrease"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "Nicky and Christina are running a race, Since Christina is faster than Nicky, she gives him a 36-meter head start. If Christina runs at a pace of 5 m/s and Nicky runs at a pace of only 3 m/s, how many seconds Nicky have to run before Christina catches up to him? tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "15 s"
+        },
+        {
+          "label": "B",
+          "text": "18 s"
+        },
+        {
+          "label": "C",
+          "text": "25 s"
+        },
+        {
+          "label": "D",
+          "text": "12 s"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "Write the answer in fractional form. 0, 3(6) + 0, (64) 1003",
+      "options": [
+        {
+          "label": "A",
+          "text": "990 1605"
+        },
+        {
+          "label": "B",
+          "text": "990 997"
+        },
+        {
+          "label": "C",
+          "text": "990 1317"
+        },
+        {
+          "label": "D",
+          "text": "990 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    }
+  ]
+}

@@ -1,0 +1,771 @@
+{
+  "source_file": "Trial Test 4.pdf",
+  "name": "Trial Test 4",
+  "test_type": "trial_test",
+  "parser": "trial_layout_parser",
+  "question_count": 31,
+  "answer_count": 0,
+  "warnings": [],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Simplify: 2 2 ( 5 − 2) ( 5 + 4)",
+      "options": [
+        {
+          "label": "A",
+          "text": "24+5 2"
+        },
+        {
+          "label": "B",
+          "text": "14-10 2"
+        },
+        {
+          "label": "C",
+          "text": "18-6 2"
+        },
+        {
+          "label": "D",
+          "text": "29-12 5"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Which of the following is the correct quadratic equation for the function given? 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑓(𝑥) =− 𝑥 − 2𝑥 + 5 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑓(𝑥) = − 𝑥 + 2𝑥 + 5 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑓(𝑥) =− 𝑥 + 2𝑥 − 5 2"
+        },
+        {
+          "label": "D",
+          "text": "𝑓(𝑥) = 𝑥 + 2𝑥 + 5 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "Rewrite x in terms of y: 2 1 𝑥 +2𝑎𝑥 𝑦 = ( 𝑏 )2 1 2 2 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑥 = (𝑏𝑦 + 𝑎 )                 −𝑎 1 2            2"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 = (𝑏𝑦 + 2𝑎) 1 2            2   2"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 = (𝑏 𝑦 + 𝑎 )                −𝑎 1 2        2        2"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 = (𝑏𝑦 + 𝑎 − 𝑎) 2𝑥"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "If 𝑦∞𝑥 = 𝑦 ,find (3∞4)∞2 24",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 32"
+        },
+        {
+          "label": "B",
+          "text": "3 8"
+        },
+        {
+          "label": "C",
+          "text": "3 12"
+        },
+        {
+          "label": "D",
+          "text": "3 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "In the following triangle, sin A= , find tan B 5",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 tg: @melonkid411 3"
+        },
+        {
+          "label": "B",
+          "text": "4 4"
+        },
+        {
+          "label": "C",
+          "text": "5 4"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Write the solution in standard form: 5 4",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 1,
+      "prompt": "52 * 10 + 5. 4 * 10 5",
+      "options": [
+        {
+          "label": "A",
+          "text": "2. 06 * 10 6"
+        },
+        {
+          "label": "B",
+          "text": "2. 06 * 10 5"
+        },
+        {
+          "label": "C",
+          "text": "20. 6 * 10 4"
+        },
+        {
+          "label": "D",
+          "text": "20. 6 * 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "The perimeter of a regular hexagon is 72 cm, find its area",
+      "options": [
+        {
+          "label": "A",
+          "text": "72 3"
+        },
+        {
+          "label": "B",
+          "text": "144 3"
+        },
+        {
+          "label": "C",
+          "text": "216 3 tg: @melonkid411"
+        },
+        {
+          "label": "D",
+          "text": "64 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Simplify −2 4 2𝑥𝑦 𝑦 −1 𝑥𝑦 ( 4𝑥𝑦 ) *( 3 ) 2𝑥 𝑦 4",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑥𝑦 2"
+        },
+        {
+          "label": "B",
+          "text": "2𝑥 𝑦 1"
+        },
+        {
+          "label": "C",
+          "text": "2 𝑥𝑦 4"
+        },
+        {
+          "label": "D",
+          "text": "2 𝑥𝑦"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "A polygon has 10 sides. The length of the sides, starting from the smallest, form an arithmetic sequence. The perimeter of the polygon is 675 cm and the length of the longest side is twice that of the shortest side. Find the common difference in this sequence.",
+      "options": [
+        {
+          "label": "A",
+          "text": "15"
+        },
+        {
+          "label": "B",
+          "text": "5"
+        },
+        {
+          "label": "C",
+          "text": "10"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "In two similar triangles, the sides are: 18, 2y-3, 24 for the bigger and x+7, 10, 16 for the smaller tg: @melonkid411 Find x+y.",
+      "options": [
+        {
+          "label": "A",
+          "text": "12"
+        },
+        {
+          "label": "B",
+          "text": "10"
+        },
+        {
+          "label": "C",
+          "text": "16"
+        },
+        {
+          "label": "D",
+          "text": "14"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "Express 0.3(28) as a fraction in its simplest form 65",
+      "options": [
+        {
+          "label": "A",
+          "text": "198 15"
+        },
+        {
+          "label": "B",
+          "text": "291 318"
+        },
+        {
+          "label": "C",
+          "text": "999 38"
+        },
+        {
+          "label": "D",
+          "text": "395"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "You poured some 6% alcohol solution and some 8% alcohol solution into a mixing container. Now you have 500 grams of 7.52% alcohol solution. How many grams of 6% solution did you pour into the mixing container?",
+      "options": [
+        {
+          "label": "A",
+          "text": "380"
+        },
+        {
+          "label": "B",
+          "text": "260"
+        },
+        {
+          "label": "C",
+          "text": "120"
+        },
+        {
+          "label": "D",
+          "text": "240 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "The radius of the arc is equal to 6 cm and the angle is 150 degrees. Find the area of the shaded region.",
+      "options": [
+        {
+          "label": "A",
+          "text": "12π-8"
+        },
+        {
+          "label": "B",
+          "text": "15π-6"
+        },
+        {
+          "label": "C",
+          "text": "15π-9"
+        },
+        {
+          "label": "D",
+          "text": "12π-4"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Express the vector SX in terms of vectors PQ=a and PS=b, if QX:XR=3:1 and 1 PS= 2 QR. −1",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 𝑏 − 𝑎 tg: @melonkid411 1"
+        },
+        {
+          "label": "B",
+          "text": "2 𝑏 + 𝑎 −3"
+        },
+        {
+          "label": "C",
+          "text": "2 𝑏 + 𝑎 3"
+        },
+        {
+          "label": "D",
+          "text": "2 𝑏 − 𝑎"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "David drove at an average speed of 50 km/h for a distance of 45 km in his car. David's journey took 54 minutes. On a different journey, Marian drove at an average speed of 70 km/h. The time she took on her journey was 80% more than the time taken by David on his journey. What is the distance, in km, that Marian drove?",
+      "options": [
+        {
+          "label": "A",
+          "text": "56 km"
+        },
+        {
+          "label": "B",
+          "text": "113 km"
+        },
+        {
+          "label": "C",
+          "text": "85 km"
+        },
+        {
+          "label": "D",
+          "text": "216 km"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "If (3, -4) and (-6, 5) are the extremities of the diagonal of a parallelogram and (-2, 1) is its third vertex, then its fourth vertex is",
+      "options": [
+        {
+          "label": "A",
+          "text": "(-1,0)"
+        },
+        {
+          "label": "B",
+          "text": "(-1,1)"
+        },
+        {
+          "label": "C",
+          "text": "(1,1)"
+        },
+        {
+          "label": "D",
+          "text": "(0,-1)"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "Work out the total surface area of the L-shaped prism. tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "96"
+        },
+        {
+          "label": "B",
+          "text": "64"
+        },
+        {
+          "label": "C",
+          "text": "68"
+        },
+        {
+          "label": "D",
+          "text": "80"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "Let 0. 3 + 0. 08 = 𝑎 + 𝑏 1 1 What is 𝑎 + 𝑏 equal to?",
+      "options": [
+        {
+          "label": "A",
+          "text": "10"
+        },
+        {
+          "label": "B",
+          "text": "25"
+        },
+        {
+          "label": "C",
+          "text": "15"
+        },
+        {
+          "label": "D",
+          "text": "20"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "Convert 16 km/h to m/s",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 m/s 20"
+        },
+        {
+          "label": "B",
+          "text": "m/s 3 40"
+        },
+        {
+          "label": "C",
+          "text": "m/s 9"
+        },
+        {
+          "label": "D",
+          "text": "10 m/s tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "A design is set up by joining the points which are one third of the way along the sides of a square. This forms a second square as shown. This process is repeated. Calculate the area of the fourth square as a fraction of the original square. 1",
+      "options": [
+        {
+          "label": "A",
+          "text": "27 5 5"
+        },
+        {
+          "label": "B",
+          "text": "81 125"
+        },
+        {
+          "label": "C",
+          "text": "729 25"
+        },
+        {
+          "label": "D",
+          "text": "81"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "The solid shown below consists of a cylinder topped by a hemisphere of the same radius. Which one of the following correctly gives the volume of this solid? 2 π𝑟",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 (2𝑟 + 3𝑙) 2 π𝑟"
+        },
+        {
+          "label": "B",
+          "text": "3 (4𝑟 + 3𝑙) tg: @melonkid411 2 π𝑟"
+        },
+        {
+          "label": "C",
+          "text": "3 (2 + 3𝑙) 2 π𝑟"
+        },
+        {
+          "label": "D",
+          "text": "3 (2𝑟 + 𝑙)"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "In the figure, the smaller circle is inscribed in the square and the square is inscribed in the larger circle. If the length of each side of the square is s, what is the ratio of the area of the larger circle to the area of the smaller circle?",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 2: 1"
+        },
+        {
+          "label": "B",
+          "text": "2:1"
+        },
+        {
+          "label": "C",
+          "text": "2: 1"
+        },
+        {
+          "label": "D",
+          "text": "4:1 1"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "The parallelogram PQRS undergoes an enlargement with a scale factor 4 . What are the perimeter and area of the parallelogram after this enlargement? tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "A"
+        },
+        {
+          "label": "B",
+          "text": "B"
+        },
+        {
+          "label": "C",
+          "text": "C"
+        },
+        {
+          "label": "D",
+          "text": "D"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "The line joining the points with coordinates (p, p-1) and (1-p, 2p), is parallel to the line with equation 2x+3y+1=0 What is the value of p?",
+      "options": [
+        {
+          "label": "A",
+          "text": "1"
+        },
+        {
+          "label": "B",
+          "text": "2 5"
+        },
+        {
+          "label": "C",
+          "text": "4"
+        },
+        {
+          "label": "D",
+          "text": "5"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "Which of the following is a simplification of 𝑥(3𝑥+1) 4− 2 2 𝑥 (3𝑥 −2𝑥−1) 3 2 12𝑥 −8𝑥 −7𝑥−1",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑥(3𝑥−1)(𝑥−1) 2 4𝑥 +4𝑥−1"
+        },
+        {
+          "label": "B",
+          "text": "𝑥(𝑥+1) tg: @melonkid411 2 4𝑥 +4𝑥+1"
+        },
+        {
+          "label": "C",
+          "text": "𝑥(𝑥+1) 2 4𝑥 −4𝑥−1"
+        },
+        {
+          "label": "D",
+          "text": "𝑥(𝑥−1)"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "A solid pyramid has a square base of side length 12 cm and a vertical height h. The volume of the pyramid is equal to its surface area. What is the value of h?",
+      "options": [
+        {
+          "label": "A",
+          "text": "6"
+        },
+        {
+          "label": "B",
+          "text": "2 3 144"
+        },
+        {
+          "label": "C",
+          "text": "23"
+        },
+        {
+          "label": "D",
+          "text": "8 2             𝑥"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "If 𝑓(𝑥) = 2𝑥 and 𝑔(𝑥) = 2 , then 𝑓(𝑔(𝑥) is 𝑥−1",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 2𝑥"
+        },
+        {
+          "label": "B",
+          "text": "2 2𝑥+1"
+        },
+        {
+          "label": "C",
+          "text": "2 𝑥+1"
+        },
+        {
+          "label": "D",
+          "text": "2 3   2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "If both 𝑥 − 1and 𝑥 − 2 are the factors of 𝑥 − 3𝑥 + 2𝑥 − 4𝑏, then b must be tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "3"
+        },
+        {
+          "label": "B",
+          "text": "0"
+        },
+        {
+          "label": "C",
+          "text": "1"
+        },
+        {
+          "label": "D",
+          "text": "2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "A metal statue is melted down and turned into 125 smaller statues. The new statues are all identical to each other and are scaled down versions of the original. The area of the base of one of the new statues is 100 cm squared. What is the area of the base of the original statue?",
+      "options": [
+        {
+          "label": "A",
+          "text": "500"
+        },
+        {
+          "label": "B",
+          "text": "2500"
+        },
+        {
+          "label": "C",
+          "text": "5000"
+        },
+        {
+          "label": "D",
+          "text": "2000"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "The letters denote the corresponding angle. What is the value of a+b+c+d+e+f+g+h?",
+      "options": [
+        {
+          "label": "A",
+          "text": "180"
+        },
+        {
+          "label": "B",
+          "text": "360"
+        },
+        {
+          "label": "C",
+          "text": "720 tg: @melonkid411"
+        },
+        {
+          "label": "D",
+          "text": "90 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    }
+  ]
+}

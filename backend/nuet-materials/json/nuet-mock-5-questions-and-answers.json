@@ -1,0 +1,1729 @@
+{
+  "source_file": "NUET_MOCK_5 (Questions and Answers).pdf",
+  "name": "NUET_MOCK_5 (Questions and Answers)",
+  "test_type": "mock_test",
+  "parser": "mock_layout_parser",
+  "question_count": 58,
+  "answer_count": 43,
+  "warnings": [
+    "6 question(s) had non A-E raw answers"
+  ],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Water makes up 80 per cent of fresh mushrooms. However, water makes up only 20 per o M k K s cent of dried mushrooms. By what percentage does the mass of a fresh mushroom decrease n i K o during drying? e K i M s k",
+      "options": [
+        {
+          "label": "A",
+          "text": "60 i k"
+        },
+        {
+          "label": "B",
+          "text": "70 o c k  i"
+        },
+        {
+          "label": "C",
+          "text": "75 i n K k e k"
+        },
+        {
+          "label": "D",
+          "text": "80 no M ck K se i o c s c i o n"
+        },
+        {
+          "label": "E",
+          "text": "85 K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Two circles have the same radius. M ck K se i o K ek n M oc s n The centre of one circle is (-2, 1). i k o The centre of the other circle is (3, -2). o i n The circle intersect at two distinct points. i K n K k What is the equation of the straight line through the two points at which the circles intersect? o c k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "3𝑥 − 5𝑦 = 4 o i"
+        },
+        {
+          "label": "B",
+          "text": "3𝑥 + 5𝑦 = −1 i k k k"
+        },
+        {
+          "label": "C",
+          "text": "5𝑥 − 3𝑦 = −4 k M c"
+        },
+        {
+          "label": "D",
+          "text": "5𝑥 − 3𝑦 = −1 i o"
+        },
+        {
+          "label": "E",
+          "text": "5𝑥 − 3𝑦 = 1 ise i o i s s F. 5𝑥 − 3𝑦 = 4 i o i o G. 5𝑥 + 3𝑦 = 1 ise i o M s n s ki o k i o n oc oc c o                        e                                                                                    k                         K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e                                                                                                                                                                all in cm. M ck K se i o                                    o                   i         k       n n        M H. 84 G. 70 F. 54"
+        },
+        {
+          "label": "E",
+          "text": "40"
+        },
+        {
+          "label": "D",
+          "text": "36"
+        },
+        {
+          "label": "C",
+          "text": "28"
+        },
+        {
+          "label": "B",
+          "text": "12"
+        },
+        {
+          "label": "A",
+          "text": "10 i        k        o               c          K       s          i       o"
+        },
+        {
+          "label": "A",
+          "text": "040° oc             s         i                        k                  e Taraz is south of Astana. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o What is the area, in 𝑐𝑚 2 of the triangle? K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Taraz is on a bearing of 110° from Kyzylorda. Page 2 What is the bearing of Kyzylorda from Astana? ise i o                  o               i        k         n        M          c"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 4,
+      "prompt": "There are three towns: Astana, Taraz, Kyzylorda. ise i ok n M ck K s e i o o k n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se The distance from Astana to Taraz is the same as the distance from Astana to Kyzylorda.",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 3,
+      "prompt": "The diagram shows a right-angled triangle, with sides of length 𝑥 − 4, 2𝑥 + 4 and 2𝑥 + 5, oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [
+        {
+          "label": "B",
+          "text": "070° o i M i k n"
+        },
+        {
+          "label": "C",
+          "text": "110° k o e k se i n o"
+        },
+        {
+          "label": "D",
+          "text": "140° M s c i n k"
+        },
+        {
+          "label": "E",
+          "text": "180°                                        e k e o i s F. 210° c k s i i K o G. 220° o M H. 240° k K s n i K o e K i M s k i k o c k  i i n"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "G",
+      "warnings": [
+        "non-MCQ raw answer detected: G"
+      ]
+    },
+    {
+      "number": 5,
+      "prompt": "Which of the following is a simplification of K k e k no M ck K se i o c s 𝑥(3𝑥 + 1) c 4− ? i o n 𝑥 2 (3𝑥 2 − 2𝑥 − 1) K e M i s 3 2 −8𝑥 −7𝑥−1",
+      "options": [
+        {
+          "label": "A",
+          "text": "12𝑥 k Ki ek n M oc k i 𝑥(3𝑥−1) (𝑥−1) K k M 2 +4𝑥−1"
+        },
+        {
+          "label": "B",
+          "text": "4𝑥𝑥(𝑥+1) k Ki ek n M oc M k e 2 +4𝑥+1"
+        },
+        {
+          "label": "C",
+          "text": "4𝑥𝑥(𝑥+1) K K sek i n o M oc k e M ck K se i o K ek n M oc s n 2 −4𝑥−1"
+        },
+        {
+          "label": "D",
+          "text": "4𝑥𝑥(𝑥−1) i k o 2−4𝑥+1"
+        },
+        {
+          "label": "E",
+          "text": "4𝑥𝑥(𝑥−1) o i n i K n 3   2 K −8𝑥 −𝑥+1 k F. 12𝑥 𝑥(3𝑥−1) (𝑥−1) o c k o o i i k k k k M"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "𝑃, 𝑄 and 𝑅 are regular polygons. c i 𝑄 has two times as many sides as 𝑃. o An interior angle of 𝑄 is 20° larger than an interior angle of 𝑃. ise i o i s s 𝑅 has twice as many sides as 𝑄. i o i o How much larger is an interior angle of 𝑅 than an interior angle of 𝑄, in degrees? ise i o M s",
+      "options": [
+        {
+          "label": "A",
+          "text": "1 n"
+        },
+        {
+          "label": "B",
+          "text": "1.5 s"
+        },
+        {
+          "label": "C",
+          "text": "2"
+        },
+        {
+          "label": "D",
+          "text": "2.5 ki o k i o n oc Page 3 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "E",
+          "text": "3 o i M i k n F. 5 k o e k G. 6 23 se i n o M s c i n k H. 10                                           e k e o i s c k s i i K o o M k K s n i K o e"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "Consider the equation 2𝑥 2 + 4𝑥 + 𝑐 = 0, where 𝑐 is constant.√ K i M s The positive difference between the roots of this equation is 10. k i What is the value of 𝑐? k o c i",
+      "options": [
+        {
+          "label": "A",
+          "text": "-5 k i n K k"
+        },
+        {
+          "label": "B",
+          "text": "-4.5                     e k no M ck K se i o c s"
+        },
+        {
+          "label": "C",
+          "text": "-3 c i o n K"
+        },
+        {
+          "label": "D",
+          "text": "-0.5 e M i s k Ki ek n M oc k"
+        },
+        {
+          "label": "E",
+          "text": "0.75 i K k M F. 8 k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "A square has its vertices on the edges of a i K n regular hexagon. Two of the edges of the K k o square are parallel to two edges of the hexagon c k o as shown in the diagram. The sides of the o i hexagon have length 1 i k k k k What is the length of the sides of the square? M c i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "54 ise i o i √ s s"
+        },
+        {
+          "label": "B",
+          "text": "3 − 3 i o i o"
+        },
+        {
+          "label": "C",
+          "text": "43 ise i o M √ s n"
+        },
+        {
+          "label": "D",
+          "text": "2"
+        },
+        {
+          "label": "E",
+          "text": "32 s ki o k i o n oc Page 4 oc c o                k       e            K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                             k       n"
+        },
+        {
+          "label": "E",
+          "text": "2"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        },
+        {
+          "label": "C",
+          "text": "4"
+        },
+        {
+          "label": "B",
+          "text": "6"
+        },
+        {
+          "label": "A",
+          "text": "9"
+        },
+        {
+          "label": "E",
+          "text": "8"
+        },
+        {
+          "label": "C",
+          "text": "5 i n        M"
+        },
+        {
+          "label": "B",
+          "text": "-6"
+        },
+        {
+          "label": "D",
+          "text": "10 i        k                        c                  s                  o"
+        },
+        {
+          "label": "A",
+          "text": "-12 oc             s         i      o                 k        K         e        i"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "Find the value of x. What is the value of 𝑝? k Ki ek n M oc is k i no M s i o k K e k n M o K ek n M oc i K ise i n o o K sek i n o M oc k K is k i o M c k k e o Page 5 ise i o k n M oc is k i n o M ck ise i o k K e o n i 𝑝 n M oc is k i o M c k K ki o o k K ek n M o c i 10. The positive integers 𝑚, 𝑛 and 𝑝 satisfy the equation 3𝑚 + 𝑛+3 1 = 17 no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o k n",
+      "options": [
+        {
+          "label": "C",
+          "text": "9"
+        },
+        {
+          "label": "B",
+          "text": "8"
+        },
+        {
+          "label": "A",
+          "text": "7 i n 1 1 M"
+        },
+        {
+          "label": "B",
+          "text": "25"
+        },
+        {
+          "label": "A",
+          "text": "40"
+        },
+        {
+          "label": "E",
+          "text": "11"
+        },
+        {
+          "label": "D",
+          "text": "10"
+        },
+        {
+          "label": "E",
+          "text": "28"
+        },
+        {
+          "label": "D",
+          "text": "26"
+        },
+        {
+          "label": "C",
+          "text": "24"
+        },
+        {
+          "label": "B",
+          "text": "22"
+        },
+        {
+          "label": "A",
+          "text": "20 oc            is       k        o               c          K       s          i       o"
+        },
+        {
+          "label": "C",
+          "text": "14 mm i                        k                  e                                                                                                                                                                                                                                                     mm mm"
+        },
+        {
+          "label": "E",
+          "text": "40mm"
+        },
+        {
+          "label": "D",
+          "text": "25mm inch is about 2.5 cm. n       M What is the value of 𝑥+𝑦+𝑧 i        k 3 ? k Ki ek n M oc s        i       o               k        K        s e       i n      o          o K ek n M oc i                                      K       i         k                 M What is the surface area of the shape? i se i n o k                   M      o c K sek i n o M oc k k      K       s e        i       o           o       k Page 6"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "A shape is made from five unit cubes, as shown. ise i o k n M o i k n M c Which of these is approximately equal to one mil? ise i o ck K s e i o o k n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 13,
+      "prompt": "The numbers 𝑥, 𝑦 and 𝑧 satisfy the equation 9𝑥 + 3𝑦 − 5𝑧 = 4 and 5𝑥 + 2𝑦 − 2𝑧 = 13",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 11,
+      "prompt": "Used in measuring the width of a wire, one mil is equal to one thousandth of an inch. An oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c",
+      "options": [],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 14,
+      "prompt": "The lines 𝑦 = 𝑥 and 𝑦 = 𝑚𝑥 − 4 intersect at the point 𝑃 i n k e k What is the sum of the positive integer values of 𝑚 for which the coordinates of 𝑃 are also e o i s c k positive integers s i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 o M k K s"
+        },
+        {
+          "label": "B",
+          "text": "5 n i K o e K"
+        },
+        {
+          "label": "C",
+          "text": "7 i M s k i"
+        },
+        {
+          "label": "D",
+          "text": "8 k"
+        },
+        {
+          "label": "E",
+          "text": "10 o c k  i i n K k e k no M ck K se i o c s c i o n K e M i s"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "The teenagers Sam and Jo notice the following facts about their ages: k Ki ek n M oc k i K k The difference between the squares of their ages is four times the sum of their ages. M k Ki ek n M oc M The sum of their ages is eight times the difference between their ages. k e K K sek i n o M oc k e What is the age of the older of the two? M ck K se i o K ek n M oc s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "16 i k o"
+        },
+        {
+          "label": "B",
+          "text": "17 o i n"
+        },
+        {
+          "label": "C",
+          "text": "18 i K n K k"
+        },
+        {
+          "label": "D",
+          "text": "19 o c k o"
+        },
+        {
+          "label": "E",
+          "text": "20 o i i k k k k M c i o"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "Here is a pattern of numbers: ise i o i s s i o 1 i o 2 3 4 ise i o M s 5 6 7 8 9 n 10 11 12 13 14 15 16 s The pattern of numbers is continued in the same way. What number will appear directly below 196? ki o k i o n oc Page 7 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [
+        {
+          "label": "A",
+          "text": "218 o i M i k n"
+        },
+        {
+          "label": "B",
+          "text": "219 k o e k se i n o"
+        },
+        {
+          "label": "C",
+          "text": "220 M s c i n k"
+        },
+        {
+          "label": "D",
+          "text": "221                                         e k e o i s"
+        },
+        {
+          "label": "E",
+          "text": "222 c k s i i K o F. 223 o M G. 224 k K s n i K o H. 225                                e K i M s k i k o c k  i i n K k e k"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 17,
+      "prompt": "Alex, Cameron and Sam are all taking part in a 400 m race. no M ck K se i o c s c i They are each running at a different constant speed. o n K e Alex is running 12% faster than Cameron, whilst Sam is running 2% slower than Cameron. M i s When Alex crosses the finish line, how many metres is Sam from the finish line? k Ki ek n M oc k i K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "9.6 M k Ki ek n M oc M k"
+        },
+        {
+          "label": "B",
+          "text": "14 e K K sek i n o M oc k e M ck K se i o"
+        },
+        {
+          "label": "C",
+          "text": "24 K ek n M oc s n i"
+        },
+        {
+          "label": "D",
+          "text": "25 k o"
+        },
+        {
+          "label": "E",
+          "text": "28 o i n i K n F. 50 K k o G. 56 c k o o i i k k k k M c i"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 18,
+      "prompt": "The ball for a garden game is a solid sphere of volume 192 𝑐𝑚 3 . o For the children’s version of the game the ball is a solid sphere made of the same material, ise i o i s s but the radius is reduced by 25%. i o i o What is the volume, in 𝑐𝑚 3 , of the children’s ball? ise i o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "48 s n"
+        },
+        {
+          "label": "B",
+          "text": "81 s"
+        },
+        {
+          "label": "C",
+          "text": "96"
+        },
+        {
+          "label": "D",
+          "text": "108 ki o k i o n oc Page 8 oc c o             k          e         K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Simplify M ck K se i o o k n",
+      "options": [
+        {
+          "label": "C",
+          "text": "𝑚9"
+        },
+        {
+          "label": "B",
+          "text": "𝑚3 i n F. 𝑚3 𝑚 1 M"
+        },
+        {
+          "label": "E",
+          "text": "3𝑛 3"
+        },
+        {
+          "label": "D",
+          "text": "3𝑚 k G. 3𝑛1 4 c                                     o"
+        },
+        {
+          "label": "A",
+          "text": "3𝑚 i                                                    s"
+        },
+        {
+          "label": "E",
+          "text": "144 oc             s         i      o                 k        K         e        i"
+        },
+        {
+          "label": "A",
+          "text": "6 km/h."
+        },
+        {
+          "label": "C",
+          "text": "15 km/h."
+        },
+        {
+          "label": "B",
+          "text": "12 km/h."
+        },
+        {
+          "label": "E",
+          "text": "5.5 km/h."
+        },
+        {
+          "label": "D",
+          "text": "3.6 km/h. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 9 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o 3𝑚 2 𝑛 · 9𝑚𝑛3 · (9𝑚𝑛2 ) −2 n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se oc           i s       k      n o      M        c          K      is        k i       o k Ki ek n M oc        i                        k           i      e k        n c             s                o                         K s                i o o              k     K   e i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                   i         k       n n        M centimetres?"
+        },
+        {
+          "label": "D",
+          "text": "84"
+        },
+        {
+          "label": "A",
+          "text": "78 oc            is       k        o               c          K       s          i       o √ √ √ √ √ i                        k                  e"
+        },
+        {
+          "label": "E",
+          "text": "20 √ 1"
+        },
+        {
+          "label": "D",
+          "text": "10 √ 1"
+        },
+        {
+          "label": "C",
+          "text": "20 √ 2"
+        },
+        {
+          "label": "B",
+          "text": "10 √ 2"
+        },
+        {
+          "label": "A",
+          "text": "20 √ 2 4−𝜋 8−𝜋 8+𝜋 4−𝜋 8−𝜋 √ √ √ √ F. 84 + 18 3"
+        },
+        {
+          "label": "E",
+          "text": "84 − 18 3"
+        },
+        {
+          "label": "C",
+          "text": "78 + 18 3"
+        },
+        {
+          "label": "B",
+          "text": "78 − 18 3 i        k         n       M remaining metal is 100 cm2 . k Ki ek n M oc s        i       o               k        K        s e       i n      o          o K ek n M oc i                                      K       i         k                 M √ o What is the area of the square, in cm2 ? se i n o K sek i n o M oc k                              is       k  i       o        M        c k"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "The perimeter of a square is (36 − 4 3) cm. k K e o Page 10 sion for the length of the side of the square in Which one of the following is a correct expres- cut out of it as shown below. The area of the",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 22,
+      "prompt": "A square piece of metal has a semicircular piece ise i o k n M oc is k i n o M ck ise i o k K e o n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n oc is k i n o M c k K s e i o A. 𝑥 ≥ 4 2𝑟 2𝑟",
+      "options": [
+        {
+          "label": "B",
+          "text": "ℎ = 𝑟+2"
+        },
+        {
+          "label": "A",
+          "text": "ℎ = 𝑟−2"
+        },
+        {
+          "label": "D",
+          "text": "ℎ = 𝑟 − 2"
+        },
+        {
+          "label": "C",
+          "text": "ℎ = 𝑟 + 2"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "Solve the inequality. Express ℎ in terms of 𝑟.",
+      "options": [
+        {
+          "label": "E",
+          "text": "ℎ = 2𝑟 (𝑟 − 2) i        k         n       M                                                                                                                                                                                                                                   D. 𝑥 ≥ 2 or 𝑥 ≤ −4"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 ≥ −2 and 𝑥 ≤ 4"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 ≤ 2 and 𝑥 ≥ −4 k Ki ek n M oc s        i       o               k        K        s e       i n      o          o K ek n M oc i                                      K       i         k                 M i se i n o k                   M      o c K sek i n o M oc k k      K       s e        i       o           o       k Page 11 ise i o k    n        M       o               i        k         n o      M          c 𝑥 2 ≥ 8 − 2𝑥 c               s same as its volume, measured in cubic centimetres. ise i o                        k        K       e        i                    o      k The radius of the cylinder is 𝑟 cm, and the height is ℎ cm. n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 3 option(s) detected"
+      ]
+    },
+    {
+      "number": 24,
+      "prompt": "The total surface area of a cylinder, measured in square centimetres, is numerically the oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k e K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n −→ n M",
+      "options": [
+        {
+          "label": "D",
+          "text": "72"
+        },
+        {
+          "label": "C",
+          "text": "36"
+        },
+        {
+          "label": "B",
+          "text": "24"
+        },
+        {
+          "label": "A",
+          "text": "12 i        k                        c                  s          i       o √ √ √ √ oc             s                o                          K H. 72 3 G. 36 3 F. 24 3"
+        },
+        {
+          "label": "E",
+          "text": "12 3 i                        k                  e G. 9𝑏 − 6𝑎 F. 8𝑏 + 6𝑎"
+        },
+        {
+          "label": "E",
+          "text": "8𝑏 − 4𝑎"
+        },
+        {
+          "label": "D",
+          "text": "4𝑏 + 4𝑎"
+        },
+        {
+          "label": "C",
+          "text": "4𝑏 − 4𝑎"
+        },
+        {
+          "label": "B",
+          "text": "3𝑏 + 6𝑎"
+        },
+        {
+          "label": "A",
+          "text": "3𝑏 − 6𝑎 What is the value of 𝑥 2 ? k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e                           o"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 26,
+      "prompt": "𝑃 is a regular 12-sided polygon. What is 𝑃𝑆 in terms of 𝑎 and 𝑏? K ek n M oc i i k n M K se i n o o",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 25,
+      "prompt": "𝑃𝑄𝑅 is a triangle. 𝑃𝑄 = 12𝑎, 𝑃𝑅 = 6𝑏. K sek i n o M oc k K is k i o M c k k e o Page 12 ise i o o k n M 𝑆 is a point on 𝑅𝑄, and the ratio 𝑅𝑆 : 𝑆𝑄 = 1 : 2. ise i ok n M ck K is e i o o ck n M oc is k i n o M c k K i ki o o k K e n M o i i k c K s The length of a straight line joining a vertex to the centre of 𝑃 is 6 cm. no M ck K se i o o k e 𝑄 is a regular hexagon with side length 𝑥 cm. The areas of 𝑃 and 𝑄 are equal. oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n i k n M c s o H. 0.5 G. 0.3 K i F. 0.25",
+      "options": [
+        {
+          "label": "E",
+          "text": "0.16"
+        },
+        {
+          "label": "D",
+          "text": "0.09"
+        },
+        {
+          "label": "B",
+          "text": "0.05"
+        },
+        {
+          "label": "E",
+          "text": "210◦"
+        },
+        {
+          "label": "D",
+          "text": "190◦"
+        },
+        {
+          "label": "C",
+          "text": "170◦"
+        },
+        {
+          "label": "B",
+          "text": "150◦"
+        },
+        {
+          "label": "A",
+          "text": "130◦ oc             s         i      o                 k                  e                                                                                                                                                                          C. 0.0625"
+        },
+        {
+          "label": "A",
+          "text": "0.0256 k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o between the hour and the minute hands? K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 13 ise i o                                                     n"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "𝑠 is directly proportional to the square root of 𝑡. o M When 𝑡 = 0.04, 𝑠 = 36. What is 𝑡 when 𝑠 = 45? k n M c K is k i o ck ise i o k e o n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 28,
+      "prompt": "If you look at a 12-hour analogue clock and the time is 1 : 40, what is the obtuse angle oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 29,
+      "prompt": "The original price of a coconut is 𝑥. The price is increased by 125%. The increased price o i M i k is then decreased by 40% twice to 𝑦. Find the relationship between 𝑥 and 𝑦. n k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "32 e k se i n o M s c i 9 n"
+        },
+        {
+          "label": "B",
+          "text": "20 k e k e"
+        },
+        {
+          "label": "C",
+          "text": "27 o i s 10 c k s i 9 i K o"
+        },
+        {
+          "label": "D",
+          "text": "25 o M"
+        },
+        {
+          "label": "E",
+          "text": "95 k K s n i K o F. 15 e K i M s k G. 1 i k 81 H. 100 o c k  i i n K k e k no M ck K se i o c s c i o n K e M i s"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "H",
+      "warnings": [
+        "non-MCQ raw answer detected: H"
+      ]
+    },
+    {
+      "number": 30,
+      "prompt": "The square 𝐴𝐵𝐶𝐷 is positioned so that its vertices are at the points with coordinates: k Ki ek n M oc k i (1, 1), (−1, 1), (−1, −1), (1, −1). K k M The square is rotated clockwise through 90◦ about the origin and then reflected in the line k Ki ek n M oc M k e 𝑦 = 𝑥. K K sek i n o M oc k e M ck K se i o K ek n M oc Which transformation will return the square to its original orientation? s n i",
+      "options": [
+        {
+          "label": "A",
+          "text": "A reflection in the 𝑥-axis. k o o"
+        },
+        {
+          "label": "B",
+          "text": "A reflection in the 𝑦-axis. i n i K n K k"
+        },
+        {
+          "label": "C",
+          "text": "A reflection in the line 𝑦 = −𝑥. o c k"
+        },
+        {
+          "label": "D",
+          "text": "A rotation of 90◦ clockwise about the origin. o"
+        },
+        {
+          "label": "E",
+          "text": "A rotation of 90◦ anticlockwise about the origin. o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 14 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K Critical Thinking o i M i k n k o e"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 1,
+      "prompt": "Recorded crime figures – the figures which police authorities produce – have always been k se i n o M s a poor way to identify crime trends. They are really a measure of police activity and c i n k priorities. A big operation to tackle knife crime, for instance, may uncover and record e k e many more offences involving knives: it does not mean knife crime is rising. Added to o i s c k s i that, there is an inbuilt temptation for police officers to ’adjust’ their crime figures when i K o targets need to be met. As with all recorded activity or performance data, there is always o M a risk of inaccuracy, confusion and fraud. A much more reliable measure of crime is the k K s n Crime Survey of England and Wales which produces figures by asking people if they have i K o e K been victims of crime. i M s k i Which one of the following is a conclusion that can be drawn from the above passage? k o c i",
+      "options": [
+        {
+          "label": "A",
+          "text": "The police regularly prioritise the tackling of crimes which help them meet their k i n targets. K k e k no M ck K se i o c"
+        },
+        {
+          "label": "B",
+          "text": "The police care more about meeting targets than they do about tackling crime. s c i o n"
+        },
+        {
+          "label": "C",
+          "text": "Much less crime takes place than police figures tend to indicate. K e M i s"
+        },
+        {
+          "label": "D",
+          "text": "Victims of crime fear retaliation from criminals if they report them to the police. k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "E",
+          "text": "To find out whether crime levels are increasing we should survey people’s expe- M k Ki ek n M oc M rience of crime. k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "A certain type of window glass allows 80% of the incident light on it to pass through. 15 i K n K k % is reflected back and 5% is absorbed. o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 15 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K If a double glazing panel is made from two sheets of this glass with a narrow gap in o i M i k between, and used to glaze window, how much of the incident light from outside will pass n k o into the room? (to the nearest 1%) e k se i n o M s c",
+      "options": [
+        {
+          "label": "A",
+          "text": "64% i n k"
+        },
+        {
+          "label": "B",
+          "text": "65% e k e o i s c k s i"
+        },
+        {
+          "label": "C",
+          "text": "79% i K o"
+        },
+        {
+          "label": "D",
+          "text": "80% o M k K s n"
+        },
+        {
+          "label": "E",
+          "text": "95% i K o e K i M s k i k o c k  i i n K k e"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "“The traditional school sports day – featuring races with clear winners and losers – is being k no M ck K se i o c s replaced in some schools by “fun days” of non-competitive games. The rationale for this c i o n is that the self esteem of children who always lose in competitive races is damaged. But in K e M adult life, competition for jobs, partners and social status is unavoidable. Schools should i s k Ki ek n M oc k recognise this and revert to traditional sports days.” i K k M Which one of the following is an assumption of the above argument? k Ki ek n M oc M k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Children are not naturally competitive. e K K sek i n o M oc k e M ck K se i o"
+        },
+        {
+          "label": "B",
+          "text": "Children who lose competitive races will be unsuccessful in adulthood. K ek n M oc s n i"
+        },
+        {
+          "label": "C",
+          "text": "Non-competitive games boost children’s self esteem. k o o"
+        },
+        {
+          "label": "D",
+          "text": "School sports should prepare children for adult life. i n i K n K k o c k o o i i k k"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "“We worry that the pesticides used on crops may get into our food, but few people know k k that plants make natural pesticides to protect them against threats to their existence. Every M c day we eat fruit and vegetables containing these natural pesticides. Since our consumption i o of natural pesticides vastly outweighs that of synthetic pesticides, our health is at greater ise i o i s risk from natural pesticides than from synthetic ones.” s i o i o Which one of the following, if true, most weakens the above argument? ise i o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "Natural pesticides in some plants can harm animals. s n"
+        },
+        {
+          "label": "B",
+          "text": "Humans have evolved to tolerate natural pesticides in food crops. s"
+        },
+        {
+          "label": "C",
+          "text": "Every natural pesticide is toxic if consumed in sufficient quantity."
+        },
+        {
+          "label": "D",
+          "text": "Traces of synthetic pesticides have been found in fruit and vegetables. ki o k i o n oc Page 16 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "One of the games at a charity fund raising event was ’Guess How Many Jelly Beans are in i n k e the Jar’. Prizes were awarded according to how close the guesses were to the exact number. k e o i s The results of the game are shown below in the table. c k s i i K o o M k K s n i K o e K i M s k i k o c k i i n K k e k no M ck K se i o c s c How many jelly beans were in the jar? i o n K e M",
+      "options": [
+        {
+          "label": "A",
+          "text": "129 i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "B",
+          "text": "130 K k M"
+        },
+        {
+          "label": "C",
+          "text": "131 k Ki ek n M oc M k e"
+        },
+        {
+          "label": "D",
+          "text": "132 K K sek i n o M oc k e M ck K se i o K ek n M oc"
+        },
+        {
+          "label": "E",
+          "text": "133 s n i k o o i n i K n K k o c k"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Perfect pitch – the ability to identify any note of music without inferring it from a reference o note – is usually found to be a characteristic only of people who were taught music before o i i k the age of 6. So teaching music to children under the age of 6 should become a priority in k k primary schools. This could mean that in the future the majority of the population would k M have perfect pitch. c i o Which one of the following describes a flaw in the above argument? ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "It assumes that adults could acquire perfect pitch if they were taught music. s i o i o"
+        },
+        {
+          "label": "B",
+          "text": "It ignores the possibility that other factors may be necessary for acquiring perfect ise i o M pitch. s n"
+        },
+        {
+          "label": "C",
+          "text": "It assumes that having perfect pitch is necessary for success as a musician. s"
+        },
+        {
+          "label": "D",
+          "text": "It ignores the possibility that children under the age of 6 may not enjoy learning music. ki o k i o n oc Page 17 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "The height and weight of three children were measured and the table below used to de- i n k e termine their BMI. Unfortunately some of the data have been lost. We know that Alex is k e o i s 162cm tall, Jay is 150cm tall and has a BMI of 22, and Charlie is 156cm tall and has a BMI c k s i of 24. The combined weight of the children is 172kg. i K o o M k K s n i K o e K i M s k i k o c k i i n K k e k no M ck K se i o c s c i o n K e M i s What is Alex’s BMI? k Ki ek n M oc k i K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "25 M k Ki ek n M oc M"
+        },
+        {
+          "label": "B",
+          "text": "26 k e K K sek i n o M oc k"
+        },
+        {
+          "label": "C",
+          "text": "27           e M ck K se i o K ek n M oc s n"
+        },
+        {
+          "label": "D",
+          "text": "28 i k o"
+        },
+        {
+          "label": "E",
+          "text": "29 o i n i K n K k o c k o o i"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Five children have had their height measured as part of a pre-school health check. Stuart i k k k is taller than Ruth who is taller than Margaret. Tim is shorter than Ruth and taller than k M Adrian. c i Who must Adrian be shorter than? o ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "Ruth, Margaret and Stuart s i o i o"
+        },
+        {
+          "label": "B",
+          "text": "Stuart and Margaret, but not necessarily Ruth ise i o M"
+        },
+        {
+          "label": "C",
+          "text": "Margaret, but not necessarily Stuart or Ruth s n"
+        },
+        {
+          "label": "D",
+          "text": "Ruth and Stuart, but not necessarily Margaret s"
+        },
+        {
+          "label": "E",
+          "text": "Ruth, but not necessarily Stuart or Margaret ki o k i o n oc Page 18 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "Competition between restaurants is fierce and restaurateurs are trying to gain recognition for i n k e the quality of their food. Research from Oxford University might just give them that edge k e o i s over their competitors. More than a hundred people participated in a series of experiments c k s i to see if the taste of food was affected by the cutlery used to eat it. The study found that i K o desserts tasted better when eaten using small spoons. Similarly yoghurt tasted creamier o M k K s when eaten with a black spoon. Cheese cut with a heavy knife tasted more expensive than n i K o cheese cut with a lighter knife. e K i M s k Which one of the following is a conclusion that can be drawn from the above passage? i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "People choose restaurants only because of the quality of the food. o c k  i i n"
+        },
+        {
+          "label": "B",
+          "text": "Restaurants should think carefully about what cutlery they use K k e k"
+        },
+        {
+          "label": "C",
+          "text": "Restaurants should pay less attention to food presentation. no M ck K se i o c s c i o n"
+        },
+        {
+          "label": "D",
+          "text": "Customers pay attention to the cutlery they are using. K e M i"
+        },
+        {
+          "label": "E",
+          "text": "Variety of cutlery is more important than quality of food. s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "Luke walks his puppy to a nearby park and lets the puppy off the lead. i k o o As Luke starts walking along the path, the puppy runs on ahead, until it has gone 100 i n i K n metres. The puppy then turns and runs back to Luke, who in that time has walked 50 K k metres. The puppy then goes on ahead again, turns after running 100 metres and runs back o c k to Luke who has now walked another 50 metres. o o i i k This routine continues until Luke has walked 1 km. k k k M If it takes 12 minutes for Luke to walk 1 km in the park, what is the puppy’s average c i running speed during the same time? o ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "12 km/h s i o i o"
+        },
+        {
+          "label": "B",
+          "text": "5 km/h ise i o M"
+        },
+        {
+          "label": "C",
+          "text": "10 km/h s n"
+        },
+        {
+          "label": "D",
+          "text": "14 km/h s"
+        },
+        {
+          "label": "E",
+          "text": "15 km/h ki o k i o n oc Page 19 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "The city council has proposed a plan to implement a congestion charge for vehicles entering i n k e the downtown area during peak hours. The proposal aims to reduce traffic congestion and k e o i s improve air quality by encouraging commuters to use public transportation or carpool. c k s i It is also anticipated that the revenue generated from the congestion charge will be used i K o to fund improvements in public transit infrastructure. Critics argue that the charge may o M k K s disproportionately affect low-income individuals who rely on cars for their daily commute. n i K o e K What is the assumption underlying the city council’s proposal to introduce a congestion i M s k charge for vehicles entering the downtown area during peak hours? i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Public transportation in the city is affordable and accessible for most commuters. o c k  i i n"
+        },
+        {
+          "label": "B",
+          "text": "Low-income drivers contribute the most to traffic congestion in downtown areas. K k e k"
+        },
+        {
+          "label": "C",
+          "text": "Revenue generated by the congestion charge will be sufficient to improve public no M ck K se i o c s c transit. i o n K e M"
+        },
+        {
+          "label": "D",
+          "text": "Drivers will shift to alternative transportation methods to avoid the congestion i s k Ki ek n M oc k charge. i K k M"
+        },
+        {
+          "label": "E",
+          "text": "Air quality improvements will occur only if traffic congestion is completely k Ki ek n M oc M eliminated. k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "A group of 5 men are able to load a pile of 90 logs onto a truck in 15 minutes. K k o c k How long would it take 3 men to load 120 logs, if they load them at the same rate (answer o to the nearest minute)? o i",
+      "options": [
+        {
+          "label": "A",
+          "text": "12 minutes i k k k"
+        },
+        {
+          "label": "B",
+          "text": "18 minutes k M c"
+        },
+        {
+          "label": "C",
+          "text": "33 minutes i o"
+        },
+        {
+          "label": "D",
+          "text": "35 minutes ise i o i s s i o"
+        },
+        {
+          "label": "E",
+          "text": "42 minutes i o ise i o M s n s ki o k i o n oc Page 20 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "The UK private security industry employs half a million people in a range of roles, including o i M i k supervising public events, guarding cash in transport, and assisting police in surveillance n k o e work. Some government officials are pushing for the legal regulation of such work to be k se i n o M s moved out of government agency control and placed in the hands of the private security c i n k companies themselves. According to these officials, self-regulation is justified on economic e k e grounds and because of the sector’s “willingness to ... be more accountable for its own o i s c k s actions.” The foolishness of this argument is breathtaking. The power entrusted to these i i K o workers over valuable property—not to mention the safety of people—means that there’s o M a fundamental need for monitoring and oversight of standards of conduct by an impartial, k K s n trustworthy source. i K o e K i M s Which one of the following is an underlying assumption of the above argument? k i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "The UK private security industry is likely to continue to grow rapidly in the near o c i future. k i n K"
+        },
+        {
+          "label": "B",
+          "text": "Self-regulation of an industry is an unwise approach regardless of the sector k e k no M ck K se i o c concerned. s c i o n"
+        },
+        {
+          "label": "C",
+          "text": "By government standards, the current regulatory system for the UK private K e M security sector is economically efficient. i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "D",
+          "text": "Many companies in the UK private security industry have a poor record when it K k M comes to issues of professional misconduct or corruption. k Ki ek n M oc M k e"
+        },
+        {
+          "label": "E",
+          "text": "The government agency staff are less susceptible to corrupt or unfair practices K K sek i n o M oc k e M ck K se i o when regulating the workers than are those at the private security companies. K ek n M oc s n i k o o i n i K n K k o c k"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "A three-dimensional shape is made by taking a cube and cutting off each of its corners. o Assume that the cube is large and that the cuts are relatively small (extending to less than o i halfway along each edge). i k k k How many edges does the new shape have? k M",
+      "options": [
+        {
+          "label": "A",
+          "text": "12 c i o"
+        },
+        {
+          "label": "B",
+          "text": "18 ise i o i s s"
+        },
+        {
+          "label": "C",
+          "text": "20 i o i o"
+        },
+        {
+          "label": "D",
+          "text": "32 ise i o M s n"
+        },
+        {
+          "label": "E",
+          "text": "36 s ki o k i o n oc Page 21 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "What is there in the universe that we know, or have good reason to believe, to possess o i M i k consciousness? Humans, and perhaps certain other animals. What do they all have in n k o e common? They are living beings, made of flesh and blood. As far as we know, nothing k se i n o M s else in the universe contains any consciousness at all. For all the mystery of consciousness, c i n k of exactly what it is, and of how and why it arises, there is one thing that is certain: it e k e is a biological phenomenon. Any fears surrounding the possibility of so-called ‘artificial o i s c k s intelligence’ are therefore misplaced. If machines are not biological organisms, then they i i K o cannot have a mind. Do not expect man-made machines to be conscious—now or ever! o M k K s Which one of the following best expresses the flaw in the above argument? n i K o e K",
+      "options": [
+        {
+          "label": "A",
+          "text": "It assumes that just because the only things we know to possess consciousness i M s k are biological organisms, they are the only things that could do. i k"
+        },
+        {
+          "label": "B",
+          "text": "It draws a general conclusion about the properties of all naturally existing objects o c i on the basis of merely a finite selection. k i n K k e"
+        },
+        {
+          "label": "C",
+          "text": "It takes for granted that we understand exactly what it means to be conscious, k no M ck K se i o c s when this is a vague and undefined term. c i o n K e"
+        },
+        {
+          "label": "D",
+          "text": "It fails to consider the phenomenal speed with which new developments in M i s technology are actually occurring. k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "E",
+          "text": "It ignores the possibility that some plants might possess a basic form of con- M k Ki ek n M oc M sciousness of their own. k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "The current ’Special Offer’ gimmick at Fareprice involves putting a band marked ’TWIN- i K n K k PACK - 25% OFF’ around pairs of selected items, such as washing powder. o c k Which one of the following ’Special Offers’ is exactly the same as Fareprice’s? o o",
+      "options": [
+        {
+          "label": "A",
+          "text": "’Buy one - Get a second for half price.’ i i k k"
+        },
+        {
+          "label": "B",
+          "text": "A larger packet containing 50% extra for no extra cost. k k M"
+        },
+        {
+          "label": "C",
+          "text": "’Three for the price of two.’ c i o"
+        },
+        {
+          "label": "D",
+          "text": "A coupon on each packet which gives 25% off the cost of the next packet. ise i o i s"
+        },
+        {
+          "label": "E",
+          "text": "’Five for the price of four.’ s i o i o ise i o M s n s ki o k i o n oc Page 22 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "There are countless ways to get rich in this world. Those who do not achieve wealth either o i M i k do not find it important or simply have bad luck. Jane is poor but she has always valued n k o material goods, so she must have been unlucky in her life. e k se i n o M s c Which one of the following most closely parallels the reasoning used in the above argument? i n k e",
+      "options": [
+        {
+          "label": "A",
+          "text": "Anyone can become prosperous by working hard. Tom is not wealthy so he must k e o i s not have been working hard. c k s i i K o"
+        },
+        {
+          "label": "B",
+          "text": "There are numerous ways to become famous. Among others, one can learn to o M play a musical instrument very well, study to become a world-class scientist, or k K s n just upload a funny video of oneself to the internet. Mike is not famous because i K o e K he has not done any of these. i M s k i"
+        },
+        {
+          "label": "C",
+          "text": "To make a cake sweet, one can use either sugar or honey. This cake is not sweet k because it was made with neither sugar nor honey. o c k  i i n"
+        },
+        {
+          "label": "D",
+          "text": "Two paths lead to the lake: one through the forest and another over the mountain. K k e k You must have arrived at the lake by the forest route because you were not on no M ck K se i o c s c the mountain path. i o n K e M"
+        },
+        {
+          "label": "E",
+          "text": "It takes a lot of luck to win the lottery. I have never won the lottery, so I must i s not have been lucky so far. k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "The whole of my garden is a patio, which is 12.5 k o by 10.5 metres. I intend to resurface my patio. o i n i K I would like my patio to include a 25 cm border n K k of bricks and the remainder of the patio inside o c k the border to be covered with paving slabs. o The bricks I will use for the border are 25 cm o i x 25 cm, and the paving slabs I will use for the i k k k remainder are 30 cm x 20 cm. k What is the total number of bricks and paving M c i slabs that I will need for my patio? o ise i o i s s",
+      "options": [
+        {
+          "label": "A",
+          "text": "2000 i o i o"
+        },
+        {
+          "label": "B",
+          "text": "2180 ise i o M s"
+        },
+        {
+          "label": "C",
+          "text": "2184 n"
+        },
+        {
+          "label": "D",
+          "text": "2268 s"
+        },
+        {
+          "label": "E",
+          "text": "2272 ki o k i o n oc Page 23 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "Dark matter, a mysterious substance that does not emit, absorb, or reflect light, constitutes i n k e approximately 27% of the universe. Despite its invisibility, scientists infer its existence from k e o i s its gravitational effects on galaxies and other celestial bodies. However, recent experiments c k s i attempting to detect dark matter particles directly have yielded inconclusive results. To i K o advance our understanding, researchers must focus on developing more sensitive detection o M k K s technologies and exploring alternative theories about the nature of dark matter. n i K o e K What is the main conclusion of the passage? i M s k i",
+      "options": [
+        {
+          "label": "A",
+          "text": "Dark matter constitutes a significant portion of the universe and influences galax- k ies through gravity. o c k  i i n"
+        },
+        {
+          "label": "B",
+          "text": "Scientists have not yet successfully detected dark matter particles directly. K k e k"
+        },
+        {
+          "label": "C",
+          "text": "Developing better detection technologies and exploring alternative theories is no M ck K se i o c s c crucial to understanding dark matter. i o n K e M"
+        },
+        {
+          "label": "D",
+          "text": "Dark matter is a mysterious substance that cannot be observed directly through i s k Ki ek n M oc k light. i K k M"
+        },
+        {
+          "label": "E",
+          "text": "Recent experiments on dark matter have been inconclusive. k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "A public telephone has been vandalised and will take only 50 pence coins and 10 pence i n i K n coins. A woman puts £8.50 into the phone to make a long-distance call with twenty-five K k coins. Five 10 pence coins are returned when she finishes her call. o c k o What combination of coins is retained by the machine? o i",
+      "options": [
+        {
+          "label": "A",
+          "text": "Twice as many 10s as 50s. i k k k"
+        },
+        {
+          "label": "B",
+          "text": "One-and-a-half times as many 50s as 10s. k M c"
+        },
+        {
+          "label": "C",
+          "text": "The same number of 50s and 10s. i o"
+        },
+        {
+          "label": "D",
+          "text": "Three times as many 50s as 10s. ise i o i s s i o"
+        },
+        {
+          "label": "E",
+          "text": "One-and-a-half times as many 10s as 50s. i o ise i o M s n s ki o k i o n oc Page 24 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "The ‘ticking time bomb’ scenario demonstrates that it is possible for torture to be morally o i M i k permissible. In the scenario, a person with knowledge of an imminent terrorist attack that n k o e will kill many people is in the hands of the authorities and will disclose the information k se i n o M s needed to prevent the attack only if she is tortured. The consequences of not torturing c i n k her—many people dying—are far worse than the consequences of torturing her—one e k e person being tortured—so in this situation torture would be morally permissible. o i s c k s i Which one of the following is an underlying assumption of the above argument? i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "If an action is morally permissible in one situation, it is morally permissible in k K s n other situations too. i K o e K"
+        },
+        {
+          "label": "B",
+          "text": "Dying is worse than torture. i M s k i"
+        },
+        {
+          "label": "C",
+          "text": "The moral status of an action is determined by its consequences. k o c i"
+        },
+        {
+          "label": "D",
+          "text": "Ordinarily, torture would be morally wrong. k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "If an action is morally permissible, then it ought to be carried out. e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "Sometimes we are mistreated by others, and forgiveness is one kind of response to those k Ki ek n M oc M k who wrong us. However, sometimes we do things that appear to be morally wrong but, in e K K sek i n o M oc k e fact, are not. If we are reproached, we can give an explanation for our action that justifies M ck K se i o K ek n M oc s it. In these cases, we are claiming that, despite appearances to the contrary, what we did n i was morally permissible. Forgiveness and justification ought to be distinguished. When k o conduct is justified, the implication is that it was not morally wrong, but when conduct o i n is forgiven, there is no such implication. What we are forgiven for is the morally wrong i K n K k things we do. o c k Which one of the following best expresses the main conclusion of the above argument? o o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Sometimes we do things that appear to be morally wrong but, in fact, are not. i i k k"
+        },
+        {
+          "label": "B",
+          "text": "Forgiveness and justification ought to be distinguished. k k M"
+        },
+        {
+          "label": "C",
+          "text": "What we are forgiven for is the morally wrong things we do. c i o"
+        },
+        {
+          "label": "D",
+          "text": "Forgiveness is one kind of response to those who wrong us. ise i o i s"
+        },
+        {
+          "label": "E",
+          "text": "When conduct is justified, the implication is that it was not morally wrong. s i o i o ise i o M s n s ki o k i o n oc Page 25 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "Despite the government’s promise to be more business-friendly, plans have been announced o i M i k to change the law regarding the paid leave that couples are entitled to take following the n k o e birth of a child. This will allow new parents to take more time off work than under the k se i n o M s current regulations. It is claimed that the current legislation makes it difficult for those with c i n k family commitments to manage all of their responsibilities, but it needs to be recognised e k e that businesses (and in particular small businesses) need to operate in a way that guarantees o i s c k s that staff are available to do the jobs that need doing. The new proposals are undoubtedly i i K o going to make the system more complicated and could dissuade businesses from employing o M certain groups of people. They should be opposed. k K s n i K o e Which one of the following, if true, most weakens the above argument? K i M s k",
+      "options": [
+        {
+          "label": "A",
+          "text": "The example given is only one of a range of measures being proposed. i k"
+        },
+        {
+          "label": "B",
+          "text": "Many businesses now allow their employees to choose to work from home. o c k  i"
+        },
+        {
+          "label": "C",
+          "text": "The proposals from the government provide support for businesses to help with i n K k e the cost of covering the work of staff taking leave. k no M ck K se i o c s c"
+        },
+        {
+          "label": "D",
+          "text": "The problems associated with covering the work of absent members of staff i o n K e become increasingly difficult the longer the absence goes on. M i s"
+        },
+        {
+          "label": "E",
+          "text": "The proposals will increase the amount of leave that employees are allowed to k Ki ek n M oc k i K k take in other circumstances as well as following the birth of a child. M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "A film star has agreed to sign autographs for £1 each at a charity function, all day from 9 o i n am to 6 pm. i K n K k He claims to sign his name consistently ten times every minute, but insists on having a o c k ten-minute break after each full hour of signing. o o How much do the organisers hope that the autographs will raise? i i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "£4,500 k k k"
+        },
+        {
+          "label": "B",
+          "text": "£4,600 M c i"
+        },
+        {
+          "label": "C",
+          "text": "£4,700 o ise i o i s"
+        },
+        {
+          "label": "D",
+          "text": "£4,800 s i o i o"
+        },
+        {
+          "label": "E",
+          "text": "£5,400 ise i o M s n s ki o k i o n oc Page 26 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "Maths is the most popular subject taken at A Level in the UK. Most of the best-paid jobs o i M i k are in the technology and finance sectors, which tend to require maths. The majority of n k o e students achieving the best grades in maths are boys, which helps to explain the persistence k se i n o M s of the gender pay disparity. But what explains the gender disparity in Maths A Level c i n k results—genetic inheritance or social conditioning? International studies of achievement e k e in maths show that in some countries girls outperform boys in maths, suggesting that social o i s c k s conditioning is the explanation. From this we can conclude that the better achievement in i i K o maths of boys in the UK is caused by low expectations of girls in maths by teachers and o M parents. k K s n i K o e Which one of the following best expresses the flaw in the above argument? K i M s k",
+      "options": [
+        {
+          "label": "A",
+          "text": "It assumes that the only factors in social conditioning are the expectations of i k teachers and parents. o c i"
+        },
+        {
+          "label": "B",
+          "text": "It fails to explain why the relative achievement of boys and girls varies country k i n K by country. k e k no M ck K se i o c s"
+        },
+        {
+          "label": "C",
+          "text": "It fails to consider the changing picture of achievement by boys and girls over c i o n time. K e M i s"
+        },
+        {
+          "label": "D",
+          "text": "It ignores the relatively better achievement of girls in some other subjects. k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "E",
+          "text": "It confuses the gender pay disparity with achievement disparities. M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "Three friends are training to run a marathon. Part of this training involves running steadily o i n round a track in the local park. They are all at different stages in their training schedules, so i K n K k they run at different speeds. Alec completes each lap in 3 minutes, Barry takes 5 minutes, o c k and Colin takes 6 minutes. o They all leave the start line at the same time. o i i k If they each maintain their running speed throughout the session, how many more laps will k k Alec have completed compared to Barry when the three of them next cross the start line k M together? c i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 ise i o i s s"
+        },
+        {
+          "label": "B",
+          "text": "4 i o i o"
+        },
+        {
+          "label": "C",
+          "text": "5 ise i o M s n"
+        },
+        {
+          "label": "D",
+          "text": "6"
+        },
+        {
+          "label": "E",
+          "text": "10 s ki o k i o n oc Page 27 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "Trains run regularly between Ayton and Exbay, stopping at Beetown, Chalton, and Deeford, i n k according to the following timetable. e k e o i s c k s i i K o o M k K s n i K o e K i M s k i k o c k i i n K k e k no M ck K se i o c s c i o n George lives a 14-minute walk away from Beetown station. He is going to the cinema in K e M Exbay to watch a film that starts at 19:20. It will take him five minutes to walk from the i s station at Exbay to the cinema. George wants to make sure that he will miss no more than k Ki ek n M oc k i K k the first five minutes of the film. M k Ki ek n M oc M What is the latest time George should leave home? k e K K sek i n o M oc k",
+      "options": [
+        {
+          "label": "A",
+          "text": "17:36        e M ck K se i o K ek n M oc s n"
+        },
+        {
+          "label": "B",
+          "text": "17:51 i k o"
+        },
+        {
+          "label": "C",
+          "text": "18:05 o i n"
+        },
+        {
+          "label": "D",
+          "text": "18:19 i K n K k"
+        },
+        {
+          "label": "E",
+          "text": "18:31 o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 28 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "One often hears that this or that action is justified or unjustified morally on the grounds o i M i k that it is ‘natural’ or ‘unnatural’. To say that something is ‘natural’ is really just to say n k o e that this is how things happen to be. Yet just because something happens to be the case, it k se i n o M s doesn’t mean that it ought to be the case. After all, there are plenty of things in life that are c i n k natural—for instance, illness and disease, droughts and earthquakes; even emotions such e k e as aggression, jealousy, anger, and a desire for revenge. This does not mean that they are o i s c k s to be encouraged or welcomed. To say of something that it is natural, or unnatural, is not i i K o to provide anything by way of moral justification. o M k K s Which one of the following illustrates the principle used in the above argument? n i K o e K",
+      "options": [
+        {
+          "label": "A",
+          "text": "The fact that human beings have a tendency to be competitive does not mean i M s k that this should be encouraged in schools. i k"
+        },
+        {
+          "label": "B",
+          "text": "The fact that someone believes that human beings ought always to behave ethi- o c i cally does not mean that they actually will. k i n K k e"
+        },
+        {
+          "label": "C",
+          "text": "The fact that some countries have laws protecting freedom of speech does not k no M ck K se i o c s mean that all countries should. c i o n K e"
+        },
+        {
+          "label": "D",
+          "text": "The fact that some things in life are clearly unpleasant does not mean that life M i s itself is not worth living. k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "E",
+          "text": "The fact that someone thinks a particular person is not to be trusted does not M k Ki ek n M oc M mean that the person in question is indeed untrustworthy. k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "In computer technology, a bit can take two values: 0 or 1. A byte is composed of 8 bits. i K n K k I start with the following byte: 01000111. o c k I choose two adjacent bits and change each of them to the opposite value (that is, a 0 o o becomes a 1, and a 1 becomes a 0). I repeat this procedure a number of times. i i k k Which one of the following bytes cannot be the result? k k M",
+      "options": [
+        {
+          "label": "A",
+          "text": "01001011 c i o"
+        },
+        {
+          "label": "B",
+          "text": "11111111 ise i o i s"
+        },
+        {
+          "label": "C",
+          "text": "10101011 s i o i o"
+        },
+        {
+          "label": "D",
+          "text": "10111101 ise i o M"
+        },
+        {
+          "label": "E",
+          "text": "00001111 s n s ki o k i o n oc Page 29 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "In the main draw of a lottery, six of the balls (which are numbered from 1 to 49) are selected o i M i k at random, then the numbers chosen are rearranged and displayed in ascending numerical n k o order. e k se i n o M s c For instance: 3, 17, 20, 29, 34, 45. i n k e In one draw recently, I noticed that the six numbers were made up of a total of ten digits, k e o i s all different. The lowest number on this occasion was 1 and the highest number was 49, so c k s i i K o the range of the six numbers was 48, the greatest possible range for the lottery main draw. o M What is the smallest possible range when the six numbers in the main draw of the lottery k K s n have a total of ten digits, all different? i K o e K i M s",
+      "options": [
+        {
+          "label": "A",
+          "text": "21 k i k"
+        },
+        {
+          "label": "B",
+          "text": "23 o c i"
+        },
+        {
+          "label": "C",
+          "text": "27 k i n K k"
+        },
+        {
+          "label": "D",
+          "text": "31                       e k no M ck K se i o c s c"
+        },
+        {
+          "label": "E",
+          "text": "32 i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 30 oc c"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    }
+  ]
+}

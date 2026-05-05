@@ -1,0 +1,771 @@
+{
+  "source_file": "Trial Test 9.pdf",
+  "name": "Trial Test 9",
+  "test_type": "trial_test",
+  "parser": "trial_layout_parser",
+  "question_count": 31,
+  "answer_count": 0,
+  "warnings": [],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Evaluate 2 2 (9𝑎 + 𝑎)(𝑎 + 𝑎) 4 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "9𝑎 + 10𝑎 * 𝑎 + 𝑎 3      2"
+        },
+        {
+          "label": "B",
+          "text": "9𝑎 + 10𝑎 + 𝑎 4     2.6"
+        },
+        {
+          "label": "C",
+          "text": "9𝑎 + 10𝑎           + 𝑎 4      2"
+        },
+        {
+          "label": "D",
+          "text": "9𝑎 + 10𝑎 + 𝑎"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Find the sum of the first 15 terms of an arithmetic sequence, if 𝑎8 = 16",
+      "options": [
+        {
+          "label": "A",
+          "text": "240"
+        },
+        {
+          "label": "B",
+          "text": "280"
+        },
+        {
+          "label": "C",
+          "text": "300"
+        },
+        {
+          "label": "D",
+          "text": "360"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "Find the value of product of roots: 2 25 4𝑥 − 7 𝑥 + 38 = 0 −25",
+      "options": [
+        {
+          "label": "A",
+          "text": "28 25"
+        },
+        {
+          "label": "B",
+          "text": "28 19"
+        },
+        {
+          "label": "C",
+          "text": "2 tg: @melonkid411 −19"
+        },
+        {
+          "label": "D",
+          "text": "2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "Find the area of trapezoid, if AB=15, CD=25 and AD=BC=13 (the picture is not to scale)",
+      "options": [
+        {
+          "label": "A",
+          "text": "220"
+        },
+        {
+          "label": "B",
+          "text": "240"
+        },
+        {
+          "label": "C",
+          "text": "260"
+        },
+        {
+          "label": "D",
+          "text": "280"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "Find the area of the given kite",
+      "options": [
+        {
+          "label": "A",
+          "text": "16( 2 + 1) tg: @melonkid411"
+        },
+        {
+          "label": "B",
+          "text": "16( 3 + 1)"
+        },
+        {
+          "label": "C",
+          "text": "18( 2 + 1)"
+        },
+        {
+          "label": "D",
+          "text": "18( 3 + 1)"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Find the radius of the large circle, if the radius of the small circle is less than the large one by 2 meters, and ratio of the area of smaller circle to area of big circle is 81:100",
+      "options": [
+        {
+          "label": "A",
+          "text": "18"
+        },
+        {
+          "label": "B",
+          "text": "20"
+        },
+        {
+          "label": "C",
+          "text": "22"
+        },
+        {
+          "label": "D",
+          "text": "24 1"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "Given that the volume of the planet core is of the volume of the entire planet. 10 𝑟 Find the ratio of 𝑅 , where r - radius of planet core, R - radius of planet 2 10",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 10 3        2 10"
+        },
+        {
+          "label": "B",
+          "text": "10 tg: @melonkid411 3 10"
+        },
+        {
+          "label": "C",
+          "text": "10 2        3 10"
+        },
+        {
+          "label": "D",
+          "text": "2 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Rearrange the formula in terms of Z: 2 𝑋= 17 − 2(𝑍 + 7) − 9 2 (17−𝑋 )+9",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑍 =                                 −7 2 2 (𝑋+17) +9"
+        },
+        {
+          "label": "B",
+          "text": "𝑍 =                                 −7 2 2        2 (𝑋 +17) −9"
+        },
+        {
+          "label": "C",
+          "text": "𝑍 =                                 +7 2 2 (17−−𝑋) −9"
+        },
+        {
+          "label": "D",
+          "text": "𝑍 =                                 +7 2 ◦"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "B is 15km away from A on the bearing of 60 , C is 15km away from B on a bearing of ◦ 120 . What is a distance between A and C",
+      "options": [
+        {
+          "label": "A",
+          "text": "15"
+        },
+        {
+          "label": "B",
+          "text": "15 3 tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "15 2"
+        },
+        {
+          "label": "D",
+          "text": "15 6"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "Find the equation of the line passing through the point P(3, -2) which has positive intercepts on the x- and y-axis in the ratio 4:3 3 1",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑦 =−         𝑥 + 4     4 1     3"
+        },
+        {
+          "label": "B",
+          "text": "𝑦 =−         𝑥 + 4     4 3     1"
+        },
+        {
+          "label": "C",
+          "text": "𝑦 =         𝑥 + 4     4 1     3"
+        },
+        {
+          "label": "D",
+          "text": "𝑦 =         𝑥 + 4     4 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "Converts between 37812 𝑐𝑚 to litres",
+      "options": [
+        {
+          "label": "A",
+          "text": "37, 812"
+        },
+        {
+          "label": "B",
+          "text": "3, 7812"
+        },
+        {
+          "label": "C",
+          "text": "378, 12 −4"
+        },
+        {
+          "label": "D",
+          "text": "37, 812 * 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "Find the volume of frustum cone, if the 𝑅1 = 15, 𝑟2 = 5, 𝑎𝑛𝑑 𝑠𝑙𝑎𝑛𝑡 ℎ𝑒𝑖𝑔ℎ𝑡 = 10 2 3250π",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 tg: @melonkid411 2500π"
+        },
+        {
+          "label": "B",
+          "text": "3 325π"
+        },
+        {
+          "label": "C",
+          "text": "3 250π"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "Find an expression of vector AM in terms of a and b 3𝑎",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 +𝑏 3𝑎"
+        },
+        {
+          "label": "B",
+          "text": "−            +𝑏 2 3𝑎"
+        },
+        {
+          "label": "C",
+          "text": "−            −𝑏 2 3𝑎"
+        },
+        {
+          "label": "D",
+          "text": "2 −𝑏"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "The diagram shows three similar right-angled triangles, the first(the smallest) has legs 2cm and 5 cm in length. Find the area of third triangle tg: @melonkid411 841",
+      "options": [
+        {
+          "label": "A",
+          "text": "125 751"
+        },
+        {
+          "label": "B",
+          "text": "125 841"
+        },
+        {
+          "label": "C",
+          "text": "25 751"
+        },
+        {
+          "label": "D",
+          "text": "25"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "Find the value of an exterior angle of regular polygon with 12 sides",
+      "options": [
+        {
+          "label": "A",
+          "text": "15"
+        },
+        {
+          "label": "B",
+          "text": "30"
+        },
+        {
+          "label": "C",
+          "text": "45"
+        },
+        {
+          "label": "D",
+          "text": "60 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "Evaluate and write in standard form 9 6 −9 2*10 +8*10 −16*10 −5 16*10 12",
+      "options": [
+        {
+          "label": "A",
+          "text": "12. 55 * 10 13"
+        },
+        {
+          "label": "B",
+          "text": "1. 255 * 10 11"
+        },
+        {
+          "label": "C",
+          "text": "125. 5 * 10 14"
+        },
+        {
+          "label": "D",
+          "text": "0. 1255 * 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "First worker finishes the work in 3 hours, while the second worker spends 8 hours finishing the same task. How many hours will it take to finish the task together?",
+      "options": [
+        {
+          "label": "A",
+          "text": "11 ℎ"
+        },
+        {
+          "label": "B",
+          "text": "5 ℎ 24"
+        },
+        {
+          "label": "C",
+          "text": "11 ℎ 24"
+        },
+        {
+          "label": "D",
+          "text": "5 ℎ"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "Find the equation of the parabola: tg: @melonkid411 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "2(𝑥 + 5) + 5 2"
+        },
+        {
+          "label": "B",
+          "text": "2(𝑥 − 5) + 5 2"
+        },
+        {
+          "label": "C",
+          "text": "2(𝑥 + 5) − 5 2"
+        },
+        {
+          "label": "D",
+          "text": "2(𝑥 − 5) − 5"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "Convert the decimal to fraction:",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 0,
+      "prompt": "(54) + 0. (576) 4 84",
+      "options": [
+        {
+          "label": "A",
+          "text": "11 + 111 7       32"
+        },
+        {
+          "label": "B",
+          "text": "11 + 111 6       64"
+        },
+        {
+          "label": "C",
+          "text": "11 + 111 9       48"
+        },
+        {
+          "label": "D",
+          "text": "11 + 111 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Given that angle a is equal to 60 degrees, and sides b = 15 c=12. Find a. (figure is not to scale)",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 31"
+        },
+        {
+          "label": "B",
+          "text": "3 19"
+        },
+        {
+          "label": "C",
+          "text": "3 15"
+        },
+        {
+          "label": "D",
+          "text": "3 13"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "Find the values of x and y, if given that DE=6, AC=8, BC=12, DB=12 (figure is not to scale)",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑥 = 9, 𝑦 = 4 tg: @melonkid411"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 = 8, 𝑦 = 6"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 = 6, 𝑦 = 8"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 = 4, 𝑦 = 9 2    2             1"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "𝑎 • 𝑏 = 𝑎 − 𝑏 , 𝑎 ⋄ 𝑏 = 2 (𝑎 • 𝑏). Find the value of (1 • 4) • (4 ⋄ 6)",
+      "options": [
+        {
+          "label": "A",
+          "text": "75"
+        },
+        {
+          "label": "B",
+          "text": "125"
+        },
+        {
+          "label": "C",
+          "text": "225"
+        },
+        {
+          "label": "D",
+          "text": "325"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "Find the value of MC, if given that MB = 7 and AB= 5",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 23"
+        },
+        {
+          "label": "B",
+          "text": "2 21"
+        },
+        {
+          "label": "C",
+          "text": "2 19"
+        },
+        {
+          "label": "D",
+          "text": "2 17 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "Given that EF is tangent to the circle, and the angle BAD has a value of 2x. Find the value of x",
+      "options": [
+        {
+          "label": "A",
+          "text": "46"
+        },
+        {
+          "label": "B",
+          "text": "52"
+        },
+        {
+          "label": "C",
+          "text": "48"
+        },
+        {
+          "label": "D",
+          "text": "64"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "Find the value of x, if: 𝑥 𝑦 4 4 * 16 = 256 1 𝑦 = 243 3",
+      "options": [
+        {
+          "label": "A",
+          "text": "18"
+        },
+        {
+          "label": "B",
+          "text": "21"
+        },
+        {
+          "label": "C",
+          "text": "24 tg: @melonkid411"
+        },
+        {
+          "label": "D",
+          "text": "26"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "Solve inequality",
+      "options": [
+        {
+          "label": "A",
+          "text": "(− ∞, − 2) ∪ (2, 3] ∪ [5, 9]"
+        },
+        {
+          "label": "B",
+          "text": "(− ∞, 2) ∪ (2, 4) ∪ (− 5, 9)"
+        },
+        {
+          "label": "C",
+          "text": "(− ∞, − 2) ∪ [2, 3] ∪ [5, 9]"
+        },
+        {
+          "label": "D",
+          "text": "(− ∞, 2) ∪ [2, 4] ∪ [− 5, 9]"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "If the time on the clock is 7:50. What is the value of the angle between hour and minute hands?",
+      "options": [
+        {
+          "label": "A",
+          "text": "55"
+        },
+        {
+          "label": "B",
+          "text": "65"
+        },
+        {
+          "label": "C",
+          "text": "75"
+        },
+        {
+          "label": "D",
+          "text": "85"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "Find the sum of the roots of the quadratic equation 8 2 3 𝑥 − 2𝑥 + 33 = 0 3",
+      "options": [
+        {
+          "label": "A",
+          "text": "− 4 3"
+        },
+        {
+          "label": "B",
+          "text": "4 tg: @melonkid411 99"
+        },
+        {
+          "label": "C",
+          "text": "− 8 99"
+        },
+        {
+          "label": "D",
+          "text": "8"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "A mixture of 80 liters of alcohol and water contains 25% water. How much water must be added to above mixture to make the water 80% of the resulting mixture",
+      "options": [
+        {
+          "label": "A",
+          "text": "200"
+        },
+        {
+          "label": "B",
+          "text": "220"
+        },
+        {
+          "label": "C",
+          "text": "240"
+        },
+        {
+          "label": "D",
+          "text": "260"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "If an amount of P is compounded with 10% interest rate. Show the final amount after 3 years in terms of P",
+      "options": [
+        {
+          "label": "A",
+          "text": "1.04P"
+        },
+        {
+          "label": "B",
+          "text": "1,441P"
+        },
+        {
+          "label": "C",
+          "text": "1,331P"
+        },
+        {
+          "label": "D",
+          "text": "1.432P как ты? устал да? я тоже приляг отдохни 🌸 tg: @melonkid411 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    }
+  ]
+}

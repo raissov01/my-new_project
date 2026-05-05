@@ -1,0 +1,771 @@
+{
+  "source_file": "Trial Test 2.pdf",
+  "name": "Trial Test 2",
+  "test_type": "trial_test",
+  "parser": "trial_layout_parser",
+  "question_count": 31,
+  "answer_count": 0,
+  "warnings": [],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Open the brackets: ( 40- 5)*( 10+ 8)",
+      "options": [
+        {
+          "label": "A",
+          "text": "20+ 8 10-5 5-2 2"
+        },
+        {
+          "label": "B",
+          "text": "20+ 4 5-5 10-2 2"
+        },
+        {
+          "label": "C",
+          "text": "20+ 4 10-5 5-2 2"
+        },
+        {
+          "label": "D",
+          "text": "20+ 8 5-5 2-2 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Rearrange to make x the subject: 2 y=4+ 𝑥 − 5 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "±     𝑦 − 8𝑦 + 11 2"
+        },
+        {
+          "label": "B",
+          "text": "±     𝑦 − 4𝑦 + 2 2"
+        },
+        {
+          "label": "C",
+          "text": "±     𝑦 − 4𝑦 + 11 2"
+        },
+        {
+          "label": "D",
+          "text": "±     𝑦 − 8𝑦 + 21 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "Points A (3,2) and B(2,1) are on the function 𝑦 = 𝑥 + 𝑝𝑥 + 𝑞, where p and q are constants. Find p+4q:",
+      "options": [
+        {
+          "label": "A",
+          "text": "16"
+        },
+        {
+          "label": "B",
+          "text": "28"
+        },
+        {
+          "label": "C",
+          "text": "-24"
+        },
+        {
+          "label": "D",
+          "text": "-16 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "Simplify: 3 1 2 𝑥 + 2 + 𝑥−2 𝑥 2 3𝑥 −𝑥−2",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 𝑥 (𝑥−2) 2 5𝑥 −12𝑥+2"
+        },
+        {
+          "label": "B",
+          "text": "2 𝑥 (𝑥−2) 2 5𝑥 −5𝑥−2"
+        },
+        {
+          "label": "C",
+          "text": "2 𝑥 (𝑥−2) 2 3𝑥 −6𝑥+2"
+        },
+        {
+          "label": "D",
+          "text": "2 𝑥 (𝑥−2) 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "The triangle can be inscribed in a circle so that the circle’s radius is equal to 3 of the triangles’ side. What is the area of a triangle in terms of its side, a? 2 3𝑎",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 2 3𝑎"
+        },
+        {
+          "label": "B",
+          "text": "4 tg: @melonkid411 2 𝑎"
+        },
+        {
+          "label": "C",
+          "text": "4 2 𝑎"
+        },
+        {
+          "label": "D",
+          "text": "2 𝑛           3/2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "5 + 25 = 750 𝑚 1 9 = 3 Find 2m+n:",
+      "options": [
+        {
+          "label": "A",
+          "text": "5"
+        },
+        {
+          "label": "B",
+          "text": "3"
+        },
+        {
+          "label": "C",
+          "text": "9"
+        },
+        {
+          "label": "D",
+          "text": "6"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "In rhombus, one diagonal is equal to 𝑥, another is equal to 𝑥 − 5. It is given that 2 the area is 75 𝑐𝑚 . Find the smaller side of the rhombus:",
+      "options": [
+        {
+          "label": "A",
+          "text": "10"
+        },
+        {
+          "label": "B",
+          "text": "5"
+        },
+        {
+          "label": "C",
+          "text": "15"
+        },
+        {
+          "label": "D",
+          "text": "25"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "The ratio of Q:R is 5:2 and the ratio of R:S is 3:10 Which one of the following gives the ratio Q:S in its simplest form? tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "1:2"
+        },
+        {
+          "label": "B",
+          "text": "2:1"
+        },
+        {
+          "label": "C",
+          "text": "3:4"
+        },
+        {
+          "label": "D",
+          "text": "3:25"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "In a trapezium PQRS, the parallel sides are PQ and RS. PQ = (x-1) cm, RS = 2 (x+5) cm and the vertical height QR = x cm. The area of the trapezium is 120 𝑐𝑚 . What is the length of RS?",
+      "options": [
+        {
+          "label": "A",
+          "text": "15 cm"
+        },
+        {
+          "label": "B",
+          "text": "17 cm"
+        },
+        {
+          "label": "C",
+          "text": "12 cm"
+        },
+        {
+          "label": "D",
+          "text": "16 cm"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "The quantities x and y are positive. x is inversely proportional to the square root of y. When x=8, y=9. What is the value of y when x=6?",
+      "options": [
+        {
+          "label": "A",
+          "text": "12"
+        },
+        {
+          "label": "B",
+          "text": "3"
+        },
+        {
+          "label": "C",
+          "text": "2"
+        },
+        {
+          "label": "D",
+          "text": "16 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "The figure below shows three similar right triangles (not to scale). Find a-b. 96",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 98"
+        },
+        {
+          "label": "B",
+          "text": "3 95"
+        },
+        {
+          "label": "C",
+          "text": "3 101"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "Consider the following set of numbers: {36, 48, 60} What is the lowest common multiple?",
+      "options": [
+        {
+          "label": "A",
+          "text": "480"
+        },
+        {
+          "label": "B",
+          "text": "720"
+        },
+        {
+          "label": "C",
+          "text": "540"
+        },
+        {
+          "label": "D",
+          "text": "320"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "In cuboid, d is the distance from vertex F to vertex G. The base is square, and the height is twice the width. tg: @melonkid411 What is the volume of the solid in terms of d? 3 2𝑑 5",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 3 𝑑 6"
+        },
+        {
+          "label": "B",
+          "text": "18 3 𝑑 6"
+        },
+        {
+          "label": "C",
+          "text": "2 3 2𝑑 6"
+        },
+        {
+          "label": "D",
+          "text": "5"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "In the prism, the bases of the right uniform solid are triangles with sides of lengths 5,12, and 13. If the surface area of the solid is 360, what is the volume?",
+      "options": [
+        {
+          "label": "A",
+          "text": "600"
+        },
+        {
+          "label": "B",
+          "text": "300 tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "180"
+        },
+        {
+          "label": "D",
+          "text": "150"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "An electronic device beeps after every 40 seconds. Another device beeps after 42 seconds. They beep together at 10 am. When will they next beep together?",
+      "options": [
+        {
+          "label": "A",
+          "text": "10:14 am"
+        },
+        {
+          "label": "B",
+          "text": "10:16 am"
+        },
+        {
+          "label": "C",
+          "text": "10:12 am"
+        },
+        {
+          "label": "D",
+          "text": "10:24 am"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "The total surface area of a cylinder, measured in square centimetres, is numerically the same as its volume, measured in cubic centimetres. The radius of the cylinder is r cm, the height is h cm. Express h in terms of r. 2𝑟",
+      "options": [
+        {
+          "label": "A",
+          "text": "ℎ = 𝑟+2 2𝑟"
+        },
+        {
+          "label": "B",
+          "text": "ℎ = 𝑟−2"
+        },
+        {
+          "label": "C",
+          "text": "ℎ = 𝑟 + 2"
+        },
+        {
+          "label": "D",
+          "text": "ℎ = 𝑟 − 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "Find the value of 2 1 6*10 +4*10 −2 −3",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 1,
+      "prompt": "2*10 +4*10 tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "40"
+        },
+        {
+          "label": "B",
+          "text": "2000"
+        },
+        {
+          "label": "C",
+          "text": "200"
+        },
+        {
+          "label": "D",
+          "text": "10 40"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "Point M has coordinates (6, 3p−1) and point N has coordinates (1−p, 2). The gradient of the straight line joining M and N is −3 and it crosses the y-axis at (0, r). What is the value of r ?",
+      "options": [
+        {
+          "label": "A",
+          "text": "11"
+        },
+        {
+          "label": "B",
+          "text": "5"
+        },
+        {
+          "label": "C",
+          "text": "1"
+        },
+        {
+          "label": "D",
+          "text": "9"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "Triangle PQR is equilateral with sides of length 10 cm. P, Q, and R are points on the circumference of a circle with centre O. Which one of the following is an expression, in centimetres, for the radius of the circle? tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "5cos60 5"
+        },
+        {
+          "label": "B",
+          "text": "𝑠𝑖𝑛60"
+        },
+        {
+          "label": "C",
+          "text": "5sin60 5"
+        },
+        {
+          "label": "D",
+          "text": "𝑡𝑎𝑛60"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "The mean time for running a race by a group of 20 people was 54 seconds. The times for a second group of people were added and the value of the mean went up to 56 seconds. Which formula represents the relationship between the number of people in the second group, P, and the mean time of the second group, T? 40",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑇−54 1080"
+        },
+        {
+          "label": "B",
+          "text": "𝑇−54 40"
+        },
+        {
+          "label": "C",
+          "text": "𝑇−56 1080"
+        },
+        {
+          "label": "D",
+          "text": "𝑇−56"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "A brother and a sister share their collection of 5000 stamps in the ratio 5:3. The brother then shares his stamps with two friends in the ratio 3:1:1, keeping most for himself. How many stamps do each of his friends receive?",
+      "options": [
+        {
+          "label": "A",
+          "text": "825"
+        },
+        {
+          "label": "B",
+          "text": "585 tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "1210"
+        },
+        {
+          "label": "D",
+          "text": "625"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "In the figure, if radius OA is 8 and the area of right triangle OAB is 32, what is the area of the shaded region?",
+      "options": [
+        {
+          "label": "A",
+          "text": "56π+32"
+        },
+        {
+          "label": "B",
+          "text": "60π+32"
+        },
+        {
+          "label": "C",
+          "text": "16π+32"
+        },
+        {
+          "label": "D",
+          "text": "25π+40"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "At a fancy vegetable stand, Tom bought purple tomatoes for $8 each and Jerry bought organic giant cabbages for $12 each. In total, they paid $104 for 10 vegetables. How many cabbages did Jerry buy?",
+      "options": [
+        {
+          "label": "A",
+          "text": "5"
+        },
+        {
+          "label": "B",
+          "text": "7"
+        },
+        {
+          "label": "C",
+          "text": "6"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "Convert 54 km/h to m/s: tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "24 m/s"
+        },
+        {
+          "label": "B",
+          "text": "18 m/s"
+        },
+        {
+          "label": "C",
+          "text": "15 m/s"
+        },
+        {
+          "label": "D",
+          "text": "20 m/s"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "Find angle at A:",
+      "options": [
+        {
+          "label": "A",
+          "text": "24"
+        },
+        {
+          "label": "B",
+          "text": "30"
+        },
+        {
+          "label": "C",
+          "text": "50"
+        },
+        {
+          "label": "D",
+          "text": "12"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "The 1st term of an arithmetic progression is non-zero. The 5th term of this arithmetic progression is the square of the 1st term. The 33rd term of this arithmetic progression is 10 times the 3rd term. What is the 10th term?",
+      "options": [
+        {
+          "label": "A",
+          "text": "33"
+        },
+        {
+          "label": "B",
+          "text": "39"
+        },
+        {
+          "label": "C",
+          "text": "34"
+        },
+        {
+          "label": "D",
+          "text": "31"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "What is the value of x that makes the following expression correct? tg: @melonkid411 3+2𝑥 𝑥 −𝑥 2 48 =4 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "-0,5"
+        },
+        {
+          "label": "B",
+          "text": "-1,5"
+        },
+        {
+          "label": "C",
+          "text": "-0,25"
+        },
+        {
+          "label": "D",
+          "text": "-1"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "On Aigerim’s 18th birthday in 2012, she was 159 cm in height, having grown 6% since her birthday in 2011. How tall was she in 2011?",
+      "options": [
+        {
+          "label": "A",
+          "text": "148 cm"
+        },
+        {
+          "label": "B",
+          "text": "145 cm"
+        },
+        {
+          "label": "C",
+          "text": "150 cm"
+        },
+        {
+          "label": "D",
+          "text": "135 cm"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "An icosagon is any polygon with twenty sides and twenty angles. The sum of all the interior angles of a regular icosagon is",
+      "options": [
+        {
+          "label": "A",
+          "text": "3640"
+        },
+        {
+          "label": "B",
+          "text": "3340"
+        },
+        {
+          "label": "C",
+          "text": "3240"
+        },
+        {
+          "label": "D",
+          "text": "3540 2         2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "For all numbers x and y, let x ♣ y be defined as x ♣ y = 𝑥 − 2𝑥𝑦 + 𝑦 . The value of (2 ♣ 4) ♣ 8 is evaluated to",
+      "options": [
+        {
+          "label": "A",
+          "text": "16"
+        },
+        {
+          "label": "B",
+          "text": "12"
+        },
+        {
+          "label": "C",
+          "text": "4 tg: @melonkid411"
+        },
+        {
+          "label": "D",
+          "text": "20 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    }
+  ]
+}

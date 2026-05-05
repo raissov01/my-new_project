@@ -2,20 +2,28 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, FileText } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronDown, FileText } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import type { NUETPDFTest } from "@/server/integrations/go-backend/nuet";
+import type { NUETParsedMock } from "@/server/nuet/mock-json";
 import { submitNUETPDFTestAttempt } from "../../simulator/actions";
 
 const options = ["", "A", "B", "C", "D", "E"] as const;
 
-export function NUETPDFTestClient({ test }: { test: NUETPDFTest }) {
+export function NUETPDFTestClient({
+  test,
+  parsed,
+}: {
+  test: NUETPDFTest;
+  parsed: NUETParsedMock | null;
+}) {
   const { t } = useLocale();
   const [answers, setAnswers] = useState<string[]>(() => Array.from({ length: test.questionCount }, () => ""));
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Awaited<ReturnType<typeof submitNUETPDFTestAttempt>> | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [openQuestions, setOpenQuestions] = useState<Record<number, boolean>>({});
 
   const answeredCount = useMemo(() => answers.filter(Boolean).length, [answers]);
   const wrongNumbers = (result?.evaluations ?? []).filter((item) => !item.correct).map((item) => item.question);
@@ -136,6 +144,75 @@ export function NUETPDFTestClient({ test }: { test: NUETPDFTest }) {
               <Link href="/nuet/history" className="text-sm text-[var(--primary)] hover:underline">
                 {t("nuet.pdfTest.viewHistory")}
               </Link>
+            </div>
+          </section>
+        ) : null}
+
+        {parsed ? (
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("nuet.pdfTest.parsedBank")}</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <InfoTile label={t("nuet.pdfTest.parsedQuestions")} value={String(parsed.question_count)} />
+              <InfoTile label={t("nuet.pdfTest.parsedAnswers")} value={String(parsed.answer_count)} />
+              <InfoTile label={t("nuet.pdfTest.parseWarnings")} value={String(parsed.warnings.length)} />
+            </div>
+
+            {parsed.warnings.length > 0 ? (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <p className="font-semibold">{t("nuet.pdfTest.parserNotes")}</p>
+                <ul className="mt-2 space-y-1">
+                  {parsed.warnings.map((warning) => (
+                    <li key={warning}>• {warning}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            <div className="mt-4 space-y-3">
+              {parsed.questions.map((question) => {
+                const isOpen = openQuestions[question.number] ?? question.number <= 3;
+                return (
+                  <div key={question.number} className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenQuestions((current) => ({
+                          ...current,
+                          [question.number]: !isOpen,
+                        }))
+                      }
+                      className="flex w-full items-start justify-between gap-3 text-left"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">
+                          #{question.number} {question.prompt}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                          {question.options.length} option(s)
+                          {question.answer ? ` · ${t("nuet.pdfTest.detectedAnswer")} ${question.answer}` : ""}
+                          {!question.answer && question.raw_answer ? ` · raw: ${question.raw_answer}` : ""}
+                        </p>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--text-muted)] transition ${isOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {isOpen ? (
+                      <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3">
+                        {question.options.map((option) => (
+                          <div key={`${question.number}-${option.label}`} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-primary)]">
+                            <span className="font-semibold">{option.label}.</span> {option.text}
+                          </div>
+                        ))}
+                        {question.warnings.length > 0 ? (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                            {question.warnings.join(" · ")}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           </section>
         ) : null}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Brain, FileText, GraduationCap, Library, Trophy } from "lucide-react";
+import { BookOpen, Brain, FileText, GraduationCap, Library, ScrollText, Trophy } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
@@ -60,6 +60,14 @@ export default async function NUETHubPage() {
       href: "/nuet/materials",
       tone: "purple" as const,
     },
+    {
+      icon: ScrollText,
+      titleKey: "nuet.pdfTest.title",
+      descKey: "nuet.pdfTest.subtitleShort",
+      meta: "18 PDF",
+      href: "/nuet/pdf-tests",
+      tone: "blue" as const,
+    },
   ];
 
   return (
@@ -107,7 +115,7 @@ export default async function NUETHubPage() {
         <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
           {t("nuet.modulesTitle")}
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {modules.map((m) => (
             <Link
               key={m.titleKey}

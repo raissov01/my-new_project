@@ -1,0 +1,1718 @@
+{
+  "source_file": "NUET_MOCK_3 (Questions and Answers).pdf",
+  "name": "NUET_MOCK_3 (Questions and Answers)",
+  "test_type": "mock_test",
+  "parser": "mock_layout_parser",
+  "question_count": 59,
+  "answer_count": 45,
+  "warnings": [
+    "3 question(s) had non A-E raw answers"
+  ],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Triange 𝑃𝑄𝑅 is equilateral. A semicircle with ise i o k n M oc is k n o M c Mathematics K i k January 8, 2025",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 2,
+      "prompt": "Use the properties of surds to simplify the following: ise i o k e o √ NUET Mock №2 o n i √ n M c K is k i o M c k K ki o k e o √ o i k n M c is 75 + 48 − 27 no M ck K se i o o k K e oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 3,
+      "prompt": "The values of 𝑘 for which the line 𝑦 = 𝑘𝑥 intersects the parabola 𝑦 = (𝑥 − 1) 2 are precisely o i M i k n",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑘 ≤ 0 k o e k se i n o"
+        },
+        {
+          "label": "B",
+          "text": "𝑘 ≥ −4 M s c i n k"
+        },
+        {
+          "label": "C",
+          "text": "𝑘 ≥ 0 or 𝑘 ≤ −4                             e k e o i s"
+        },
+        {
+          "label": "D",
+          "text": "−4 ≤ 𝑘 ≤ 0 c k s i i K o o M k K s n i K o e K i M s"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "(2𝑥 + 1) and (𝑥 − 2) are factors of 2𝑥 3 + 𝑝𝑥 2 + 𝑞 k i k What is the value of 2𝑝 + 𝑞 o c k i",
+      "options": [
+        {
+          "label": "A",
+          "text": "-10 i n K k"
+        },
+        {
+          "label": "B",
+          "text": "− 38 e k 5 no M ck K se i o c s c"
+        },
+        {
+          "label": "C",
+          "text": "− 22 i o n 3 K e M"
+        },
+        {
+          "label": "D",
+          "text": "22 i s 3 k Ki ek n M oc k i"
+        },
+        {
+          "label": "E",
+          "text": "38 K k 5 M k Ki ek n M oc M F. 10 k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "The diagram shows two concentric circles o c k divided by radial lines into 14 pieces of equal o area. The radius of the smaller circle is 1. o i i k k What is the length, x, of an outer radial line? k k M c i o √",
+      "options": [
+        {
+          "label": "A",
+          "text": "14 − 1 ise i o i s √ s i o 14"
+        },
+        {
+          "label": "B",
+          "text": "2 −1 i o √ ise i o M"
+        },
+        {
+          "label": "C",
+          "text": "14 − 2 s √ n 14"
+        },
+        {
+          "label": "D",
+          "text": "2 −2 √ s 14−1"
+        },
+        {
+          "label": "E",
+          "text": "2 ki o k i o n oc Page 2 oc c o                        e             k   K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                   i         k       n k      n        M"
+        },
+        {
+          "label": "E",
+          "text": "∠4"
+        },
+        {
+          "label": "D",
+          "text": "∠5"
+        },
+        {
+          "label": "C",
+          "text": "∠6"
+        },
+        {
+          "label": "B",
+          "text": "∠1 i                                 c                  s                  o"
+        },
+        {
+          "label": "A",
+          "text": "∠11 i is an integer if oc             s                o                          K"
+        },
+        {
+          "label": "E",
+          "text": "𝑠 ≥ 𝑟"
+        },
+        {
+          "label": "D",
+          "text": "𝑟 ≥ 𝑠"
+        },
+        {
+          "label": "B",
+          "text": "𝑠 ≤ 0"
+        },
+        {
+          "label": "C",
+          "text": "𝑟 ≤ 0 i                        k                  e"
+        },
+        {
+          "label": "A",
+          "text": "𝑟 + 𝑠 ≤ 0 k Ki ek n M oc                                            is       k         no      M"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Let 𝑟 and 𝑠 be integers. Then s i o k K e k i n M o K ek n M oc i K ise i n o o K sek i n o M oc k K is k i o M c k k e o Page 3 ise i o n M o i k n M c 8𝑟 × 9𝑟+2𝑠 k c s o 6𝑟+𝑠 × 12𝑟−𝑠 ise i o k K e i o k n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 7,
+      "prompt": "Which of the following angles can you conclude have greater measures than ∠7 oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c",
+      "options": [],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 8,
+      "prompt": "An arithmetic progression has first term 𝑎 and common difference 𝑑 i n k e k The sum of the first 5 terms is equal to the sum of the first 8 terms e o i s c k s i Which one of the following expresses the relationship between 𝑎 and 𝑑? i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑎 = −7𝑑 o M k K s n"
+        },
+        {
+          "label": "B",
+          "text": "𝑎 = − 38 i K 3 𝑑 o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "6𝑑 k i"
+        },
+        {
+          "label": "D",
+          "text": "−6𝑑 k o c i"
+        },
+        {
+          "label": "E",
+          "text": "7𝑑 k i n K k F. 𝑎 = 38 3 𝑑 e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k √ M"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "Solve the inequality: 2𝑥 + 5 > 𝑥 + 1 k Ki ek n M oc M k e",
+      "options": [
+        {
+          "label": "A",
+          "text": "−2 < 𝑥 < 2 K K sek i n o M oc k e M ck K se i o K ek n M oc"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 > 2 s n i"
+        },
+        {
+          "label": "C",
+          "text": "−1 < 𝑥 ≤ 2 k o o"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 ≥ −2 i n i K n"
+        },
+        {
+          "label": "E",
+          "text": "− 25 ≤ 𝑥 < 2 K k o c k o o i i k k k k M"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "A train 150 m long moving at a speed of 25 m/s overtakes a man moving at 5 m/s in c i opposite direction . The train will pass the man in o ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "4.8 sec s i o i o"
+        },
+        {
+          "label": "B",
+          "text": "6 sec ise i o M"
+        },
+        {
+          "label": "C",
+          "text": "4 27 sec s n"
+        },
+        {
+          "label": "D",
+          "text": "8 sec s"
+        },
+        {
+          "label": "E",
+          "text": "5 sec ki o k i o n oc Page 4 oc c o               k        e                      K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                             k       n"
+        },
+        {
+          "label": "A",
+          "text": "13"
+        },
+        {
+          "label": "B",
+          "text": "0 i n        M"
+        },
+        {
+          "label": "E",
+          "text": "-9"
+        },
+        {
+          "label": "D",
+          "text": "-7"
+        },
+        {
+          "label": "C",
+          "text": "-5 i        k                        c                  s                  o F. -11 o                          K                  i F. 170°"
+        },
+        {
+          "label": "E",
+          "text": "160°"
+        },
+        {
+          "label": "D",
+          "text": "150°"
+        },
+        {
+          "label": "C",
+          "text": "140°"
+        },
+        {
+          "label": "B",
+          "text": "130°"
+        },
+        {
+          "label": "A",
+          "text": "120° oc             s         i                        k                  e Find angle 𝑃𝑄𝑇 k Ki ek n M oc                                            is       k i       no      M s                o                        K          e"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 12,
+      "prompt": "There are three points: 𝑃, 𝑄, 𝑇 i k o",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 11,
+      "prompt": "Find the sum of the solutions of i k n M 𝑥 3 K ek n M oc i K se i n o o K sek i n o M oc k K is k i o M c k 𝑥 e 3 k o Page 5 ise i o k n M oc is k i n o M ck ise i o k K e o 𝑇 is on east from 𝑄 and 𝑃 is on bearing of 250° from 𝑇 3( + 2) 2 − ( + 2) − 4 = 0 n M oc is k i n o M c k K i The distance from 𝑃 to 𝑄 is the same as the distance from 𝑄 to 𝑇 ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 13,
+      "prompt": "The variables 𝑥 and 𝑦 are related by the equation: o i M i k n k 𝑦 = −6 + (4𝑥 + 5) 2 o e k se i n o M s c i n which of the following is the rearrangement to make 𝑥 the subject? k √ e k e o i 𝑦+6−5 s",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑥 = c k s 4 i √ i K o 𝑦−6−5"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 = o M 4 √ k K s n 𝑦+6+5 i K o"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 =      4 e K √ i M s k 𝑦−6+5 i"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 =      4 k √ o c i 𝑦+6−5"
+        },
+        {
+          "label": "E",
+          "text": "𝑥 = k 2 i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Yernar keeps a record of what he earns each day. i K k On Tuesday, he earned 30% more then he earned on Monday M k Ki ek n M oc M On Wednesday, he earned 20% less then he earned on Tuesday k e On Thursday, he earned 50% less then he earned on Wednesday K K sek i n o M oc k e M ck K se i o On Monday, he earned 3500 tenge. K ek n M oc s n i How much did Yernar earn Thursday? k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "1760 tenge o i n i K n"
+        },
+        {
+          "label": "B",
+          "text": "3640 tenge K k o"
+        },
+        {
+          "label": "C",
+          "text": "1480 tenge c k o"
+        },
+        {
+          "label": "D",
+          "text": "1820 tenge o i i k"
+        },
+        {
+          "label": "E",
+          "text": "4550 tenge k k k F. 2000 tenge M c i o ise i o i s s i o i o ise i o M"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "A cyclist rides along a track to the top of a hill then immediately turns around and descends s n along the same track to her starting point. He takes 30 minutes at an average speed of 16 𝑘𝑚ℎ−1 to reach the top. s His average speed for the whole journey is 20 𝑘𝑚ℎ−1 . What is the average speed of his descent? ki o k i o n oc Page 6 oc c o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n n M G. 82",
+      "options": [
+        {
+          "label": "C",
+          "text": "79"
+        },
+        {
+          "label": "B",
+          "text": "80 i        k                        c                  s                  o F. 40°"
+        },
+        {
+          "label": "E",
+          "text": "30°"
+        },
+        {
+          "label": "D",
+          "text": "25°"
+        },
+        {
+          "label": "C",
+          "text": "20°"
+        },
+        {
+          "label": "B",
+          "text": "15°"
+        },
+        {
+          "label": "A",
+          "text": "10° oc             s         i      o                 k        K         e        i angle 𝐵𝐴𝐶 = 56 Find angle 𝐷𝐶 𝐴 angle 𝐷𝐵𝐴 = 48 3 𝑘𝑚ℎ 3 𝑘𝑚ℎ 3 𝑘𝑚ℎ −1 −1 −1 F. 30 𝑘𝑚ℎ−1"
+        },
+        {
+          "label": "E",
+          "text": "27 𝑘𝑚ℎ−1"
+        },
+        {
+          "label": "D",
+          "text": "24 𝑘𝑚ℎ−1"
+        },
+        {
+          "label": "A",
+          "text": "25 𝑘𝑚ℎ−1 i        k         n       M"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "A is the center of the circle. k Ki ek n M oc s i o k K s e i n o o K ek n M oc i K i k M i se i n o k M o c K sek i n o M oc k k K s e i o o k Page 7 ise i o k n M oc is k i n o M ck ise i o k K e o n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o k n M i k 𝑥=0 i c K s i the car. k e",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 18,
+      "prompt": "Evaluate M ck K se i o o k n",
+      "options": [
+        {
+          "label": "A",
+          "text": "0 i n 𝑦 = 3𝑥 − 23 M"
+        },
+        {
+          "label": "A",
+          "text": "39 G. 34"
+        },
+        {
+          "label": "E",
+          "text": "17 k                                                              o 5𝑥 + 2𝑦 = 20 √ √ √ √ i                                 c          K       s          i"
+        },
+        {
+          "label": "C",
+          "text": "60%"
+        },
+        {
+          "label": "B",
+          "text": "64%"
+        },
+        {
+          "label": "A",
+          "text": "36% oc             s                o F. 4 70"
+        },
+        {
+          "label": "D",
+          "text": "2 70"
+        },
+        {
+          "label": "C",
+          "text": "4 10"
+        },
+        {
+          "label": "B",
+          "text": "2 10 i                        k                  e"
+        },
+        {
+          "label": "E",
+          "text": "164%"
+        },
+        {
+          "label": "D",
+          "text": "136%"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 19,
+      "prompt": "The straight lines What is the value of 𝐾? k Ki ek n M oc is k i no M s i o k K e n M o √ K ek n M oc i i k The car decreases its speed by 40%. K se i n o o √ i k M c enclose a region with area 𝐾 square units. K sek i n o M oc k k K s e i o o k Page 8 ise i o o k n M c √ ise i ok n M ck K is e i o o k √ ( 10 + 7) 2 − ( 10 − 7) 2 n M oc is k i n o M c k K i ki o o k K ek n M o c i i K s What is the precentage decrease in the resistance to the motion of the car? no M ck K se i o o k e",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 17,
+      "prompt": "The resistance to the motion of a car is directly proportional to the square of the speed of oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o k n",
+      "options": [
+        {
+          "label": "D",
+          "text": "49"
+        },
+        {
+          "label": "B",
+          "text": "35 i n        M 90 F. 43 90"
+        },
+        {
+          "label": "E",
+          "text": "44"
+        },
+        {
+          "label": "A",
+          "text": "90 41"
+        },
+        {
+          "label": "C",
+          "text": "99"
+        },
+        {
+          "label": "B",
+          "text": "78 83 k                                                              o"
+        },
+        {
+          "label": "C",
+          "text": "180 i                                 c                  s F. 258"
+        },
+        {
+          "label": "E",
+          "text": "198"
+        },
+        {
+          "label": "D",
+          "text": "129 oc             s                o                          K                  i F. (0, 6)"
+        },
+        {
+          "label": "B",
+          "text": "(2, 3)"
+        },
+        {
+          "label": "A",
+          "text": "(4, 7) i                        k                  e"
+        },
+        {
+          "label": "D",
+          "text": "(4, −1)"
+        },
+        {
+          "label": "C",
+          "text": "(−1, 5)"
+        },
+        {
+          "label": "E",
+          "text": "(−1, 10) coordinates of vertex 𝐷. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 9"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Which of the answers below is equal to 0.4(5) ise i o k n M oc is k i n o M ck ise i o k K e o −−→ n M oc is k i n o M c k K i ki o o k K ek n M o c i i s −−→ no M ck K se i o o k K e oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o k n",
+      "options": [
+        {
+          "label": "E",
+          "text": "16"
+        },
+        {
+          "label": "D",
+          "text": "15"
+        },
+        {
+          "label": "C",
+          "text": "18"
+        },
+        {
+          "label": "B",
+          "text": "14 i n 1 M"
+        },
+        {
+          "label": "A",
+          "text": "12 oc            is       k        o               c          K       s          i       o"
+        },
+        {
+          "label": "B",
+          "text": "24 · 7 i                        k                  e F. 22 · 72"
+        },
+        {
+          "label": "E",
+          "text": "23 · 11"
+        },
+        {
+          "label": "A",
+          "text": "23 · 13"
+        },
+        {
+          "label": "D",
+          "text": "22 · 7 · 13"
+        },
+        {
+          "label": "C",
+          "text": "23 · 5 · 13 i        k         n       M 𝑥 k Ki ek n M oc s                o                        K        s         i        o"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "Find the prime factors of 𝑥, if: i k e o = i k n M 10 K ek n M oc i 8008 770 K , i se i n o k M o c K sek i n o M oc k k K s e i o o k Page 10 ise i o k n M oc is k i n o M ck ise i o k K e o n M oc is k n o M c K i and 2002 = 2 · 7 · 11 · 13. ki o o k K e i n M o k i no M ck K se i o i k c k K se",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 23,
+      "prompt": "Find the ratio of the volume of the shaded pyramid 𝐵𝐸 𝐹𝐺 to the volume of the cube. oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n n 9 1 2 3 M",
+      "options": [
+        {
+          "label": "E",
+          "text": "50"
+        },
+        {
+          "label": "D",
+          "text": "10"
+        },
+        {
+          "label": "C",
+          "text": "25"
+        },
+        {
+          "label": "B",
+          "text": "25"
+        },
+        {
+          "label": "E",
+          "text": "30"
+        },
+        {
+          "label": "C",
+          "text": "12"
+        },
+        {
+          "label": "A",
+          "text": "10 16 k                                                              o"
+        },
+        {
+          "label": "A",
+          "text": "125 i                                 c                  s          i √ √ √ oc             s                o                          K F. 20 2"
+        },
+        {
+          "label": "D",
+          "text": "24 3"
+        },
+        {
+          "label": "B",
+          "text": "16 3 i                        k                  e When 𝑡 = 0.2, 𝑑 = 8. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o i Find the area of trapezoid 𝐴𝐵𝐶𝐷."
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "The quantities 𝑡 and 𝑑 are positive. K ek n M oc i What is the value of 𝑡 when 𝑑 = 10? K se i n o k M o c K sek i n o M oc k is i o k 𝑡 is inversely proportional to the square of 𝑑. k K e o Page 11 ise i o k n M oc is k i n o M ck ise i o k K e o n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 24,
+      "prompt": "ABCD is an isosceles trapezoid. It is given that 𝐷𝐻 ⊥ 𝐴𝐵, |𝐷𝐶 | = 5 cm, and | 𝐴𝐻| = 3 cm. oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i shaded. k e",
+      "options": [
+        {
+          "label": "E",
+          "text": ""
+        },
+        {
+          "label": "D",
+          "text": ""
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 2 option(s) detected"
+      ]
+    },
+    {
+      "number": 27,
+      "prompt": "Simplify: M ck K se i o o i k n k n M o 4 5 𝑧 i c s 𝑧2",
+      "options": [
+        {
+          "label": "C",
+          "text": "4𝑥 𝑧 𝑦"
+        },
+        {
+          "label": "B",
+          "text": "4𝑥 𝑧 𝑦"
+        },
+        {
+          "label": "A",
+          "text": "4𝑥𝑧2𝑦 K                  i 3 5 3 6 6 5 oc             s                o 4𝑥 3 𝑦 6 4𝑥 2 𝑦 5 i                        k                  e"
+        },
+        {
+          "label": "E",
+          "text": "10 cm2"
+        },
+        {
+          "label": "D",
+          "text": "75 cm2"
+        },
+        {
+          "label": "B",
+          "text": "25 cm2"
+        },
+        {
+          "label": "A",
+          "text": "50 − 25𝜋 cm2 n"
+        },
+        {
+          "label": "C",
+          "text": "100 − 25𝜋 cm2 k Ki ek n M oc K       is       k i        o      M s K ek n M oc  i       o               k           i       e k       n         M       o i                                      K        se i n o                      o i        k                   M        c Calculate the area of the unshaded region. K sek i n o M oc k K       s          i       o                   k √ 2 𝑧 k                e                            o Page 12 2𝑥 3 𝑦 3 ise i o n        M       o               i        k         n        M          c !2 ise i ok                      ck        K     s e        i        o           o      k n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "The diagram shows a square tile of side 10 centimetres with 4 identical quarter circles oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c",
+      "options": [],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 28,
+      "prompt": "A chemist needs to mix together two chemicals, 𝑃 and 𝑄, in the volume ratio 5 : 2. i n k e k The chemist has two mixtures, 𝑋 and 𝑌 : e o i s c k s i • Mixture 𝑋 contains 𝑃 and 𝑄 in the volume ratio 3 : 2. i K o o • Mixture 𝑌 contains 𝑃 and 𝑄 in the volume ratio 4 : 1. M k K s n i K o e The chemist combines mixtures 𝑋 and 𝑌 in order to achieve the required volume ratio of 𝑃 K i M s and 𝑄. k i k What is the resulting volume ratio of 𝑋 to 𝑌 ? o c k i",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 : 4 i n K k"
+        },
+        {
+          "label": "B",
+          "text": "4 : 7 e k no M ck K se i o c s c i"
+        },
+        {
+          "label": "C",
+          "text": "5 : 9 o n K e M"
+        },
+        {
+          "label": "D",
+          "text": "13 : 16 i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "E",
+          "text": "14 : 17 K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "Simplify: o o 163/4 · 25−1/2 i n i K n 82/3 K k o c",
+      "options": [
+        {
+          "label": "A",
+          "text": "34 k o"
+        },
+        {
+          "label": "B",
+          "text": "45 o i i k"
+        },
+        {
+          "label": "C",
+          "text": "12 k k k"
+        },
+        {
+          "label": "D",
+          "text": "35 M c i"
+        },
+        {
+          "label": "E",
+          "text": "23 o ise i o i s F. 14 s i o i o G. 58 ise i o M s H. 25 n s ki o k i o n oc Page 13 oc c o          k       K     e i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e"
+        },
+        {
+          "label": "E",
+          "text": ""
+        },
+        {
+          "label": "D",
+          "text": ""
+        },
+        {
+          "label": "C",
+          "text": ""
+        },
+        {
+          "label": "B",
+          "text": ""
+        },
+        {
+          "label": "A",
+          "text": "M ck K se i o                                    o                   i         k       n i        k      n        M        c                  s                  o 5 4 7 5 6 − 21 − 25 − 52 −4 −3 oc                              o                          K                  i Find the vector s \u0012 \u0013 \u0012 \u0013 \u0012 \u0013 \u0012 \u0013 \u0012 \u0013 i                        k                  e 𝑞 𝑝 \u0012 \u0013 . k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       i                              o • 𝑅𝑆 is then translated by the vector se i n o i        k                   M        c 𝑞 𝑝 K sek i n o M oc k s                  o \u0012 \u0013 k      K         e        i                   o       k Page 14 ise i o n        M       o               i        k         n        M          c"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "H",
+      "warnings": [
+        "non-MCQ raw answer detected: H"
+      ]
+    },
+    {
+      "number": 30,
+      "prompt": "The point 𝑀 is (3, 4) and the point 𝑁 is (−2, −2). k c s o The coordinates of the midpoint of 𝑇𝑈 are (6, −3). ise i o k K e i o k n M oc is k i n o M c k K i ki o o k K ek n M o c i i K s to give the line segment 𝑇𝑈. no M ck K se i o o k e • 𝑀 𝑁 is rotated 90° clockwise about the origin to give the line segment 𝑅𝑆. The line segment 𝑀 𝑁 is transformed to the line segment 𝑇𝑈 by two transformations: oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K Critical Thinking o i M i k n k o e",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 1,
+      "prompt": "A technology company asserts that its new artificial intelligence (AI) software will rev- k se i n o M s olutionize education by tailoring lessons to each student’s learning style. The company c i n k provides data showing that students using the AI performed better on standardized tests e k e compared to those in traditional classrooms. However, teachers argue that the study does o i s c k s i not consider other factors, such as additional teacher support provided to students using i K o the AI. They also question whether the software can address non-academic needs, such as o M emotional support and motivation. k K s n i K o e Which one of the following best expresses a flaw in the above argument? K i M s k",
+      "options": [
+        {
+          "label": "A",
+          "text": "The argument fails to consider the cost of implementing the software in schools. i k"
+        },
+        {
+          "label": "B",
+          "text": "The argument does not address whether the AI software can be scaled to larger o c i classrooms. k i n K k e"
+        },
+        {
+          "label": "C",
+          "text": "The argument overlooks the role of teachers in improving student performance. k no M ck K se i o c s c"
+        },
+        {
+          "label": "D",
+          "text": "The argument assumes that standardized test scores are the best measure of i o n K learning outcomes.  e M i s k Ki ek n M oc k"
+        },
+        {
+          "label": "E",
+          "text": "The argument assumes that the improvement in test scores is solely due to the i K k AI software. M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Many urban planners argue that increasing the number of bicycle lanes in city centers will o i n significantly reduce traffic congestion and air pollution. A recent survey revealed that a i K n K k substantial portion of city commuters would prefer cycling if safer infrastructure, such as o c k dedicated bike lanes, were available. The proposal emphasizes that encouraging cycling o as an alternative to car use not only eases traffic but also promotes a healthier lifestyle for o i residents. Opponents, however, claim that the space required for bike lanes would worsen i k k congestion for drivers in the short term. k k M Which one of the following is an assumption of the argument in the passage above? c i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Commuters prioritize environmental concerns over convenience when choosing ise i o i s transportation. s i o"
+        },
+        {
+          "label": "B",
+          "text": "Building bike lanes will directly result in fewer cars on the road. i o ise i o M"
+        },
+        {
+          "label": "C",
+          "text": "Drivers will not be significantly affected by the reduction in road space. s n"
+        },
+        {
+          "label": "D",
+          "text": "Air pollution is caused primarily by private vehicles in city centers. s"
+        },
+        {
+          "label": "E",
+          "text": "People prefer cycling over driving in all circumstances. ki o k i o n oc Page 15 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "A recent policy proposal argues that banning single-use plastics in retail will significantly i n k e reduce environmental pollution and encourage sustainable alternatives. Opponents claim k e o i s that such a ban will increase costs for small businesses, who may struggle to afford the c k s i higher costs of biodegradable packaging, and shift the financial burden to consumers i K o through higher product prices. Proponents of the ban emphasize that plastics are a major o M k K s contributor to marine pollution, with millions of tons entering oceans annually, harming n i K o e marine life and ecosystems. The proposal suggests government subsidies for sustainable K i M s packaging to support small businesses and mitigate consumer cost increases, ensuring a k i smoother transition toward eco-friendly practices. k o c i Which of the following best strengthens the argument for banning single-use plastics? k i n K k e",
+      "options": [
+        {
+          "label": "A",
+          "text": "Countries that have banned single-use plastics report a measurable decline in k no M ck K se i o c s plastic waste in landfills and oceans within five years of implementation. c i o n K"
+        },
+        {
+          "label": "B",
+          "text": "Surveys indicate that small businesses find sustainable packaging to be too e M i expensive without financial assistance, resulting in limited adoption of such s k Ki ek n M oc k i alternatives. K k M"
+        },
+        {
+          "label": "C",
+          "text": "Research shows that consumers are more likely to recycle single-use plastics than k Ki ek n M oc M k switch to reusable alternatives, particularly in countries with robust recycling e K K sek i n o M oc k e M ck K se i o programs. K ek n M oc s n"
+        },
+        {
+          "label": "D",
+          "text": "Studies demonstrate that the production of certain biodegradable packaging i k materials has a higher carbon footprint than single-use plastics, especially during o o i large-scale manufacturing. n i K n K k"
+        },
+        {
+          "label": "E",
+          "text": "A growing number of consumers express willingness to pay more for prod- o c k ucts with eco-friendly packaging, especially among younger demographics who o prioritize environmental sustainability. o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 16 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "The Cartman family went to a restaurant and bought two Pizzas, three Chillies and four o i M Pastas. They paid £53 in total. i k n k o e k The Marsh family went to the same restaurant and bought five of the same Pizzas, six of se i n o M s the same Chillies and seven of the same Pastas. They paid £107 in total. c i n k How much more does a Pizza cost than a Pasta? e k e o i s c k s i",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 i K o"
+        },
+        {
+          "label": "B",
+          "text": "1 o M k K s n"
+        },
+        {
+          "label": "C",
+          "text": "5 i K o e K"
+        },
+        {
+          "label": "D",
+          "text": "6 i M s k i"
+        },
+        {
+          "label": "E",
+          "text": "3 k o c k  i i n K k e k no M ck K se i o c s c i o n K e"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "A new policy has been proposed to reintroduce wolves into certain ecosystems to balance M i s wildlife populations. Advocates argue that wolves naturally regulate populations of deer k Ki ek n M oc k i and other herbivores, preventing overgrazing and promoting biodiversity. However, critics K k M note that wolves may negatively impact local livestock populations and disrupt human k Ki ek n M oc M k activities in surrounding areas. e K K sek i n o M oc k e M ck K se i o Which statement most effectively weakens the argument presented in the passage below? K ek n M oc s n i",
+      "options": [
+        {
+          "label": "A",
+          "text": "Livestock losses to wolves are significantly lower than losses to disease and other k o predators. o i n i K n"
+        },
+        {
+          "label": "B",
+          "text": "Studies in other regions show increased biodiversity following wolf reintroduc- K k tion. o c k o"
+        },
+        {
+          "label": "C",
+          "text": "Wolves primarily target weak and sick animals, which minimally impacts overall o i herbivore populations. i k k"
+        },
+        {
+          "label": "D",
+          "text": "Many local communities oppose wolf reintroduction due to safety concerns. k k M"
+        },
+        {
+          "label": "E",
+          "text": "Reintroducing wolves requires significant investment in monitoring and manage- c i ment programs. o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 17 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Five sealed urns, labelled P, Q, R, S, and T each contain the same (non-zero) number of o i M i k balls. The following statements are attached to the urns. n k o e k • Urn 𝑃: This urn contains one or four balls. se i n o M s c i n • Urn 𝑄: This urn contains two or four balls. k e k e o • Urn 𝑅: This urn contains more than two balls and fewer than five balls. i s c k s i • Urn 𝑆: This urn contains one or two balls. i K o o M • Urn 𝑇: This urn contains fewer than three balls. k K s n i K o e K Exactly one of the urns has a true statement attached to it. i M s k i Which urn is it? k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Urn P o c k  i i n"
+        },
+        {
+          "label": "B",
+          "text": "Urn Q K k e k no M ck K se i o c s"
+        },
+        {
+          "label": "C",
+          "text": "Urn R c i o n K"
+        },
+        {
+          "label": "D",
+          "text": "Urn S                e M i s"
+        },
+        {
+          "label": "E",
+          "text": "Urn T k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "The seventh day of an unknown month in an unknown year is a Tuesday. The 𝑛th day of k o the following is the first Tuesday of that month. What is the product of all the possible o i n values of 𝑛? i K n K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "840 o c k"
+        },
+        {
+          "label": "B",
+          "text": "490 o o i"
+        },
+        {
+          "label": "C",
+          "text": "540 i k k"
+        },
+        {
+          "label": "D",
+          "text": "910 k k M"
+        },
+        {
+          "label": "E",
+          "text": "770 c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 18 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Antarctic krill, a small shrimp-like crustacean, is one of the most abundant organisms on o i M i k Earth and forms the backbone of the Antarctic ecosystem. Recent studies have shown that n k o e krill populations are declining due to climate change and industrial fishing, which could k se i n o M s have catastrophic consequences for species like whales, seals, and penguins that depend c i n k on krill as their primary food source. To ensure the stability of the Antarctic ecosystem, it e k e is crucial to impose stricter regulations on krill fishing and address the impacts of climate o i s c k s change on polar regions. i i K o What is the main conclusion of the passage below? o M k K s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "Antarctic krill is one of the most abundant organisms on Earth. i K o e K"
+        },
+        {
+          "label": "B",
+          "text": "Climate change and industrial fishing are leading to a decline in krill populations. i M s k i"
+        },
+        {
+          "label": "C",
+          "text": "Industrial fishing poses a significant threat to the survival of Antarctic wildlife. k o c i"
+        },
+        {
+          "label": "D",
+          "text": "Many Antarctic species rely on krill as their primary food source. k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "Stricter regulations on krill fishing and climate action are essential to protect the e k no M ck K se i o c Antarctic ecosystem. s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "A lucky year is one in which at least one date, when written in the form month/day/year, has e K K sek i n o M oc k e the following property: the product of the month times the day equals the last two digits of M ck K se i o K ek n M oc s the year. For example, 1956 is a lucky year because it has the date 7/8/56 and 7 · 8 = 56. n i Which of the following is NOT a lucky year? k o o",
+      "options": [
+        {
+          "label": "A",
+          "text": "1994 i n i K n"
+        },
+        {
+          "label": "B",
+          "text": "1993 K k o c k"
+        },
+        {
+          "label": "C",
+          "text": "1992 o"
+        },
+        {
+          "label": "D",
+          "text": "1991 o i i k"
+        },
+        {
+          "label": "E",
+          "text": "1990 k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 19 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "A set of cupboards containing eight identical o i M blue doors is arranged in a 2 by 4 grid as i k n k o shown. A fussy decorator wishes to paint three e k se i n o M s of the doors red such that at least one door in c i n each row is painted red and at least two of the k e k four corners are painted red. e o i s c k s i i K o How many ways are there to do this? o M k K s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "12 i K o e K i M s"
+        },
+        {
+          "label": "B",
+          "text": "24 k i k"
+        },
+        {
+          "label": "C",
+          "text": "36 o c i"
+        },
+        {
+          "label": "D",
+          "text": "40 k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "56                       e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "Electric engines are more efficient than petrol engines in converting fuel into mechanical k Ki ek n M oc M k power, thus they are more economical in fuel use. But their electricity has to come from e K K sek i n o M oc k e M ck K se i o somewhere. The UK electricity grid is powered by a mix of sources: coal, gas and nuclear K ek n M oc s with a few renewables thrown in. If you make extra demand in order to fuel electric cars, n i only fossil fuels, which produce emissions of CO2, can provide the extra capacity. Wind k o turbines cannot turn any faster than wind speed allows, and extra capacity from nuclear o i n i K power will be possible only when new nuclear power plants are built. n K k Which one of the following can be drawn as a conclusion from the above passage? o c k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "The electricity needed to power electric cars cannot be provided by the UK o i electricity grid. i k k k"
+        },
+        {
+          "label": "B",
+          "text": "Electric cars cannot yet be fuelled without increasing emissions of CO2 from k M electricityproduction. c i"
+        },
+        {
+          "label": "C",
+          "text": "Wind power will never be able to provide more electricity than it does at present. o ise i o i s"
+        },
+        {
+          "label": "D",
+          "text": "The use of electric engines in place of petrol engines will increase emissions of s i o CO2. i o ise i o M s n s ki o k i o n oc Page 20 oc c o          k       K     e i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e"
+        },
+        {
+          "label": "D",
+          "text": ""
+        },
+        {
+          "label": "C",
+          "text": ""
+        },
+        {
+          "label": "B",
+          "text": ""
+        },
+        {
+          "label": "A",
+          "text": "M ck K se i o                                    o                   i         k       n oc            is       k i    n o      M        c k        K       s e        i       o k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 21 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o Which one of the following cubes was formed from this net?"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "The net shown below was cut out and folded to make a cube. n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c i n k e k e o i s",
+      "options": [
+        {
+          "label": "E",
+          "text": "c k s i i K o o M k K s n i K o e K i M s k"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": [
+        "only 1 option(s) detected"
+      ]
+    },
+    {
+      "number": 13,
+      "prompt": "My four grandchildren are called Ben, Maria, Adam and Tara. Their birthdays are on the i k 128th, 182nd, 218th and 281st days of the year respectively (except in leap years). o c i Which two of my grandchildren have their birthdays on the same day of the week as each k i n other every year? K k e k no M ck K se i o c s",
+      "options": [
+        {
+          "label": "A",
+          "text": "Adam and Ben c i o n K"
+        },
+        {
+          "label": "B",
+          "text": "Adam and Maria      e M i s"
+        },
+        {
+          "label": "C",
+          "text": "Adam and Tara k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "D",
+          "text": "Ben and Maria M k Ki ek n M oc M"
+        },
+        {
+          "label": "E",
+          "text": "Ben and Tara k e K K sek i n o M oc k e M ck K se i o F. Maria and Tara K ek n M oc s n i k o o i n i K n K k o c k"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Food manufacturers should reduce sugar levels in processed foods. This is because there o are too many overweight and obese people. Since people are unable or unwilling to make o i sensible decisions for themselves, manufacturers must take responsibility for rectifying a i k problem to which they contribute. k k k Which one of the following illustrates the principle used in the above argument? M c i",
+      "options": [
+        {
+          "label": "A",
+          "text": "Cigarette packets should have plain packaging and display government health o warnings. ise i o i s s i o"
+        },
+        {
+          "label": "B",
+          "text": "In order to reduce sugar intake, foods with high sugar content should be taxed i o more heavily. ise i o M s n"
+        },
+        {
+          "label": "C",
+          "text": "Power tools should have clear instructions in order to reduce the number of accidents caused by incorrect use. s"
+        },
+        {
+          "label": "D",
+          "text": "Labelling on food should be improved so that consumers are clear about the level of sugar in a product. ki o k i o n oc Page 22 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "E",
+          "text": "To reduce the number of deaths caused by excessive speed, car manufacturers o i M i k should incorporate speed limiters in vehicles. n k o e k se i n o M s c i n k e k e o i s c k s i"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "Luke walks his puppy to a nearby park and lets the puppy off the lead. i K o As Luke starts walking along the path, the puppy runs on ahead, until it has gone 100 o M k K s metres. The puppy then turns and runs back to Luke, who in that time has walked 50 n i K o e metres. The puppy then goes on ahead again, turns after running 100 metres and runs back K i M s to Luke who has now walked another 50 metres. k i This routine continues until Luke has walked 1 km. k o If it takes 12 minutes for Luke to walk 1 km in the park, what is the puppy’s average running c k i i speed during the same time? n K k e k",
+      "options": [
+        {
+          "label": "A",
+          "text": "12 km / h no M ck K se i o c s c i o n"
+        },
+        {
+          "label": "B",
+          "text": "5 km/ h K e M i"
+        },
+        {
+          "label": "C",
+          "text": "10 km / h s k Ki ek n M oc k i"
+        },
+        {
+          "label": "D",
+          "text": "14 km / h K k M k Ki ek n M oc M"
+        },
+        {
+          "label": "E",
+          "text": "15 km / h k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "Over the last ten years there has been a huge increase in the number of television pro- i K n K k grammes involving the work of forensic scientists. This media attention has been matched o c k by a massive increase in the number of courses and qualifications available in this field. o Although this new attention has led to greater public awareness, it has not led to the creation o i of more jobs in this field. The work of forensics professionals has continued unchanged. i k k Therefore, those who choose to study these courses will find that there is fierce competition k k for difficult and unpleasant work. M c i Which one of the following, if true, would most weaken the above argument? o ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "Each year around 1500 graduates in forensic science compete for 200 jobs in the s i o sector. i o ise i o M"
+        },
+        {
+          "label": "B",
+          "text": "Many students of forensic science go on to pursue careers in other areas. s n"
+        },
+        {
+          "label": "C",
+          "text": "New technologies have brought about a decrease in the number of forensics staff required in laboratories. s"
+        },
+        {
+          "label": "D",
+          "text": "The number of university courses in forensic science has grown at an unprece- dented rate. ki o k i o n oc Page 23 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "E",
+          "text": "Salaries for forensic scientists compare well with those in other scientific fields. o i M i k n k o e k se i n o M s c i n k e k e o i s"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "A delivery company opens its depot at 7:30 am. It uses large and small vans to make c k s i deliveries. The smaller vans take 10 minutes to load and then 1 hour to make the deliveries i K o and return. The larger ones have a loading time of 30 minutes and return from deliveries o M k K s after 2 hours. The driver of a large van starts loading at 8:00 am. n i K o e K If the driver of a small van is to make the maximum number of deliveries he can, how i M s much later than the driver of the large van can he start loading if they are both to arrive k i k back at the depot for lunch at 1:00 pm? o c i",
+      "options": [
+        {
+          "label": "A",
+          "text": "0 minutes k i n K k"
+        },
+        {
+          "label": "B",
+          "text": "20 minutes               e k no M ck K se i o c s"
+        },
+        {
+          "label": "C",
+          "text": "15 minutes c i o n K"
+        },
+        {
+          "label": "D",
+          "text": "5 minutes           e M i s k Ki ek n M oc k"
+        },
+        {
+          "label": "E",
+          "text": "10 minutes i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "Climate scientists in Greenland studying patterns of plant growth have suggested that the k o early arrival of spring in the Arctic threatens to drive down populations of migrating o i n animals such as caribou. However, comparable studies elsewhere show that their fears are i K n K k unfounded. A recent study of great tits in Oxfordshire showed the birds are capable of o c k adapting to climate change better than many scientists expected. Over the past half century, o the birds have brought forward the date they lay their eggs by two weeks, so that young are o i born when plant-eating grubs are most plentiful. i k k k Which one of the following is an underlying assumption of the above argument? k M",
+      "options": [
+        {
+          "label": "A",
+          "text": "Migrating animals in the Arctic can adapt to climate change as successfully as c i great tits in Oxfordshire. o ise i o i s"
+        },
+        {
+          "label": "B",
+          "text": "Birds are more adaptable than large mammals such as caribou. s i o i o"
+        },
+        {
+          "label": "C",
+          "text": "Unless animals like the caribou produce their young earlier in the year, their ise i o M population will fall. s n"
+        },
+        {
+          "label": "D",
+          "text": "The scientists working in Oxfordshire have greater expertise than those working in Greenland. s"
+        },
+        {
+          "label": "E",
+          "text": "Climate change in Greenland and climate change in Oxfordshire are of the same scale ki o k i o n oc Page 24 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "The Organisation for Economic Co-operation and Development (OECD) has released data i n k e from a study of 15 year olds in the principal industrialised countries. It shows unequivocally k e o i s that teenage students whose parents discuss political or social issues with them, either c k s i weekly or daily, score 28 points higher at reading (on average) than those whose parents i K o discuss these issues less often or not at all. Other factors were also associated with better o M k K s reading ability: discussing books or television programmes, eating main meals together at n i K o e a table and spending time talking to children. Discussing news and serious issues showed K i M s the strongest association, so if parents spend time discussing these issues with their children k i they will help their children read well. k o c i Which of the following best expresses the flaw in the argument above? k i n K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "It implies that discussing serious issues with parents is more influential than e k no M ck K se i o c s discussion with a peer group. c i o n"
+        },
+        {
+          "label": "B",
+          "text": "It assumes that eating meals together at a table is practical in all households K e M i s"
+        },
+        {
+          "label": "C",
+          "text": "It fails to consider teenagers in rural countries. k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "D",
+          "text": "It does not show why reading ability is so important in a teenager’s development. M k Ki ek n M oc M"
+        },
+        {
+          "label": "E",
+          "text": "It suggests a causal relationship between discussion and reading k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "A golf tournament is played over 10 rounds, on successive Saturdays. The winner of each K k round scores 3 points and the player finishing second scores 1 point. The tournament is o c k won by the competitor with the most points over the 10 rounds o Alan Vinci, Barry Durand, Carl Johansson and Daniel and Eric Lim were the participants o i in this year’s tournament. All five won at least one round, but either Barry, Daniel or Eric i k k k finished second on each occasion. The 1-2 finishing order was different every round, and k M the Lim brothers didn’t both score points in the same round at any time. c i Who won this year’s tournament? o ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "Eric Lim s i o i o"
+        },
+        {
+          "label": "B",
+          "text": "Daniel Lim ise i o M"
+        },
+        {
+          "label": "C",
+          "text": "Barry Durand s n"
+        },
+        {
+          "label": "D",
+          "text": "Carl Johansson s"
+        },
+        {
+          "label": "E",
+          "text": "Alan Vinc ki o k i o n oc Page 25 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "The council claims that this policy will reduce traffic congestion and improve air quality i n k e by encouraging people to use public transportation or carpool. They also highlight that k e o i s similar schemes have succeeded in other cities and generated revenue for public transit c k s i improvements. Critics argue that the policy disproportionately affects low-income drivers i K o who depend on cars for commuting. o M k K s n Which one of the following is an underlying assumption of the argument above? i K o e K i M s",
+      "options": [
+        {
+          "label": "A",
+          "text": "Public transportation in the city is affordable and accessible for most commuters. k i"
+        },
+        {
+          "label": "B",
+          "text": "Low-income drivers contribute the most to traffic congestion in downtown areas. k o c i"
+        },
+        {
+          "label": "C",
+          "text": "Revenue generated by the congestion charge will be sufficient to improve public k i n transit. K k e k no M ck K se i o c s"
+        },
+        {
+          "label": "D",
+          "text": "Drivers will shift to alternative transportation methods to avoid the congestion c i o n charge. K e M i"
+        },
+        {
+          "label": "E",
+          "text": "Air quality improvements will occur only if traffic congestion is completely s k Ki ek n M oc k i eliminated. K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "There is growing agreement amongst scientists and doctors that being seriously overweight o o is dangerous for one’s health. This is seen as a major problem in many Western countries, i n i K n where instances of obesity are on the rise, the result largely of the increasing availability of K k cheap fast-food and ready-made meals which are high in fat. But instead of going back to o c k the basics and cooking things from simple, fresh ingredients as most doctors recommend, o overweight people have been tempted by a succession of so-called ‘miracle’ diets, each o i i k guaranteeing significant weight loss in a relatively short period of time. However, while k k the diets may work in that they aid weight loss, the sudden changes to people’s eating habits k M and the lack of basic nutrition they regularly entail, means that they often do more harm c i than good. o ise i o i s Which of the following is a conclusion which can be drawn from the above passage? s i o i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Any new miracle diet should be avoided despite the scientific evidence in its ise i o M favour. s n"
+        },
+        {
+          "label": "B",
+          "text": "Overweight people cannot trust the claims made by promoters of miracle diets. s"
+        },
+        {
+          "label": "C",
+          "text": "Overweight people should stick to natural, fresh ingredients as a means of controlling their weight. ki o k i o n oc Page 26 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "D",
+          "text": "People who lose a lot of weight very quickly usually put it back on once they o i M i k come off the diet. n k o e k"
+        },
+        {
+          "label": "E",
+          "text": "People who want to lose weight quickly should also consider the negative effects se i n o M s c which can often accompany miracle diets. i n k e k e o i s c k s i i K o o M k K s n"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "A three-dimensional shape is made by taking a cube and cutting off each of its corners. i K o e K Assume that the cube is large and that the cuts are relatively small (extending to less than i M s halfway along each edge). k i k How many edges does the new shape have? o c k i",
+      "options": [
+        {
+          "label": "A",
+          "text": "12 i n K k e k"
+        },
+        {
+          "label": "B",
+          "text": "18 no M ck K se i o c s c i o"
+        },
+        {
+          "label": "C",
+          "text": "20 n K e M"
+        },
+        {
+          "label": "D",
+          "text": "32 i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "E",
+          "text": "36 K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "Many people think that animal behaviour is predominately innate, in other words, that the o o way an animal behaves is ‘hard-wired’ into its genes. But an argument against this is the i n i K n speed with which dramatic changes in characteristic behaviour have been seen in some K k animal populations. For example, in several European cities, one species of bird previously o c k characterised by its daytime song has taken to singing in the middle of the night – the o reason being that it is too noisy in the daytime to be heard! Such changes are too fast to o i i k be the result of evolution, and yet very quickly become normalised within a population as k k individual animals mimic new forms of behaviour. k M Which of the following, if true, would most strengthen the above argument? c i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Animal behaviour, especially that of birds, varies according to the time of year. ise i o i s s"
+        },
+        {
+          "label": "B",
+          "text": "Animals in cities are more prone to diseases which can affect their behaviour. i o i o"
+        },
+        {
+          "label": "C",
+          "text": "Birds in cities have been known to mimic non-animal noises such as police ise i o M sirens. s n"
+        },
+        {
+          "label": "D",
+          "text": "Changes in the environment can trigger different genes to be expressed. s"
+        },
+        {
+          "label": "E",
+          "text": "The change in the birds’ behaviour has taken place within a single generation. ki o k i o n oc Page 27 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "There is a two-way express train service operating between Kuala Lumpur Central Station i n k (KLCS) and Kuala Lumpur International Airport (KLIA), 64 kms away. e k e o i s Which of the following pieces of information is not required in order to calculate the c k s i minimum number of trains needed to operate the service each day? i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "The first train leaves KLCS at 5.30am and the first train leaves KLIA at 6am. k K s n i K o"
+        },
+        {
+          "label": "B",
+          "text": "The journey between KLCS and KLIA (and vice versa) takes 28 minutes. e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "On arrival at its destination each train stands for ten minutes before commencing k i its return journey. k o c i"
+        },
+        {
+          "label": "D",
+          "text": "In peak hours (5.30am to 10.30am and 4.00pm to midnight, when the service k i n terminates) trains run every 15 minutes. K k e k no M ck K se i o"
+        },
+        {
+          "label": "E",
+          "text": "During off-peak hours (10.30am to 4.00pm) the trains run every 20 minutes. c s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "The company has been making large losses for some time. If it continues to make such M k large losses, a sizeable number of the workforce will lose their jobs. Unfortunately, the e K K sek i n o M oc k e M ck K se i o town’s economy will suffer considerably if many of the employees are made redundant. K ek n M oc s n So if the company continues to operate with such losses, the economy of the town will be i k badly affected. o o i n Which of the following most closely parallels the reasoning used in the above argument? i K n K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "If we do not pay nurses more, many of them will go and work in private hospitals. o c k So there will be fewer of them to provide care in our public hospitals. Therefore, o if we want to maintain high standards of nursing care in our public hospitals, we o i must pay nurses more. i k k k"
+        },
+        {
+          "label": "B",
+          "text": "If this hot weather continues, the number of families taking foreign holidays will k M continue to fall. A number of travel companies will go out of business if fewer c i people book foreign holidays. Therefore, if this hot weather continues, we can o expect many bargain holidays from travel companies. ise i o i s s i o"
+        },
+        {
+          "label": "C",
+          "text": "If everyone was prepared to pay more taxes, we could afford to raise the level of i o pensions. If old people were given increased pensions, they could spend more on ise i o M food and heating. So If we want old people to lead much happier and healthier s n lives, we must be prepared to pay higher taxes. s"
+        },
+        {
+          "label": "D",
+          "text": "If house prices continue to fall, then more people will buy houses The prices will then stop declining if more people are buying. So the fall in house prices must soon come to an end. ki o k i o n oc Page 28 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "E",
+          "text": "If the present drought does not end soon, water will have to be rationed in many o i M i k areas. Once water rationing is brought in, people are going to complain about n k o e having to pay high water charges. So unless we get some rain soon, we are going k se i n o M s to soon find people complaining about their water bills. c i n k e k e o i s c k s i i K o o M k K s"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "Every motorist pays the same amount for road tax, regardless of how much they use the n i K o e roads: someone who covers as little as 1 000 miles pays the same as someone who covers K i M s 20 000. This is unfair. Road tax should be scrapped and the money raised by an increase k i in the tax on car fuel. Making this change would ensure that those who use the roads more k o would pay more. This would not only be a fairer system, but could also bring in more c k i i n revenue. K k e k Which of the following best illustrates the principle underlying the argument above? no M ck K se i o c s c i o n",
+      "options": [
+        {
+          "label": "A",
+          "text": "People should receive free medical treatment only if they cannot afford to pay K e M for it. i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "B",
+          "text": "People who travel to work every day by train should pay a lower fare than those K k M who travel only occasionally. k Ki ek n M oc M k"
+        },
+        {
+          "label": "C",
+          "text": "People who earn more than double the average wage should be made to pay e K K sek i n o M oc k e M ck K se i o much higher charges for dental treatment. K ek n M oc s n"
+        },
+        {
+          "label": "D",
+          "text": "Television channels should be paid for by subscription so that only those people i k who watch them should be made to pay. o o i n"
+        },
+        {
+          "label": "E",
+          "text": "Telephone charges should be higher for business customers than for domestic i K n K k customers because they are using the system only to make money. o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 29 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "A museum education officer prepares for the day by setting out one pencil per child and one o i M i k clipboard between two children. No child ever works alone. He has 50 pencils available n k o e and a maximum of 10 clipboards. Each small group is usually 20 strong and always stays k se i n o M s with him for 30 minutes. The day starts at 10:30 and finishes at 14:30. An hour is spent c i n k eating lunch. Last Wednesday groups of different sizes attended. In two sessions he had e k e exactly the right number of clipboards. In one session he had two spare clipboards, and o i s c k s in the remaining three sessions there were five occasions when there were not enough i i K o clipboards and three children had to share. o M k K s How many children attended on Wednesday? n i K o e K",
+      "options": [
+        {
+          "label": "A",
+          "text": "119 i M s k i"
+        },
+        {
+          "label": "B",
+          "text": "121 k"
+        },
+        {
+          "label": "C",
+          "text": "123 o c k  i i n"
+        },
+        {
+          "label": "D",
+          "text": "131 K k e k no M ck K se i o c"
+        },
+        {
+          "label": "E",
+          "text": "133 s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "All of the coins in my wallet are less than £1, and I have at least one of each type (1p, 2p, k e 5p, 10p, 20p, 50p). I can make any amount of money less than £2 exactly using the coins K K sek i n o M oc k e M ck K se i o K ek n M oc s that I have. n i k What is the smallest number of coins that I could have? o o i",
+      "options": [
+        {
+          "label": "A",
+          "text": "6 n i K n K k"
+        },
+        {
+          "label": "B",
+          "text": "7 o c k"
+        },
+        {
+          "label": "C",
+          "text": "8 o o i"
+        },
+        {
+          "label": "D",
+          "text": "9 i k k"
+        },
+        {
+          "label": "E",
+          "text": "10 k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 30 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "A group of Construction students must choose their specialist options from the following o i M i k list: n k o e k Bricklaying, Damp-proofing, Drainage, Flooring, Joinery, Plastering, Roofing se i n o M s c i n Each student must choose three options. The available options may be combined with k e each other in any way, with the exception of the restrictions that Damp-proofing and k e o i s Drainage together may not be combined with Bricklaying or Plastering because of timetable c k s i i K o constraints, and that students choosing Joinery must also choose Flooring. o M How many possible combinations including Drainage could the students choose from? k K s n i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "7                                   e K i M s k"
+        },
+        {
+          "label": "B",
+          "text": "8 i k"
+        },
+        {
+          "label": "C",
+          "text": "9 o c k  i"
+        },
+        {
+          "label": "D",
+          "text": "10 i n K k e k"
+        },
+        {
+          "label": "E",
+          "text": "11 no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 31 oc c"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    }
+  ]
+}

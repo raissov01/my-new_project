@@ -1,0 +1,771 @@
+{
+  "source_file": "Trial Test 11.pdf",
+  "name": "Trial Test 11",
+  "test_type": "trial_test",
+  "parser": "trial_layout_parser",
+  "question_count": 31,
+  "answer_count": 0,
+  "warnings": [],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Evaluate (9 + 2 7)(5 − 9 7)",
+      "options": [
+        {
+          "label": "A",
+          "text": "− 72 − 63 7"
+        },
+        {
+          "label": "B",
+          "text": "− 81 − 71 7"
+        },
+        {
+          "label": "C",
+          "text": "− 94 − 84 7"
+        },
+        {
+          "label": "D",
+          "text": "− 126 − 92 7"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "In the year 2000 a shop sold 150 computers. Each year the shop sold 10 more computers than the year before, so that the shop sold 160 computers in 2001, 170 computers in 2002, and so on forming an arithmetic sequence. Calculate the total number of computers the shop sold from 2000 to 2013 inclusive.",
+      "options": [
+        {
+          "label": "A",
+          "text": "2730"
+        },
+        {
+          "label": "B",
+          "text": "2920"
+        },
+        {
+          "label": "C",
+          "text": "3010"
+        },
+        {
+          "label": "D",
+          "text": "3340"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "Solve the inequality 4 3 2 𝑥 − 2𝑥 − 5𝑥 + 6𝑥 < 0",
+      "options": [
+        {
+          "label": "A",
+          "text": "(− 1, 0) ∪ (0, 6)"
+        },
+        {
+          "label": "B",
+          "text": "(− 2, 0) ∪ (1, 3)"
+        },
+        {
+          "label": "C",
+          "text": "(− 3, − 1) ∪ (1, 2)"
+        },
+        {
+          "label": "D",
+          "text": "(− 6, − 1) ∪ (0, 1) tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "Find the area of the triangle, if given that the sides of the triangle are equal to 17, 17 and 30.",
+      "options": [
+        {
+          "label": "A",
+          "text": "80"
+        },
+        {
+          "label": "B",
+          "text": "100"
+        },
+        {
+          "label": "C",
+          "text": "120"
+        },
+        {
+          "label": "D",
+          "text": "140"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "Find the area of hexagon, if given that the radius of circle is equal to 8cm",
+      "options": [
+        {
+          "label": "A",
+          "text": "48 3"
+        },
+        {
+          "label": "B",
+          "text": "72 3 tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "96 3"
+        },
+        {
+          "label": "D",
+          "text": "144 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Find the volume of pyramid, if it is given that base sides are equal to 10 and lateral edge are equal to 5 6 1000",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 1125"
+        },
+        {
+          "label": "B",
+          "text": "3"
+        },
+        {
+          "label": "C",
+          "text": "300"
+        },
+        {
+          "label": "D",
+          "text": "350"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "Two circles of radii 2 and 4 units touch at one point. The line AC passes through the centers of both circles and line AB just touches each of circles. What is the following is true tg: @melonkid411 1",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑠𝑖𝑛(𝐴) = 2 1"
+        },
+        {
+          "label": "B",
+          "text": "𝑠𝑖𝑛(𝐴) = 3 3"
+        },
+        {
+          "label": "C",
+          "text": "𝑐𝑜𝑠(𝐴) = 4 2"
+        },
+        {
+          "label": "D",
+          "text": "𝑡𝑎𝑛(𝐴) = 4"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Rearrange in terms of Y 2 (𝑅+𝑌) 𝑋= 𝑍",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑌 =    𝑋 𝑍− 𝑅 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑌 = 𝑋       𝑍+ 𝑅 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑅 =    𝑋𝑍 − 𝑅 2               2"
+        },
+        {
+          "label": "D",
+          "text": "𝑅 =     𝑋𝑍 + 𝑅 tg: @melonkid411 1"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "Find the sum of infinite geometric sequence, if it is given that 𝑏3 =− 9, 𝑎𝑛𝑑 𝑏6 = 3 243",
+      "options": [
+        {
+          "label": "A",
+          "text": "− 4 243"
+        },
+        {
+          "label": "B",
+          "text": "3 81"
+        },
+        {
+          "label": "C",
+          "text": "4 81"
+        },
+        {
+          "label": "D",
+          "text": "− 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "Convert 1260 km/h into m/s",
+      "options": [
+        {
+          "label": "A",
+          "text": "300 𝑚/𝑠"
+        },
+        {
+          "label": "B",
+          "text": "320 𝑚/𝑠"
+        },
+        {
+          "label": "C",
+          "text": "350 𝑚/𝑠"
+        },
+        {
+          "label": "D",
+          "text": "380 𝑚/𝑠"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "The diagram shows two shapes that are mathematically similar. 2 2 The smaller shape has area 52. 5 𝑐𝑚 and the larger shape has area 134. 4 𝑐𝑚 FInd the value of m tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "4"
+        },
+        {
+          "label": "B",
+          "text": "4.8"
+        },
+        {
+          "label": "C",
+          "text": "5"
+        },
+        {
+          "label": "D",
+          "text": "5.7"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "Find the surface area of cone, if it is given that diameter is equal to 16, and height is twice diameter",
+      "options": [
+        {
+          "label": "A",
+          "text": "32π(1 + 13)"
+        },
+        {
+          "label": "B",
+          "text": "48π(2 + 15)"
+        },
+        {
+          "label": "C",
+          "text": "64π(1 + 17)"
+        },
+        {
+          "label": "D",
+          "text": "96π(2 + 19)"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "The line 𝑎𝑥 − 𝑏𝑦 =− 9 is passes through 𝐴(− 1, 3) 𝑎𝑛𝑑 𝐵(− 3, 0). Find 𝑎 + 𝑏",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 tg: @melonkid411"
+        },
+        {
+          "label": "B",
+          "text": "6"
+        },
+        {
+          "label": "C",
+          "text": "8"
+        },
+        {
+          "label": "D",
+          "text": "10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Solve and write in standard form 8 4*10 −18 64*10 25",
+      "options": [
+        {
+          "label": "A",
+          "text": "0, 625 * 10 24"
+        },
+        {
+          "label": "B",
+          "text": "6. 25 * 10 23"
+        },
+        {
+          "label": "C",
+          "text": "62. 5 * 10 22"
+        },
+        {
+          "label": "D",
+          "text": "625 * 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "The original price of an item is 𝑝. The price is increased by 125%. The increased price then decreased by 40% to 𝑞. The relationship between 𝑝 and 𝑞 can be expressed as 𝑚𝑝 = 𝑞. What is the value of 𝑚 7",
+      "options": [
+        {
+          "label": "A",
+          "text": "20 17"
+        },
+        {
+          "label": "B",
+          "text": "20 27"
+        },
+        {
+          "label": "C",
+          "text": "20 tg: @melonkid411 37"
+        },
+        {
+          "label": "D",
+          "text": "20"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "x is inversely proportional to square of y 2 When 𝑥 = 9, 𝑦 = 3 . Find the value of y, when x = 4",
+      "options": [
+        {
+          "label": "A",
+          "text": "1"
+        },
+        {
+          "label": "B",
+          "text": "2 1"
+        },
+        {
+          "label": "C",
+          "text": "2 1"
+        },
+        {
+          "label": "D",
+          "text": "4 2 2       2            𝑎"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "𝑎 • 𝑏 = 𝑎 − 𝑏 , 𝑎 ⋄ 𝑏 = 2 . 𝑏 Find the value of (2 • 4) • (3 ⋄ 1)",
+      "options": [
+        {
+          "label": "A",
+          "text": "54"
+        },
+        {
+          "label": "B",
+          "text": "63"
+        },
+        {
+          "label": "C",
+          "text": "72"
+        },
+        {
+          "label": "D",
+          "text": "81"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "Find the area of arc, if it is given that the length of arc is equal to 16π, and radius is equal to 24",
+      "options": [
+        {
+          "label": "A",
+          "text": "166π"
+        },
+        {
+          "label": "B",
+          "text": "192π tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "212π"
+        },
+        {
+          "label": "D",
+          "text": "246π"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "The diagram shows a rhombus, ABCD, where the opposite sides are parallel. Vector CF is an extension of vector DC, such that DC:CF = 5:3 and E is a midpoint of AD. Find an expression for the vector EF in terms of a and b 1",
+      "options": [
+        {
+          "label": "A",
+          "text": "1. 6𝑎 + 2 𝑏 1"
+        },
+        {
+          "label": "B",
+          "text": "2. 4𝑎 + 4 𝑏 1"
+        },
+        {
+          "label": "C",
+          "text": "3. 2𝑎 + 2 𝑏 1"
+        },
+        {
+          "label": "D",
+          "text": "4. 8𝑎 + 4 𝑏 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "The equation 𝑦 = 4(𝑥 + 2𝑦) is shifted 2 units to the right and 3 units down. 2 Write the equation of the parabola in the form 𝑦 = 𝑎𝑥 + 𝑏𝑦 + 𝑐 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑦 = 4𝑥 + 2𝑦 + 7 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑦 = 6𝑥 + 2𝑦 − 5 tg: @melonkid411 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑦 =− 4𝑥 − 2𝑦 − 5 2"
+        },
+        {
+          "label": "D",
+          "text": "𝑦 =− 6𝑥 − 2𝑦 + 7"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "An observer standing on top of a vertical spots a house in the adjacent valley at an angle of depression of 30°. The cliff is 60m tall. How far is the house from the base of the cliff",
+      "options": [
+        {
+          "label": "A",
+          "text": "45 3"
+        },
+        {
+          "label": "B",
+          "text": "60 3"
+        },
+        {
+          "label": "C",
+          "text": "75 3"
+        },
+        {
+          "label": "D",
+          "text": "90 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "Decimal to fraction",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 0,
+      "prompt": "(17) + 0. 0(75) 49",
+      "options": [
+        {
+          "label": "A",
+          "text": "198 89"
+        },
+        {
+          "label": "B",
+          "text": "111 145"
+        },
+        {
+          "label": "C",
+          "text": "333 245"
+        },
+        {
+          "label": "D",
+          "text": "999 tg: @melonkid411 ◦"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "Find the value of x, if it is given that arc BC is equal to 20 and arc DE is equal to ◦ 140 . Angle A is equal to 2x",
+      "options": [
+        {
+          "label": "A",
+          "text": "30"
+        },
+        {
+          "label": "B",
+          "text": "45"
+        },
+        {
+          "label": "C",
+          "text": "60"
+        },
+        {
+          "label": "D",
+          "text": "75 3     3      2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "It is given that the expansion (𝑎𝑥 + 𝑏) is 8𝑥 − 𝑝𝑥 + 18𝑥 − 3 3, where a, b and p are real constants. What is the value of p?",
+      "options": [
+        {
+          "label": "A",
+          "text": "− 12 3"
+        },
+        {
+          "label": "B",
+          "text": "− 9 3"
+        },
+        {
+          "label": "C",
+          "text": "− 6 3"
+        },
+        {
+          "label": "D",
+          "text": "− 4 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "In the figure, ABCD is a kite with AB = AD = x and CB = CD = y. Angle A is equal to 60 degrees and angle C is equal to 120 degrees. tg: @melonkid411 Find the ratio of x to y",
+      "options": [
+        {
+          "label": "A",
+          "text": "2: 1"
+        },
+        {
+          "label": "B",
+          "text": "3: 1"
+        },
+        {
+          "label": "C",
+          "text": "2: 2"
+        },
+        {
+          "label": "D",
+          "text": "3: 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "PQRST is a regular pentagon. RSU is an equilateral triangle. What is the size of angle STU tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "48"
+        },
+        {
+          "label": "B",
+          "text": "54"
+        },
+        {
+          "label": "C",
+          "text": "60"
+        },
+        {
+          "label": "D",
+          "text": "66"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "Find the shaded area of given figure, if it is given that the radius is equal to 4, and sides of rhombus are equal to 12",
+      "options": [
+        {
+          "label": "A",
+          "text": "12(7 − π)"
+        },
+        {
+          "label": "B",
+          "text": "16(6 − π)"
+        },
+        {
+          "label": "C",
+          "text": "18(5 − π)"
+        },
+        {
+          "label": "D",
+          "text": "22(4 − π) ◦"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "B is 10km away from A on the bearing of 065 , C is 10km away from B on a bearing ◦ of 155 . What is a bearing A from C? ◦",
+      "options": [
+        {
+          "label": "A",
+          "text": "225 tg: @melonkid411 ◦"
+        },
+        {
+          "label": "B",
+          "text": "270 ◦"
+        },
+        {
+          "label": "C",
+          "text": "290 ◦"
+        },
+        {
+          "label": "D",
+          "text": "310"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "What is the value of x? 𝑥+1 3𝑥 19 5 * 25 = 125",
+      "options": [
+        {
+          "label": "A",
+          "text": "7"
+        },
+        {
+          "label": "B",
+          "text": "8"
+        },
+        {
+          "label": "C",
+          "text": "9"
+        },
+        {
+          "label": "D",
+          "text": "10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "A pyramid with height 15 𝑐𝑚 is separated into two pieces by a plane parallel to the base and 6 𝑐𝑚 above it. 3 What is the volume of upper piece if the volume of the original pyramid is 250 𝑐𝑚",
+      "options": [
+        {
+          "label": "A",
+          "text": "54"
+        },
+        {
+          "label": "B",
+          "text": "90"
+        },
+        {
+          "label": "C",
+          "text": "108"
+        },
+        {
+          "label": "D",
+          "text": "180 как ты? устал да? я тоже приляг отдохни tg: @melonkid411 🌸 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    }
+  ]
+}

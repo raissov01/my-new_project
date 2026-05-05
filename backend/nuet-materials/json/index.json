@@ -1,0 +1,158 @@
+[
+  {
+    "source_file": "NUET_MOCK_1 (Questions and Answers) (1).pdf",
+    "json_file": "nuet-mock-1-questions-and-answers-1.json",
+    "test_type": "mock_test",
+    "question_count": 58,
+    "answer_count": 44,
+    "warnings": [
+      "1 question(s) had non A-E raw answers"
+    ]
+  },
+  {
+    "source_file": "NUET_MOCK_2 (Questions and Answers).pdf",
+    "json_file": "nuet-mock-2-questions-and-answers.json",
+    "test_type": "mock_test",
+    "question_count": 59,
+    "answer_count": 45,
+    "warnings": [
+      "3 question(s) had non A-E raw answers"
+    ]
+  },
+  {
+    "source_file": "NUET_MOCK_3 (Questions and Answers).pdf",
+    "json_file": "nuet-mock-3-questions-and-answers.json",
+    "test_type": "mock_test",
+    "question_count": 59,
+    "answer_count": 45,
+    "warnings": [
+      "3 question(s) had non A-E raw answers"
+    ]
+  },
+  {
+    "source_file": "NUET_MOCK_4 (Questions and Answers).pdf",
+    "json_file": "nuet-mock-4-questions-and-answers.json",
+    "test_type": "mock_test",
+    "question_count": 64,
+    "answer_count": 45,
+    "warnings": [
+      "1 question(s) had non A-E raw answers"
+    ]
+  },
+  {
+    "source_file": "NUET_MOCK_5 (Questions and Answers).pdf",
+    "json_file": "nuet-mock-5-questions-and-answers.json",
+    "test_type": "mock_test",
+    "question_count": 58,
+    "answer_count": 43,
+    "warnings": [
+      "6 question(s) had non A-E raw answers"
+    ]
+  },
+  {
+    "source_file": "NUET_MOCK_6 (Questions and Answers).pdf",
+    "json_file": "nuet-mock-6-questions-and-answers.json",
+    "test_type": "mock_test",
+    "question_count": 63,
+    "answer_count": 46,
+    "warnings": []
+  },
+  {
+    "source_file": "NUET_MOCK_7 (Questions and Answers).pdf",
+    "json_file": "nuet-mock-7-questions-and-answers.json",
+    "test_type": "mock_test",
+    "question_count": 60,
+    "answer_count": 49,
+    "warnings": [
+      "1 question(s) had non A-E raw answers"
+    ]
+  },
+  {
+    "source_file": "Trial Test 1.pdf",
+    "json_file": "trial-test-1.json",
+    "test_type": "trial_test",
+    "question_count": 30,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 10.pdf",
+    "json_file": "trial-test-10.json",
+    "test_type": "trial_test",
+    "question_count": 31,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 11.pdf",
+    "json_file": "trial-test-11.json",
+    "test_type": "trial_test",
+    "question_count": 31,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 2.pdf",
+    "json_file": "trial-test-2.json",
+    "test_type": "trial_test",
+    "question_count": 31,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 3.pdf",
+    "json_file": "trial-test-3.json",
+    "test_type": "trial_test",
+    "question_count": 30,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 4.pdf",
+    "json_file": "trial-test-4.json",
+    "test_type": "trial_test",
+    "question_count": 31,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 5.pdf",
+    "json_file": "trial-test-5.json",
+    "test_type": "trial_test",
+    "question_count": 31,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 6.pdf",
+    "json_file": "trial-test-6.json",
+    "test_type": "trial_test",
+    "question_count": 32,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 7.pdf",
+    "json_file": "trial-test-7.json",
+    "test_type": "trial_test",
+    "question_count": 30,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 8.pdf",
+    "json_file": "trial-test-8.json",
+    "test_type": "trial_test",
+    "question_count": 33,
+    "answer_count": 0,
+    "warnings": []
+  },
+  {
+    "source_file": "Trial Test 9.pdf",
+    "json_file": "trial-test-9.json",
+    "test_type": "trial_test",
+    "question_count": 31,
+    "answer_count": 0,
+    "warnings": []
+  }
+]

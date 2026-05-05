@@ -6,6 +6,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { getNUETPDFTest } from "@/server/integrations/go-backend/nuet";
+import { getNUETParsedMockByName } from "@/server/nuet/mock-json";
 import { NUETPDFTestClient } from "./test-client";
 
 export async function generateMetadata({
@@ -48,6 +49,7 @@ export default async function NUETPDFTestDetailPage({
 
   const test = await getNUETPDFTest(user.id, id).catch(() => null);
   if (!test) notFound();
+  const parsed = await getNUETParsedMockByName(test.name).catch(() => null);
 
   return (
     <div className="page-shell py-6 sm:py-10">
@@ -62,7 +64,7 @@ export default async function NUETPDFTestDetailPage({
       <h1 className="mt-3 text-2xl font-bold text-[var(--text-primary)] sm:text-3xl">{test.name}</h1>
       <p className="mt-2 max-w-3xl text-sm text-[var(--text-secondary)]">{t("nuet.pdfTest.detailSubtitle")}</p>
 
-      <NUETPDFTestClient test={test} />
+      <NUETPDFTestClient test={test} parsed={parsed} />
     </div>
   );
 }

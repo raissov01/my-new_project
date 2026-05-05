@@ -1,0 +1,1755 @@
+{
+  "source_file": "NUET_MOCK_4 (Questions and Answers).pdf",
+  "name": "NUET_MOCK_4 (Questions and Answers)",
+  "test_type": "mock_test",
+  "parser": "mock_layout_parser",
+  "question_count": 64,
+  "answer_count": 45,
+  "warnings": [
+    "1 question(s) had non A-E raw answers"
+  ],
+  "questions": [
+    {
+      "number": 3,
+      "prompt": "In the diagram, O is the center of the circle, ise i o k n M oc is k n o M c",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 1,
+      "prompt": "The sum of four consecutive primes is itself prime. Mathematics",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 2,
+      "prompt": "If 5𝑥 + 2𝑦 = 8, 25𝑥 2 − 4𝑦 2 = 72, then 5𝑥 − 2𝑦 = ... K i k January 15, 2025 ise i o k e o NUET Mock №4 n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o k n",
+      "options": [
+        {
+          "label": "B",
+          "text": "8"
+        },
+        {
+          "label": "A",
+          "text": "9"
+        },
+        {
+          "label": "E",
+          "text": "5"
+        },
+        {
+          "label": "A",
+          "text": "3 i n √ √ √ M"
+        },
+        {
+          "label": "E",
+          "text": "20"
+        },
+        {
+          "label": "D",
+          "text": "18"
+        },
+        {
+          "label": "C",
+          "text": "10"
+        },
+        {
+          "label": "E",
+          "text": "16"
+        },
+        {
+          "label": "D",
+          "text": "72"
+        },
+        {
+          "label": "C",
+          "text": "52"
+        },
+        {
+          "label": "B",
+          "text": "20"
+        },
+        {
+          "label": "A",
+          "text": "32 i        k                        c                  s          i       o"
+        },
+        {
+          "label": "D",
+          "text": "22"
+        },
+        {
+          "label": "C",
+          "text": "19"
+        },
+        {
+          "label": "B",
+          "text": "18 oc             s         i      o                 k        K         e k Ki ek n M oc                                            is       k i       no      M s                o                        K shaded region has area 62 cm2 i                       k                   e                           o What is the length of KN in cm? K ek n M oc i                                              i         k       n         M K        se i n o k                   M      o c K sek i n o M oc k k      K      is e        i       o           o       k Page 2 𝑁𝐾 𝑃𝑂. The length of 𝑁 𝐿 is 10 cm. The"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "The diagram shows two squares, 𝐽𝐾 𝐿𝑀 and ise i o k n M oc is k i n o M ck ise i o k K e o",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 5,
+      "prompt": "Find the maximum value of 8 sin 𝑥 + 10, where 0◦ ≤ 𝑥 ≤ 360◦ n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k e K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i 𝑝 and 𝑟? k e",
+      "options": [
+        {
+          "label": "A",
+          "text": "M ck K se i o                                    o                             k       n G. 1"
+        },
+        {
+          "label": "B",
+          "text": "2"
+        },
+        {
+          "label": "E",
+          "text": "1"
+        },
+        {
+          "label": "C",
+          "text": "2𝑝 i n √ √︁ √︁ M"
+        },
+        {
+          "label": "C",
+          "text": "-2 k                                                              o √ c 𝑝𝑟 i                                                    s          i"
+        },
+        {
+          "label": "D",
+          "text": "2𝑝+𝑟 oc             s                o                          K"
+        },
+        {
+          "label": "A",
+          "text": "2𝑝 + 𝑟 i                        k                  e √"
+        },
+        {
+          "label": "E",
+          "text": "4 2 − 4"
+        },
+        {
+          "label": "D",
+          "text": "4 − 4 2 √ F. 26 − 4 2 √ 26 − 16 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑝 2 + 𝑟 2 + 2𝑝 k Ki ek n M oc                                            is       k i       no      M s                o                        K √︃ i                       k                   e                           o"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "Find the value of the expression K ek n M oc i i k n M K √ i se i n o k M o c K sek i n o M oc k k K s e i o o k Page 3 Which of these expressions gives 𝑞 in terms of X at the same time. Their first meeting is at 𝑀. directions along the edge of the field, starting at and Emily walk at the same speed in opposite with 𝐿 𝑀 = 𝑟, 𝐿 𝑋 = 𝑝 and 𝑋 𝑁 = 𝑞. Haley",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 6,
+      "prompt": "Triangle 𝐿𝑀 𝑁 represents a right-angled field ise i o o n √︃ k n M c K is k i o M ck ise i o k e o √ 8 − 4 2 + 1 + 9 − 12 2 + 8 n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o k n",
+      "options": [
+        {
+          "label": "E",
+          "text": "5"
+        },
+        {
+          "label": "D",
+          "text": "4"
+        },
+        {
+          "label": "C",
+          "text": "3"
+        },
+        {
+          "label": "B",
+          "text": "2"
+        },
+        {
+          "label": "A",
+          "text": "1 i oc            is       k i    n o      M        c k        K       s e        i       o"
+        },
+        {
+          "label": "E",
+          "text": "−𝑛2 − 𝑛 + 21"
+        },
+        {
+          "label": "D",
+          "text": "−𝑛2 + 19𝑛 + 1 n       M"
+        },
+        {
+          "label": "A",
+          "text": "−4.5𝑛2 + 16.5𝑛 i        k          o"
+        },
+        {
+          "label": "C",
+          "text": "−11.5𝑛2 + 30.5𝑛"
+        },
+        {
+          "label": "B",
+          "text": "−2.75𝑛2 + 11.25𝑛 k Ki ek n M oc                                             s         i s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 4 ise i o k    n        M       oc              is       k         n o      M          c 19, 15, 9, 1... ise i o                        k        K       e        i                    o      k n    M       o                 i     k         n o       M         c          K      i"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Work out the formula for the 𝑛th term of the quadratics sequence: c s and noted that the resulting product 20 × 20 was a square number. ki o o k K e i n M o k i no M ck K se i o i k c k K se How many integers between 2010 and 2099 (including 2020) have the same property?",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 9,
+      "prompt": "Caroline put a multiplication sign between the second and third digits of the number 2020 oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n i k n M c s i o √ √ √ √ √ oc s o K",
+      "options": [
+        {
+          "label": "E",
+          "text": "42 3"
+        },
+        {
+          "label": "D",
+          "text": "36 3"
+        },
+        {
+          "label": "C",
+          "text": "33 3"
+        },
+        {
+          "label": "B",
+          "text": "22 3"
+        },
+        {
+          "label": "A",
+          "text": "11 3 i                        k                  e Find 𝐴( 𝐴𝐵𝐶𝐷). √ √ √ √"
+        },
+        {
+          "label": "D",
+          "text": "6 + 8 3"
+        },
+        {
+          "label": "C",
+          "text": "8 + 8 3 √"
+        },
+        {
+          "label": "A",
+          "text": "8 + 6 3"
+        },
+        {
+          "label": "E",
+          "text": "8 + 12 3"
+        },
+        {
+          "label": "B",
+          "text": "16 + 6 3 i        k         n       M 𝐵𝐶 = 6 cm, m(∠C) = 120°. k Ki ek n M oc s        i       o               k        K        s e       i n      o          o K ek n M oc i                                              i         k                 M What is the perimeter of the hat tile? K        se i n o k                   M      o c K sek i n o M oc k K      is          i       o                   k √ k                e                            o Page 5"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "ABCD is an isosceles trapezoid 𝐷𝐶 = 8 cm, congruent kites. The area of the hat tile is 8 3. here. This tile can be subdivided into eight",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 10,
+      "prompt": "The plane can be tiled using the ’hat tile’ shown ise i o k n M oc is k i n o M ck ise i o k K e o n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 12,
+      "prompt": "On Monday a shirt is reduced in price by 30% of its original price. o i M i k n On Tuesday the shirt is further reduced in price by 20% of its Monday reduced price. k o e k se i n o What is the overall price reduction of the shirt as a percentage of its original price? M s c i n k",
+      "options": [
+        {
+          "label": "A",
+          "text": "6%                                           e k e o i s"
+        },
+        {
+          "label": "B",
+          "text": "10% c k s i i K o"
+        },
+        {
+          "label": "C",
+          "text": "25% o M"
+        },
+        {
+          "label": "D",
+          "text": "44% k K s n i K o"
+        },
+        {
+          "label": "E",
+          "text": "50%                                e K i M s k F. 60% i k o c k  i i n K k e k no M ck K se i o c s c i o n"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "A laboratory technician has made up a stock mixture of two chemicals, X and Y, ready for K e M use by all of the groups in Year 9 at a High School. He has mixed 6.0 kg which is 14 of X i s k Ki ek n M oc k and 34 of Y. i K k M He realises that he has used the wrong mix and, rather than waste the chemicals he has k Ki ek n M oc M k used so far, he is going to add some more of chemical X so that the mix consists of 40% of e K K sek i n o M oc k X and 60% of Y. e M ck K se i o K ek n M oc s n What mass of chemical X must he add? i k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "1.0 kg o i n"
+        },
+        {
+          "label": "B",
+          "text": "1.5 kg i K n K k"
+        },
+        {
+          "label": "C",
+          "text": "2.0 kg o c k o"
+        },
+        {
+          "label": "D",
+          "text": "2.5 kg o i"
+        },
+        {
+          "label": "E",
+          "text": "3.0 kg i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 6 oc c o                        e              k                                       K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c                 i s      k 10 cm. k        K         e       i M ck K se i o                                    o                   i         k       n oc            is       k i    n o      M        c k        K       s e        i       o"
+        },
+        {
+          "label": "A",
+          "text": "𝑃 = 𝑅5 5"
+        },
+        {
+          "label": "E",
+          "text": "𝑃 = 2𝑅"
+        },
+        {
+          "label": "B",
+          "text": "𝑃 = 4𝑅 25 1 2"
+        },
+        {
+          "label": "D",
+          "text": "𝑃 = 4𝑅5 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑃 = 800𝑅 2"
+        },
+        {
+          "label": "E",
+          "text": "360𝜋 𝑐𝑚 3"
+        },
+        {
+          "label": "D",
+          "text": "320𝜋 𝑐𝑚 3"
+        },
+        {
+          "label": "C",
+          "text": "240𝜋 𝑐𝑚 3"
+        },
+        {
+          "label": "B",
+          "text": "210𝜋 𝑐𝑚 3"
+        },
+        {
+          "label": "A",
+          "text": "180𝜋 𝑐𝑚 3 When P is 2, Q is 4. When Q is 2, R is 5. What is P in terms of R? k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e                           o Q is inversely proportional to R. K ek n M oc i                                              i         k       n         M K                                      o"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "P is directly proportional to Q squared. Find the volume of the remaining solid. se i n o K sek i n o M oc k K is k i o M c k k e o Page 7 another cylinder with diameter 9 cm and height",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 14,
+      "prompt": "A cylinder with diameter 3 cm is removed from ise i o k n M oc is k i n o M ck ise i o k K e o n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k e K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n oc is k n o M c K s i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "9 cm F. 5 + 2𝑥"
+        },
+        {
+          "label": "E",
+          "text": "5 − 2𝑥"
+        },
+        {
+          "label": "D",
+          "text": "4 + 2𝑥"
+        },
+        {
+          "label": "C",
+          "text": "4 − 2𝑥"
+        },
+        {
+          "label": "B",
+          "text": "3 + 2𝑥"
+        },
+        {
+          "label": "A",
+          "text": "3 − 2𝑥 i                        k                  e F. 17 cm"
+        },
+        {
+          "label": "E",
+          "text": "15 cm"
+        },
+        {
+          "label": "D",
+          "text": "12 cm"
+        },
+        {
+          "label": "C",
+          "text": "11 cm"
+        },
+        {
+          "label": "B",
+          "text": "10 cm n       M What is the length of 𝑅𝑆? k Ki ek n M oc s                o                        K       is       k i        o i                       k           i       e k       n         M       o and the vertical height QR = x cm. K ek n M oc i                                      K The area of the trapezium is 120 cm2 . se i n o k                   M      o c 4+ K sek i n o M oc k k      K      is e        i       o           o       k Page 8"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "In a trapezium 𝑃𝑄𝑅𝑆, the parallel sides are 𝑃𝑄 and 𝑅𝑆. PQ = (x - 1)cm, RS = (x + 5)cm, ise i o o k n M",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 17,
+      "prompt": "Which one of the following is a simplification of i c 4 − 𝑥2 n M 𝑥 2 − 2𝑥 k c s o ? ise i o k K e i o k n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n n M",
+      "options": [
+        {
+          "label": "C",
+          "text": "25"
+        },
+        {
+          "label": "A",
+          "text": "30 i        k                        c                  s                  o"
+        },
+        {
+          "label": "E",
+          "text": "84°"
+        },
+        {
+          "label": "D",
+          "text": "66°"
+        },
+        {
+          "label": "C",
+          "text": "60°"
+        },
+        {
+          "label": "B",
+          "text": "54°"
+        },
+        {
+          "label": "A",
+          "text": "48° i"
+        },
+        {
+          "label": "E",
+          "text": "−24"
+        },
+        {
+          "label": "D",
+          "text": "−32"
+        },
+        {
+          "label": "B",
+          "text": "−28 oc             s                o                          K Find 𝑝 + 𝑞 + 𝑟. i                        k                  e"
+        },
+        {
+          "label": "C",
+          "text": "8.6 km/h"
+        },
+        {
+          "label": "B",
+          "text": "7.2 km/h"
+        },
+        {
+          "label": "A",
+          "text": "6.3 km/h"
+        },
+        {
+          "label": "E",
+          "text": "12.6 km/h"
+        },
+        {
+          "label": "D",
+          "text": "10.5 km/h"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "Convert 74 m/s to km/h. k Ki ek n M oc is k i no M s o K 𝑅𝑆𝑈 is an equilateral triangle.",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 18,
+      "prompt": "𝑃𝑄𝑅𝑆𝑇 is a regular pentagon. i k e o What is the size of angle ∠𝑆𝑇𝑈? K ek n M oc i i k n M K se i n o k M o c K sek i n o M oc k k K is e i o o k Page 9 ise i o k n M oc is k i n o M ck ise i o k K e o",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 20,
+      "prompt": "4𝑥 2 + 24𝑥 + 1 can be written in the form 𝑝(𝑥 + 𝑞) 2 + 𝑟. n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c",
+      "options": [],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 21,
+      "prompt": "The first four triangular numbers are: i n k e k e o i s c k s i i K o o M k K s n i K o e K i M s k i k o c k i i n K k e The difference between the first and second triangular numbers is 2. k no M ck K se i o c s The difference between the second and third triangular numbers is 3. c i o n The difference between the third and fourth triangular numbers is 4. K e M All triangular numbers follow this pattern. i s k Ki ek n M oc k The difference between the 𝑟 𝑡ℎ triangular number and (𝑟 + 3) 𝑡ℎ triangular number is 126. i K k What is the value of 𝑟? M k Ki ek n M oc M k",
+      "options": [
+        {
+          "label": "A",
+          "text": "39 e K K sek i n o M oc k e M ck K se i o"
+        },
+        {
+          "label": "B",
+          "text": "40 K ek n M oc s n i"
+        },
+        {
+          "label": "C",
+          "text": "41 k o"
+        },
+        {
+          "label": "D",
+          "text": "42 o i n i K n"
+        },
+        {
+          "label": "E",
+          "text": "43 K k o c k o o i i k k k k"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "The point A is 5 km away due West of the point B. M c The bearing of the point C from A is 045° and the bearing of C from B is 315°. i o Find the distance AC. ise i o i s s",
+      "options": [
+        {
+          "label": "A",
+          "text": "5 i o i o"
+        },
+        {
+          "label": "B",
+          "text": "25 ise i o M √ s n"
+        },
+        {
+          "label": "C",
+          "text": "5 2"
+        },
+        {
+          "label": "D",
+          "text": "√5 s 2"
+        },
+        {
+          "label": "E",
+          "text": "10 ki o k i o n oc Page 10 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "The graphs of the following equations are drawn: i n k",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 1,
+      "prompt": "𝑦 = 3𝑥 − 2 e k e o i s",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 2,
+      "prompt": "𝑦 = 𝑥 2 c k s i",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 3,
+      "prompt": "𝑦 = 1 − 𝑥 2 i K o",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 4,
+      "prompt": "𝑦 = 𝑥 + 6 o M k K s Which pair of graphs do not intersect ? n i K o e K",
+      "options": [
+        {
+          "label": "A",
+          "text": "1 and 2 i M s k i"
+        },
+        {
+          "label": "B",
+          "text": "1 and 3 k"
+        },
+        {
+          "label": "C",
+          "text": "2 and 3 o c k  i i n"
+        },
+        {
+          "label": "D",
+          "text": "2 and 4 K k e k no M ck K se i o c"
+        },
+        {
+          "label": "E",
+          "text": "3 and 4 s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "The solutions of the quadratic equation 2𝑥 2 − 8𝑥 + 6 = 0 are 𝑝 and 𝑞, where 𝑝 > 𝑞. k e What is the value of ( 𝑝 2 + 𝑞 2 ) 2 K K sek i n o M oc k e M ck K se i o K ek n M oc s",
+      "options": [
+        {
+          "label": "A",
+          "text": "100 n i k"
+        },
+        {
+          "label": "B",
+          "text": "121 o o i n"
+        },
+        {
+          "label": "C",
+          "text": "81 i K n K k"
+        },
+        {
+          "label": "D",
+          "text": "64 o c k"
+        },
+        {
+          "label": "E",
+          "text": "144 o o i F. 169 i k k G. 49 k k M H. 196 c i o ise i o i s s i o i o ise i o M s"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "The diagram shows a shape consisting of half of a regular hexagon and half of a regular n octagon, which have the line 𝑃𝑆 in common. s 𝑃, 𝑄, 𝑅, 𝑆 are vertices of a regular hexagon with sides of length 4 cm. 𝑆, 𝑇, 𝑈, 𝑉, 𝑃 are vertices of a regular octagon. 𝑂 is at the midpoint of 𝑃𝑆 ki o k i o n oc Page 11 oc c o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n i k n M c o",
+      "options": [
+        {
+          "label": "A",
+          "text": "1:1 oc             s         i      o                 k        K       s e        i √ √ √ √"
+        },
+        {
+          "label": "E",
+          "text": "1 : 49 6"
+        },
+        {
+          "label": "D",
+          "text": "1 : 13 6"
+        },
+        {
+          "label": "C",
+          "text": "1 : 49 3"
+        },
+        {
+          "label": "B",
+          "text": "1 : 13 3 Calculate the ratio √︃ √︃ √︃"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 = 4 ± 4 5−𝑦  3 n       M 3 3 k"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 = −4 ± 2 5−𝑦"
+        },
+        {
+          "label": "A",
+          "text": "𝑥 = −4 ± 4 5−𝑦 k Ki ek n M oc s        i       o               k        K       is e       i        o          o i         k       n         M"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "The equation gives 𝑦 in terms of 𝑥: K ek n M oc i K se i n o o K sek i n o M oc k K is k i o M c k k e o \u0010 Page 12 ise i o n M o i k n M c 𝑦 =5−3 1− k c s i o k 4 k K e o 𝑥 \u00112 ise i o n M oc is k n o M c K i Which one of the following is a rearrangement for 𝑥 in terms of 𝑦? ki o o k K e i n M o k i no M ck K se i o i k c k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o e k K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 27,
+      "prompt": "Evaluate: M ck K se i o o i k n n M",
+      "options": [
+        {
+          "label": "E",
+          "text": "40"
+        },
+        {
+          "label": "B",
+          "text": "80 i        k                        c                  s                  o"
+        },
+        {
+          "label": "D",
+          "text": "360"
+        },
+        {
+          "label": "C",
+          "text": "840 oc             s                o                          K                  i"
+        },
+        {
+          "label": "A",
+          "text": "1680 i                        k                  e √︃ √︃ √︃ √︃"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 28,
+      "prompt": "What is 60% of 6060 ? √︃ 2 3 3 3 G. 2119 · 360 · 562 F. 2120 · 361 · 559",
+      "options": [
+        {
+          "label": "E",
+          "text": "2119 · 361 · 559"
+        },
+        {
+          "label": "D",
+          "text": "2120 · 361 · 560"
+        },
+        {
+          "label": "C",
+          "text": "2121 · 360 · 559"
+        },
+        {
+          "label": "B",
+          "text": "2120 · 359 · 559"
+        },
+        {
+          "label": "A",
+          "text": "2121 · 360 · 559 H. 𝑥 = 2 ± 2 5−𝑦 G. 𝑥 = 2 ± 4 5−𝑦"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 = 4 ± 2 5−𝑦 n       M 2"
+        },
+        {
+          "label": "E",
+          "text": "𝑥 = 4 ± 3(5−𝑦) i        k F. 𝑥 = −4 ± 3(5−𝑦) k Ki ek n M oc s        i       o               k        K        s e       i n      o          o K ek n M oc i                                      K       i         k                 M i se i n o k                   M      o c K sek i n o M oc k K       s          i       o                   k"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "Which of the answers below is equal to 0.37? k e o Page 13 ise i o k n M oc is k i n o M ck ise i o k K e o (272 − 232 ) + (142 − 62 ) n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 30,
+      "prompt": "Evaluate: M ck K se i o o i k n n M 45 F. 16 45",
+      "options": [
+        {
+          "label": "E",
+          "text": "17 30"
+        },
+        {
+          "label": "C",
+          "text": "11 90"
+        },
+        {
+          "label": "A",
+          "text": "34 37 k                                                              o                                                                                          D. 100 300"
+        },
+        {
+          "label": "B",
+          "text": "112 i                                 c                  s"
+        },
+        {
+          "label": "B",
+          "text": "400 oc             s                o                          K                  i"
+        },
+        {
+          "label": "C",
+          "text": "8 000 i                        k                  e"
+        },
+        {
+          "label": "D",
+          "text": "10 000"
+        },
+        {
+          "label": "A",
+          "text": "40 000"
+        },
+        {
+          "label": "E",
+          "text": "100 000 k Ki ek n M oc                                            is       k i       no      M o                        K 3 s                                                    e √︄ K ek n M oc  i                       k           i         k       n         M       o i                                      K        se i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 14 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o                                10−1 − 9.8 × 10−2 (9 × 104 ) 2 − 108 + 1.2 × 1011 n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se oc           i s       k      n o      M        c          K      is        k i       o k Ki ek n M oc        i                        k           i      e k        n c             s                o                         K s                i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K Critical Thinking o i M i k n k o e"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 1,
+      "prompt": "Over the years, nutritionists have suggested several plant-based products to reduce our k se i n o M s reliance on dairy. Their latest favourite is oat milk because it is relatively sustainable c i n k to produce and has fewer greenhouse gas emissions than traditional dairy. However, its e k e widespread adoption is unlikely because of the difficulty in storing large quantities of the o i s c k s product at the right temperature. Oat milk requires strict refrigeration to prevent spoilage, i i K o but this poses logistical challenges and significantly increases energy usage. The problem o M is made worse by rising electricity costs and the need for specialised cooling systems during k K s n transportation. i K o e K i M s Which of the following is an underlying assumption of the above argument? k i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "People will not adopt oat milk if it requires more expensive refrigeration systems. o c i"
+        },
+        {
+          "label": "B",
+          "text": "No other plant-based milk requires refrigeration at all. k i n K k e"
+        },
+        {
+          "label": "C",
+          "text": "Consumers are unaware that oat milk can be stored in shelf-stable cartons for k no M ck K se i o c s limited periods. c i o n K e"
+        },
+        {
+          "label": "D",
+          "text": "Oat milk’s sustainability credentials do not outweigh the extra effort required for M i s proper storage. k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "E",
+          "text": "Higher greenhouse gas emissions from dairy are acceptable if the alternative M k Ki ek n M oc milk is difficult to store. M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Many people strive to improve their mental well-being, as shown by the growing popularity i K n K k of mindfulness apps and meditation classes. However, the solution might be far simpler. A o c k man who claimed to have overcome years of anxiety attributed his transformation to daily o journaling. Clearly, one example cannot establish a causal relationship. Nonetheless, stud- o i ies show that individuals who journal regularly report 30% fewer stress-related symptoms i k than those who do not. Thus, it is evident that journaling is the key to achieving long-term k k k mental well-being. M c i Which of the following is the best statement of the flaw in the above argument? o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Achieving mental well-being requires addressing deeper psychological issues. ise i o i s s i o"
+        },
+        {
+          "label": "B",
+          "text": "Not everyone who journals regularly reports significant reductions in stress i o symptoms. ise i o M s n"
+        },
+        {
+          "label": "C",
+          "text": "Reporting fewer stress-related symptoms does not necessarily mean improved overall mental well-being. s"
+        },
+        {
+          "label": "D",
+          "text": "One person’s experience cannot prove that journaling is effective for everyone."
+        },
+        {
+          "label": "E",
+          "text": "Stress-related symptoms can decrease for reasons unrelated to journaling. ki o k i o n oc Page 15 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "To enhance public safety, the government is considering the introduction of autonomous i n k e drones equipped with advanced surveillance technology, such as facial recognition and k e o i s heat sensors. These drones can identify individuals in crowded places and track suspicious c k s i activity in real-time. Unlike traditional cameras, drones can follow a target, making it i K o nearly impossible for criminals to evade detection. By using drones, authorities argue that o M k K s crimes such as theft, assault, and illegal gatherings will be significantly reduced, as the fear n i K o e of constant surveillance will deter potential offenders. K i M s k Which of the following, if true, would most strengthen the above argument? i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Autonomous drones are programmed to operate without human intervention, o c k  i reducing the risk of operator bias. i n K k e"
+        },
+        {
+          "label": "B",
+          "text": "Advanced surveillance drones are proven to identify individuals with a 98 k no M ck K se i o c s c"
+        },
+        {
+          "label": "C",
+          "text": "The cost of deploying drones is lower than traditional surveillance systems, such i o n K as fixed cameras.   e M i s k Ki ek n M oc k"
+        },
+        {
+          "label": "D",
+          "text": "Autonomous drones have been successfully used to monitor large events, like i K k festivals, without incidents. M k Ki ek n M oc M"
+        },
+        {
+          "label": "E",
+          "text": "Public support for advanced surveillance technology has increased due to con- k e K K sek i n o M oc k cerns over rising crime rates. e M ck K se i o K ek n M oc s n i k o o i n i K n K k"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "The maximum weight allowed in a service lift is satisfied exactly by 12 identical large o c k packages or by 20 identical small packages. What is the greatest number of small packages o that the lift can carry alongside nine large packages? o i i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 k k k"
+        },
+        {
+          "label": "B",
+          "text": "4 M c i"
+        },
+        {
+          "label": "C",
+          "text": "5 o ise i o i s"
+        },
+        {
+          "label": "D",
+          "text": "6 s i o i o"
+        },
+        {
+          "label": "E",
+          "text": "8 ise i o M s n s ki o k i o n oc Page 16 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "Nine cards numbered from 1 to 9 were placed facedown on the table. Aleksa, Bart, Clara o i M i k and Deindra each picked up two of the cards. Aleksa said, “My numbers add up to 6.” Bart n k o e said, “The difference between my numbers is 5.” Clara said, “The product of my numbers k se i n o M s is 18.” Deindra said, “One of my numbers is twice the other one.” All four made a true c i n k statement. Which number was left on the table? e k e o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "1 c k s i i K o"
+        },
+        {
+          "label": "B",
+          "text": "3 o M"
+        },
+        {
+          "label": "C",
+          "text": "6 k K s n i K o"
+        },
+        {
+          "label": "D",
+          "text": "8                                  e K i M s k"
+        },
+        {
+          "label": "E",
+          "text": "9 i k o c k  i i n K k e k no M ck K se i o c s c i o n"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Some companies and analysts argue that automation and artificial intelligence (AI) will not K e M lead to significant job losses. They defend this by pointing out that in the past, technological i s k Ki ek n M oc k advancements like the industrial revolution created more jobs than they eliminated, leading i K k to economic growth. However, this argument overlooks key factors. Modern AI is capable M k Ki ek n M oc M of replacing not just manual labor but also complex cognitive tasks. Studies show that AI k e could automate up to 40% of existing jobs within the next decade, particularly in industries K K sek i n o M oc k e M ck K se i o like finance, healthcare, and transportation. The overall trend indicates that automation K ek n M oc s n may lead to significant displacement in the job market, even if new jobs are created in i k emerging fields. o o i n Which of the following is the best statement of the main conclusion of the above argument? i K n K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Automation and artificial intelligence are not comparable to past technological o c k advancements. o o"
+        },
+        {
+          "label": "B",
+          "text": "The argument that past technological advancements always created jobs is flawed. i i k k"
+        },
+        {
+          "label": "C",
+          "text": "Companies and analysts are ignoring the risks associated with widespread AI k k adoption. M c i"
+        },
+        {
+          "label": "D",
+          "text": "New jobs created by automation will not compensate for the jobs lost. o ise i o i s"
+        },
+        {
+          "label": "E",
+          "text": "Automation is likely to lead to significant job losses, even if some new jobs are s i o created. i o ise i o M s n s ki o k i o n oc Page 17 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "Data for the world’s largest 10 lakes are shown below: o i M i k n k o Name and Location Area (sq km) e Length (km) Volume (cu km) k se i n o M s c i Caspian Sea, Asia 394,299 1,199 78,200 n k Michigan – Huron, US – Canada 117,612 e 397 8,458 k e o i s Superior, US – Canada 82,414 616 12,100 c k s i Victoria, Tanzania – Uganda 69,485 322 2,750 i K o o Tanganyika, Tanzania – Congo 32,893 676 18,900 M k K s Baikal, Russia 31,500 636 23,600 n i K o Great Bear, Canada e 31,080 373 2,236 K i M s Great Slave, Canada 28,930 480 2,090 k i Erie, US – Canada 25,719 388 489 k o Winnipeg, Canada 23,553 425 283 c k i i n K k e k Which has the greatest average depth? no M ck K se i o c s c i o n",
+      "options": [
+        {
+          "label": "A",
+          "text": "Caspian Sea K e M i"
+        },
+        {
+          "label": "B",
+          "text": "Victoria s k Ki ek n M oc k i"
+        },
+        {
+          "label": "C",
+          "text": "Tanganyika K k M k Ki ek n M oc M"
+        },
+        {
+          "label": "D",
+          "text": "Baikal k e K K sek i n o M oc k"
+        },
+        {
+          "label": "E",
+          "text": "Winnipeg    e M ck K se i o K ek n M oc s n i k o o i n i K n K k"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Many students prepare for exams by cramming, believing that intensive, last-minute study o c k sessions are the most effective way to retain information. However, research suggests that o cramming is not as beneficial as regular, spaced-out study sessions. The brain processes o i i k and stores information more effectively when it is revisited over time, rather than absorbed k k all at once. Moreover, cramming often leads to increased stress and fatigue, which can k M negatively affect performance during exams. While last-minute reviews may help with c i recalling specific facts, the best way to prepare for exams is through consistent and well- o organized study habits over an extended period. ise i o i s s i o Which of the following is a conclusion that can be drawn from the above passage? i o ise i o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "Cramming for exams is less effective than consistent study over time. s n"
+        },
+        {
+          "label": "B",
+          "text": "Last-minute reviews are harmful and should be avoided altogether. s"
+        },
+        {
+          "label": "C",
+          "text": "Spaced-out study sessions only benefit students preparing for long exams."
+        },
+        {
+          "label": "D",
+          "text": "The stress caused by cramming outweighs any potential benefits it might offer. ki o k i o n oc Page 18 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "E",
+          "text": "Effective exam preparation requires avoiding all forms of last-minute study. o i M i k n k o e k se i n o M s c i n k e k e o i s"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "A group of 50 girls sit in a circle. They throw a ball around the circle. Each girl who gets c k s i the ball throws it to the girl sitting six places anticlockwise from her, who catches it. Freda i K o catches the ball 100 times. In that time, how many girls never get to catch the ball? o M k K s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "0 i K o e K i M s"
+        },
+        {
+          "label": "B",
+          "text": "8 k i"
+        },
+        {
+          "label": "C",
+          "text": "10 k o c i"
+        },
+        {
+          "label": "D",
+          "text": "25 k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "40                       e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "Kristina has a piece of transparent paper with k e some lines marked on it. K K sek i n o M oc k e M ck K se i o She folds it along the central dashed line, as K ek n M oc s n indicated. i k What can she now see? o o i n i K n K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "B.                                 C. o c k o o i"
+        },
+        {
+          "label": "D",
+          "text": "E. i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 19 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": [
+        "only 2 option(s) detected"
+      ]
+    },
+    {
+      "number": 11,
+      "prompt": "Evita wants to write the numbers 1 to 8 in the o i M boxes of the grid shown, so that the sums of i k n k o the numbers in the boxes in each row are equal e k se i n o M s and the sums of the numbers in the boxes in c i n each column are equal. She has already written k e k numbers 3, 4 and 8, as shown. e o i s c k What number should she write in the shaded s i i K o box? o M k K s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "1 i K o e K"
+        },
+        {
+          "label": "B",
+          "text": "2 i M s k i"
+        },
+        {
+          "label": "C",
+          "text": "5 k o c i"
+        },
+        {
+          "label": "D",
+          "text": "6 k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "7                        e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "Only Tesla, the internationally recognized electric vehicle company, can pull off marketing k Ki ek n M oc M k strategies that would seem unconvincing from any other brand. Their latest campaign, e K K sek i n o M oc k e highlighting their autonomous driving features, went viral with over a million shares on M ck K se i o K ek n M oc s social media in the first week. The video depicts a future where driving is obsolete, yet n i critics argue that it promotes an unrealistic and overly idealistic view of technology. If k o another company had launched this campaign, they would have been dismissed as overly o i n ambitious or naı̈ve. Yet, Tesla’s reputation for innovation allows them to frame the narrative i K n K k successfully, with sales figures outperforming all competitors in the same quarter. o c k Which one of the following can be drawn as a conclusion from the above passage? o o i",
+      "options": [
+        {
+          "label": "A",
+          "text": "Autonomous driving technology is essential for the future of transportation. i k k"
+        },
+        {
+          "label": "B",
+          "text": "Consumers will accept ambitious ideas more readily when presented by Tesla. k k M"
+        },
+        {
+          "label": "C",
+          "text": "Marketing campaigns that depict futuristic visions are not credible. c i o"
+        },
+        {
+          "label": "D",
+          "text": "Social media engagement directly translates to higher sales. ise i o i s"
+        },
+        {
+          "label": "E",
+          "text": "Critics of Tesla’s campaign lack understanding of its technological vision. s i o i o ise i o M s n s ki o k i o n oc Page 20 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "Residents of neighborhoods near public parks often express frustration when the parks o i M i k are used for loud events or concerts that disrupt their peace. People have a right to n k o e enjoy their homes and surroundings without unnecessary disturbances, and therefore, local k se i n o M s communities should have the authority to decide how public spaces in their area are used, c i n k including setting limits on noise levels or the types of events allowed. e k e o i s Which one of the following illustrates the principle used in the above argument? c k s i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Residents of a community, not city officials, should have the final say in how o M nearby parks are maintained. k K s n"
+        },
+        {
+          "label": "B",
+          "text": "Public spaces should always be available for use by everyone, regardless of the i K o e K local community’s preferences. i M s k i"
+        },
+        {
+          "label": "C",
+          "text": "Decisions about event planning should be made by professionals to ensure fair k access to public spaces. o c k  i i n"
+        },
+        {
+          "label": "D",
+          "text": "People living near public spaces should expect occasional disruptions as part of K k e k community life. no M ck K se i o c s c i o n"
+        },
+        {
+          "label": "E",
+          "text": "Organizers of public events should consider moving their events to areas where K e M fewer people live. i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "How many eight-digit numbers can be written using only the digits 1, 2 and 3 so that the n i difference between any two adjacent digits is 1? k o o",
+      "options": [
+        {
+          "label": "A",
+          "text": "16 i n i K n"
+        },
+        {
+          "label": "B",
+          "text": "20 K k o c k"
+        },
+        {
+          "label": "C",
+          "text": "24 o"
+        },
+        {
+          "label": "D",
+          "text": "28 o i i k"
+        },
+        {
+          "label": "E",
+          "text": "32 k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 21 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "On each of three pieces of paper a five-digit n k o number is written as shown. Three of the digits e k se i n o M s are covered. The sum of the three numbers is c i n k 57263. e k What are the covered digits? e o i s c k s i i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "0, 2 and 2 k K s n i K o"
+        },
+        {
+          "label": "B",
+          "text": "2, 4 and 9                         e K i M s k"
+        },
+        {
+          "label": "C",
+          "text": "1, 2 and 9 i k"
+        },
+        {
+          "label": "D",
+          "text": "2, 7 and 8 o c k  i i"
+        },
+        {
+          "label": "E",
+          "text": "5, 7 and 8 n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "Many modern offices now use biometric access systems, such as fingerprint scanners and M k Ki ek n M oc facial recognition, to improve security and reduce unauthorized access. Reports suggest M k that companies implementing these systems have seen a 60% reduction in security breaches. e K K sek i n o M oc k e M ck K se i o For instance, one company reported that after installing biometric scanners, there were no K ek n M oc s n recorded breaches for six months. Therefore, biometric access systems are highly effective i k in preventing unauthorized access to secure areas. o o i n Which one of the following, if true, most weakens the above argument? i K n K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Biometric access systems can be bypassed by sophisticated hacking techniques. o c k"
+        },
+        {
+          "label": "B",
+          "text": "Some employees are uncomfortable with using biometric systems due to privacy o concerns. o i i k"
+        },
+        {
+          "label": "C",
+          "text": "Biometric systems require regular maintenance to ensure they function correctly. k k k"
+        },
+        {
+          "label": "D",
+          "text": "Biometric systems occasionally fail to recognize authorized personnel, causing M c i inconvenience. o"
+        },
+        {
+          "label": "E",
+          "text": "Many companies with biometric systems also increased the presence of security ise i o i s s guards during the same period. i o i o ise i o M s n s ki o k i o n oc Page 22 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "Liam spent all his money buying 50 soda bottles at the corner shop for £1 each. He sold o i M each bottle at the same higher price. After selling 40 bottles, he had £10 more than he i k n k o e started with. He then sold all the remaining bottles. How much money did Liam have once k se i n o M s all the bottles were sold? c i n k",
+      "options": [
+        {
+          "label": "A",
+          "text": "75                                           e k e o i s"
+        },
+        {
+          "label": "B",
+          "text": "70 c k s i i K o"
+        },
+        {
+          "label": "C",
+          "text": "100 o M k K s"
+        },
+        {
+          "label": "D",
+          "text": "80 n i K o e K"
+        },
+        {
+          "label": "E",
+          "text": "90 i M s k i k o c k  i i n K k e k no M ck K se i o c s"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "If you want to win the chess tournament, you need to beat the defending champion. You c i o n didn’t win the tournament last year, so you must not have beaten the defending champion. K e M i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "To win the art competition, you need to submit a painting. You didn’t win, but k Ki ek n M oc k i you submitted a painting anyway. K k M"
+        },
+        {
+          "label": "B",
+          "text": "To qualify for the team, you need to run a mile in under six minutes. You haven’t k Ki ek n M oc M k tried out yet, so you must not be on the team. e K K sek i n o M oc k e M ck K se i o"
+        },
+        {
+          "label": "C",
+          "text": "You can’t win the raffle unless you buy a ticket. Since you won, you must have K ek n M oc s n bought a ticket. i k o"
+        },
+        {
+          "label": "D",
+          "text": "If you want to graduate, you need to pass the final exam. You didn’t graduate, o i n so you must not have passed the final exam. i K n K k"
+        },
+        {
+          "label": "E",
+          "text": "If you want to become a doctor, you need to attend medical school. Since you’re o c k still studying, you’re not yet a doctor. o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 23 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "Cyclists are required to follow the same traffic laws as motorists, and violations result in o i M i k fines. However, cyclists are not required to have insurance to cover damages they might n k o e cause in accidents. If a cyclist causes an accident, the injured party must pursue the cyclist k se i n o M s directly for compensation, which is often difficult and costly. Therefore, a law should c i n k be introduced to require cyclists to carry liability insurance. This would ensure that any e k e damages caused by cyclists are covered by insurance companies, relieving victims of the o i s c k s financial burden. i i K o Which one of the following is an underlying assumption of the above argument? o M k K s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "Cyclists are as likely as motorists to cause significant damage in accidents. i K o e K"
+        },
+        {
+          "label": "B",
+          "text": "Insurance companies would be willing to offer liability insurance for cyclists. i M s k i"
+        },
+        {
+          "label": "C",
+          "text": "Most cyclists currently do not voluntarily carry liability insurance. k"
+        },
+        {
+          "label": "D",
+          "text": "Cyclists would comply with a law requiring them to carry liability insurance. o c k  i i n"
+        },
+        {
+          "label": "E",
+          "text": "Pursuing compensation directly from cyclists is usually unsuccessful. K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Captain Flint asked four of his pirates to write K k M on a piece of paper how many gold, silver and k Ki ek n M oc M k bronze coins were in the treasure chest. Their e K K sek i n o M oc k e responses are shown in the diagram but unfor- M ck K se i o K ek n M oc s tunately part of the paper was damaged. Only n i one of the four pirates told the truth. The other k o three lied in all their answers. The total number o i n of coins was 30. Who told the truth? i K n K k o c k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Tom o"
+        },
+        {
+          "label": "B",
+          "text": "Al o i i k"
+        },
+        {
+          "label": "C",
+          "text": "Pit k k"
+        },
+        {
+          "label": "D",
+          "text": "Jim k M c"
+        },
+        {
+          "label": "E",
+          "text": "We cannot be sure i o ise i o i s s i o i o ise i o M s"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "Set “Che tam” consists of 9 types of sushi. Each type of sushi must weigh exactly 300 n grams and be sealed in a box. However, Dikiy Daniyar, known as the “Chernyi Tigr, s Paluan,” ate 1 sushi from the order and sealed the box back. If you have a balance scale, but can not unseal any of the boxes, what is the minimum number of weighings needed to determine which box was unsealed by Dikiy Daniyar “Chernyu Tigr, Paluan”? ki o k i o n oc Page 24 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [
+        {
+          "label": "A",
+          "text": "1 o i M i k n"
+        },
+        {
+          "label": "B",
+          "text": "2 k o e k se i n o"
+        },
+        {
+          "label": "C",
+          "text": "3 M s c i n k"
+        },
+        {
+          "label": "D",
+          "text": "4                                           e k e o i s"
+        },
+        {
+          "label": "E",
+          "text": "5 c k s i i K o o M k K s n i K o e K i M s"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "Though relatively few people know it by name, palm oil is found in over fifty per cent of k i processed supermarket goods, from soaps to snacks. This vegetable oil, which is taken from k o the fruit of the oil palm tree, causes a great deal of environmental concern. The clearing c k i i n of tropical forests to grow oil palm plantations threatens the survival of orangutans and K k e other endangered species. The land conversion often happens on carbon rich peat soils in a k no M ck K se i o c s process which releases significant greenhouse gas emissions. Yet even some environmental c i o n K organisations warn that alternative vegetable oil crops may require much larger areas of e M i forest to be converted to agricultural land. s k Ki ek n M oc k i Which one of the following is a conclusion that can be drawn from the above passage? K k M",
+      "options": [
+        {
+          "label": "A",
+          "text": "A ban on palm oil alone would not solve all of the environmental problems k Ki ek n M oc M k associated with vegetable oil production e K K sek i n o M oc k e M ck K se i o"
+        },
+        {
+          "label": "B",
+          "text": "If farmers stopped clearing tropical forests for oil palm plantations, endangered K ek n M oc s n orangutan populations would recover. i k o"
+        },
+        {
+          "label": "C",
+          "text": "The environmental risks associated with oil palm plantations are not well under- o i n stood in tropical countries. i K n K k"
+        },
+        {
+          "label": "D",
+          "text": "To produce the most profitable crops, oil palm plantations must be grown on o c k carbon rich peat soils. o"
+        },
+        {
+          "label": "E",
+          "text": "There is no motivation for manufacturers to stop using palm oil in their products o i i k k k k M c i o ise i o i s"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "Next week the European Parliament will vote on whether to ban trawling, a method of fishing s i o that involves pulling large fishing nets behind boats. The fishing industry is opposed to i o a ban and has argued strongly against it. Trawling is not as damaging to ecosystems as ise i o M s environmentalists claim. Trawling the seabed doesn’t always create ’dead zones’ in the n ocean. It can boost fish numbers, since the species that are more resistant to the effects of s trawling can proliferate. So trawling on flat sandy beds in shallow areas can benefit marine life. Which one of the following, if true, most weakens the above argument? ki o k i o n oc Page 25 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [
+        {
+          "label": "A",
+          "text": "Trawling creates new habitats by making parts of the sea more habitable. o i M i k n"
+        },
+        {
+          "label": "B",
+          "text": "Trawling in deep waters is expensive and an ineffective use of fishing resources. k o e k se i n o"
+        },
+        {
+          "label": "C",
+          "text": "Trawling in shallow waters can damage the bottom of fishermen’s boats. M s c i n k"
+        },
+        {
+          "label": "D",
+          "text": "Trawling in shallow waters can alter the ecology in beneficial ways e k e o i s"
+        },
+        {
+          "label": "E",
+          "text": "Trawling nets have a destructive impact on many endangered species. c k s i i K o o M k K s n i K o e K i M s"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "The table below shows calories burned depending on a person’s weight: k i k o c k i i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k Five friends choose the following exercise routine: M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k o c k o Which one of the five friends burns the most calories? o i i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Holly k k"
+        },
+        {
+          "label": "B",
+          "text": "Paul k M c"
+        },
+        {
+          "label": "C",
+          "text": "Josie i o"
+        },
+        {
+          "label": "D",
+          "text": "Jessie ise i o i s s i"
+        },
+        {
+          "label": "E",
+          "text": "Harry o i o ise i o M s n s"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "In a slalom skiing competition skiers tackle the course one at a time. Each skier makes two runs. The times for the two runs are added and the fastest total time determines the ki o k i o n oc Page 26 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K winner. Competitors who fail to finish their first run are not allowed to make a second run. o i M i k n k o e In the second round, skiers compete in the reverse order of their positions after the first k se i n o M s round. c i n k e k e Grace took part in a slalom competition last week. She was the eighth skier to make o i s c k s her first run. At the end of the first round she was in sixth position, so she had to wait for i i K o 17 of her rivals to make their second runs before it was her turn again. Three skiers had o M failed to complete the course in the first round. k K s n i K o e K How many competitors took part in last week’s slalom competition? i M s k i",
+      "options": [
+        {
+          "label": "A",
+          "text": "26 k o c i"
+        },
+        {
+          "label": "B",
+          "text": "23 k i n K"
+        },
+        {
+          "label": "C",
+          "text": "34 k e k no M ck K se i o c s"
+        },
+        {
+          "label": "D",
+          "text": "31 c i o n K"
+        },
+        {
+          "label": "E",
+          "text": "28                 e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "Few linguists would argue against the view that our first language is acquired and not K ek n M oc s n learned. Pre-school children do not study their native tongue nor do they learn grammar i k rules but, by the time they start school at the age of five or six, the vast majority are competent o o i users of their language. Therefore, when learning a second or additional language, studying n i K n grammar is a waste of time and all that is required is exposure to the target language in K k order to acquire competency in its use. o c k Which one of the following identifies the underlying assumption of the above argument? o o i",
+      "options": [
+        {
+          "label": "A",
+          "text": "Only people who know how to read can learn a second or additional language. i k k k"
+        },
+        {
+          "label": "B",
+          "text": "Languages are fundamentally different from one another. k M"
+        },
+        {
+          "label": "C",
+          "text": "Children are better at acquiring languages than adults. c i o"
+        },
+        {
+          "label": "D",
+          "text": "Learners of second or additional languages should read the target language. ise i o i s s"
+        },
+        {
+          "label": "E",
+          "text": "Acquiring a second or additional language is the same process as acquiring a i o i o first language. ise i o M s n s ki o k i o n oc Page 27 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "A delivery company opens its depot at 7:30 am. It uses large and small vans to make o i M i k deliveries. The smaller vans take 10 minutes to load and then 1 hour to make the deliveries n k o e and return. The larger ones have a loading time of 30 minutes and return from deliveries k se i n o M s after 2 hours. The driver of a large van starts loading at 8:00 am. c i n k e k e If the driver of a small van is to make the maximum number of deliveries he can, how o i s c k s much later than the driver of the large van can he start loading if they are both to arrive i i K o back at the depot for lunch at 1:00 pm? o M k K s",
+      "options": [
+        {
+          "label": "A",
+          "text": "0 minutes n i K o e K"
+        },
+        {
+          "label": "B",
+          "text": "20 minutes i M s k i"
+        },
+        {
+          "label": "C",
+          "text": "15 minutes k"
+        },
+        {
+          "label": "D",
+          "text": "5 minutes o c k  i i n"
+        },
+        {
+          "label": "E",
+          "text": "10 minutes K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "What is a clone but a twin? What is genetic engineering or selective breeding but assisted M k Ki ek n M oc M evolution? How often do we hear these trite excuses for man’s arrogant interference with k e natural processes? Too often. It is time to call a halt and consider just what limits need K K sek i n o M oc k e M ck K se i o to be placed on the break-neck progress of bio-technology, if ’progress’ is even the right K ek n M oc s n word for it. The big question for science should not be ’What’s in it for us?’ but ’Could i k this have happened naturally?’ And if the answer is ’No’ then we should not bring it about o o i just because we have found that we can. If we do we may live a bit longer or grow more n i K n food per acre, but we don’t know where our meddling will end. K k Which one of the following is a principle which underlies the above argument? o c k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Nature will have its own way in the long run o i i k"
+        },
+        {
+          "label": "B",
+          "text": "Meddling with nature could only ever end in disaster. k k"
+        },
+        {
+          "label": "C",
+          "text": "Science should not progress beyond what is natural. k M c"
+        },
+        {
+          "label": "D",
+          "text": "It is time to call a halt on bio-technological advances. i o"
+        },
+        {
+          "label": "E",
+          "text": "Cloning, genetic engineering and selective breeding are not ’progress’. ise i o i s s i o i o ise i o M s n s"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "Children are being encouraged to take up gardening through special events at shows and activities in schools. It is hoped that an interest in gardening, and particularly growing one’s own food, will make children more interested in learning about their food and they ki o k i o n oc Page 28 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K will therefore be deterred from eating junk food. The initiative should be supported and o i M i k spread to more schools as quickly as possible. n k o e Which one of the following, if true, would most weaken the above argument? k se i n o M s c",
+      "options": [
+        {
+          "label": "A",
+          "text": "The practical experience of gardening is not a traditional academic subject i n k e"
+        },
+        {
+          "label": "B",
+          "text": "The events to encourage children to garden also included stands where junk food k e o i s was for sale. c k s i i K o"
+        },
+        {
+          "label": "C",
+          "text": "Some schools do not have a garden. o M k K s"
+        },
+        {
+          "label": "D",
+          "text": "Most children have enjoyed the events provided, but have not gained an interest n i K o in gardening itself.                e K i M s k"
+        },
+        {
+          "label": "E",
+          "text": "It tends to be older people who are interested in gardening and growing their i k own food. o c k  i i n K k e k no M ck K se i o c s c i o n K e M"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "A golf tournament is played over 10 rounds, on successive Saturdays. The winner of each i s k Ki ek n M oc k round scores 3 points and the player finishing second scores 1 point. The tournament is i K k won by the competitor with the most points over the 10 rounds. M k Ki ek n M oc M k e Alan Vinci, Barry Durand, Carl Johansson and Daniel and Eric Lim were the partici- K K sek i n o M oc k e M ck K se i o pants in this year’s tournament. All five won at least one round, but either Barry, Daniel or K ek n M oc s n Eric finished second on each occasion. The 1-2 finishing order was different every round, i k and the Lim brothers didn’t both score points in the same round at any time. o o i n i K n Who won this year’s tournament? K k o c k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Eric Lim o"
+        },
+        {
+          "label": "B",
+          "text": "Daniel Lim o i i k"
+        },
+        {
+          "label": "C",
+          "text": "Barry Durand k k k"
+        },
+        {
+          "label": "D",
+          "text": "Carl Johansson M c i"
+        },
+        {
+          "label": "E",
+          "text": "Alan Vinci o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 29 oc c"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    }
+  ]
+}

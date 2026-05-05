@@ -1,0 +1,761 @@
+{
+  "source_file": "Trial Test 3.pdf",
+  "name": "Trial Test 3",
+  "test_type": "trial_test",
+  "parser": "trial_layout_parser",
+  "question_count": 30,
+  "answer_count": 0,
+  "warnings": [],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Evaluate: 2 2 ( 7 + 3) −( 7 − 3)",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 7"
+        },
+        {
+          "label": "B",
+          "text": "4 7"
+        },
+        {
+          "label": "C",
+          "text": "2 21"
+        },
+        {
+          "label": "D",
+          "text": "4 21"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Find the complete set of values of x which satisfy the inequality: 1 2 2 (3𝑥 − 2) − 3 (𝑥 − 4) < 𝑥",
+      "options": [
+        {
+          "label": "A",
+          "text": "x>10"
+        },
+        {
+          "label": "B",
+          "text": "x<22"
+        },
+        {
+          "label": "C",
+          "text": "x>2.5"
+        },
+        {
+          "label": "D",
+          "text": "x<4.5 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "The equation of a curve is 𝑦 = 𝑝𝑥 + 𝑞𝑥 where p and q are constants. The curve passes through the points (2, 6) and (4, –4). What is the value of q – p?",
+      "options": [
+        {
+          "label": "A",
+          "text": "16"
+        },
+        {
+          "label": "B",
+          "text": "9"
+        },
+        {
+          "label": "C",
+          "text": "5"
+        },
+        {
+          "label": "D",
+          "text": "1 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "The diagram shows a right-angled triangle, with sides of length x+4, 2x+2 and 3x, all in cm. Find the area.",
+      "options": [
+        {
+          "label": "A",
+          "text": "54"
+        },
+        {
+          "label": "B",
+          "text": "70"
+        },
+        {
+          "label": "C",
+          "text": "36"
+        },
+        {
+          "label": "D",
+          "text": "40"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "Express as a single fraction: 1 1 1 2𝑥 + 𝑥−1 − 𝑥 1",
+      "options": [
+        {
+          "label": "A",
+          "text": "2𝑥−1 2𝑥−1"
+        },
+        {
+          "label": "B",
+          "text": "𝑥(𝑥−1) 𝑥+1"
+        },
+        {
+          "label": "C",
+          "text": "2𝑥(𝑥−1) 𝑥−3"
+        },
+        {
+          "label": "D",
+          "text": "2𝑥(𝑥−1) tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "The diagram shows the sector of circle, centre O, radius 20 cm and angle AOB is 150 degrees. Find the area of the segment and take π as 3.",
+      "options": [
+        {
+          "label": "A",
+          "text": "300"
+        },
+        {
+          "label": "B",
+          "text": "250"
+        },
+        {
+          "label": "C",
+          "text": "200"
+        },
+        {
+          "label": "D",
+          "text": "400"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "A metal alloy is 25% copper. Another metal alloy is 50% copper. How much of 25% alloy should be used to make 500 g of an alloy that is 45% copper?",
+      "options": [
+        {
+          "label": "A",
+          "text": "200"
+        },
+        {
+          "label": "B",
+          "text": "300"
+        },
+        {
+          "label": "C",
+          "text": "100"
+        },
+        {
+          "label": "D",
+          "text": "150"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Two similar cones have radii of 4 cm and 6 cm. The total area of smaller one is 2 72π 𝑐𝑚 . Find the total area of the larger cone. tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "162π"
+        },
+        {
+          "label": "B",
+          "text": "184π"
+        },
+        {
+          "label": "C",
+          "text": "216π"
+        },
+        {
+          "label": "D",
+          "text": "98π"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "The equation connects the variables M,x,y,z,P and Q. x and y are both increased by 50%, z is decreased by 20%, P is doubled, Q remains the same. What is the percentage change of M? 2 (𝑥+𝑦) 𝑧 𝑀= 𝑃 𝑄",
+      "options": [
+        {
+          "label": "A",
+          "text": "20% increase"
+        },
+        {
+          "label": "B",
+          "text": "20 decrease"
+        },
+        {
+          "label": "C",
+          "text": "10% increase"
+        },
+        {
+          "label": "D",
+          "text": "10% decrease 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "One side of a rectangle is (7 − 5)cm. The rectangle has an area of 66 𝑐𝑚 . What is the perimeter, in cm, of the rectangle? 35−5 5",
+      "options": [
+        {
+          "label": "A",
+          "text": "2"
+        },
+        {
+          "label": "B",
+          "text": "35 − 5 5 35+5 5"
+        },
+        {
+          "label": "C",
+          "text": "2"
+        },
+        {
+          "label": "D",
+          "text": "35+ 5 tg: @melonkid411 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "p is directly proportional to (𝑞 + 2) . When q=1, p=1. Find p when q=10.",
+      "options": [
+        {
+          "label": "A",
+          "text": "22"
+        },
+        {
+          "label": "B",
+          "text": "16"
+        },
+        {
+          "label": "C",
+          "text": "14"
+        },
+        {
+          "label": "D",
+          "text": "20"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "The design in the diagram is formed from four circles which all touch at the top of the shape (the diagram is not to scale). The diameter of the smallest circle is d, the second is 2d, the third is 3d and the largest is 4d. Find an expression for the area of the shading in the design. 5 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 π𝑑 2"
+        },
+        {
+          "label": "B",
+          "text": "4π𝑑 3   2"
+        },
+        {
+          "label": "C",
+          "text": "2 π𝑑 2"
+        },
+        {
+          "label": "D",
+          "text": "10π𝑑 tg: @melonkid411 2                                   5"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "What is the coefficient of the 𝑥 term in the binomial expansion of (2 − 𝑥) ?",
+      "options": [
+        {
+          "label": "A",
+          "text": "-48"
+        },
+        {
+          "label": "B",
+          "text": "40"
+        },
+        {
+          "label": "C",
+          "text": "-88"
+        },
+        {
+          "label": "D",
+          "text": "80"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Simplify 7 3𝑥 3 3𝑥( 1 ) 3 𝑥 20",
+      "options": [
+        {
+          "label": "A",
+          "text": "9𝑥 20"
+        },
+        {
+          "label": "B",
+          "text": "27𝑥 21"
+        },
+        {
+          "label": "C",
+          "text": "3𝑥 21"
+        },
+        {
+          "label": "D",
+          "text": "81𝑥 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "Write 72 as a product of its prime factors. 6 4",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 * 3 4         4"
+        },
+        {
+          "label": "B",
+          "text": "2 * 3 2         6"
+        },
+        {
+          "label": "C",
+          "text": "2 * 3 4* 2"
+        },
+        {
+          "label": "D",
+          "text": "2 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "The first five terms of a sequence in order are: 2 17 42 77 122 𝑡ℎ 2 The 𝑛 term of this sequence is 𝑝𝑛 + 𝑞where 𝑝and 𝑞are integers. tg: @melonkid411 𝑝−𝑞 What is the value of ? 𝑝+𝑞",
+      "options": [
+        {
+          "label": "A",
+          "text": "14"
+        },
+        {
+          "label": "B",
+          "text": "4"
+        },
+        {
+          "label": "C",
+          "text": "2 23"
+        },
+        {
+          "label": "D",
+          "text": "17"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "The total of three numbers p, q and r is 375 The ratio p:q is 5:7. The ratio q:r is 4:11. What is the value of p+r?",
+      "options": [
+        {
+          "label": "A",
+          "text": "315"
+        },
+        {
+          "label": "B",
+          "text": "231"
+        },
+        {
+          "label": "C",
+          "text": "291"
+        },
+        {
+          "label": "D",
+          "text": "144"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "In the figure below, the square base ABCD has side lengths of 20 cm. Lengths VA, VB, VC and VD are each 8 cm. M is the midpoint of the square. What is the volume of this pyramid?",
+      "options": [
+        {
+          "label": "A",
+          "text": "24 6 tg: @melonkid411"
+        },
+        {
+          "label": "B",
+          "text": "32 3"
+        },
+        {
+          "label": "C",
+          "text": "20 6"
+        },
+        {
+          "label": "D",
+          "text": "48 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "Five apples, three pears and two bananas cost 3.18$. Four apples, eight pears and three bananas cost 4.49$. How much more expensive is an apple than a pear?",
+      "options": [
+        {
+          "label": "A",
+          "text": "10p"
+        },
+        {
+          "label": "B",
+          "text": "6p"
+        },
+        {
+          "label": "C",
+          "text": "7p"
+        },
+        {
+          "label": "D",
+          "text": "8p"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "In the regular polygon shown, find the measure of angle θ.",
+      "options": [
+        {
+          "label": "A",
+          "text": "45 deg"
+        },
+        {
+          "label": "B",
+          "text": "40 deg"
+        },
+        {
+          "label": "C",
+          "text": "50 deg"
+        },
+        {
+          "label": "D",
+          "text": "30 deg tg: @melonkid411 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "The roots of the equation 2𝑥 − 11𝑥 + 𝑎 = 0 differ by 2. The value of a is: 105",
+      "options": [
+        {
+          "label": "A",
+          "text": "8 113"
+        },
+        {
+          "label": "B",
+          "text": "8 117"
+        },
+        {
+          "label": "C",
+          "text": "8 119"
+        },
+        {
+          "label": "D",
+          "text": "8"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "A cylindrical hollow metal pipe is 16 cm long. It has an external diameter of 10 c, and an internal diameter of 8 cm. The density of the metal from which the pipe is 3 made is 8 grams per 𝑐𝑚 . What is the mass of the pipe in grams?",
+      "options": [
+        {
+          "label": "A",
+          "text": "512π"
+        },
+        {
+          "label": "B",
+          "text": "1024π"
+        },
+        {
+          "label": "C",
+          "text": "256π"
+        },
+        {
+          "label": "D",
+          "text": "1152π"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "The diagram shows a square with a side of length x cm. A circle is drawn with centre O which lies at the midpoint of one of the sides of the square. The side forms tg: @melonkid411 part of a diameter of the circle. The circle passes through two corners of the square as shown. 2 What is the area, in 𝑐𝑚 , of the shaded part of the semi-circle? 5π−8 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "(        )𝑥 8 5π−4   2"
+        },
+        {
+          "label": "B",
+          "text": "(        )𝑥 4 3π−2   2"
+        },
+        {
+          "label": "C",
+          "text": "(        )𝑥 2 3π−4   2"
+        },
+        {
+          "label": "D",
+          "text": "(        )𝑥 4"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "A cube has sides of unit length. What is the length of a line joining a vertex to the midpoint of one of the opposite faces (the dashed line in the diagram below)? tg: @melonkid411 3",
+      "options": [
+        {
+          "label": "A",
+          "text": "2"
+        },
+        {
+          "label": "B",
+          "text": "2 5"
+        },
+        {
+          "label": "C",
+          "text": "2"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "If you look at a clock at 9:45, what is the angle between the hour and minute hands?",
+      "options": [
+        {
+          "label": "A",
+          "text": "30 deg"
+        },
+        {
+          "label": "B",
+          "text": "15 deg"
+        },
+        {
+          "label": "C",
+          "text": "7.5 deg7"
+        },
+        {
+          "label": "D",
+          "text": "22.5 deg"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "Which of the expressions below has the largest value for 0<x<1? 1",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑥 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 1"
+        },
+        {
+          "label": "C",
+          "text": "(1+𝑥) tg: @melonkid411 1"
+        },
+        {
+          "label": "D",
+          "text": "𝑥"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "Find the sum of the solutions of 𝑥 2 𝑥 2( 4 + 3) − ( 4 + 3) − 36 = 0",
+      "options": [
+        {
+          "label": "A",
+          "text": "-22"
+        },
+        {
+          "label": "B",
+          "text": "-34"
+        },
+        {
+          "label": "C",
+          "text": "-36"
+        },
+        {
+          "label": "D",
+          "text": "-13 12           −1"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "Calculate (1. 63 * 10 ) * (2. 47 * 10 ). Give your answer in standard form. 9",
+      "options": [
+        {
+          "label": "A",
+          "text": "402. 61 * 10 11"
+        },
+        {
+          "label": "B",
+          "text": "4. 0261 * 10 12"
+        },
+        {
+          "label": "C",
+          "text": "0. 40261 * 10 10"
+        },
+        {
+          "label": "D",
+          "text": "40. 261 * 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "The weight of an animal increases by 50% each year for 3 years. It then declines in weight by 20% a year for 2 years, and then declines by a further 25% in the next year. What is the percentage increase in the animal’s weight at the end of 6 years compared to its original weight at the start of this period?",
+      "options": [
+        {
+          "label": "A",
+          "text": "85%"
+        },
+        {
+          "label": "B",
+          "text": "20% tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "62%"
+        },
+        {
+          "label": "D",
+          "text": "115%"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "S and T are geometric progressions. For each, the second term is 6 and the sum to infinity is 25. The first term of S is greater that the first term of T. What is the fourth term of S? 8",
+      "options": [
+        {
+          "label": "A",
+          "text": "125 4"
+        },
+        {
+          "label": "B",
+          "text": "25 24"
+        },
+        {
+          "label": "C",
+          "text": "25 162"
+        },
+        {
+          "label": "D",
+          "text": "125 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    }
+  ]
+}

@@ -1,0 +1,771 @@
+{
+  "source_file": "Trial Test 10.pdf",
+  "name": "Trial Test 10",
+  "test_type": "trial_test",
+  "parser": "trial_layout_parser",
+  "question_count": 31,
+  "answer_count": 0,
+  "warnings": [],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Evaluate: 2 (3𝑥 −6𝑥)(4𝑥−3) (𝑥−2) 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "12𝑥 − 9𝑥 2"
+        },
+        {
+          "label": "B",
+          "text": "14𝑥 − 7𝑥 2"
+        },
+        {
+          "label": "C",
+          "text": "16𝑥 − 5𝑥 2"
+        },
+        {
+          "label": "D",
+          "text": "18𝑥 − 3𝑥 𝑛"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Given the sequence that 𝑎1 = 1, 𝑎𝑛+1 − 𝑎𝑛 = 3 . Find the value of 𝑎5.",
+      "options": [
+        {
+          "label": "A",
+          "text": "81"
+        },
+        {
+          "label": "B",
+          "text": "101"
+        },
+        {
+          "label": "C",
+          "text": "121"
+        },
+        {
+          "label": "D",
+          "text": "141"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "Solve 4 2 4𝑥 + 9𝑥 − 63 = 0",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑥 =± 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 =± 3"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 =± 5"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 =± 7 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "Find the area of parallelogram, if given that the diagonals are equal to 15 and 20 ◦ respectively, and the angle between them is equal to 60",
+      "options": [
+        {
+          "label": "A",
+          "text": "55 3"
+        },
+        {
+          "label": "B",
+          "text": "65 3"
+        },
+        {
+          "label": "C",
+          "text": "75 3"
+        },
+        {
+          "label": "D",
+          "text": "85 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "Find the value of x in the given regular polygon",
+      "options": [
+        {
+          "label": "A",
+          "text": "24"
+        },
+        {
+          "label": "B",
+          "text": "36"
+        },
+        {
+          "label": "C",
+          "text": "48"
+        },
+        {
+          "label": "D",
+          "text": "72"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Find the volume of a given sphere tg: @melonkid411 49π",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 343π"
+        },
+        {
+          "label": "B",
+          "text": "3 1029π"
+        },
+        {
+          "label": "C",
+          "text": "4 1372π"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "Given that DS = 6, SB = 8, AS = 12. Find the value of CS tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "1"
+        },
+        {
+          "label": "B",
+          "text": "2"
+        },
+        {
+          "label": "C",
+          "text": "3"
+        },
+        {
+          "label": "D",
+          "text": "4"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Rearrange the formula in terms of Y: 2 𝑋= 19 − 25 − 7(𝑌 + 9) 2 2 (17−𝑋 ) +25",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑌 =      −                      −9 7 2 2 (19−𝑋 ) −25"
+        },
+        {
+          "label": "B",
+          "text": "𝑌 =      −                      −9 7 2       2 (𝑋 +17) +25"
+        },
+        {
+          "label": "C",
+          "text": "𝑅 =                            +9 2 tg: @melonkid411 2 (𝑋−17) −25"
+        },
+        {
+          "label": "D",
+          "text": "𝑅 =                         +9 2 5"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "Find the sum of infinite geometric sequence, if given that 𝑏2 = 15 𝑎𝑛𝑑 𝑏5 = 9 125",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 135"
+        },
+        {
+          "label": "B",
+          "text": "2 145"
+        },
+        {
+          "label": "C",
+          "text": "2 155"
+        },
+        {
+          "label": "D",
+          "text": "2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "Find the area of shaded region 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "14π 𝑐𝑚 2"
+        },
+        {
+          "label": "B",
+          "text": "16π 𝑐𝑚 2"
+        },
+        {
+          "label": "C",
+          "text": "18π 𝑐𝑚 2"
+        },
+        {
+          "label": "D",
+          "text": "22π 𝑐𝑚"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "Find x tg: @melonkid411 (figure is not to scale)",
+      "options": [
+        {
+          "label": "A",
+          "text": "84"
+        },
+        {
+          "label": "B",
+          "text": "87"
+        },
+        {
+          "label": "C",
+          "text": "114"
+        },
+        {
+          "label": "D",
+          "text": "117"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "Find the surface area of the cone, if given that radius is equal to 5 cm and height is equal to 12 cm",
+      "options": [
+        {
+          "label": "A",
+          "text": "90π"
+        },
+        {
+          "label": "B",
+          "text": "96π"
+        },
+        {
+          "label": "C",
+          "text": "112π"
+        },
+        {
+          "label": "D",
+          "text": "126π 2           2                               2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "When the expression (2𝑥 − 2) − (𝑥 + 8) written in the form , 𝑝(𝑥 + 𝑞) + 𝑟 where p, q and r are constants, what is the value of r ?",
+      "options": [
+        {
+          "label": "A",
+          "text": "96"
+        },
+        {
+          "label": "B",
+          "text": "108 tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "-96"
+        },
+        {
+          "label": "D",
+          "text": "-108 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Convert 12697 liters to 𝑚 3",
+      "options": [
+        {
+          "label": "A",
+          "text": "1, 2697 𝑚 3"
+        },
+        {
+          "label": "B",
+          "text": "12, 697 𝑚 3"
+        },
+        {
+          "label": "C",
+          "text": "126, 97 𝑚 3"
+        },
+        {
+          "label": "D",
+          "text": "1269, 7 𝑚"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "Evaluate and write in standard form 19 55*10 5 4*10 13",
+      "options": [
+        {
+          "label": "A",
+          "text": "137. 5 * 10 14"
+        },
+        {
+          "label": "B",
+          "text": "13. 75 * 10 15"
+        },
+        {
+          "label": "C",
+          "text": "1. 375 * 10 16"
+        },
+        {
+          "label": "D",
+          "text": "0. 1375 * 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "A medical scanner is bought for $15000. The value of the scanner depreciates by 20% every year. By how much has the scanner reduced in value after 2 years?",
+      "options": [
+        {
+          "label": "A",
+          "text": "$5400 tg: @melonkid411"
+        },
+        {
+          "label": "B",
+          "text": "$6000"
+        },
+        {
+          "label": "C",
+          "text": "$9000"
+        },
+        {
+          "label": "D",
+          "text": "$9000"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "In the rectangular solid in the adjacent figure, AB = 3, BF = 12, BC = 4. Find the length of AG",
+      "options": [
+        {
+          "label": "A",
+          "text": "11"
+        },
+        {
+          "label": "B",
+          "text": "13"
+        },
+        {
+          "label": "C",
+          "text": "17"
+        },
+        {
+          "label": "D",
+          "text": "21"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "Find the equation of the line: tg: @melonkid411 1",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑦 =−       𝑥+3 2 1"
+        },
+        {
+          "label": "B",
+          "text": "𝑦 =−       𝑥+6 3 1"
+        },
+        {
+          "label": "C",
+          "text": "𝑦 =−       𝑥−3 4 1"
+        },
+        {
+          "label": "D",
+          "text": "𝑦 =−       𝑥−6 5"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "The quantities x and y are positive. x is inversely proportional to the square root of y. When x = 8, y = 9. What is the value of y when x = 6",
+      "options": [
+        {
+          "label": "A",
+          "text": "12"
+        },
+        {
+          "label": "B",
+          "text": "16 81"
+        },
+        {
+          "label": "C",
+          "text": "16 27"
+        },
+        {
+          "label": "D",
+          "text": "14 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "ABCD is a square. Sides AB and CD are each increased in length by 40%. Sides BC and AD are each decreased in length by 75%. ABCD has been transformed into a rectangle. What is a percentage decrease in the area caused by the transformation",
+      "options": [
+        {
+          "label": "A",
+          "text": "30%"
+        },
+        {
+          "label": "B",
+          "text": "35%"
+        },
+        {
+          "label": "C",
+          "text": "65%"
+        },
+        {
+          "label": "D",
+          "text": "70%"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "Two right-angled triangles are joined together to make a quadrilateral PQRS. 3 7 𝑡𝑎𝑛(θ) = 4 , 𝑠𝑖𝑛(Θ) = 9 . Find the ratio of length PQ : length PS tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "28:45"
+        },
+        {
+          "label": "B",
+          "text": "20:63"
+        },
+        {
+          "label": "C",
+          "text": "36:35"
+        },
+        {
+          "label": "D",
+          "text": "4:7 3      2           2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "When x = 2 is substituted in the expression 𝑥 + 𝑝𝑥 + 𝑞𝑥 + 𝑝 , the result is 0. When x = 1 is substituted into the same expression, the result is -3.5 Find all possible values of p",
+      "options": [
+        {
+          "label": "A",
+          "text": "p=1 6"
+        },
+        {
+          "label": "B",
+          "text": "p=1 ± 3"
+        },
+        {
+          "label": "C",
+          "text": "p=1 ±     7"
+        },
+        {
+          "label": "D",
+          "text": "p=-3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "Find a sum and write it as a fraction:",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 0,
+      "prompt": "(063) + 0. (64) 2353",
+      "options": [
+        {
+          "label": "A",
+          "text": "3669 2599"
+        },
+        {
+          "label": "B",
+          "text": "3663 2773"
+        },
+        {
+          "label": "C",
+          "text": "3799 tg: @melonkid411 2927"
+        },
+        {
+          "label": "D",
+          "text": "3849"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "The diagram shows part of a glass structure. PQRS is a horizontal square with sides of 1 metre and point X is 4 meters vertically above P. What is cosine of the angle that XR makes with the horizontal 1",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 2"
+        },
+        {
+          "label": "B",
+          "text": "4 2"
+        },
+        {
+          "label": "C",
+          "text": "2 3 2"
+        },
+        {
+          "label": "D",
+          "text": "3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "Find the value of x, if: tg: @melonkid411 𝑥 𝑦 23 5 * 125 = 3125 𝑦 𝑦 𝑦 3 + 3 + 3 = 243",
+      "options": [
+        {
+          "label": "A",
+          "text": "93"
+        },
+        {
+          "label": "B",
+          "text": "103"
+        },
+        {
+          "label": "C",
+          "text": "113"
+        },
+        {
+          "label": "D",
+          "text": "123"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "Find the sum of the all solutions of the given inequality |𝑥 − 5| < 6",
+      "options": [
+        {
+          "label": "A",
+          "text": "39"
+        },
+        {
+          "label": "B",
+          "text": "49"
+        },
+        {
+          "label": "C",
+          "text": "55"
+        },
+        {
+          "label": "D",
+          "text": "66 3      2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "The function 𝑓 is given by 𝑓(𝑥) = 𝑥 + 𝑝𝑥 + 𝑞𝑥 − 8 where p and q are real constants. When 𝑓(𝑥) is divided by (𝑥 + 1), the remainder is -27 When 𝑓(𝑥) is divided by (𝑥 − 1), the remainder is -1 Find the reminder when 𝑓(𝑥) is divided by (2𝑥 − 1) 25",
+      "options": [
+        {
+          "label": "A",
+          "text": "− 6 tg: @melonkid411 27"
+        },
+        {
+          "label": "B",
+          "text": "− 8 29"
+        },
+        {
+          "label": "C",
+          "text": "9 31"
+        },
+        {
+          "label": "D",
+          "text": "11 2                                          2    2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "𝑥 + (3𝑚 + 4)𝑥 + 𝑚 − 1 = 0 is given. 𝐼𝑓 𝑥1 + 𝑥2 = 10. Find the one possible value of m",
+      "options": [
+        {
+          "label": "A",
+          "text": "1/2"
+        },
+        {
+          "label": "B",
+          "text": "-2"
+        },
+        {
+          "label": "C",
+          "text": "4/9"
+        },
+        {
+          "label": "D",
+          "text": "-2/9"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "One alloy is 25% gold and the other is 40% gold. How much of each should be used to produce 120 kg of an alloy that is 30% gold",
+      "options": [
+        {
+          "label": "A",
+          "text": "100kg(I) and 20kg(II)"
+        },
+        {
+          "label": "B",
+          "text": "90kg(I) and 30kg(II)"
+        },
+        {
+          "label": "C",
+          "text": "80kg(I) and 40kg(II)"
+        },
+        {
+          "label": "D",
+          "text": "70kg(I) and 50kg(II)"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "If x, y, z are positive numbers, with xy = 24, xz = 48, yz = 72. Find x + y + z",
+      "options": [
+        {
+          "label": "A",
+          "text": "20"
+        },
+        {
+          "label": "B",
+          "text": "22 tg: @melonkid411"
+        },
+        {
+          "label": "C",
+          "text": "28"
+        },
+        {
+          "label": "D",
+          "text": "36 как ты? устал да? я тоже приляг отдохни 🌸 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    }
+  ]
+}

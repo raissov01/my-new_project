@@ -1,0 +1,761 @@
+{
+  "source_file": "Trial Test 7.pdf",
+  "name": "Trial Test 7",
+  "test_type": "trial_test",
+  "parser": "trial_layout_parser",
+  "question_count": 30,
+  "answer_count": 0,
+  "warnings": [],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Simplify: 2 2 ( 6 + 3) − ( 6 − 3)",
+      "options": [
+        {
+          "label": "A",
+          "text": "12 2"
+        },
+        {
+          "label": "B",
+          "text": "6 2"
+        },
+        {
+          "label": "C",
+          "text": "4 2"
+        },
+        {
+          "label": "D",
+          "text": "10 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "Simplify: 2 2𝑥 +3𝑥+1 2 𝑥 −3𝑥−4 7",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 + 𝑥−4 9"
+        },
+        {
+          "label": "B",
+          "text": "2 + 𝑥−4 5"
+        },
+        {
+          "label": "C",
+          "text": "1 + 𝑥−4 3"
+        },
+        {
+          "label": "D",
+          "text": "2 + 𝑥−4"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "Rearrange to give x in terms of y: 𝑥 2 𝑦 = 3 + 2(1 − 3 ) 𝑦−3",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑥 = 3 − 3 2 tg: @melonkid411 𝑦−3"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 = 3 + 3 2 𝑦+3"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 = 3 − 3 2 𝑦+3"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 = 3 + 3 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "Work out: 8 −5 (2. 1 * 10 ) * (6 * 10 ) Write your answer in standard form: 4",
+      "options": [
+        {
+          "label": "A",
+          "text": "12. 6 * 10 3"
+        },
+        {
+          "label": "B",
+          "text": "1. 26 * 10 4"
+        },
+        {
+          "label": "C",
+          "text": "1. 26 * 10 3"
+        },
+        {
+          "label": "D",
+          "text": "12. 6 * 10"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "The weight of a piece of wire is directly proportional to its length. A piece of wire is 25 cm long and has a weight of 6 grams. Another piece of the same wire is 30 cm long. Calculate the weight of the 30 cm of wire.",
+      "options": [
+        {
+          "label": "A",
+          "text": "7.2"
+        },
+        {
+          "label": "B",
+          "text": "6.4"
+        },
+        {
+          "label": "C",
+          "text": "8.6"
+        },
+        {
+          "label": "D",
+          "text": "3.2 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "The equation of a curve is 𝑦 = 𝑝𝑥 + 𝑞𝑥, where 𝑝 and 𝑞 are constants. tg: @melonkid411 The curve passes through the points (2,6) and (4,-4). What is the value of 𝑞 − 𝑝?",
+      "options": [
+        {
+          "label": "A",
+          "text": "-11"
+        },
+        {
+          "label": "B",
+          "text": "9"
+        },
+        {
+          "label": "C",
+          "text": "5"
+        },
+        {
+          "label": "D",
+          "text": "-2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "A cuboid has length 3 cm, width 4 cm and height 12 cm. Work out the length of PQ:",
+      "options": [
+        {
+          "label": "A",
+          "text": "16"
+        },
+        {
+          "label": "B",
+          "text": "15"
+        },
+        {
+          "label": "C",
+          "text": "11"
+        },
+        {
+          "label": "D",
+          "text": "13"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Express the recurring decimal 0.1(26) as a fraction: 15",
+      "options": [
+        {
+          "label": "A",
+          "text": "198 27"
+        },
+        {
+          "label": "B",
+          "text": "198 tg: @melonkid411 25"
+        },
+        {
+          "label": "C",
+          "text": "198 32"
+        },
+        {
+          "label": "D",
+          "text": "198"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "The ball for a garden game is a solid sphere of volume 192 cm cubed. For the children’s version of the game the ball is a solid sphere made of the same material, but the radius is reduced by 25%. What is the volume, in cm cubed, of the children’s ball?",
+      "options": [
+        {
+          "label": "A",
+          "text": "96"
+        },
+        {
+          "label": "B",
+          "text": "81"
+        },
+        {
+          "label": "C",
+          "text": "48"
+        },
+        {
+          "label": "D",
+          "text": "108"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "ABCDE is a circle with diameter AC. Angle BAC=x+3 and angle BCA is 2x-17. What is the value of x?",
+      "options": [
+        {
+          "label": "A",
+          "text": "24"
+        },
+        {
+          "label": "B",
+          "text": "27"
+        },
+        {
+          "label": "C",
+          "text": "16"
+        },
+        {
+          "label": "D",
+          "text": "21 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "A solid pyramid has a square base of side length 12 cm and a vertical height of h cm. The volume of the pyramid, in cm cubed, is equal to the total surface area of the pyramid, in cm cubed. What is the value of h?",
+      "options": [
+        {
+          "label": "A",
+          "text": "16"
+        },
+        {
+          "label": "B",
+          "text": "4 2"
+        },
+        {
+          "label": "C",
+          "text": "8"
+        },
+        {
+          "label": "D",
+          "text": "8 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "Here is part of Gary’s electricity bill. Work out how much Gary has to pay for the units of electricity he used.",
+      "options": [
+        {
+          "label": "A",
+          "text": "1000p tg: @melonkid411"
+        },
+        {
+          "label": "B",
+          "text": "900p"
+        },
+        {
+          "label": "C",
+          "text": "850p"
+        },
+        {
+          "label": "D",
+          "text": "750p"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "The diagram shows a right-angled triangular prism. Work out its surface area.",
+      "options": [
+        {
+          "label": "A",
+          "text": "420"
+        },
+        {
+          "label": "B",
+          "text": "380"
+        },
+        {
+          "label": "C",
+          "text": "320"
+        },
+        {
+          "label": "D",
+          "text": "400 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "For what values of x is |16 − (𝑥 + 5) | at its minimum?",
+      "options": [
+        {
+          "label": "A",
+          "text": "-1 and 4"
+        },
+        {
+          "label": "B",
+          "text": "-1 or -9"
+        },
+        {
+          "label": "C",
+          "text": "1 and 9"
+        },
+        {
+          "label": "D",
+          "text": "-4 and -1"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "The symbol • defines a mathematical binary operation such that 𝑎 • 𝑏= 𝑎𝑏 for all positive integers. Evaluate the (8 • 2) • (4 • 9) tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "32"
+        },
+        {
+          "label": "B",
+          "text": "24"
+        },
+        {
+          "label": "C",
+          "text": "8"
+        },
+        {
+          "label": "D",
+          "text": "20"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "The length of each side of the smaller square is 𝑎 2 What is the best expression for the shaded area? 2 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "4𝑎       − 𝑝𝑖𝑎 2 2       π𝑎"
+        },
+        {
+          "label": "B",
+          "text": "4𝑎       −    2 2 2        π𝑎"
+        },
+        {
+          "label": "C",
+          "text": "2𝑎       −    2 2"
+        },
+        {
+          "label": "D",
+          "text": "2 − π𝑎"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "The shortest distance between two opposite sides of a regular hexagon is 12 cm. Find its area.",
+      "options": [
+        {
+          "label": "A",
+          "text": "48 3 tg: @melonkid411"
+        },
+        {
+          "label": "B",
+          "text": "54 3"
+        },
+        {
+          "label": "C",
+          "text": "36 3"
+        },
+        {
+          "label": "D",
+          "text": "72 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "In trapezium PQRS, the parallel sides are PQ and RS. PQ=(x-1) cm, RS=x+5 cm and the vertical height QR=x cm. The area of the trapezium is 120 cm squared. What is the length of RS?",
+      "options": [
+        {
+          "label": "A",
+          "text": "18"
+        },
+        {
+          "label": "B",
+          "text": "10"
+        },
+        {
+          "label": "C",
+          "text": "12"
+        },
+        {
+          "label": "D",
+          "text": "15"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "A rhombus has diagonals of length 5 cm and 3 cm. An enlargement of the rhombus has sides of length 68cm. What is the scale factor of the enlargement?",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 2"
+        },
+        {
+          "label": "B",
+          "text": "2 3"
+        },
+        {
+          "label": "C",
+          "text": "4 2"
+        },
+        {
+          "label": "D",
+          "text": "8 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Express 108 as the product of powers of its prime factors: 2 3",
+      "options": [
+        {
+          "label": "A",
+          "text": "2 * 3 3       2"
+        },
+        {
+          "label": "B",
+          "text": "2 * 3 3     3"
+        },
+        {
+          "label": "C",
+          "text": "2 * 3 2       2"
+        },
+        {
+          "label": "D",
+          "text": "2 * 3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "Simplify: −5 −3 27𝑎 𝑏 −1 ( 5 −7 −5 ) 3𝑎 𝑏 2 −2 −1",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 * 𝑎        *𝑏 2       −1        −2"
+        },
+        {
+          "label": "B",
+          "text": "3 * 𝑎        *𝑏 2       −1    2"
+        },
+        {
+          "label": "C",
+          "text": "3 * 𝑎        *𝑏 2       −2        −2"
+        },
+        {
+          "label": "D",
+          "text": "3 * 𝑎        *𝑏 2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "The graph of 𝑦 = 𝑥 + 2 is shown below. tg: @melonkid411 If the graph were to be shifted up 2 and left 3, which of the following would be the equation of the transformed function? 2",
+      "options": [
+        {
+          "label": "A",
+          "text": "𝑦 = (𝑥 − 3) − 4 2"
+        },
+        {
+          "label": "B",
+          "text": "𝑦 = (𝑥 + 3) + 4 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑦 = (𝑥 − 3) + 4 2"
+        },
+        {
+          "label": "D",
+          "text": "𝑦 = (𝑥 + 3) − 4"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "AB is parallel to CD. Find the length of BE.",
+      "options": [
+        {
+          "label": "A",
+          "text": "8"
+        },
+        {
+          "label": "B",
+          "text": "12"
+        },
+        {
+          "label": "C",
+          "text": "10"
+        },
+        {
+          "label": "D",
+          "text": "4 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "In the triangle ABC shown below 1 2 Tan A= 6 and Tan B= 3 .M is the midpoint of AB. What is the value of tan θ? 7",
+      "options": [
+        {
+          "label": "A",
+          "text": "3 5"
+        },
+        {
+          "label": "B",
+          "text": "9 2"
+        },
+        {
+          "label": "C",
+          "text": "3 4"
+        },
+        {
+          "label": "D",
+          "text": "9"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "Find the positive solution of the following simultaneous equations: 2 2 4𝑥 + 𝑦 + 10𝑦 = 47 2𝑥 − 𝑦 = 5",
+      "options": [
+        {
+          "label": "A",
+          "text": "x=3 y=1"
+        },
+        {
+          "label": "B",
+          "text": "х=1, y=3"
+        },
+        {
+          "label": "C",
+          "text": "x=6, y=1"
+        },
+        {
+          "label": "D",
+          "text": "x=2, y=3"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "Five bells commence tolling together and toll at intervals 3, 6, 9, 12, and 15 seconds respectively. tg: @melonkid411 In 60 minutes, how many times do they toll together?",
+      "options": [
+        {
+          "label": "A",
+          "text": "25"
+        },
+        {
+          "label": "B",
+          "text": "30"
+        },
+        {
+          "label": "C",
+          "text": "20"
+        },
+        {
+          "label": "D",
+          "text": "27"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "A product in a shop is reduced in price by 20%. At this reduced price the shopkeeper makes only 4% profit. What percentage profit (to the nearest whole percent) does the shopkeeper makes at its normal selling price?",
+      "options": [
+        {
+          "label": "A",
+          "text": "16"
+        },
+        {
+          "label": "B",
+          "text": "30"
+        },
+        {
+          "label": "C",
+          "text": "15"
+        },
+        {
+          "label": "D",
+          "text": "25"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "An exterior angle of a regular polygon with n sides is 4 degrees larger than an exterior angle of a regular polygon with (n+3) sides. What is the value of n?",
+      "options": [
+        {
+          "label": "A",
+          "text": "21"
+        },
+        {
+          "label": "B",
+          "text": "15"
+        },
+        {
+          "label": "C",
+          "text": "18"
+        },
+        {
+          "label": "D",
+          "text": "12"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "Buka has a collection of 5-tenge and 10-tenge coins worth a total of 400 tenge. If he has 50 coins in all, how many 5-tenge coins does Buka have? tg: @melonkid411",
+      "options": [
+        {
+          "label": "A",
+          "text": "30"
+        },
+        {
+          "label": "B",
+          "text": "20"
+        },
+        {
+          "label": "C",
+          "text": "40"
+        },
+        {
+          "label": "D",
+          "text": "50"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "Imagine a plain, bog-standard clock that reads 5:40. What is the angle formed between the hour and the minute hands?",
+      "options": [
+        {
+          "label": "A",
+          "text": "105"
+        },
+        {
+          "label": "B",
+          "text": "100"
+        },
+        {
+          "label": "C",
+          "text": "70"
+        },
+        {
+          "label": "D",
+          "text": "75 tg: @melonkid411"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    }
+  ]
+}

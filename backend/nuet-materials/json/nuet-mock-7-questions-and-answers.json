@@ -1,0 +1,1718 @@
+{
+  "source_file": "NUET_MOCK_7 (Questions and Answers).pdf",
+  "name": "NUET_MOCK_7 (Questions and Answers)",
+  "test_type": "mock_test",
+  "parser": "mock_layout_parser",
+  "question_count": 60,
+  "answer_count": 49,
+  "warnings": [
+    "1 question(s) had non A-E raw answers"
+  ],
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "The diagram shows a circle with centre 𝑂 and ise i o k n M oc is k n o M c √ Mathematics K i k February 3, 2025 ise i o k e o √ NUET Mock №7 o k n M i √ ki o n M c k K ise i o o c k K o no M ck K se i o i k n M c k K ise",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 2,
+      "prompt": "The positive integer 𝑘 satisfies the equation 2 + 8 + 18 = 𝑘. What is the value of 𝑘? oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 3,
+      "prompt": "The diagram shows a square and a regular o i M decagon that share an edge. One side of the i k n k o square is extended to meet an extended edge of e k se i n o M s the decagon. c i n k e k What is the value of 𝑥? e o i s c k s i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "15 o M"
+        },
+        {
+          "label": "B",
+          "text": "18 k K s n i K o"
+        },
+        {
+          "label": "C",
+          "text": "21                                 e K i M s k"
+        },
+        {
+          "label": "D",
+          "text": "24 i k"
+        },
+        {
+          "label": "E",
+          "text": "27 o c k  i i n K k e k no M ck K se i o c s c i o n K e M i s"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "A square has vertices (0, 0), (1, 0), (1, 1) and (0, 1). Graphs of the following equations are k Ki ek n M oc k i drawn on the same set of axes as the square. K k M k Ki ek n M oc M k 1 𝑥 2 + 𝑦 2 = 1, 𝑦 = −𝑥 2 + 1, e 𝑦 = 𝑥 + 1, 𝑦 = 𝑥, 𝑦= K K sek i n o M oc k e M ck K se i o 𝑥 K ek n M oc s n How many of the graphs pass through exactly two of the vertices of the square? i k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "1 o i n i K"
+        },
+        {
+          "label": "B",
+          "text": "2 n K k"
+        },
+        {
+          "label": "C",
+          "text": "3 o c k o"
+        },
+        {
+          "label": "D",
+          "text": "4 o i i k"
+        },
+        {
+          "label": "E",
+          "text": "5 k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 2 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "When Louise had her first car, 50 litres of petrol cost £40. When she filled up the other o i M day, she noticed that 40 litres of petrol cost £50. By approximately what percentage has i k n k o the cost of petrol increased over this time? e k se i n o M s c",
+      "options": [
+        {
+          "label": "A",
+          "text": "50% i n k"
+        },
+        {
+          "label": "B",
+          "text": "56% e k e o i s c k s i"
+        },
+        {
+          "label": "C",
+          "text": "67% i K o"
+        },
+        {
+          "label": "D",
+          "text": "75% o M k K s n"
+        },
+        {
+          "label": "E",
+          "text": "80% i K o e K i M s k i k o c k  i i n K k e"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "A solid right circular cone whose base has k no M ck K se i o c s radius 𝑟 metres has total surface area (including c i o n the circular base) of 𝐴 metres squared and a K e M volume of 𝑉 metres cubed. The perpendicular i s √ k Ki ek n M oc k i height of the cone is 𝑟 8 metres. K k M √ k Ki ek n M oc M Given that 𝑉𝐴 = 5000, what is the value of 𝑟? k e K K sek i n o M oc k e M ck K se i o K ek n M oc s",
+      "options": [
+        {
+          "label": "A",
+          "text": "200 n i k"
+        },
+        {
+          "label": "B",
+          "text": "225 o o i n"
+        },
+        {
+          "label": "C",
+          "text": "250 i K n K k"
+        },
+        {
+          "label": "D",
+          "text": "275 o c k"
+        },
+        {
+          "label": "E",
+          "text": "300 o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 3 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "The parabola 𝑦 = 𝑥 2 − 10𝑥 + 24 has two distinct 𝑥-intercepts and a 𝑦-intercept. The circle o i M i k which goes these three intercepts meets the parabola at a fourth point, 𝑃. n k o e k What is the distance of 𝑃 from the origin? se i n o M s c i n",
+      "options": [
+        {
+          "label": "A",
+          "text": "26 k √                                         e k e"
+        },
+        {
+          "label": "B",
+          "text": "26 2 o i s c k s i"
+        },
+        {
+          "label": "C",
+          "text": "28 i K o √ o"
+        },
+        {
+          "label": "D",
+          "text": "30 3 M k K s n"
+        },
+        {
+          "label": "E",
+          "text": "35 i K o e K i M s k i k o c k  i i n"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "The equations 𝑥 2 + 𝑎𝑥 + 𝑏 = 0 and 𝑥 2 + 𝑏𝑥 + 𝑎 = 0 both have real roots. It is known that K k e k no M ck K se i o c s the sum of the squares of the roots of the first equation is equal to the sum of the squares c i o n of the roots of the second one, and that 𝑎 ≠ 𝑏. Find the value 500 + 10(𝑎 + 𝑏). K e M",
+      "options": [
+        {
+          "label": "A",
+          "text": "190 i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "B",
+          "text": "240 K k M k Ki ek n M oc M"
+        },
+        {
+          "label": "C",
+          "text": "360 k e"
+        },
+        {
+          "label": "D",
+          "text": "480 K K sek i n o M oc k e M ck K se i o K ek n M oc s"
+        },
+        {
+          "label": "E",
+          "text": "500 n i k o o i n i K n K k o c k o"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "The perimeter of the square in the figure is 40. o i The perimeter of the larger equilateral triangle i k √ k k in the figure is 𝑎 + 𝑏 𝑝, where 𝑝 is a prime k M number. What is the value of 7𝑎 + 5𝑏 + 3𝑝? c i o ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "269 s i o i o"
+        },
+        {
+          "label": "B",
+          "text": "301 ise i o M s"
+        },
+        {
+          "label": "C",
+          "text": "357 n"
+        },
+        {
+          "label": "D",
+          "text": "441 s"
+        },
+        {
+          "label": "E",
+          "text": "463 ki o k i o n oc Page 4 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "A dealer bought two cars. He sold the first one for 40% more than he paid for it and the i n k e second one for 60% more than he paid for it. The total sum he received for the two cars k e o i s was 54% more that the total sum he paid for them. When written in its lowest terms, the c k s i ratio of the prices the dealer paid for the first and the second car was a : b. What is the i K o value of 11𝑎 + 13𝑏? o M k K s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "86 i K o e K i M s"
+        },
+        {
+          "label": "B",
+          "text": "102 k i"
+        },
+        {
+          "label": "C",
+          "text": "124 k o c i"
+        },
+        {
+          "label": "D",
+          "text": "172 k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "198                      e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "The point A is due west of the point B. k Ki ek n M oc M k The bearing of the point C from B is 150°. e K K sek i n o M oc k e The distance between point A and point B is the same as the distance between point B and M ck K se i o K ek n M oc s point C. n i A is 16 km away from C. k o Find the distance of AB. o i n i K n",
+      "options": [
+        {
+          "label": "A",
+          "text": "16 km K k"
+        },
+        {
+          "label": "B",
+          "text": "√16 km o c k 3 o √"
+        },
+        {
+          "label": "C",
+          "text": "16 3 km o i i k k"
+        },
+        {
+          "label": "D",
+          "text": "8 km k k"
+        },
+        {
+          "label": "E",
+          "text": "√16 M c 2 i √ o 16 3 F.     2 ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 5 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "A woman has 31 coins, all of which are dimes ($0.1) and quarters ($0.25). If the total o i M i k value of the coins is $5.95, by how much more the value of all the quarters is compared to n k o the value of all the dimes? e k se i n o M s c",
+      "options": [
+        {
+          "label": "A",
+          "text": "$2.75 i n k"
+        },
+        {
+          "label": "B",
+          "text": "$3.00 e k e o i s c k s i"
+        },
+        {
+          "label": "C",
+          "text": "$3.25 i K o"
+        },
+        {
+          "label": "D",
+          "text": "$3.55 o M k K s n"
+        },
+        {
+          "label": "E",
+          "text": "$3.75 i K o e K F. $4.00 i M s k i k o c i k i n K k e k no M ck K se i o c s √︃ 16 𝑥 +8 𝑥 c"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 13,
+      "prompt": "The expression 4 𝑥 +2 𝑥 simplifies to which of the following? i o n K e M",
+      "options": [
+        {
+          "label": "A",
+          "text": "2𝑥 i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "B",
+          "text": "2 K k √ M"
+        },
+        {
+          "label": "C",
+          "text": "( 2) 𝑥 k Ki ek n M oc M √ k e"
+        },
+        {
+          "label": "D",
+          "text": "2𝑥 K K sek i n o M oc k e M ck K se i o"
+        },
+        {
+          "label": "E",
+          "text": "22𝑥 K ek n M oc s n i k o o i n i K n K k o c k"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Which one of the following is an equation of the line that passes through (4, 3) and o perpendicular to the line 𝑦 = 2𝑥 + 4? o i i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "2𝑥 − 𝑦 = 5 k k k"
+        },
+        {
+          "label": "B",
+          "text": "2𝑦 + 𝑥 = 11 M c i"
+        },
+        {
+          "label": "C",
+          "text": "2𝑦 − 𝑥 = 2 o ise i o i s"
+        },
+        {
+          "label": "D",
+          "text": "2𝑥 + 𝑦 = 11 s i o i o"
+        },
+        {
+          "label": "E",
+          "text": "2𝑦 + 𝑥 = 10 ise i o M s n s ki o k i o n oc Page 6 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "A car starts at point X. It travels 3.0 km due east, then 4.0 km due south, then 6.0 km due o i M i k west and finally 8.0 km due north. n k o e k se i n o M s How far away is the car from point X when it has reached the end of this journey? c i n k e k e (Assume that all distances moved are on a flat horizontal surface, and that point X is o i s c k s on the equator. You may ignore any curvature of the Earth.) i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "5.0 km o M k K s n"
+        },
+        {
+          "label": "B",
+          "text": "21.0 km i K o e K"
+        },
+        {
+          "label": "C",
+          "text": "10.0 km i M s k i"
+        },
+        {
+          "label": "D",
+          "text": "7.0 km k o c i"
+        },
+        {
+          "label": "E",
+          "text": "2.0 km k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "ABCDE is a regular pentagon. The transformation R is a rotation about the origin and i K k maps A to B, B to C, C to D, etc. The transformation S is a reflection in the y-axis. M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k o c k o o i i k k k k M c Which of the following sequences of transformations (performed in the order that they are i o listed) would NOT leave vertex D in the same position? ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "S R R S R S s i o i o"
+        },
+        {
+          "label": "B",
+          "text": "S R ise i o M s"
+        },
+        {
+          "label": "C",
+          "text": "R R S R S R n"
+        },
+        {
+          "label": "D",
+          "text": "R S R S s"
+        },
+        {
+          "label": "E",
+          "text": "R S R R ki o k i o n oc Page 7 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "A group of drivers, consisting of 200 women and 300 men, was asked if they passed their i n k driving test at the first attempt. e k e o i s Altogether 167 of the group said they passed at the first attempt. c k s i Of the women, 143 said they did not pass at the first attempt. i K o How many of the men said they passed at the first attempt? o M k K s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "10 i K o e K i M s"
+        },
+        {
+          "label": "B",
+          "text": "24 k i"
+        },
+        {
+          "label": "C",
+          "text": "33 k o c i"
+        },
+        {
+          "label": "D",
+          "text": "57 k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "110                       e k no M ck K se i o c s F. 133 c i o n K G. 157                  e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o √"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "How many different integers, 𝑛, are there such that the difference between 2 𝑛 and 7 is K ek n M oc s n i less than 1? k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "0 o i n i K n"
+        },
+        {
+          "label": "B",
+          "text": "2 K k o c k"
+        },
+        {
+          "label": "C",
+          "text": "4 o"
+        },
+        {
+          "label": "D",
+          "text": "6 o i i k"
+        },
+        {
+          "label": "E",
+          "text": "8 k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 8 oc c o          k             K e i no M ck K se ki no Mo ock K ise 𝑟 o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                             k       n"
+        },
+        {
+          "label": "A",
+          "text": "32"
+        },
+        {
+          "label": "B",
+          "text": "2 i n        M 14"
+        },
+        {
+          "label": "D",
+          "text": "27 16"
+        },
+        {
+          "label": "C",
+          "text": "81 F. 16"
+        },
+        {
+          "label": "E",
+          "text": "12 oc            is       k        o               c          K       s          i       o 2 , 𝑟, 2𝑟 and 3𝑟. i                        k                  e"
+        },
+        {
+          "label": "E",
+          "text": "26𝜋𝑟 2"
+        },
+        {
+          "label": "D",
+          "text": "25𝜋𝑟 2"
+        },
+        {
+          "label": "C",
+          "text": "57𝜋𝑟 2"
+        },
+        {
+          "label": "A",
+          "text": "58𝜋𝑟 2"
+        },
+        {
+          "label": "B",
+          "text": "169𝜋𝑟 2 When 𝑥 = 8, 𝑦 = 9. k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o i"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 19,
+      "prompt": "Four individual spheres have radii:",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 20,
+      "prompt": "The quantities 𝑥 and 𝑦 are positive. What is the value of 𝑦 when 𝑥 = 6? K ek n M oc i K o What is the sum of their surface areas? se i n o K sek i n o M oc k K is k i o M c k k e o Page 9 ise i o k n M oc is k i n o M ck 𝑥 is inversely proportional to the square root of 𝑦. ise i o k K e o n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n n M",
+      "options": [
+        {
+          "label": "D",
+          "text": "72"
+        },
+        {
+          "label": "C",
+          "text": "36"
+        },
+        {
+          "label": "B",
+          "text": "24"
+        },
+        {
+          "label": "A",
+          "text": "12 i        k                        c                  s          i       o √ √ √ √ oc             s                o                          K"
+        },
+        {
+          "label": "E",
+          "text": "𝑥 = 3"
+        },
+        {
+          "label": "D",
+          "text": "𝑥 ≥ 2"
+        },
+        {
+          "label": "C",
+          "text": "𝑥 > 1"
+        },
+        {
+          "label": "B",
+          "text": "𝑥 ≤ 0 H. 72 3 G. 36 3 F. 24 3"
+        },
+        {
+          "label": "E",
+          "text": "12 3 i                        k                  e                                                                                                                                                                                                                                                                                  A. 𝑥 < −2"
+        }
+      ],
+      "answer": null,
+      "raw_answer": "F",
+      "warnings": [
+        "non-MCQ raw answer detected: F"
+      ]
+    },
+    {
+      "number": 21,
+      "prompt": "Solve the inequality: What is the value of 𝑥 2 ? k Ki ek n M oc is k i no M s i o k K e o The areas of 𝑃 and 𝑄 are equal.",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 22,
+      "prompt": "𝑃 is a regular 12-sided polygon. 3 1 K ek n M oc i i k n M K se i n o k M o c K sek i n o M oc k is o 4 3 K i k 𝑄 is a regular hexagon with side length 𝑥 cm. k e o Page 10 ise i o k n M oc is k i n o M ck ise i o k K e o (𝑥 + 2) − (𝑥 − 1) > 2 − 𝑥 n M oc is k i n o M c k K i ki o o k K e n M o i The length of a straight line joining a vertex to the center of 𝑃 is 6 cm. no M ck K se i o i k c k K se oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 23,
+      "prompt": "In a rectangle, the long side is 3 times greater than the short side. If we cut 1 cm from each o i M i k side, the perimeter will be 36 cm. Find the area of the rectangle at first. n k o e k",
+      "options": [
+        {
+          "label": "A",
+          "text": "45 se i n o M s c i n"
+        },
+        {
+          "label": "B",
+          "text": "60 k e k e"
+        },
+        {
+          "label": "C",
+          "text": "75 o i s c k s i"
+        },
+        {
+          "label": "D",
+          "text": "80 i K o o"
+        },
+        {
+          "label": "E",
+          "text": "84 M k K s n i K o e K i M s k i k o c i"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "On Aigerim’s 18th birthday in 2012, she was 159 cm in height, having grown 6% since her k i n K k birthday in 2011. How tall was she in 2011? e k no M ck K se i o c s",
+      "options": [
+        {
+          "label": "A",
+          "text": "148 cm c i o n K"
+        },
+        {
+          "label": "B",
+          "text": "145 cm              e M i s"
+        },
+        {
+          "label": "C",
+          "text": "150 cm k Ki ek n M oc k i K k"
+        },
+        {
+          "label": "D",
+          "text": "135 cm M k Ki ek n M oc M k"
+        },
+        {
+          "label": "E",
+          "text": "152 cm e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "In the given figure, three circles centered at 𝐴, o c k 𝐵, and 𝐶 have equal radii of 4 cm. o The circles are tangent to each other, and a metal o i i k wire rounds the circles completely as shown in k k the figure. k M Find the length of √ the metal wire. c i 𝑉 Given that 𝐴 = 5000, what is the value of 𝑟? o ise i o i s s i o i o",
+      "options": [
+        {
+          "label": "A",
+          "text": "4(𝜋 + 2) ise i o M s"
+        },
+        {
+          "label": "B",
+          "text": "4(𝜋 + 3) n"
+        },
+        {
+          "label": "C",
+          "text": "8(𝜋 + 3) s"
+        },
+        {
+          "label": "D",
+          "text": "8(𝜋 + 2)"
+        },
+        {
+          "label": "E",
+          "text": "16(𝜋 + 3) ki o k i o n oc Page 11 oc c o          k             e   K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                   i         k       n n        M"
+        },
+        {
+          "label": "C",
+          "text": "40"
+        },
+        {
+          "label": "B",
+          "text": "20 oc            is       k        o               c          K       s          i       o"
+        },
+        {
+          "label": "E",
+          "text": "8 m/s"
+        },
+        {
+          "label": "A",
+          "text": "5 m/s i                        k                  e"
+        },
+        {
+          "label": "E",
+          "text": "52 km"
+        },
+        {
+          "label": "C",
+          "text": "85 km"
+        },
+        {
+          "label": "A",
+          "text": "56 km 9 m/s 3 m/s"
+        },
+        {
+          "label": "D",
+          "text": "10 m/s"
+        },
+        {
+          "label": "D",
+          "text": "216 km"
+        },
+        {
+          "label": "B",
+          "text": "113 km"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "Convert 16 km/h to m/s. journey took 54 minutes. k Ki ek n M oc is k i no M s i o k K e k n M o K ek n M oc i K ise i n o o K sek i n o M oc k K is k i o M c k k e o Page 12 What is the distance, in km, that Marian drove? ise i o k n M oc is k i n o M ck ise i o k K e o n M oc is k i n o M c k K i ki o o k K ek n M o c i i k K se on her journey was 80% more than the time taken by David on his journey. no M ck K se i o o On a different journey, Marian drove at an average speed of 70 km/h. The time she took",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 26,
+      "prompt": "David drove at an average speed of 50 km/h for a distance of 45 km in his car. David’s oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o ke K i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n k n M o √ i c s",
+      "options": [
+        {
+          "label": "A",
+          "text": "500 i √ √ √ √"
+        },
+        {
+          "label": "A",
+          "text": "8 2 oc             s                o                          K"
+        },
+        {
+          "label": "E",
+          "text": "3000"
+        },
+        {
+          "label": "D",
+          "text": "2000"
+        },
+        {
+          "label": "C",
+          "text": "5000"
+        },
+        {
+          "label": "B",
+          "text": "2500"
+        },
+        {
+          "label": "E",
+          "text": "24 2"
+        },
+        {
+          "label": "D",
+          "text": "16 2"
+        },
+        {
+          "label": "C",
+          "text": "12 2"
+        },
+        {
+          "label": "B",
+          "text": "10 2 i k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       i                              o the area of the given rectangle 𝐷𝐵𝐵′ 𝐷 ′. se i n o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 13"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "The volume of the given cube is 64 cm3 . Find ise i o n M o i k n M c What is the area of the base of the original statue? ise i ok ck K s e i o o k The area of the base of one of the new statues is 100 cm2 . n M oc is k i n o M c k K i K identical to each other and are scaled down versions of the original. ki o o k i ek n M o c is no M ck K se i o o k K e",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 29,
+      "prompt": "A metal statue is melted down and turned into 125 smaller statues. The new statues are all oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o o k K e i no M ck K se ki no Mo ock K ise o i k n M c K i s k i k e M ck K se i o o i k n i k n M c s o",
+      "options": [
+        {
+          "label": "E",
+          "text": "340"
+        },
+        {
+          "label": "D",
+          "text": "100"
+        },
+        {
+          "label": "C",
+          "text": "600"
+        },
+        {
+          "label": "B",
+          "text": "450"
+        },
+        {
+          "label": "A",
+          "text": "240 oc             s         i      o                 k        K         e        i lateral edge of 13 cm? k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k k                e                            o Page 14 ise i o k    n        M       oc              is       k  i      n o      M          ck ise i o                        k        K       e                             o n    M       oc                is    k  i      n o       M         c k        K      i ki o o        k      K        ek       n         M       o c                 i no M ck K se i o              i                             o       k        K       se"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "What is the surface area of a regular square pyramid with a slant height of 12 cm and a oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K Critical Thinking o i M i k n k o e",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 1,
+      "prompt": "The town of Coppersvile uses some special coins. Edwards has five 5 p coins, four 4 p k se i n o M s coins, three 3 p coins, two 2 p coins and one 1 p coin. The smallest amount he cannot pay c i n k with his coins alone is 𝑊 p. e k e o i s What is the value of 𝑊? c k s i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "50 o M"
+        },
+        {
+          "label": "B",
+          "text": "56 k K s n i K o"
+        },
+        {
+          "label": "C",
+          "text": "47                                 e K i M s k"
+        },
+        {
+          "label": "D",
+          "text": "33 i k"
+        },
+        {
+          "label": "E",
+          "text": "25 o c k  i i n K k e k no M ck K se i o c s c i o n K e M i s"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 2,
+      "prompt": "One of the best things about online courses is that they are accessible to people all over k Ki ek n M oc k i the world. However, because there are so many courses available, finding one that is K k M genuinely high-quality can be just as time-consuming as enrolling in a traditional class. k Ki ek n M oc M k Additionally, there’s no guarantee that the course material is accurate or up-to-date since e K K sek i n o M oc k e anyone can create an online course without proper accreditation or review. Therefore, M ck K se i o K ek n M oc s attending accredited institutions in person is a far better option for those who are serious n i about their education. k o o Which one of the following is an assumption underlying the above argument? i n i K n",
+      "options": [
+        {
+          "label": "A",
+          "text": "Most online courses contain outdated or incorrect information. K k o c k"
+        },
+        {
+          "label": "B",
+          "text": "Traditional classes are more expensive than online courses. o"
+        },
+        {
+          "label": "C",
+          "text": "Accredited institutions are more likely to provide reliable and accurate course o i i k material. k k k"
+        },
+        {
+          "label": "D",
+          "text": "Online courses are popular mainly because they are convenient. M c i"
+        },
+        {
+          "label": "E",
+          "text": "Many online course creators intentionally provide misleading information. o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 15 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 3,
+      "prompt": "The circles in the diagram are to be coloured o i M so that any two circles connected by a line i k n k o segment have different colours. e k se i n o M s c i n What is the smallest number of colours re- k e k quired? e o i s c k s i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "6 o M k"
+        },
+        {
+          "label": "B",
+          "text": "5 K s n i K o"
+        },
+        {
+          "label": "C",
+          "text": "4 e K i M s k"
+        },
+        {
+          "label": "D",
+          "text": "3 i k"
+        },
+        {
+          "label": "E",
+          "text": "2 o c k  i i n K k e k no M ck K se i o c s c i o n K e M i s"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 4,
+      "prompt": "Priti is learning a new language called Tedio. k Ki ek n M oc k i K During her one hour lesson, which started at k M k Ki ek n M oc midday, she looks at the clock and notices that M k the hour hand and the minute hand make exactly e K K sek i n o M oc k e M ck K se i o the same angle with the vertical, as shown in K ek n M oc s n the diagram. How many whole seconds remain i k until the end of the lesson? o o i n i K n",
+      "options": [
+        {
+          "label": "A",
+          "text": "235 K k"
+        },
+        {
+          "label": "B",
+          "text": "276 o c k o"
+        },
+        {
+          "label": "C",
+          "text": "294 o i i k"
+        },
+        {
+          "label": "D",
+          "text": "311 k k"
+        },
+        {
+          "label": "E",
+          "text": "321 k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 16 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 5,
+      "prompt": "In the 1980s, there was a public transport strike in a major city. It was predicted that o i M i k because public transport was unavailable, there would be a significant increase in traffic n k o e accidents due to more people using private cars. However, the data showed that the number k se i n o M s of traffic accidents actually decreased during the strike. From this, we can conclude that c i n k using public transport, rather than reducing road accidents, may actually contribute to e k e them. o i s c k s i Which one of the following states a flaw in the above argument? i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "It ignores other possible reasons for the decrease in traffic accidents. k K s n"
+        },
+        {
+          "label": "B",
+          "text": "It implies that public transport should be banned to reduce accidents. i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "It presents data that contradicts its own conclusion. k i k"
+        },
+        {
+          "label": "D",
+          "text": "It assumes a direct link between public transport usage and accident rates. o c i"
+        },
+        {
+          "label": "E",
+          "text": "It assumes that predictions about traffic accidents were incorrect. k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 6,
+      "prompt": "Although it has long been known that dolphins communicate through clicks and whistles, K k M advances in marine biology have revealed that dolphins use a complex system of sounds k Ki ek n M oc M k to coordinate hunting and social interactions. Using underwater microphones, researchers e K K sek i n o M oc k e have discovered that dolphins have unique signature whistles, functioning like names, which M ck K se i o K ek n M oc s help them identify and call each other over long distances. However, these sophisticated n i communication abilities can be exploited by humans. For instance, some fishing vessels use k o devices that mimic dolphin calls to attract them, making dolphins vulnerable to capture or o i n harm. This has raised concerns among conservationists about the unintended consequences i K n K k of human interference with dolphin communication. o c k Which of the following can be drawn as a conclusion from the passage above? o o",
+      "options": [
+        {
+          "label": "A",
+          "text": "The use of underwater microphones has helped discover new dolphin species. i i k k"
+        },
+        {
+          "label": "B",
+          "text": "Dolphins are the only marine animals that use sound for identification. k k M"
+        },
+        {
+          "label": "C",
+          "text": "Dolphins have developed complex communication solely to avoid predators. c i o"
+        },
+        {
+          "label": "D",
+          "text": "Mimicking dolphin sounds is an effective way to protect them from human ise i o i s threats. s i o"
+        },
+        {
+          "label": "E",
+          "text": "Dolphins’ communication skills will eventually lead to their vulnerability to i o ise i o human activities. M s n s ki o k i o n oc Page 17 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 7,
+      "prompt": "The following table shows the exchange rates for five world currencies against the UK o i M i k pound. An investor will change some pounds into one of these currencies in May and n k o exchange the full amount back into pounds in October. e k se i n o M s c Currency May June July August September October i n k US dollar 2.1 2 1.8 e 1.7 1.5 1.6 k e o i s SINGAPORE dollar 1.4 1.2 1.3 1.25 1.4 1.35 c k s i BRUNEI dollar 2.4 2.5 2.6 2.6 2.7 2.8 i K o AUSTRALIAN dollar 2 2.1 2 1.95 1.9 1.7 o M k K s ARGENTINE peso 6.3 6.2 5.9 4.5 5 5.2 n i K o e For example, 1 UK pound buys 2 AUSTRALIAN dollars in May. K i M s k Which currency will make the investor the most money in UK pounds over the six months? i k",
+      "options": [
+        {
+          "label": "A",
+          "text": "ARGENTINE peso o c k  i"
+        },
+        {
+          "label": "B",
+          "text": "AUSTRALIAN dollar i n K k e k"
+        },
+        {
+          "label": "C",
+          "text": "BRUNEI dollar no M ck K se i o c s c i"
+        },
+        {
+          "label": "D",
+          "text": "SINGAPORE dollar o n K e M"
+        },
+        {
+          "label": "E",
+          "text": "US dollar i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 8,
+      "prompt": "Stephanie enjoys swimming. She goes for a swim on a particular date if, and only if, the K ek n M oc s n day, month (where January is replaced by ’01’ through to December by ’12’) and year are i k all of the same parity (that is they are all odd, or all are even). On how many days will she o o go for a swim in the two-year period between January 1st of one year and December 31st i n i K n of the following year inclusive? K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "142 o c k o"
+        },
+        {
+          "label": "B",
+          "text": "155 o i"
+        },
+        {
+          "label": "C",
+          "text": "183 i k k k"
+        },
+        {
+          "label": "D",
+          "text": "203 k M"
+        },
+        {
+          "label": "E",
+          "text": "216 c i o ise i o i s s i o i o ise i o M"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 9,
+      "prompt": "Either people are becoming healthier due to improved lifestyles, or medical treatments have s n become more effective at curing diseases. Since there is little evidence that lifestyle habits such as diet and exercise have significantly improved in recent years, we must conclude s that medical treatments are more effective now than they were in the past. Which one of the following most closely parallels the reasoning used in the above argument? ki o k i o n oc Page 18 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [
+        {
+          "label": "A",
+          "text": "Farmers must decide whether to plant wheat or corn based on seasonal weather o i M i k conditions. Since weather forecasts predict more rain this year, they should n k o choose corn.                                     e k se i n o M s c"
+        },
+        {
+          "label": "B",
+          "text": "Every year, students choose between attending public or private universities. i n k e Since private universities often have better facilities, many students prefer them. k e o i s"
+        },
+        {
+          "label": "C",
+          "text": "Researchers studying bird migration found that birds either rely on instinct or c k s i i K o environmental cues to navigate. Since experiments show that removing environ- o M mental cues disrupts migration, it must be the key factor. k K s n"
+        },
+        {
+          "label": "D",
+          "text": "Wood-burning stoves are considered more eco-friendly than traditional heating i K o e K methods because they produce less carbon emissions. Therefore, more people i M s k i should adopt them. k"
+        },
+        {
+          "label": "E",
+          "text": "When scheduling surgeries, doctors prioritize critical cases over routine proce- o c k  i dures. If your case is not critical, you may have to wait longer. i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 10,
+      "prompt": "In a situation where every possible choice leads to some form of harm, it is still possible K k M to choose the option that minimizes harm while maximizing overall benefit. Therefore, k Ki ek n M oc M k when faced with two harmful decisions, one should select the option that causes the least e K K sek i n o M oc k e M ck K se i o damage while providing the greatest benefit to the largest number of people. This may be K ek n M oc s n a difficult conclusion to reach, but it remains the most ethical course of action. i k Which one of the following best illustrates the principle contained o o i n",
+      "options": [
+        {
+          "label": "A",
+          "text": "The quickest and least costly decision is often the most ethical one. i K n K k"
+        },
+        {
+          "label": "B",
+          "text": "The decision that causes the least harm to the fewest people is the right choice. o c k"
+        },
+        {
+          "label": "C",
+          "text": "An action is not unethical if it achieves the intended outcome efficiently. o o i"
+        },
+        {
+          "label": "D",
+          "text": "When all options result in harm, it is important to choose the option with the i k k least harmful consequences. k k M"
+        },
+        {
+          "label": "E",
+          "text": "An action cannot be considered unethical if it is done with good intentions. c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 19 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 11,
+      "prompt": "Luxury cruises on very large ships have become an increasingly fashionable leisure activity, o i M i k especially among retired people. However, people should not put themselves in danger n k o e unnecessarily. Some of the most popular cruises go through parts of the oceans where k se i n o M s modern pirates are active. Passengers face a serious risk of being captured and held for c i n k ransom or even being killed when the ship is invaded. In addition, it is wrong to benefit e k e from the exploitation of workers. The workers in the engine rooms, laundries, kitchens and o i s c k s restaurants of large cruise ships work long hours for poor pay under appalling conditions i i K o and in a culture of fear, facing instant dismissal if they complain about bullying or sexual o M harassment. k K s n Which one of the following can be drawn as a conclusion from the above passage? i K o e K i M s",
+      "options": [
+        {
+          "label": "A",
+          "text": "Most of the people who can afford the time and cost of luxury cruises are those k i who have retired from work. k o c i"
+        },
+        {
+          "label": "B",
+          "text": "The governments of the world should work together to eradicate the danger of k i n piracy. K k e k no M ck K se i o c"
+        },
+        {
+          "label": "C",
+          "text": "There are personal and moral reasons why people should not go on luxury s c i o n cruises. K e M"
+        },
+        {
+          "label": "D",
+          "text": "Owners of luxury cruise ships operate in a fiercely competitive business envi- i s k Ki ek n M oc k i ronment K k M"
+        },
+        {
+          "label": "E",
+          "text": "Workers on large cruise ships should band together to campaign for better pay k Ki ek n M oc M k and working conditions. e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 20 oc c o                        e k                                                                                                 K i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e M ck K se i o                                    o                   i         k       n oc            is       k i    n o      M        c k        K       s e        i       o"
+        },
+        {
+          "label": "A",
+          "text": "36 minutes k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e                           o"
+        },
+        {
+          "label": "C",
+          "text": "2 hours and 8 minutes n"
+        },
+        {
+          "label": "B",
+          "text": "1 hour and 48 minutes k                 M"
+        },
+        {
+          "label": "E",
+          "text": "3 hours and 56 minutes"
+        },
+        {
+          "label": "D",
+          "text": "3 hours and 36 minutes K ek n M oc i                                      K       ise i n o                      o K sek i n o M oc k K      is       k  i       o        M        c k How long will it take to paint the two sheds?"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 12,
+      "prompt": "The drawing below shows an allotment shed. k e o Page 21 ise i o k n M oc is k i n o M ck ise i o k K e o n i three coats of paint. It takes 4 minutes to paint 1 square metre. n M oc is k i o M c k K ki o o k K ek n M o c i no M ck K se i o i o k K se I have two identical sheds to paint and will take just one 20-minute tea break. The four outside wood surfaces of the shed, including the door, need to be painted with oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K",
+      "options": [],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": [
+        "only 0 option(s) detected"
+      ]
+    },
+    {
+      "number": 13,
+      "prompt": "Sarah drives to work each morning. On the way she passes through a busy junction with a o i M i k set of traffic lights. One morning she stops behind a line of traffic just as the lights go red. n k o e She can see 14 cars between her and the red light. The red (stop) light will remain on for k se i n o M s 42 seconds. The green (go) light will come on for just 10 seconds, and this will be enough c i n k time for 7 cars to get through the junction before the red light comes on again and the line e k e of cars is brought to a stop. o i s c k s How long will Sarah have to wait until she can go through the junction? i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "52 seconds o M k K s n"
+        },
+        {
+          "label": "B",
+          "text": "1 minute 34 seconds i K o e K"
+        },
+        {
+          "label": "C",
+          "text": "1 minute 44 seconds i M s k i"
+        },
+        {
+          "label": "D",
+          "text": "2 minutes 26 seconds k o c i"
+        },
+        {
+          "label": "E",
+          "text": "2 minutes 36 seconds k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 14,
+      "prompt": "Government legislation has proved very effective in reducing emissions from car exhausts. i K k But exhausts are not the only source of air pollution linked to traffic. A recent study showed M k Ki ek n M oc M that particles from brakes, tyres and road surfaces actually made up about two thirds of k e all dangerous particulate matter from road transport. It is now time to legislate to impose K K sek i n o M oc k e M ck K se i o lower speed limits in areas where there are high volumes of traffic. K ek n M oc s n Which one of the following is an assumption underlying the above argument? i k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Lower speed limits will lead to a reduction in car exhaust emissions. o i n i K n"
+        },
+        {
+          "label": "B",
+          "text": "There are no other sources of air pollution besides those caused by traffic. K k"
+        },
+        {
+          "label": "C",
+          "text": "Air pollution is only a problem in areas where there is a high volume of traffic. o c k o"
+        },
+        {
+          "label": "D",
+          "text": "If legislation has been effective elsewhere then it is likely to be effective in this o i case. i k k k"
+        },
+        {
+          "label": "E",
+          "text": "Pollution from brakes, tyres and road surfaces is reduced when lower speed limits k M are imposed. c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 22 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 15,
+      "prompt": "Risk of death contradicts the very concept of sport, since sport is generally considered o i M i k to belong to the less serious side of life. Sport is what people do to counter the stress n k o e and pressure of work, not to increase them. The growth in the popularity of so-called k se i n o M s extreme sports, where there is a real risk of death, is therefore puzzling; particularly since c i n k the modifications in equipment which are designed to make the sports safer do not lead to e k e fewer accidents but to ever higher performance levels and greater exposure to danger. o i s c k s i Which one of the following, if true, most weakens the above argument? i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "Improved performance in extreme sports does not lessen the risk of death. k K s n"
+        },
+        {
+          "label": "B",
+          "text": "Most people want to escape from the modern obsession with safety at work. i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "By claiming to enhance safety, sports-equipment designers merely encourage k i risk-taking. k o c i"
+        },
+        {
+          "label": "D",
+          "text": "The popularity of extreme sports means that sport is sometimes a serious matter. k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 16,
+      "prompt": "I have a digital clock that displays the date as well as the time. Just after 4 p.m. on 25th i K k April I happened to glance at the clock and saw: M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k o c k o o i i k k k k M c i o ise i o i s It struck me that the four numbers on the clock were all different square numbers. When I s i o thought about it, I realised that this would occur another three times within the next hour, i o then not again until September. ise i o M s n How many times will my clock display four different non-zero square numbers during s September?",
+      "options": [
+        {
+          "label": "A",
+          "text": "32 ki o k i o n oc Page 23 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        },
+        {
+          "label": "B",
+          "text": "36 o i M i k n"
+        },
+        {
+          "label": "C",
+          "text": "40 k o e k se i n o"
+        },
+        {
+          "label": "D",
+          "text": "44 M s c i n k"
+        },
+        {
+          "label": "E",
+          "text": "48                                          e k e o i s c k s i i K o o M k K s n i K o e"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 17,
+      "prompt": "The battery life of laptop computers means that they cannot be used for the duration of K i M s a long haul flight without needing to be recharged from an onboard power point. Not all k i aeroplanes have this facility. Therefore, laptop computers should not be allowed as carry- k o c on items for long haul flights on planes that do not have onboard power points, regardless k i i n of whether they are intended for personal or business use, as they will be of limited use to K k e their owners and take up a disproportionate amount of space in the cabin. k no M ck K se i o c s c i Which one of the following is the best statement of the flaw in the above argument? o n K e M",
+      "options": [
+        {
+          "label": "A",
+          "text": "Some companies expect their employees to work on long haul flights. i s k Ki ek n M oc k i"
+        },
+        {
+          "label": "B",
+          "text": "There is no chance of a laptop becoming damaged if it is stored in a suitcase in K k M the hold. k Ki ek n M oc M k"
+        },
+        {
+          "label": "C",
+          "text": "A laptop may run out of battery on a short haul flight, too. e K K sek i n o M oc k e M ck K se i o"
+        },
+        {
+          "label": "D",
+          "text": "The passenger cannot choose whether or not they book a flight with an onboard K ek n M oc s n power point. i k o"
+        },
+        {
+          "label": "E",
+          "text": "Passengers could make some use of their laptop even if the battery does run out. o i n i K n K k o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 24 oc c o          k         K   e i no M ck K se ki no Mo ock K ise o              i       k       n      M          c          K      i s      k i k                  e"
+        },
+        {
+          "label": "C",
+          "text": ""
+        },
+        {
+          "label": "B",
+          "text": ""
+        },
+        {
+          "label": "A",
+          "text": "M ck K se i o                                    o                   i         k       n oc            is       k i    n o      M        c k        K       s e        i       o k Ki ek n M oc                                            is       k i       no      M s        i       o               k        K          e k       n         M       o i"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 18,
+      "prompt": "Below a pictures of three cylinders. K ek n M oc i K se i n o o K sek i n o M oc k K is k i o M c k k e o Page 25 ise i o k n M oc is k i n o M ck ise i o k K e o could NOT be a view of one of the halves from any direction? n M oc is k i n o M c k K i ki o o k K ek n M o c i no M ck K se i o i o k K se If a cylinder is cut into two equal halves with one straight cut, which one of the following oc i s k n o M c K is k i o k Ki ek n M oc i k i e k n c s o K s i o i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c i n k e k e o i s c k s i i K o",
+      "options": [
+        {
+          "label": "D",
+          "text": "o M k K s n i K o e K i M s k i k o c k  i i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M"
+        },
+        {
+          "label": "E",
+          "text": "k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": [
+        "only 2 option(s) detected"
+      ]
+    },
+    {
+      "number": 19,
+      "prompt": "Myopia (short-sightedness) has long been thought of as a genetic condition. However, o c k recent research suggests that environmental factors are as important. In particular, the o idea that unusually large amounts of reading contribute to the development of myopia is o i supported by a recent academic study of 4568 people aged 35–74 years. This showed that i k k 50% of those who went to university were myopic compared to 34% of non-graduates. So, k k if you want to reduce your chances of developing myopia you should not go to university. M c i Which one of the following is an underlying assumption of the above argument? o ise i o i s",
+      "options": [
+        {
+          "label": "A",
+          "text": "People who go to university have to do a lot of reading. s i o i o"
+        },
+        {
+          "label": "B",
+          "text": "Myopia is a serious eye condition which one should avoid. ise i o M"
+        },
+        {
+          "label": "C",
+          "text": "It is not worth going to university. s n"
+        },
+        {
+          "label": "D",
+          "text": "There are no other ways to reduce the risk of developing myopia. s"
+        },
+        {
+          "label": "E",
+          "text": "Lenses to correct myopia are not fully effective ki o k i o n oc Page 26 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K o i M i k n k o e k se i n o M s c"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 20,
+      "prompt": "Jane and Tom make wedding cakes. Jane was paid £240 by a customer. Tom bought the i n k ingredients for the cake, which came to £40. They will split the costs of all ingredients e k e o i s equally, but Jane will keep 60% of the customer’s fee, compared to Tom’s 40%. c k s i How much does Jane owe Tom? i K o o",
+      "options": [
+        {
+          "label": "A",
+          "text": "£96 M k K s n"
+        },
+        {
+          "label": "B",
+          "text": "£112 i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "£116 k i k"
+        },
+        {
+          "label": "D",
+          "text": "£120 o c i"
+        },
+        {
+          "label": "E",
+          "text": "£140 k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 21,
+      "prompt": "In a certain family, the father gives out pocket money to his children in the following way. K k M Every month he chooses a number between 1 and 100, and then shares that amount of k Ki ek n M oc M k money equally between the seven children, giving them whole-number sums of money, e K K sek i n o M oc k e and giving anything left over to charity. M ck K se i o K ek n M oc s n For instance, if he chose the number 30, he would give $4 to each child ($4 × 7 = $28) and i k $2 to charity. o o i n If the father realizes after 100 months that every number between 1 and 100 (inclusive) has i K n K k been used once, how much has he given to charity? o c k",
+      "options": [
+        {
+          "label": "A",
+          "text": "$276 o"
+        },
+        {
+          "label": "B",
+          "text": "$294 o i i k k"
+        },
+        {
+          "label": "C",
+          "text": "$295 k k M"
+        },
+        {
+          "label": "D",
+          "text": "$297 c i"
+        },
+        {
+          "label": "E",
+          "text": "$300 o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 27 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 22,
+      "prompt": "Alice and Ben both carry pedometers when walking to monitor how far they go. One day o i M i k they go the same route, which Alice completes in 53 minutes, while Ben only takes 45 n k o e minutes. Alice’s pedometer registers the route length as 5.27 km, but Ben’s pedometer k se i n o M s suggests that it is 5.69 km. Neither knows whether their pedometer is accurate, so Alice c i n k takes hers to a reliable expert who tells her that her pedometer has been under-estimating e k e distances travelled by 3.26%. Ben knows that his pedometer may consistently under or o i s c k s overestimate distances but does not get it checked. i i K o Ben wishes to calculate as accurately as possible his average speed on the route he took o M k K s with Alice, and his average speed on future walks he takes with his own pedometer. Which n i K o e one of the pieces of information given above is unnecessary to complete such calculations? K i M s k",
+      "options": [
+        {
+          "label": "A",
+          "text": "Alice completed the route in 53 minutes. i k"
+        },
+        {
+          "label": "B",
+          "text": "Alice’s pedometer registered the route as 5.27 km long. o c k  i"
+        },
+        {
+          "label": "C",
+          "text": "Alice’s pedometer under-estimates distance by 3.26%. i n K k e k"
+        },
+        {
+          "label": "D",
+          "text": "Ben completed the route in 45 minutes. no M ck K se i o c s c i o n"
+        },
+        {
+          "label": "E",
+          "text": "Ben’s pedometer registered the route as 5.69 km long. K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e"
+        }
+      ],
+      "answer": "A",
+      "raw_answer": "A",
+      "warnings": []
+    },
+    {
+      "number": 23,
+      "prompt": "A recent study has found that those businesses which engaged more with social media had M ck K se i o K ek n M oc s more financial success than businesses which did not. The businesses which were the most n i engaged saw their revenue grow by 18 per cent over the last year, while the least engaged k o saw losses of 8 per cent. Since social media is the future of communication, it can be seen o i n that businesses should interact more with social media in order to maximise their profits. i K n K k Which one of the following is the best statement of the flaw in the above argument? o c k",
+      "options": [
+        {
+          "label": "A",
+          "text": "It ignores the fact that not all businesses use social media. o o i"
+        },
+        {
+          "label": "B",
+          "text": "It assumes that businesses that do not use social media will collapse. i k k k"
+        },
+        {
+          "label": "C",
+          "text": "It assumes that participation in social media causes an increase in profits. k M"
+        },
+        {
+          "label": "D",
+          "text": "It ignores the fact that businesses can use other forms of communication. c i o"
+        },
+        {
+          "label": "E",
+          "text": "It assumes that a growth in revenue of 18 per cent is possible for all businesses. ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 28 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 24,
+      "prompt": "It is time for prostitution to be legalised. It has been illegal for millennia, and yet it is still o i M i k present in modern society. Clearly, its being illegal does not provide enough deterrent to n k o e prevent people from engaging in it. We are never going to eradicate prostitution, so we k se i n o M s should give up trying, and legalise it. Money that is spent in prosecuting prostitutes and c i n k their clients could be better used elsewhere. e k e o i s Which one of the following illustrates the principle used in the above argument? c k s i i K o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Prostitutes’ clients should be prosecuted, but not prostitutes themselves. o M"
+        },
+        {
+          "label": "B",
+          "text": "Some people will commit murders, whether or not murder is illegal, so murder k K s n should not be illegal. i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "People who are involved with dealing in illegal substances largely as a result of k i a background of poverty should not be prosecuted. k o c i"
+        },
+        {
+          "label": "D",
+          "text": "Modern crimes, such as internet hacking, should be the focus of police forces. k i n K k"
+        },
+        {
+          "label": "E",
+          "text": "We should not waste money trying to rehabilitate young offenders. e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 25,
+      "prompt": "In order for it to be possible to rain, clouds must be present. The weather forecast is k Ki ek n M oc M k predicting clear skies, so there is no chance of rain. e K K sek i n o M oc k e M ck K se i o Which one of the following most closely parallels the reasoning used in the above argument? K ek n M oc s n",
+      "options": [
+        {
+          "label": "A",
+          "text": "The temperature in the fish tank must be at least 25°C for the fish to survive. The i k o fish are all alive, therefore the temperature must be at least 25°C. o i n"
+        },
+        {
+          "label": "B",
+          "text": "Solar eclipses only occur at New Moon, when the Moon is between the Earth i K n K k and the Sun. The New Moon is not until next week, so there will be no Solar o c k eclipse today. o"
+        },
+        {
+          "label": "C",
+          "text": "A scab will only form when platelets in the blood have clotted. If you do not o i i k have any scabs, you do not have platelets in your blood. k k"
+        },
+        {
+          "label": "D",
+          "text": "When outside temperatures fall below 0°C household pipes are at risk of bursting. k M So at a temperature of -5°C all your household pipes will burst. c i o"
+        },
+        {
+          "label": "E",
+          "text": "Deciduous trees lose their leaves in the autumn. Autumn will be late this year, ise i o i s so trees will not lose their leaves until winter. s i o i o ise i o M s n s ki o k i o n oc Page 29 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "B",
+      "raw_answer": "B",
+      "warnings": []
+    },
+    {
+      "number": 26,
+      "prompt": "I live in a block of flats which is served by a lift which always goes from bottom to top and o i M i k back, picking up anyone who wishes to go in the direction it is travelling. If I have pressed n k o e the ‘down’ button and the lift is going up, it does not stop for me, but goes to the top and k se i n o M s stops for me on the way down. c i n k e I notice that, if I have pressed the button on my floor to go up, more often than not the lift k e o i s goes past my floor going down before it comes back up to collect me. c k s i i K o Which one of the following would explain this? o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "The lift travels down faster than it travels up. k K s n i K o e"
+        },
+        {
+          "label": "B",
+          "text": "It waits longer at the bottom floor than at intermediate floors. K i M s k"
+        },
+        {
+          "label": "C",
+          "text": "People mainly travel between their own floor and the bottom. i k"
+        },
+        {
+          "label": "D",
+          "text": "I live near the top of the block of flats. o c k  i"
+        },
+        {
+          "label": "E",
+          "text": "I live near the bottom of the block of flats. i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i"
+        }
+      ],
+      "answer": "E",
+      "raw_answer": "E",
+      "warnings": []
+    },
+    {
+      "number": 27,
+      "prompt": "Many people criticise what they call ‘the younger generation’ for what their seniors regard K k M as immoral behaviour. These critics need to realise that because the world has changed, k Ki ek n M oc M k moral standards have changed with it. In fact, technology is advancing so rapidly that it is e K K sek i n o M oc k e M ck K se i o only the young who understand the world in which they live. It is they, not their parents or K ek n M oc s n grandparents, who should be setting moral standards. Anyone over the age of 25 cannot i k help but be blinded by what they learned in the past. Their education has prevented them o o from perceiving and responding to the demands of the modern day, and so their moral i n i K n judgments have no validity. K k Which one of the following best expresses the main conclusion of the above argument? o c k o",
+      "options": [
+        {
+          "label": "A",
+          "text": "Moral judgments made by people over the age of 25 are not valid. o i i k"
+        },
+        {
+          "label": "B",
+          "text": "Moral standards have changed. k k"
+        },
+        {
+          "label": "C",
+          "text": "Moral standards should be set by people under the age of 25. k M c i"
+        },
+        {
+          "label": "D",
+          "text": "The younger generation is guilty of what older people regard as immoral be- o haviour. ise i o i s s"
+        },
+        {
+          "label": "E",
+          "text": "Young people are the only ones who understand the contemporary world. i o i o ise i o M s n s ki o k i o n oc Page 30 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": null,
+      "raw_answer": null,
+      "warnings": []
+    },
+    {
+      "number": 28,
+      "prompt": "Anna buys potatoes in the local market. She has noticed that the price on Saturday morning o i M i k is 5p per kilo more than the normal weekday price. However, an hour before the stall closes n k o e on a Saturday afternoon, the price drops to 5p per kilo below the weekday price. She k se i n o M s spends £3.00 a week on potatoes. This will buy her 3 kilos less in weight on a Saturday c i n k morning than on a weekday, but 5 kilos more in weight at the low Saturday afternoon price e k e than on a weekday. o i s c k s i What is the weekday price of potatoes per kilo? i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "12p k K s n"
+        },
+        {
+          "label": "B",
+          "text": "15p i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "20p k i k"
+        },
+        {
+          "label": "D",
+          "text": "25p o c i"
+        },
+        {
+          "label": "E",
+          "text": "30p k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    },
+    {
+      "number": 29,
+      "prompt": "The payment systems which use pre-paid magnetic swipe cards are not all that wonderful. K k M We had one put into the office last week to operate the tea and coffee dispensing machine. k Ki ek n M oc M k I was somewhat surprised to find, after having five coffees, that I had spent 121p, and my e K K sek i n o M oc k e colleague, after four teas, had spent 82p. We were assured that there had been no changes M ck K se i o K ek n M oc s in the prices; the problem appears to be that if you ask the machine how much you have n i left, it deducts a ‘service’ charge for this ‘service’. We both enquired once. Charges for k o tea, coffee, and service are whole numbers. o i n i K n What is the minimum that the service charge could be? K k",
+      "options": [
+        {
+          "label": "A",
+          "text": "1p o c k o"
+        },
+        {
+          "label": "B",
+          "text": "2p o i i k"
+        },
+        {
+          "label": "C",
+          "text": "4p k k"
+        },
+        {
+          "label": "D",
+          "text": "6p k M c i"
+        },
+        {
+          "label": "E",
+          "text": "14p o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 31 oc c i o no M ck K se ki no Mo ock K ise k e o M o c s n i o K k i M i o c k o n K"
+        }
+      ],
+      "answer": "D",
+      "raw_answer": "D",
+      "warnings": []
+    },
+    {
+      "number": 30,
+      "prompt": "There is no point to re-enactments of historical battles. Despite the meticulous attention o i M i k to getting the uniforms right and the cannon smoke, the simulation of being there fails on n k o e every level: there is no real danger of death and you know what the outcome will be. It k se i n o M s is merely an exercise in pageantry. In history-as-lived, the participants at Gettysburg did c i n k not know that the Confederates were not going to win, while in a scripted re-enactment e k e everyone knows their role and destiny from the outset. o i s c k s i Which one of the following best expresses the main conclusion of the above argument? i K o o M",
+      "options": [
+        {
+          "label": "A",
+          "text": "Re-enactments of historic battles are just colourful pageants. k K s n"
+        },
+        {
+          "label": "B",
+          "text": "The simulation of being there at a re-enacted historic event fails on all levels. i K o e K i M s"
+        },
+        {
+          "label": "C",
+          "text": "Re-enactments of historic battles are pointless. k i k"
+        },
+        {
+          "label": "D",
+          "text": "No insights into historic battles are gained through re-enactments. o c i"
+        },
+        {
+          "label": "E",
+          "text": "Pageantry is of no value in itself. k i n K k e k no M ck K se i o c s c i o n K e M i s k Ki ek n M oc k i K k M k Ki ek n M oc M k e K K sek i n o M oc k e M ck K se i o K ek n M oc s n i k o o i n i K n K k o c k o o i i k k k k M c i o ise i o i s s i o i o ise i o M s n s ki o k i o n oc Page 32 oc c"
+        }
+      ],
+      "answer": "C",
+      "raw_answer": "C",
+      "warnings": []
+    }
+  ]
+}
