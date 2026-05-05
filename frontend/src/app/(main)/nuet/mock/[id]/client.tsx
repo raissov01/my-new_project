@@ -485,11 +485,52 @@ function QuestionPrompt({ prompt }: { prompt: string }) {
       </div>
       {figure ? (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-          <span className="font-semibold">📐 Figure:</span> {figure}
+          <FigureContent figure={figure} />
         </div>
       ) : null}
     </div>
   );
+}
+
+function FigureContent({ figure }: { figure: string }) {
+  if (isAbsoluteParabolaFigure(figure)) {
+    return (
+      <div>
+        <CoordinateGraph />
+        <p className="mt-2 text-xs leading-5 text-amber-800">{figure}</p>
+      </div>
+    );
+  }
+  return (
+    <p>
+      <span className="font-semibold">Figure:</span> {figure}
+    </p>
+  );
+}
+
+function CoordinateGraph() {
+  return (
+    <svg viewBox="0 0 320 220" role="img" aria-label="Coordinate graph through (-3,0), (0,9), and (3,0)" className="h-56 w-full max-w-md rounded-lg bg-white">
+      <line x1="35" y1="170" x2="290" y2="170" stroke="#111827" strokeWidth="2" />
+      <line x1="160" y1="20" x2="160" y2="200" stroke="#111827" strokeWidth="2" />
+      <path d="M285 170 L274 164 M285 170 L274 176 M160 20 L154 31 M160 20 L166 31" fill="none" stroke="#111827" strokeWidth="2" />
+      <path d="M45 20 C58 88 82 145 100 170" fill="none" stroke="#111827" strokeWidth="3" />
+      <path d="M100 170 C122 78 198 78 220 170" fill="none" stroke="#111827" strokeWidth="3" />
+      <path d="M220 170 C238 145 262 88 275 20" fill="none" stroke="#111827" strokeWidth="3" />
+      <circle cx="100" cy="170" r="4" fill="#111827" />
+      <circle cx="160" cy="70" r="4" fill="#111827" />
+      <circle cx="220" cy="170" r="4" fill="#111827" />
+      <text x="284" y="190" fontSize="16" fill="#111827">x</text>
+      <text x="172" y="34" fontSize="16" fill="#111827">y</text>
+      <text x="75" y="194" fontSize="15" fill="#111827">(-3,0)</text>
+      <text x="174" y="64" fontSize="15" fill="#111827">(0,9)</text>
+      <text x="202" y="194" fontSize="15" fill="#111827">(3,0)</text>
+    </svg>
+  );
+}
+
+function isAbsoluteParabolaFigure(figure: string) {
+  return figure.includes("(-3,0)") && figure.includes("(0,9)") && figure.includes("(3,0)");
 }
 
 function MathText({ text }: { text: string }) {
