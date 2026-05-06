@@ -37,7 +37,7 @@ export function CreateQuizClient() {
       submitLabel={t("quiz.submitCreate")}
       cancelHref="/quizzes"
       cancelLabel={t("quiz.cancel")}
-      initialIsPublic={false}
+      initialIsPublic={true}
       initialTimePerQuestion={30}
       initialShuffleOptions={true}
       onSubmit={submitQuiz}

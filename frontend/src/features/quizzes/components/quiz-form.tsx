@@ -307,7 +307,7 @@ export function QuizForm({
   initialTitle = "",
   initialDescription = "",
   initialSubject = "",
-  initialIsPublic = false,
+  initialIsPublic = true,
   initialTimePerQuestion = 30,
   initialShuffleOptions = true,
   initialShowAnswerAnimations = true,
