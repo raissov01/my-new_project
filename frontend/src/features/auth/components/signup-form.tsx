@@ -23,12 +23,151 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+const PHONE_COUNTRIES = [
+  ["Kazakhstan", "+7"],
+  ["United States", "+1"],
+  ["Canada", "+1"],
+  ["United Kingdom", "+44"],
+  ["Russia", "+7"],
+  ["Kyrgyzstan", "+996"],
+  ["Uzbekistan", "+998"],
+  ["Tajikistan", "+992"],
+  ["Turkmenistan", "+993"],
+  ["Azerbaijan", "+994"],
+  ["Armenia", "+374"],
+  ["Georgia", "+995"],
+  ["Turkey", "+90"],
+  ["China", "+86"],
+  ["South Korea", "+82"],
+  ["Japan", "+81"],
+  ["India", "+91"],
+  ["Pakistan", "+92"],
+  ["Bangladesh", "+880"],
+  ["Indonesia", "+62"],
+  ["Malaysia", "+60"],
+  ["Singapore", "+65"],
+  ["Thailand", "+66"],
+  ["Vietnam", "+84"],
+  ["Philippines", "+63"],
+  ["Australia", "+61"],
+  ["New Zealand", "+64"],
+  ["Germany", "+49"],
+  ["France", "+33"],
+  ["Italy", "+39"],
+  ["Spain", "+34"],
+  ["Portugal", "+351"],
+  ["Netherlands", "+31"],
+  ["Belgium", "+32"],
+  ["Switzerland", "+41"],
+  ["Austria", "+43"],
+  ["Poland", "+48"],
+  ["Czechia", "+420"],
+  ["Slovakia", "+421"],
+  ["Hungary", "+36"],
+  ["Romania", "+40"],
+  ["Bulgaria", "+359"],
+  ["Greece", "+30"],
+  ["Ukraine", "+380"],
+  ["Belarus", "+375"],
+  ["Moldova", "+373"],
+  ["Lithuania", "+370"],
+  ["Latvia", "+371"],
+  ["Estonia", "+372"],
+  ["Finland", "+358"],
+  ["Sweden", "+46"],
+  ["Norway", "+47"],
+  ["Denmark", "+45"],
+  ["Ireland", "+353"],
+  ["Iceland", "+354"],
+  ["Serbia", "+381"],
+  ["Croatia", "+385"],
+  ["Slovenia", "+386"],
+  ["Bosnia and Herzegovina", "+387"],
+  ["Montenegro", "+382"],
+  ["North Macedonia", "+389"],
+  ["Albania", "+355"],
+  ["Israel", "+972"],
+  ["United Arab Emirates", "+971"],
+  ["Saudi Arabia", "+966"],
+  ["Qatar", "+974"],
+  ["Kuwait", "+965"],
+  ["Bahrain", "+973"],
+  ["Oman", "+968"],
+  ["Jordan", "+962"],
+  ["Lebanon", "+961"],
+  ["Egypt", "+20"],
+  ["Morocco", "+212"],
+  ["Algeria", "+213"],
+  ["Tunisia", "+216"],
+  ["South Africa", "+27"],
+  ["Nigeria", "+234"],
+  ["Kenya", "+254"],
+  ["Ethiopia", "+251"],
+  ["Ghana", "+233"],
+  ["Tanzania", "+255"],
+  ["Uganda", "+256"],
+  ["Rwanda", "+250"],
+  ["Senegal", "+221"],
+  ["Brazil", "+55"],
+  ["Argentina", "+54"],
+  ["Chile", "+56"],
+  ["Colombia", "+57"],
+  ["Peru", "+51"],
+  ["Mexico", "+52"],
+  ["Costa Rica", "+506"],
+  ["Panama", "+507"],
+  ["Dominican Republic", "+1"],
+  ["Puerto Rico", "+1"],
+  ["Uruguay", "+598"],
+  ["Paraguay", "+595"],
+  ["Bolivia", "+591"],
+  ["Ecuador", "+593"],
+  ["Venezuela", "+58"],
+  ["Cuba", "+53"],
+  ["Iran", "+98"],
+  ["Iraq", "+964"],
+  ["Sri Lanka", "+94"],
+  ["Nepal", "+977"],
+  ["Mongolia", "+976"],
+  ["Hong Kong", "+852"],
+  ["Taiwan", "+886"],
+  ["Cambodia", "+855"],
+  ["Laos", "+856"],
+  ["Myanmar", "+95"],
+  ["Afghanistan", "+93"],
+  ["Maldives", "+960"],
+] as const;
+
+function normalizeDialCode(value: string) {
+  const cleaned = value.replace(/[^\d+]/g, "");
+  if (!cleaned) return "";
+  return cleaned.startsWith("+") ? cleaned : `+${cleaned}`;
+}
+
+function buildPhoneValue(countryCode: string, customCode: string, localPhone: string) {
+  const local = localPhone.trim();
+  if (!local) return "";
+  if (local.startsWith("+")) return local;
+
+  const code = normalizeDialCode(countryCode === "custom" ? customCode : countryCode);
+  if (!code) return local;
+
+  const digits = local.replace(/\D/g, "");
+  if (code === "+7" && digits.length === 11 && digits.startsWith("8")) {
+    return `+7${digits.slice(1)}`;
+  }
+  return `${code}${digits}`;
+}
+
 export function SignupForm() {
   const { t } = useLocale();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [selectedRole, setSelectedRole] = useState<ProfileRole>("student");
+  const [phoneCountry, setPhoneCountry] = useState("+7");
+  const [customPhoneCode, setCustomPhoneCode] = useState("");
+  const [phoneLocal, setPhoneLocal] = useState("");
   const [socialPending, setSocialPending] = useState<string | null>(null);
   const [emailPending, setEmailPending] = useState(false);
   const submitLockRef = useRef(false);
@@ -181,7 +320,52 @@ export function SignupForm() {
       <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
         <Input id="full_name" name="full_name" type="text" label={t("auth.fullName")} placeholder={t("auth.fullNamePlaceholder")} required autoComplete="name" disabled={isDisabled} />
         <Input id="username" name="username" type="text" label={t("auth.username")} placeholder={t("auth.usernamePlaceholder")} required autoComplete="username" disabled={isDisabled} />
-        <Input id="phone" name="phone" type="tel" label={t("auth.phone")} placeholder={t("auth.phonePlaceholder")} autoComplete="tel" disabled={isDisabled} />
+        <div className="space-y-1.5">
+          <label htmlFor="phone-local" className="block text-sm font-medium text-[var(--text-primary)]">
+            {t("auth.phone")}
+          </label>
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+            <select
+              id="phone-country"
+              value={phoneCountry}
+              onChange={(event) => setPhoneCountry(event.target.value)}
+              disabled={isDisabled}
+              className="block h-10 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 text-sm text-[var(--text-primary)] transition-all duration-150 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:px-3.5"
+            >
+              {PHONE_COUNTRIES.map(([country, code]) => (
+                <option key={`${country}-${code}`} value={code}>
+                  {country} {code}
+                </option>
+              ))}
+              <option value="custom">{t("auth.phoneCountryCustom")}</option>
+            </select>
+            <input
+              id="phone-local"
+              type="tel"
+              value={phoneLocal}
+              onChange={(event) => setPhoneLocal(event.target.value)}
+              placeholder={t("auth.phonePlaceholder")}
+              autoComplete="tel-national"
+              disabled={isDisabled}
+              className="block h-10 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 text-sm text-[var(--text-primary)] transition-all duration-150 placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:px-3.5"
+            />
+          </div>
+          {phoneCountry === "custom" ? (
+            <input
+              type="tel"
+              value={customPhoneCode}
+              onChange={(event) => setCustomPhoneCode(event.target.value)}
+              placeholder="+999"
+              disabled={isDisabled}
+              className="block h-10 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 text-sm text-[var(--text-primary)] transition-all duration-150 placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:px-3.5"
+            />
+          ) : null}
+          <input
+            type="hidden"
+            name="phone"
+            value={buildPhoneValue(phoneCountry, customPhoneCode, phoneLocal)}
+          />
+        </div>
         <Input id="email" name="email" type="email" label={t("auth.email")} placeholder={t("auth.emailPlaceholder")} required autoComplete="email" disabled={isDisabled} />
         <PasswordInput
           id="password"
