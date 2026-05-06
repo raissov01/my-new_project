@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -1537,6 +1538,8 @@ func (h *NUETHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 		Where("has_media = true").
 		Count(&materialCount)
 
+	weakTopics := h.computeNUETWeakTopics(userID, 5)
+
 	jsonOK(w, map[string]any{
 		"totalAttempts":     totalAttempts,
 		"completedAttempts": completedAttempts,
@@ -1546,7 +1549,137 @@ func (h *NUETHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 		"recentAttempts":    recent,
 		"topicCount":        topicCount,
 		"materialCount":     materialCount,
+		"weakTopics":        weakTopics,
 	})
+}
+
+type nuetWeakTopic struct {
+	Slug     string  `json:"slug"`
+	Title    string  `json:"title"`
+	Section  string  `json:"section"`
+	Total    int     `json:"total"`
+	Correct  int     `json:"correct"`
+	Accuracy float64 `json:"accuracy"`
+}
+
+// computeNUETWeakTopics aggregates per-topic accuracy across all the user's
+// completed attempts. The topic_id is taken from each question's row, not
+// from the attempt itself, so this works for full mocks that span every
+// topic. Returns the lowest-accuracy topics first (with at least 1 sample).
+func (h *NUETHandler) computeNUETWeakTopics(userID string, limit int) []nuetWeakTopic {
+	var attempts []models.NUETAttempt
+	if err := h.db.
+		Select("id, results").
+		Where("user_id = ? AND status = ? AND results IS NOT NULL", userID, "completed").
+		Find(&attempts).Error; err != nil {
+		return nil
+	}
+	if len(attempts) == 0 {
+		return nil
+	}
+
+	type counter struct {
+		correct int
+		total   int
+	}
+	stats := map[string]*counter{}
+	questionIDs := map[string]struct{}{}
+	for _, a := range attempts {
+		for _, ev := range parseNUETStoredEvaluations(a.Results) {
+			if ev.QuestionID == "" {
+				continue
+			}
+			questionIDs[ev.QuestionID] = struct{}{}
+			cur := stats[ev.QuestionID]
+			if cur == nil {
+				cur = &counter{}
+				stats[ev.QuestionID] = cur
+			}
+			cur.total++
+			if ev.Correct {
+				cur.correct++
+			}
+		}
+	}
+	if len(questionIDs) == 0 {
+		return nil
+	}
+
+	ids := make([]string, 0, len(questionIDs))
+	for id := range questionIDs {
+		ids = append(ids, id)
+	}
+	type qrow struct {
+		ID      string  `gorm:"column:id"`
+		TopicID *string `gorm:"column:topic_id"`
+	}
+	var qrows []qrow
+	if err := h.db.Table("nuet_questions").
+		Select("id, topic_id").
+		Where("id IN ?", ids).
+		Scan(&qrows).Error; err != nil {
+		return nil
+	}
+	questionTopic := make(map[string]string, len(qrows))
+	for _, q := range qrows {
+		if q.TopicID != nil && *q.TopicID != "" {
+			questionTopic[q.ID] = *q.TopicID
+		}
+	}
+
+	topicStats := map[string]*counter{}
+	for qid, c := range stats {
+		topicID, ok := questionTopic[qid]
+		if !ok {
+			continue
+		}
+		bucket := topicStats[topicID]
+		if bucket == nil {
+			bucket = &counter{}
+			topicStats[topicID] = bucket
+		}
+		bucket.correct += c.correct
+		bucket.total += c.total
+	}
+	if len(topicStats) == 0 {
+		return nil
+	}
+
+	topicIDs := make([]string, 0, len(topicStats))
+	for id := range topicStats {
+		topicIDs = append(topicIDs, id)
+	}
+	var topics []models.NUETTopic
+	if err := h.db.Select("id, slug, title, section").
+		Where("id IN ?", topicIDs).
+		Find(&topics).Error; err != nil {
+		return nil
+	}
+	out := make([]nuetWeakTopic, 0, len(topics))
+	for _, topic := range topics {
+		bucket, ok := topicStats[topic.ID]
+		if !ok || bucket.total == 0 {
+			continue
+		}
+		out = append(out, nuetWeakTopic{
+			Slug:     topic.Slug,
+			Title:    topic.Title,
+			Section:  topic.Section,
+			Total:    bucket.total,
+			Correct:  bucket.correct,
+			Accuracy: float64(bucket.correct) / float64(bucket.total),
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Accuracy != out[j].Accuracy {
+			return out[i].Accuracy < out[j].Accuracy
+		}
+		return out[i].Total > out[j].Total
+	})
+	if len(out) > limit {
+		out = out[:limit]
+	}
+	return out
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────

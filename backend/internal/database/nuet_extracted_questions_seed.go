@@ -32,6 +32,10 @@ type nuetExtractedQuestionSeed struct {
 	Options     []string `json:"options"`
 	Answer      string   `json:"answer"`
 	Explanation string   `json:"explanation"`
+	// TopicSlug is an optional override produced by tools like
+	// cmd/tag-nuet-questions. When present, the seed loader uses it
+	// instead of running the keyword classifier.
+	TopicSlug string `json:"topicSlug,omitempty"`
 }
 
 // SeedNUETExtractedQuestions publishes the locally extracted NUET PDF mock bank
@@ -111,7 +115,11 @@ func SeedNUETExtractedQuestions(db *gorm.DB) error {
 		source := fmt.Sprintf("%s #%d", seed.TestName, seed.Position)
 
 		var topicID interface{} = nil
-		if slug := ClassifyNUETTopic(seed.Prompt, seed.Options, seed.Section); slug != "" {
+		slug := strings.TrimSpace(seed.TopicSlug)
+		if slug == "" {
+			slug = ClassifyNUETTopic(seed.Prompt, seed.Options, seed.Section)
+		}
+		if slug != "" {
 			if id, ok := topicIDs[slug]; ok {
 				topicID = id
 				classified++

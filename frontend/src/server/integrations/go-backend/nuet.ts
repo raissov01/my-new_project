@@ -35,6 +35,16 @@ export type NUETDashboard = {
   recentAttempts: Array<Record<string, unknown>>;
   topicCount: number;
   materialCount: number;
+  weakTopics?: NUETWeakTopic[];
+};
+
+export type NUETWeakTopic = {
+  slug: string;
+  title: string;
+  section: "math" | "critical_thinking";
+  total: number;
+  correct: number;
+  accuracy: number;
 };
 
 export type NUETPDFTest = {

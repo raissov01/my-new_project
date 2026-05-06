@@ -97,7 +97,7 @@ export default async function NUETTopicPage({
               {t("nuet.topicExplanation")}
             </h2>
             <div className="prose prose-sm max-w-none text-[var(--text-primary)]">
-              <MathText text={topic.explanation} as="div" />
+              <MathText text={cleanTopicExplanation(topic.explanation)} as="div" />
             </div>
           </section>
 
@@ -195,6 +195,14 @@ export default async function NUETTopicPage({
       </div>
     </article>
   );
+}
+
+// cleanTopicExplanation hides the HTML-comment marker that the
+// enrich-nuet-topics CLI uses to delimit its appended study material.
+// Replacing it with a thin horizontal rule keeps the section split
+// visible without leaking the literal `<!-- ... -->` to readers.
+function cleanTopicExplanation(text: string): string {
+  return text.replace(/<!--\s*enriched-section\s*-->/g, "\n\n— — — — —\n\n");
 }
 
 // Heuristic: map a slug like "trigonometry-in-right-angled-triangle" to a
