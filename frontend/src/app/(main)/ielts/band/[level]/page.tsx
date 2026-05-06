@@ -16,11 +16,11 @@ type BandContent = {
   label: string;
   color: string;
   tagColor: string;
-  description: string;
+  descriptionKey: string;
   vocabulary: string[];
   grammarFocus: string[];
-  writingTip: string;
-  speakingTip: string;
+  writingTipKey: string;
+  speakingTipKey: string;
   commonMistakes: string[];
 };
 
@@ -29,7 +29,7 @@ const BAND_CONTENT: Record<BandLevel, BandContent> = {
     label: "Band 6",
     color: "text-cyan-500 bg-cyan-500/10",
     tagColor: "border-l-cyan-500",
-    description: "Компетентті пайдаланушы. Жалпы мағынасы дұрыс, бірақ қателер жиі кездеседі.",
+    descriptionKey: "ielts.band.descBand6",
     vocabulary: [
       "nevertheless", "furthermore", "consequently", "subsequently",
       "aforementioned", "primarily", "predominantly", "approximately",
@@ -40,10 +40,8 @@ const BAND_CONTENT: Record<BandLevel, BandContent> = {
       "Passive voice (active → passive transformation)",
       "Comparison structures (as … as, more … than)",
     ],
-    writingTip:
-      "Task 2: тезисіңізді бірінші параграфта анық жазыңыз. Тіркесімді сөздер (cohesive devices) пайдаланыңыз: however, therefore, in addition.",
-    speakingTip:
-      "Part 1: жауаптарды 2-3 сөйлемге дейін кеңейтіңіз. Себебін немесе мысалыңызды қосыңыз.",
+    writingTipKey: "ielts.band.writingTipBand6",
+    speakingTipKey: "ielts.band.speakingTipBand6",
     commonMistakes: [
       "Article errors (a/an/the)",
       "Subject-verb agreement in complex sentences",
@@ -54,7 +52,7 @@ const BAND_CONTENT: Record<BandLevel, BandContent> = {
     label: "Band 7",
     color: "text-blue-500 bg-blue-500/10",
     tagColor: "border-l-blue-500",
-    description: "Жақсы пайдаланушы. Жалпы тілді шебер меңгереді, кейде қателер кездеседі.",
+    descriptionKey: "ielts.band.descBand7",
     vocabulary: [
       "albeit", "hitherto", "notwithstanding", "ostensibly", "pervasive",
       "ubiquitous", "exacerbate", "mitigate", "contentious", "pivotal",
@@ -64,10 +62,8 @@ const BAND_CONTENT: Record<BandLevel, BandContent> = {
       "Inversion for emphasis (Not only … but also, Never have I …)",
       "Nominalization (to investigate → investigation)",
     ],
-    writingTip:
-      "Task 2: жауабыңызда counterargument + rebuttal қосыңыз. Бұл Band 7+ маркері. 'While some argue X, the evidence suggests Y.'",
-    speakingTip:
-      "Part 2: PEEL форматын пайдаланыңыз (Point, Explain, Example, Link). Паузалар мен fillers азайтыңыз.",
+    writingTipKey: "ielts.band.writingTipBand7",
+    speakingTipKey: "ielts.band.speakingTipBand7",
     commonMistakes: [
       "Tense consistency errors in complex narratives",
       "Misuse of gerunds vs infinitives",
@@ -78,7 +74,7 @@ const BAND_CONTENT: Record<BandLevel, BandContent> = {
     label: "Band 8",
     color: "text-violet-500 bg-violet-500/10",
     tagColor: "border-l-violet-500",
-    description: "Өте жақсы пайдаланушы. Ана тілі спикері деңгейіне жуық, аздаған жүйесіз қателер.",
+    descriptionKey: "ielts.band.descBand8",
     vocabulary: [
       "antithetical", "dichotomous", "epistemological", "paradigm shift",
       "corroborate", "refute", "substantiate", "ameliorate", "precipitate",
@@ -89,10 +85,8 @@ const BAND_CONTENT: Record<BandLevel, BandContent> = {
       "Advanced hedging language (It would appear that, There is reason to believe)",
       "Cleft sentences (It is X that …, What Y does is …)",
     ],
-    writingTip:
-      "Task 1: тек деректерді сипаттамаңыз — интерпретация қосыңыз. 'This sharp increase likely reflects …' деп жазыңыз.",
-    speakingTip:
-      "Part 3: абстрактілі мәселелерді кеңейтіңіз. Болжамдар жасаңыз: 'Were this trend to continue, …' — Conditional inversion Band 8 белгісі.",
+    writingTipKey: "ielts.band.writingTipBand8",
+    speakingTipKey: "ielts.band.speakingTipBand8",
     commonMistakes: [
       "Lexical repetition (use synonyms and paraphrase)",
       "Overcomplicating simple ideas (clarity > complexity)",
@@ -106,9 +100,11 @@ type Props = { params: Promise<{ level: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { level } = await params;
   if (!VALID_LEVELS.includes(level as BandLevel)) return {};
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
   return {
-    title: `IELTS Band ${level} жолы | StudyWithRaissov`,
-    description: `Band ${level} мақсатты vocabulary, grammar және writing/speaking стратегиялары.`,
+    title: t("ielts.band.metaTitle", { level }),
+    description: t("ielts.band.metaDesc", { level }),
   };
 }
 
@@ -143,7 +139,7 @@ export default async function BandLevelPage({ params }: Props) {
               Band {level} мақсатты жолы
             </h1>
             <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-              {content.description}
+              {t(content.descriptionKey)}
             </p>
           </div>
         </div>
@@ -210,7 +206,7 @@ export default async function BandLevelPage({ params }: Props) {
             <PenLine className="h-5 w-5 text-emerald-500" />
             <h2 className="text-lg font-bold text-[var(--text-primary)]">Writing кеңесі</h2>
           </div>
-          <p className="text-sm leading-7 text-[var(--text-secondary)]">{content.writingTip}</p>
+          <p className="text-sm leading-7 text-[var(--text-secondary)]">{t(content.writingTipKey)}</p>
           <div className="mt-4">
             <Link href="/ielts/writing">
               <Button variant="secondary" size="sm">
@@ -227,7 +223,7 @@ export default async function BandLevelPage({ params }: Props) {
             <Mic className="h-5 w-5 text-violet-500" />
             <h2 className="text-lg font-bold text-[var(--text-primary)]">Speaking кеңесі</h2>
           </div>
-          <p className="text-sm leading-7 text-[var(--text-secondary)]">{content.speakingTip}</p>
+          <p className="text-sm leading-7 text-[var(--text-secondary)]">{t(content.speakingTipKey)}</p>
           <div className="mt-4">
             <Link href="/ielts/speaking">
               <Button variant="secondary" size="sm">
