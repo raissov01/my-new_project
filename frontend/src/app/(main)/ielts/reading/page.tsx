@@ -6,10 +6,14 @@ import { getServerLocale } from "@/server/i18n";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
 
-export const metadata: Metadata = {
-  title: "IELTS Оқу жаттығуы | StudyWithRaissov",
-  description: "Cambridge мәтіндері мен сұрақтары бойынша IELTS Reading бөлімін жаттықтырыңыз.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  return {
+    title: t("ielts.reading.metaTitle"),
+    description: t("ielts.reading.metaDesc"),
+  };
+}
 
 const PASSAGE_TYPE_KEYS = [
   { key: "skimming", label: "Skimming & Scanning", descKey: "ielts.reading.skimmingDesc" },
