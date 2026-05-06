@@ -61,9 +61,11 @@ function gradeKey(pct: number): string {
 export function GuestResultsPage({
   quizId,
   locale,
+  resultKey,
 }: {
   quizId: string;
   locale: Locale;
+  resultKey?: string;
 }) {
   const t = createTranslator(locale);
   const [result, setResult] = useState<GuestResult | null>(null);
@@ -71,13 +73,13 @@ export function GuestResultsPage({
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(`guest_quiz_result_${quizId}`);
+      const raw = sessionStorage.getItem(`guest_quiz_result_${resultKey ?? quizId}`);
       if (!raw) { setMissing(true); return; }
       setResult(JSON.parse(raw) as GuestResult);
     } catch {
       setMissing(true);
     }
-  }, [quizId]);
+  }, [quizId, resultKey]);
 
   if (missing) {
     return (

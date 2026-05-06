@@ -128,6 +128,9 @@ interface PlayQuizClientProps {
   // True when the visitor is not logged in. Guest attempts are scored
   // locally and tracked in localStorage; no backend submission is made.
   isGuest?: boolean;
+  // Stable scope for saved progress/results when the same quiz is played in parts.
+  progressKey?: string;
+  partLabel?: string;
 }
 
 const GUEST_ATTEMPTS_KEY = "guest_quiz_attempts";
@@ -176,6 +179,8 @@ export function PlayQuizClient({
   mode = "play",
   returnHref,
   isGuest = false,
+  progressKey,
+  partLabel,
 }: PlayQuizClientProps) {
   const isPractice = mode === "practice";
   const sounds = useQuizSounds();
@@ -192,11 +197,12 @@ export function PlayQuizClient({
   const [animationTick, setAnimationTick] = useState(0);
   const t = useMemo(() => createTranslator(locale), [locale]);
   const router = useRouter();
+  const progressScope = progressKey ?? quiz.id;
 
   const totalQuestions = quiz.questions.length;
 
   // Restore saved progress on mount (play mode only — practice is ephemeral)
-  const savedProgress = !isPractice ? loadProgress(quiz.id) : null;
+  const savedProgress = !isPractice ? loadProgress(progressScope) : null;
   const restoredProgress = Boolean(savedProgress);
 
   const [currentIdx, setCurrentIdx] = useState(savedProgress?.currentIdx ?? 0);
@@ -367,7 +373,7 @@ export function PlayQuizClient({
         }),
       };
       try {
-        sessionStorage.setItem(`guest_quiz_result_${quiz.id}`, JSON.stringify(guestResult));
+        sessionStorage.setItem(`guest_quiz_result_${progressScope}`, JSON.stringify(guestResult));
         const prev = parseInt(localStorage.getItem(GUEST_ATTEMPTS_KEY) ?? "0", 10);
         localStorage.setItem(GUEST_ATTEMPTS_KEY, String(prev + 1));
       } catch {
@@ -387,7 +393,9 @@ export function PlayQuizClient({
             timeSpent,
           },
         });
-        router.push(`/quizzes/${encodeURIComponent(quiz.id)}/results?guest=1`);
+        router.push(
+          `/quizzes/${encodeURIComponent(quiz.id)}/results?guest=1&part=${encodeURIComponent(progressScope)}`
+        );
       }
       return;
     }
@@ -400,6 +408,7 @@ export function PlayQuizClient({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             startedAt: new Date(quizStartRef.current).toISOString(),
+            questionIds: quiz.questions.map((q) => q.id),
             answers: answersRef.current,
           }),
         }
@@ -426,7 +435,7 @@ export function PlayQuizClient({
           answeredCount: answersRef.current.length,
         },
       });
-      clearProgress(quiz.id);
+      clearProgress(progressScope);
       router.push(
         `/quizzes/${encodeURIComponent(quiz.id)}/results?attempt=${encodeURIComponent(data.id)}`
       );
@@ -434,7 +443,7 @@ export function PlayQuizClient({
       setSubmitError(t("quiz.play.submitFailed"));
       setPhase("revealed");
     }
-  }, [quiz.id, quiz.questions, router, t, sounds, isGuest, mode]);
+  }, [quiz.id, quiz.questions, progressScope, router, t, sounds, isGuest, mode]);
 
   const advance = useCallback(() => {
     clearAdvanceTimer();
@@ -506,7 +515,7 @@ export function PlayQuizClient({
       // Persist progress so a page refresh doesn't lose answered questions.
       // Practice mode is ephemeral — no persistence needed.
       if (!isPractice) {
-        saveProgress(quiz.id, {
+        saveProgress(progressScope, {
           currentIdx: currentIdxRef.current,
           answers: answersRef.current,
           streak: isCorrect ? streakRef.current + 1 : 0,
@@ -554,7 +563,7 @@ export function PlayQuizClient({
         advance();
       }, 1800);
     },
-    [advance, phase, question.id, sounds, powerUps, isPractice, quiz.id, mode, isGuest, questionType]
+    [advance, phase, question.id, sounds, powerUps, isPractice, quiz.id, progressScope, mode, isGuest, questionType]
   );
 
   const recordMcq = useCallback(
@@ -1004,7 +1013,7 @@ export function PlayQuizClient({
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex-1">
             <div className="flex items-center justify-between text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-              <span>{questionNumberLabel}</span>
+              <span>{partLabel ? `${partLabel} · ${questionNumberLabel}` : questionNumberLabel}</span>
               {isPractice ? (
                 <span className="inline-flex items-center gap-1.5 text-[var(--primary)]">
                   {t("quiz.practice.label")}
@@ -1087,7 +1096,7 @@ export function PlayQuizClient({
             <div className="nd-mock-bar">
               <span className="nd-mock-qn">{currentIdx + 1}</span>
               <span style={{ flex: 1, fontFamily: "'JetBrains Mono',monospace", fontSize: 11, letterSpacing: ".08em", color: "var(--ink-mute)", textTransform: "uppercase" }}>
-                {questionNumberLabel}
+                {partLabel ? `${partLabel} · ${questionNumberLabel}` : questionNumberLabel}
               </span>
               {streak > 1 ? (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 700, color: "#f97316" }}>

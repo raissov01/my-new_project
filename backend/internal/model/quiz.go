@@ -3,8 +3,8 @@ package model
 // ComprehensionSubQuestion is one sub-question inside a comprehension question.
 // Type is one of "mcq", "true_false", "fill_blank".
 type ComprehensionSubQuestion struct {
-	ID      string `json:"id"`               // e.g. "sq0", "sq1"
-	Type    string `json:"type"`             // "mcq" | "true_false" | "fill_blank"
+	ID      string `json:"id"`   // e.g. "sq0", "sq1"
+	Type    string `json:"type"` // "mcq" | "true_false" | "fill_blank"
 	Prompt  string `json:"prompt"`
 	OptionA string `json:"optionA,omitempty"`
 	OptionB string `json:"optionB,omitempty"`
@@ -15,7 +15,7 @@ type ComprehensionSubQuestion struct {
 
 // ComprehensionData is the payload for a comprehension question.
 type ComprehensionData struct {
-	Passage      string                    `json:"passage"`
+	Passage      string                     `json:"passage"`
 	SubQuestions []ComprehensionSubQuestion `json:"subQuestions"`
 }
 
@@ -50,25 +50,25 @@ type HotspotZone struct {
 //   - reorder    : ReorderItems (array of strings, 2..10)
 //   - matching   : MatchPairs (array of {left,right} pairs, 2..8)
 type QuizQuestionInput struct {
-	ID            *string     `json:"id,omitempty"`
-	QuestionText  string      `json:"questionText"`
-	QuestionType  string      `json:"questionType,omitempty"`
-	OptionA       string      `json:"optionA,omitempty"`
-	OptionB       string      `json:"optionB,omitempty"`
-	OptionC       string      `json:"optionC,omitempty"`
-	OptionD       string      `json:"optionD,omitempty"`
-	OptionE       string      `json:"optionE,omitempty"`
-	CorrectOption string      `json:"correctOption,omitempty"`
-	BlankAnswer   string      `json:"blankAnswer,omitempty"`
-	ReorderItems  []string      `json:"reorderItems,omitempty"`
-	MatchPairs    []MatchPair   `json:"matchPairs,omitempty"`
-	HotspotZones       []HotspotZone      `json:"hotspotZones,omitempty"`
-	ComprehensionData  *ComprehensionData `json:"comprehensionData,omitempty"`
-	ImageURL           string             `json:"imageUrl,omitempty"`
-	AudioURL           string             `json:"audioUrl,omitempty"`
-	VideoURL           string             `json:"videoUrl,omitempty"`
-	Explanation        string             `json:"explanation,omitempty"`
-	Hint               string             `json:"hint,omitempty"`
+	ID                *string            `json:"id,omitempty"`
+	QuestionText      string             `json:"questionText"`
+	QuestionType      string             `json:"questionType,omitempty"`
+	OptionA           string             `json:"optionA,omitempty"`
+	OptionB           string             `json:"optionB,omitempty"`
+	OptionC           string             `json:"optionC,omitempty"`
+	OptionD           string             `json:"optionD,omitempty"`
+	OptionE           string             `json:"optionE,omitempty"`
+	CorrectOption     string             `json:"correctOption,omitempty"`
+	BlankAnswer       string             `json:"blankAnswer,omitempty"`
+	ReorderItems      []string           `json:"reorderItems,omitempty"`
+	MatchPairs        []MatchPair        `json:"matchPairs,omitempty"`
+	HotspotZones      []HotspotZone      `json:"hotspotZones,omitempty"`
+	ComprehensionData *ComprehensionData `json:"comprehensionData,omitempty"`
+	ImageURL          string             `json:"imageUrl,omitempty"`
+	AudioURL          string             `json:"audioUrl,omitempty"`
+	VideoURL          string             `json:"videoUrl,omitempty"`
+	Explanation       string             `json:"explanation,omitempty"`
+	Hint              string             `json:"hint,omitempty"`
 }
 
 // CreateQuizRequest is the input for creating a quiz.
@@ -101,15 +101,15 @@ type UpdateQuizRequest struct {
 
 // QuizOverview is a library-card summary of a quiz (used in list views).
 type QuizOverview struct {
-	ID                   string  `json:"id"`
-	UserID               string  `json:"userId"`
-	AuthorName           *string `json:"authorName"`
-	Title                string  `json:"title"`
-	Description          *string `json:"description"`
-	Subject              *string `json:"subject"`
-	IsPublic             bool    `json:"isPublic"`
-	TimePerQuestion      int     `json:"timePerQuestion"`
-	ShuffleOptions       bool    `json:"shuffleOptions"`
+	ID                   string   `json:"id"`
+	UserID               string   `json:"userId"`
+	AuthorName           *string  `json:"authorName"`
+	Title                string   `json:"title"`
+	Description          *string  `json:"description"`
+	Subject              *string  `json:"subject"`
+	IsPublic             bool     `json:"isPublic"`
+	TimePerQuestion      int      `json:"timePerQuestion"`
+	ShuffleOptions       bool     `json:"shuffleOptions"`
 	ShowAnswerAnimations bool     `json:"showAnswerAnimations"`
 	PowerUpsEnabled      bool     `json:"powerUpsEnabled"`
 	Version              int      `json:"version"`
@@ -127,18 +127,18 @@ type QuizOverview struct {
 // MatchPairs) are included so the client can render inline reveal; scoring
 // is still recomputed server-side in SubmitAttempt.
 type QuizQuestionDTO struct {
-	ID            string      `json:"id"`
-	QuestionText  string      `json:"questionText"`
-	QuestionType  string      `json:"questionType"`
-	OptionA       string      `json:"optionA,omitempty"`
-	OptionB       string      `json:"optionB,omitempty"`
-	OptionC       string      `json:"optionC,omitempty"`
-	OptionD       string      `json:"optionD,omitempty"`
-	OptionE       string      `json:"optionE,omitempty"`
-	CorrectOption *string     `json:"correctOption,omitempty"`
-	BlankAnswer   *string     `json:"blankAnswer,omitempty"`
-	ReorderItems  []string      `json:"reorderItems,omitempty"`
-	MatchPairs    []MatchPair   `json:"matchPairs,omitempty"`
+	ID                string             `json:"id"`
+	QuestionText      string             `json:"questionText"`
+	QuestionType      string             `json:"questionType"`
+	OptionA           string             `json:"optionA,omitempty"`
+	OptionB           string             `json:"optionB,omitempty"`
+	OptionC           string             `json:"optionC,omitempty"`
+	OptionD           string             `json:"optionD,omitempty"`
+	OptionE           string             `json:"optionE,omitempty"`
+	CorrectOption     *string            `json:"correctOption,omitempty"`
+	BlankAnswer       *string            `json:"blankAnswer,omitempty"`
+	ReorderItems      []string           `json:"reorderItems,omitempty"`
+	MatchPairs        []MatchPair        `json:"matchPairs,omitempty"`
 	HotspotZones      []HotspotZone      `json:"hotspotZones,omitempty"`
 	ComprehensionData *ComprehensionData `json:"comprehensionData,omitempty"`
 	ImageURL          *string            `json:"imageUrl,omitempty"`
@@ -192,27 +192,28 @@ type AttemptAnswerInput struct {
 // SubmitAttemptRequest is the payload for POST /quizzes/:id/attempts.
 // The client sends only raw selections; scoring is computed server-side.
 type SubmitAttemptRequest struct {
-	StartedAt string               `json:"startedAt"`
-	Answers   []AttemptAnswerInput `json:"answers"`
+	StartedAt   string               `json:"startedAt"`
+	QuestionIDs []string             `json:"questionIds,omitempty"`
+	Answers     []AttemptAnswerInput `json:"answers"`
 }
 
 // AttemptAnswerResult is a graded answer returned after submission.
 type AttemptAnswerResult struct {
-	QuestionID     string      `json:"questionId"`
-	QuestionText   string      `json:"questionText"`
-	QuestionType   string      `json:"questionType"`
-	OptionA        string      `json:"optionA,omitempty"`
-	OptionB        string      `json:"optionB,omitempty"`
-	OptionC        string      `json:"optionC,omitempty"`
-	OptionD        string      `json:"optionD,omitempty"`
-	OptionE        string      `json:"optionE,omitempty"`
-	SelectedOption *string     `json:"selectedOption,omitempty"`
-	CorrectOption  string      `json:"correctOption,omitempty"`
-	TextAnswer     *string     `json:"textAnswer,omitempty"`
-	BlankAnswer    *string     `json:"blankAnswer,omitempty"`
-	OrderAnswer    []string    `json:"orderAnswer,omitempty"`
-	ReorderItems   []string    `json:"reorderItems,omitempty"`
-	MatchPairs     []MatchPair   `json:"matchPairs,omitempty"`
+	QuestionID        string             `json:"questionId"`
+	QuestionText      string             `json:"questionText"`
+	QuestionType      string             `json:"questionType"`
+	OptionA           string             `json:"optionA,omitempty"`
+	OptionB           string             `json:"optionB,omitempty"`
+	OptionC           string             `json:"optionC,omitempty"`
+	OptionD           string             `json:"optionD,omitempty"`
+	OptionE           string             `json:"optionE,omitempty"`
+	SelectedOption    *string            `json:"selectedOption,omitempty"`
+	CorrectOption     string             `json:"correctOption,omitempty"`
+	TextAnswer        *string            `json:"textAnswer,omitempty"`
+	BlankAnswer       *string            `json:"blankAnswer,omitempty"`
+	OrderAnswer       []string           `json:"orderAnswer,omitempty"`
+	ReorderItems      []string           `json:"reorderItems,omitempty"`
+	MatchPairs        []MatchPair        `json:"matchPairs,omitempty"`
 	HotspotZones      []HotspotZone      `json:"hotspotZones,omitempty"`
 	ComprehensionData *ComprehensionData `json:"comprehensionData,omitempty"`
 	ImageURL          *string            `json:"imageUrl,omitempty"`
@@ -220,8 +221,8 @@ type AttemptAnswerResult struct {
 	VideoURL          *string            `json:"videoUrl,omitempty"`
 	Explanation       *string            `json:"explanation,omitempty"`
 	IsCorrect         bool               `json:"isCorrect"`
-	TimeSpent      int           `json:"timeSpent"`
-	OrderIndex     int           `json:"orderIndex"`
+	TimeSpent         int                `json:"timeSpent"`
+	OrderIndex        int                `json:"orderIndex"`
 }
 
 // AttemptResult is the full graded response returned to the client.

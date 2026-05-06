@@ -781,11 +781,11 @@ func (r *Quiz) UpdateQuiz(ctx context.Context, userID, quizID string, req model.
 			nullableString(q.Explanation),      // $14
 			i,                                  // $15 (order_index)
 			nullableString(q.Hint),             // $16
-			encodeMatchPairs(q.MatchPairs),          // $17
-			encodeHotspotZones(q.HotspotZones),      // $18
+			encodeMatchPairs(q.MatchPairs),     // $17
+			encodeHotspotZones(q.HotspotZones), // $18
 			encodeComprehensionData(q.ComprehensionData), // $19
-			nullableString(q.AudioURL),              // $20
-			nullableString(q.VideoURL),              // $21
+			nullableString(q.AudioURL),                   // $20
+			nullableString(q.VideoURL),                   // $21
 		}
 		if _, ok := existingIDs[id]; ok {
 			if _, err := tx.Exec(ctx, `
@@ -1058,6 +1058,29 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID, inviteToken st
 
 	if len(questions) == 0 {
 		return nil, fmt.Errorf("quiz has no questions")
+	}
+
+	if len(req.QuestionIDs) > 0 {
+		requestedOrder := make([]string, 0, len(req.QuestionIDs))
+		seen := make(map[string]struct{}, len(req.QuestionIDs))
+		for _, qid := range req.QuestionIDs {
+			qid = strings.TrimSpace(qid)
+			if qid == "" {
+				continue
+			}
+			if _, duplicate := seen[qid]; duplicate {
+				continue
+			}
+			if _, ok := questions[qid]; !ok {
+				return nil, fmt.Errorf("question %s does not belong to quiz", qid)
+			}
+			seen[qid] = struct{}{}
+			requestedOrder = append(requestedOrder, qid)
+		}
+		if len(requestedOrder) == 0 {
+			return nil, fmt.Errorf("questionIds is empty")
+		}
+		order = requestedOrder
 	}
 
 	submitted := make(map[string]model.AttemptAnswerInput, len(req.Answers))
@@ -1705,12 +1728,12 @@ func (r *Quiz) UseInviteLink(ctx context.Context, token string) (quizID, quizTit
 
 // InviteLink is the public-facing shape of a quiz_invite_links row.
 type InviteLinkRow struct {
-	ID        string  `json:"id"`
-	QuizID    string  `json:"quizId"`
-	MaxUses   *int    `json:"maxUses"`
-	UseCount  int     `json:"useCount"`
-	IsActive  bool    `json:"isActive"`
-	CreatedAt string  `json:"createdAt"`
+	ID        string `json:"id"`
+	QuizID    string `json:"quizId"`
+	MaxUses   *int   `json:"maxUses"`
+	UseCount  int    `json:"useCount"`
+	IsActive  bool   `json:"isActive"`
+	CreatedAt string `json:"createdAt"`
 }
 
 // ListInviteLinks returns all invite links for a quiz (owner only).

@@ -17,7 +17,7 @@ import { GuestResultsPage } from "./guest-results";
 
 interface ResultsPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ attempt?: string; guest?: string }>;
+  searchParams: Promise<{ attempt?: string; guest?: string; part?: string }>;
 }
 
 function gradeKey(percentage: number): string {
@@ -54,12 +54,12 @@ export default async function QuizResultsPage({
 }: ResultsPageProps) {
   const user = await getCurrentUser();
   const { id } = await params;
-  const { attempt: attemptId, guest } = await searchParams;
+  const { attempt: attemptId, guest, part } = await searchParams;
 
   // Guest mode: results were computed locally and stored in sessionStorage.
   if (guest === "1" && !user) {
     const locale = await getServerLocale();
-    return <GuestResultsPage quizId={id} locale={locale} />;
+    return <GuestResultsPage quizId={id} locale={locale} resultKey={part} />;
   }
 
   if (!user) {

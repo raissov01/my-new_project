@@ -18,6 +18,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { formatDate } from "@/lib/shared/utils";
 import { getQuizById, getQuizStats, type QuestionStat } from "@/server/services/quizzes";
 import { ShareQuizButton } from "@/features/quizzes/components/share-quiz-button";
+import { QuizSplitLinks } from "@/features/quizzes/components/quiz-split-links";
 import { QuizPageTracker } from "@/features/quizzes/components/quiz-page-tracker";
 
 interface QuizDetailPageProps {
@@ -174,6 +175,14 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
           {user ? <ShareQuizButton quizId={quiz.id} quizTitle={quiz.title} /> : null}
         </div>
       </div>
+
+      {quiz.isAuthor ? (
+        <QuizSplitLinks
+          quizId={quiz.id}
+          questionCount={quiz.questionCount}
+          isPublic={quiz.isPublic}
+        />
+      ) : null}
 
       <section className="nd-reveal nd-d4" style={{ marginTop: 8 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
