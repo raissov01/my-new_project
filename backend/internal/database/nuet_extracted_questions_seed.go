@@ -81,8 +81,18 @@ func SeedNUETExtractedQuestions(db *gorm.DB) error {
 		testIDs[test.Name] = test.ID
 	}
 
+	topicIDs := map[string]string{}
+	var seededTopics []models.NUETTopic
+	if err := db.Select("id", "slug").Find(&seededTopics).Error; err != nil {
+		return fmt.Errorf("load NUET topics: %w", err)
+	}
+	for _, topic := range seededTopics {
+		topicIDs[topic.Slug] = topic.ID
+	}
+
 	upserted := 0
 	skipped := 0
+	classified := 0
 	for _, seed := range questions {
 		testID, ok := testIDs[seed.TestName]
 		if !ok {
@@ -100,13 +110,22 @@ func SeedNUETExtractedQuestions(db *gorm.DB) error {
 		}
 		source := fmt.Sprintf("%s #%d", seed.TestName, seed.Position)
 
+		var topicID interface{} = nil
+		if slug := ClassifyNUETTopic(seed.Prompt, seed.Options, seed.Section); slug != "" {
+			if id, ok := topicIDs[slug]; ok {
+				topicID = id
+				classified++
+			}
+		}
+
 		if err := db.Exec(`
 			INSERT INTO nuet_questions (
 				pdf_test_id, position, topic_id, section, question_type, difficulty,
 				prompt, options, answer, explanation, source, created_at, updated_at
-			) VALUES (?, ?, NULL, ?, 'multiple_choice', 'medium', ?, ?::jsonb, ?, ?, ?, NOW(), NOW())
+			) VALUES (?, ?, ?, ?, 'multiple_choice', 'medium', ?, ?::jsonb, ?, ?, ?, NOW(), NOW())
 			ON CONFLICT (pdf_test_id, position) WHERE pdf_test_id IS NOT NULL
 			DO UPDATE SET
+				topic_id = EXCLUDED.topic_id,
 				section = EXCLUDED.section,
 				question_type = EXCLUDED.question_type,
 				difficulty = EXCLUDED.difficulty,
@@ -116,13 +135,13 @@ func SeedNUETExtractedQuestions(db *gorm.DB) error {
 				explanation = EXCLUDED.explanation,
 				source = EXCLUDED.source,
 				updated_at = NOW()
-		`, testID, seed.Position, seed.Section, seed.Prompt, string(options), seed.Answer, seed.Explanation, source).Error; err != nil {
+		`, testID, seed.Position, topicID, seed.Section, seed.Prompt, string(options), seed.Answer, seed.Explanation, source).Error; err != nil {
 			return fmt.Errorf("upsert NUET question %s #%d: %w", seed.TestName, seed.Position, err)
 		}
 		upserted++
 	}
 
-	log.Printf("seeded NUET extracted questions: pdf_tests=%d questions=%d skipped=%d", len(tests), upserted, skipped)
+	log.Printf("seeded NUET extracted questions: pdf_tests=%d questions=%d classified=%d skipped=%d", len(tests), upserted, classified, skipped)
 	return nil
 }
 

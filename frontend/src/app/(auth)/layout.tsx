@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { headers } from "next/headers";
+import { getServerLocale } from "@/server/i18n";
+import { createTranslator } from "@/lib/shared/i18n";
 
 export default async function AuthLayout({
   children,
@@ -10,6 +12,9 @@ export default async function AuthLayout({
   const hdrs = await headers();
   const pathname = hdrs.get("x-pathname") ?? "";
   const isLogin = !pathname.includes("signup");
+
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
 
   return (
     <div className="nd-auth-split">
@@ -26,36 +31,36 @@ export default async function AuthLayout({
         <div className="nd-auth-illo-content">
           <div className="nd-eyebrow" style={{ color: "#FBA968", marginBottom: 24 }}>
             <span style={{ background: "#FBA968", width: 20, height: 1 }}></span>
-            Қош келдің
+            {t("auth.welcomeEyebrow")}
           </div>
           <h1 style={{ fontSize: "clamp(34px,4.5vw,52px)", color: "#FBF7F0", lineHeight: 1.08, fontWeight: 900, letterSpacing: "-.03em", marginBottom: 18 }}>
-            Бүгін <span style={{ fontFamily: "'Caveat',cursive", color: "#FBA968" }}>үйренуді</span> бастайық
+            {t("auth.heroPart1")} <span style={{ fontFamily: "'Caveat',cursive", color: "#FBA968" }}>{t("auth.heroHighlight")}</span> {t("auth.heroPart2")}
           </h1>
           <p style={{ color: "#FCE3CC", fontSize: 16, lineHeight: 1.65, maxWidth: 400, margin: 0 }}>
-            Күніне 20 минут — нәтиже 3 айда. AI көмекші, флэшкарталар және Раиссов ағайдың дәрістері.
+            {t("auth.heroBody")}
           </p>
 
           <div className="nd-auth-stats">
             <div className="nd-auth-stat">
               <strong>2,400+</strong>
-              <span>Студент</span>
+              <span>{t("auth.statStudents")}</span>
             </div>
             <div className="nd-auth-stat">
               <strong>7.5</strong>
-              <span>Орта балы</span>
+              <span>{t("auth.statAvgScore")}</span>
             </div>
             <div className="nd-auth-stat">
               <strong>92%</strong>
-              <span>Мақсатқа жетті</span>
+              <span>{t("auth.statGoalReached")}</span>
             </div>
           </div>
 
           <div className="nd-auth-quote">
             <div className="nd-auth-quote-stars">★★★★★</div>
-            <p>«Үш ай ішінде Band 6.5-тен 8.0-ге өстім. AI эссе тексеру керемет.»</p>
+            <p>{t("auth.testimonialQuote")}</p>
             <div className="nd-auth-quote-who">
-              <div className="nd-auth-quote-ava">А</div>
-              Айгерім · Band 8.0
+              <div className="nd-auth-quote-ava">A</div>
+              {t("auth.testimonialBy")}
             </div>
           </div>
         </div>
@@ -76,8 +81,8 @@ export default async function AuthLayout({
 
           {/* Tabs */}
           <div className="nd-auth-tabs">
-            <Link href="/login" className={isLogin ? "active" : ""}>Кіру</Link>
-            <Link href="/signup" className={!isLogin ? "active" : ""}>Тіркелу</Link>
+            <Link href="/login" className={isLogin ? "active" : ""}>{t("nav.logIn")}</Link>
+            <Link href="/signup" className={!isLogin ? "active" : ""}>{t("nav.signUp")}</Link>
           </div>
 
           {children}

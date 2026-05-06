@@ -89,10 +89,22 @@ export function NUETPracticeClient({
   if (questions.length === 0) {
     return (
       <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-sm text-[var(--text-secondary)]">
-        <p>{t("nuet.practice.empty")}</p>
-        <Link href="/nuet/pdf-tests" className="mt-4 inline-flex text-[var(--primary)] hover:underline">
-          {t("nuet.practice.emptyCta")}
-        </Link>
+        <p className="font-medium text-[var(--text-primary)]">{t("nuet.practice.empty")}</p>
+        <p className="mt-2 text-[var(--text-secondary)]">{t("nuet.practice.emptyHint")}</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="/nuet/simulator"
+            className="inline-flex items-center rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+          >
+            {t("nuet.practice.emptyTryMock")}
+          </Link>
+          <Link
+            href="/nuet/pdf-tests"
+            className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
+          >
+            {t("nuet.practice.emptyCta")}
+          </Link>
+        </div>
       </div>
     );
   }

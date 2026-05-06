@@ -422,10 +422,11 @@ export function NUETSimulatorClient() {
                     onClick={() => setExpandedReview((current) => ({ ...current, [item.question]: !open }))}
                     className="flex w-full items-start justify-between gap-3 text-left"
                   >
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">
-                        #{item.question} {item.prompt}
-                      </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-[var(--text-primary)]">
+                        <span>#{item.question} </span>
+                        {item.prompt ? <MathText text={item.prompt} /> : null}
+                      </div>
                       <p className="mt-1 text-xs text-[var(--text-secondary)]">
                         {item.correct ? t("nuet.simulator.correct") : t("nuet.simulator.incorrect")} · {t("nuet.simulator.correctAnswer")} {item.expected}
                       </p>
@@ -437,9 +438,22 @@ export function NUETSimulatorClient() {
                     )}
                   </button>
                   {open ? (
-                    <div className="mt-3 border-t border-[var(--border)] pt-3 text-sm text-[var(--text-secondary)]">
+                    <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3 text-sm text-[var(--text-secondary)]">
                       <p>{t("nuet.simulator.yourAnswer")} {item.received || "—"}</p>
-                      <p className="mt-1">{item.explanation}</p>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                          {t("nuet.review.solutionTitle")}
+                        </p>
+                        {item.explanation && item.explanation.trim() ? (
+                          <div className="mt-1">
+                            <MathText text={item.explanation} as="div" />
+                          </div>
+                        ) : (
+                          <p className="mt-1 italic text-[var(--text-muted)]">
+                            {t("nuet.review.noExplanation")}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   ) : null}
                 </div>

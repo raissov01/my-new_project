@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Clock3, Flag, Loader2 } from "lucide-react";
 import { MathText } from "@/components/nuet/math-text";
+import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import {
   completeNUETMockAttempt,
@@ -33,6 +34,7 @@ export function NUETMockClient({
   testId: string;
   testName: string;
 }) {
+  const { t } = useLocale();
   const [stage, setStage] = useState<Stage>("loading");
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<NUETMockQuestion[]>([]);
@@ -313,7 +315,7 @@ export function NUETMockClient({
                     }
                     className="flex w-full items-start justify-between gap-3 text-left"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-[var(--text-primary)]">
                         #{index + 1} {truncateSingleLine(prompt, 140)}
                       </p>
@@ -328,8 +330,26 @@ export function NUETMockClient({
                     )}
                   </button>
                   {open ? (
-                    <div className="mt-3 border-t border-[var(--border)] pt-3 text-sm text-[var(--text-secondary)]">
-                      <p>{item.explanation || "No explanation provided."}</p>
+                    <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3 text-sm text-[var(--text-secondary)]">
+                      {prompt ? (
+                        <div>
+                          <MathText text={prompt} as="div" />
+                        </div>
+                      ) : null}
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                          {t("nuet.review.solutionTitle")}
+                        </p>
+                        {item.explanation && item.explanation.trim() ? (
+                          <div className="mt-1">
+                            <MathText text={item.explanation} as="div" />
+                          </div>
+                        ) : (
+                          <p className="mt-1 italic text-[var(--text-muted)]">
+                            {t("nuet.review.noExplanation")}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   ) : null}
                 </article>

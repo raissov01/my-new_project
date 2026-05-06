@@ -1,10 +1,13 @@
+"use client";
+
 import type { ScoreEntry } from "@/components/dashboard/ScoreRadarDashboard";
+import { useLocale } from "@/components/providers/locale-provider";
 
 const SKILLS = [
-  { key: "reading" as const, label: "Оқу", abbr: "R", color: "bg-cyan-500" },
-  { key: "listening" as const, label: "Аудирование", abbr: "L", color: "bg-indigo-500" },
-  { key: "writing" as const, label: "Жазу", abbr: "W", color: "bg-emerald-500" },
-  { key: "speaking" as const, label: "Сөйлеу", abbr: "S", color: "bg-violet-500" },
+  { key: "reading"   as const, labelKey: "skill.reading",   abbr: "R", color: "bg-cyan-500"    },
+  { key: "listening" as const, labelKey: "skill.listening", abbr: "L", color: "bg-indigo-500"  },
+  { key: "writing"   as const, labelKey: "skill.writing",   abbr: "W", color: "bg-emerald-500" },
+  { key: "speaking"  as const, labelKey: "skill.speaking",  abbr: "S", color: "bg-violet-500"  },
 ];
 
 function bandToPercent(band: number): number {
@@ -12,23 +15,25 @@ function bandToPercent(band: number): number {
   return Math.round((band / 9) * 100);
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const now = Date.now();
-  const diffDays = Math.floor((now - d.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "Бүгін";
-  if (diffDays === 1) return "Кеше";
-  if (diffDays < 7) return `${diffDays} күн бұрын`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} апта бұрын`;
-  return `${Math.floor(diffDays / 30)} ай бұрын`;
-}
-
 interface Props {
   scoreHistory: ScoreEntry[];
 }
 
 export function SkillScoreBar({ scoreHistory }: Props) {
+  const { t } = useLocale();
+
   if (!scoreHistory.length) return null;
+
+  const formatDate = (iso: string): string => {
+    const d = new Date(iso);
+    const now = Date.now();
+    const diffDays = Math.floor((now - d.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return t("ielts.skill.today");
+    if (diffDays === 1) return t("ielts.skill.yesterday");
+    if (diffDays < 7) return t("ielts.skill.daysAgo", { n: diffDays });
+    if (diffDays < 30) return t("ielts.skill.weeksAgo", { n: Math.floor(diffDays / 7) });
+    return t("ielts.skill.monthsAgo", { n: Math.floor(diffDays / 30) });
+  };
 
   const latest = scoreHistory[scoreHistory.length - 1];
   const overallAvg =
@@ -39,7 +44,7 @@ export function SkillScoreBar({ scoreHistory }: Props) {
     <div className="mt-6 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm font-semibold text-[var(--text-primary)]">
-          Соңғы нәтижелер
+          {t("ielts.skill.latestResults")}
         </p>
         <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
           <span>{formatDate(latest.date)}</span>
@@ -57,7 +62,7 @@ export function SkillScoreBar({ scoreHistory }: Props) {
             <div key={skill.key}>
               <div className="mb-1.5 flex items-center justify-between">
                 <span className="text-xs font-medium text-[var(--text-secondary)]">
-                  {skill.label}
+                  {t(skill.labelKey)}
                 </span>
                 <span className="text-xs font-bold text-[var(--text-primary)]">
                   {score.toFixed(1)}
@@ -76,7 +81,7 @@ export function SkillScoreBar({ scoreHistory }: Props) {
 
       {scoreHistory.length > 1 && (
         <p className="mt-3 text-xs text-[var(--text-muted)]">
-          Жалпы {scoreHistory.length} mock · /ielts/dashboard-та толық серпінді қараңыз
+          {t("ielts.skill.allMocks", { n: scoreHistory.length })}
         </p>
       )}
     </div>
