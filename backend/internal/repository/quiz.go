@@ -1303,13 +1303,33 @@ func (r *Quiz) SubmitAttempt(ctx context.Context, userID, quizID, inviteToken st
 	}
 	completedAt := time.Now().UTC()
 
+	// Power-ups are client-driven and never affect grading; we persist the
+	// list as JSONB for analytics. Non-string entries are skipped silently.
+	var powerUpsJSON *string
+	if len(req.PowerUpsUsed) > 0 {
+		filtered := make([]string, 0, len(req.PowerUpsUsed))
+		for _, k := range req.PowerUpsUsed {
+			k = strings.TrimSpace(k)
+			if k == "" {
+				continue
+			}
+			filtered = append(filtered, k)
+		}
+		if len(filtered) > 0 {
+			if encoded, err := json.Marshal(filtered); err == nil {
+				s := string(encoded)
+				powerUpsJSON = &s
+			}
+		}
+	}
+
 	var attemptID string
 	if err := tx.QueryRow(ctx, `
-		INSERT INTO quiz_attempts (quiz_id, user_id, score, total_questions, percentage, time_spent, started_at, completed_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO quiz_attempts (quiz_id, user_id, score, total_questions, percentage, time_spent, started_at, completed_at, power_ups_used)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id
 	`,
-		quizID, userID, score, total, percentage, totalTime, startedAt, completedAt,
+		quizID, userID, score, total, percentage, totalTime, startedAt, completedAt, powerUpsJSON,
 	).Scan(&attemptID); err != nil {
 		return nil, fmt.Errorf("insert attempt: %w", err)
 	}

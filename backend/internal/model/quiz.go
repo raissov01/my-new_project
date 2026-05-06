@@ -191,10 +191,14 @@ type AttemptAnswerInput struct {
 
 // SubmitAttemptRequest is the payload for POST /quizzes/:id/attempts.
 // The client sends only raw selections; scoring is computed server-side.
+// PowerUpsUsed is the list of power-up keys the player activated during
+// the attempt (e.g. ["fifty_fifty","skip"]); persisted as a JSONB column
+// for analytics and never affects server-side grading.
 type SubmitAttemptRequest struct {
-	StartedAt   string               `json:"startedAt"`
-	QuestionIDs []string             `json:"questionIds,omitempty"`
-	Answers     []AttemptAnswerInput `json:"answers"`
+	StartedAt    string               `json:"startedAt"`
+	QuestionIDs  []string             `json:"questionIds,omitempty"`
+	Answers      []AttemptAnswerInput `json:"answers"`
+	PowerUpsUsed []string             `json:"powerUpsUsed,omitempty"`
 }
 
 // AttemptAnswerResult is a graded answer returned after submission.

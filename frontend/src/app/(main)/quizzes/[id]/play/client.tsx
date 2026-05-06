@@ -10,17 +10,19 @@ import {
   Lightbulb,
   LogOut,
   Timer,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createTranslator, type Locale } from "@/lib/shared/i18n";
-import { useQuizSounds } from "@/features/quizzes/use-sounds";
+import { useGameSound } from "@/hooks/use-game-sound";
+import { SoundSettings } from "@/components/sound-settings";
 import { AnswerAnimation } from "@/features/quizzes/components/answer-animation";
 import { usePowerUps, type PowerUpKey } from "@/features/quizzes/use-power-ups";
-import { PowerUpBar } from "@/features/quizzes/components/power-up-bar";
+import {
+  PowerUpBar,
+  PowerUpActivationOverlay,
+} from "@/features/quizzes/components/power-up-bar";
 import { trackQuizUsageEvent } from "@/features/quizzes/analytics";
 import type {
   ComprehensionData,
@@ -183,7 +185,7 @@ export function PlayQuizClient({
   partLabel,
 }: PlayQuizClientProps) {
   const isPractice = mode === "practice";
-  const sounds = useQuizSounds();
+  const sounds = useGameSound();
   // Power-ups are disabled in practice mode (it's a focused review, not a
   // gamified run) and when the quiz owner has turned them off.
   const powerUpsEnabled = !isPractice && (quiz.powerUpsEnabled ?? true);
@@ -266,6 +268,10 @@ export function PlayQuizClient({
   useEffect(() => { streakRef.current = streak; }, [streak]);
   const currentIdxRef = useRef(currentIdx);
   useEffect(() => { currentIdxRef.current = currentIdx; }, [currentIdx]);
+  // submitAttempt is memoized without powerUps in deps; it reads the
+  // latest used list via this ref instead of capturing stale state.
+  const usedPowerUpsRef = useRef<PowerUpKey[]>(powerUps.used);
+  useEffect(() => { usedPowerUpsRef.current = powerUps.used; }, [powerUps.used]);
 
   const trackAbandoned = useCallback(
     (reason: string) => {
@@ -415,6 +421,7 @@ export function PlayQuizClient({
             startedAt: new Date(quizStartRef.current).toISOString(),
             questionIds: quiz.questions.map((q) => q.id),
             answers: answersRef.current,
+            powerUpsUsed: usedPowerUpsRef.current,
           }),
         }
       );
@@ -539,15 +546,13 @@ export function PlayQuizClient({
       if (isCorrect) {
         setStreak((s) => {
           const next = s + 1;
-          // Fire the streak flourish at 5, 10, 15… so early correct
-          // answers get the ordinary chime, not the bigger cue.
-          if (next > 1 && next % 5 === 0) {
+          // Streak fanfare at the Quizizz-style milestones: 3, 5, 10.
+          // Other correct answers get the ordinary chime.
+          if (next === 3 || next === 5 || next === 10) {
             sounds.play("streak");
           } else {
             sounds.play("correct");
           }
-          // Grant a new power-up every 3-streak.
-          powerUps.grant(next);
           return next;
         });
       } else if (streakSaved) {
@@ -569,6 +574,66 @@ export function PlayQuizClient({
       }, 1800);
     },
     [advance, phase, question.id, sounds, powerUps, isPractice, quiz.id, progressScope, mode, isGuest, questionType]
+  );
+
+  // recordSkip is invoked by the Skip power-up. It posts an empty answer
+  // for the current question (so the backend still receives a row), but
+  // keeps the streak intact and never marks the answer as correct.
+  const recordSkip = useCallback(() => {
+    if (phase !== "asking") return;
+    const timeSpent = Math.max(
+      0,
+      Math.round((Date.now() - questionStartRef.current) / 1000)
+    );
+    correctnessRef.current.push(false);
+    answersRef.current.push({
+      questionId: question.id,
+      selectedOption: null,
+      textAnswer: null,
+      orderAnswer: null,
+      timeSpent,
+    });
+    trackQuizUsageEvent({
+      quizId: quiz.id,
+      eventType: "question_answered",
+      questionId: question.id,
+      metadata: {
+        mode,
+        guest: isGuest,
+        questionIndex: currentIdxRef.current,
+        questionType,
+        isCorrect: false,
+        skipped: true,
+        timeSpent,
+      },
+    });
+    if (!isPractice) {
+      saveProgress(progressScope, {
+        currentIdx: currentIdxRef.current,
+        answers: answersRef.current,
+        // Preserve the streak — Skip is the whole point of this power-up.
+        streak: streakRef.current,
+        quizStartedAt: quizStartRef.current,
+      });
+    }
+    // No streak/coin/sound change; lastCorrect stays null so the green/red
+    // overlay doesn't fire on the reveal.
+    setLastCorrect(null);
+    setPhase("revealed");
+    advanceTimerRef.current = setTimeout(() => {
+      advance();
+    }, 1200);
+  }, [
+    advance,
+    phase,
+    question.id,
+    isPractice,
+    quiz.id,
+    progressScope,
+    mode,
+    isGuest,
+    questionType,
+  ]
   );
 
   const recordMcq = useCallback(
@@ -827,9 +892,8 @@ export function PlayQuizClient({
   useEffect(() => {
     handleTimeoutRef.current = handleTimeout;
   });
-  const timeFrozen = powerUps.effects.timeFrozen;
   useEffect(() => {
-    if (phase !== "asking" || isPractice || timeFrozen) return;
+    if (phase !== "asking" || isPractice) return;
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -837,22 +901,41 @@ export function PlayQuizClient({
           queueMicrotask(() => handleTimeoutRef.current());
           return 0;
         }
-        // Tick on the final five seconds (5 → 1) so the student hears a
-        // ramp before timeout fires. No tick at 0 because that frame is
-        // the timeout itself.
-        const next = prev - 1;
-        if (next <= 5 && next > 0) {
-          sounds.play("tick");
-        }
-        return next;
+        return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [phase, currentIdx, isPractice, timeFrozen, sounds]);
+  }, [phase, currentIdx, isPractice]);
+
+  // Ticktock urgency loop: starts when 10 seconds remain, stops as soon as
+  // the timer expires or the question phase changes (reveal, submit, etc).
+  useEffect(() => {
+    if (phase !== "asking" || isPractice) {
+      sounds.stop("ticktock");
+      return;
+    }
+    if (timeLeft > 0 && timeLeft <= 10) {
+      sounds.play("ticktock");
+    } else {
+      sounds.stop("ticktock");
+    }
+    return () => {
+      sounds.stop("ticktock");
+    };
+  }, [phase, timeLeft, isPractice, sounds]);
 
   useEffect(() => {
     return () => clearAdvanceTimer();
   }, []);
+
+  // Clear the power-up activation banner ~1s after a click. The hook
+  // intentionally exposes the just-activated key without an internal timer
+  // so the play client owns the cancellation surface (unmount cleanup).
+  useEffect(() => {
+    if (!powerUps.justActivated) return;
+    const id = setTimeout(() => powerUps.clearJustActivated(), 1000);
+    return () => clearTimeout(id);
+  }, [powerUps]);
 
   // 3-2-1-GO! countdown before the first question. Each step is held ~750ms,
   // and the final "GO!" frame stays for 450ms before we hand control off to
@@ -897,8 +980,9 @@ export function PlayQuizClient({
     return () => {
       document.body.style.overflow = prev;
       trackAbandoned("unmount");
+      sounds.stopAll();
     };
-  }, [isPractice, quiz.id, mode, isGuest, restoredProgress, totalQuestions, trackAbandoned]);
+  }, [isPractice, quiz.id, mode, isGuest, restoredProgress, totalQuestions, trackAbandoned, sounds]);
 
   useEffect(() => {
     const handlePageHide = () => trackAbandoned("pagehide");
@@ -1034,6 +1118,7 @@ export function PlayQuizClient({
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[var(--bg-base)]">
+      <PowerUpActivationOverlay activated={powerUps.justActivated} />
       {phase === "countdown" ? (
         <div
           aria-live="assertive"
@@ -1067,11 +1152,7 @@ export function PlayQuizClient({
                       ★ {coins}
                     </span>
                   ) : null}
-                  <span
-                    className={`inline-flex items-center gap-1.5 ${
-                      timeFrozen ? "text-sky-300" : "text-[var(--text-primary)]"
-                    }`}
-                  >
+                  <span className="inline-flex items-center gap-1.5 text-[var(--text-primary)]">
                     <Timer className="h-3.5 w-3.5" />
                     {timeLeft}
                     {t("quiz.secondsShort")}
@@ -1086,19 +1167,17 @@ export function PlayQuizClient({
               />
             </div>
           </div>
-          <button
-            type="button"
-            onClick={sounds.toggle}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-            aria-label={sounds.enabled ? t("quiz.play.soundOff") : t("quiz.play.soundOn")}
-            title={sounds.enabled ? t("quiz.play.soundOff") : t("quiz.play.soundOn")}
-          >
-            {sounds.enabled ? (
-              <Volume2 className="h-4 w-4" />
-            ) : (
-              <VolumeX className="h-4 w-4" />
-            )}
-          </button>
+          <SoundSettings
+            volume={sounds.volume}
+            muted={sounds.muted}
+            setVolume={sounds.setVolume}
+            toggleMuted={sounds.toggleMuted}
+            labels={{
+              toggleSound: t("quiz.sound.toggleSound"),
+              volume: t("quiz.sound.volume"),
+              muted: t("quiz.sound.muted"),
+            }}
+          />
           <button
             type="button"
             onClick={() => { clearAdvanceTimer(); setShowExit(true); }}
@@ -1185,7 +1264,7 @@ export function PlayQuizClient({
               displayOptions={displayOptions}
               selectedLetter={selectedLetter as OptionLetter | null}
               correctLetter={question.correctOption as OptionLetter | null | undefined}
-              hiddenLetters={powerUps.effects.hiddenLetters}
+              hiddenLetters={powerUps.effects.eliminatedLetters}
               revealed={revealed}
               onPick={recordMcq}
             />
@@ -1302,7 +1381,7 @@ export function PlayQuizClient({
               displayOptions={displayOptions}
               selectedLetter={selectedLetter as OptionLetter | null}
               correctLetter={question.correctOption as OptionLetter | null | undefined}
-              hiddenLetters={powerUps.effects.hiddenLetters}
+              hiddenLetters={powerUps.effects.eliminatedLetters}
               revealed={revealed}
               onPick={recordMcq}
             />
@@ -1359,14 +1438,21 @@ export function PlayQuizClient({
 
           {powerUpsEnabled ? (
             <PowerUpBar
-              inventory={powerUps.inventory}
+              available={powerUps.available}
+              used={powerUps.used}
               activeEffects={powerUps.effects}
               disabled={revealed}
               onActivate={(key: PowerUpKey) => {
-                powerUps.activate(
+                const action = powerUps.activate(
                   key,
                   (question.correctOption as string | null | undefined) ?? null
                 );
+                if (action.addTime && action.addTime > 0) {
+                  setTimeLeft((t) => t + (action.addTime ?? 0));
+                }
+                if (action.skipQuestion) {
+                  recordSkip();
+                }
               }}
             />
           ) : null}
