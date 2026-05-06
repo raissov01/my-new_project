@@ -51,7 +51,7 @@ type RecordedAnswer = {
   timeSpent: number;
 };
 
-type Phase = "asking" | "revealed" | "submitting";
+type Phase = "countdown" | "asking" | "revealed" | "submitting";
 
 const POSITION_LABELS = ["A", "B", "C", "D", "E"] as const;
 
@@ -206,7 +206,12 @@ export function PlayQuizClient({
   const restoredProgress = Boolean(savedProgress);
 
   const [currentIdx, setCurrentIdx] = useState(savedProgress?.currentIdx ?? 0);
-  const [phase, setPhase] = useState<Phase>("asking");
+  // Wayground/Quizizz-style 3-2-1 countdown on the very first run. Skip
+  // it when resuming an in-progress attempt — players don't want to wait
+  // for a 3-second drumroll just to continue from question 7.
+  const [phase, setPhase] = useState<Phase>(restoredProgress ? "asking" : "countdown");
+  // 3 → 2 → 1 → 0 (0 renders as "GO!"). Only meaningful while phase==="countdown".
+  const [countdownNumber, setCountdownNumber] = useState<number>(3);
   const [timeLeft, setTimeLeft] = useState(quiz.timePerQuestion);
   const [streak, setStreak] = useState(savedProgress?.streak ?? 0);
   const [showExit, setShowExit] = useState(false);
@@ -849,6 +854,26 @@ export function PlayQuizClient({
     return () => clearAdvanceTimer();
   }, []);
 
+  // 3-2-1-GO! countdown before the first question. Each step is held ~750ms,
+  // and the final "GO!" frame stays for 450ms before we hand control off to
+  // the question. Reset quizStartRef so the elapsed timer doesn't include
+  // the countdown itself.
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    if (countdownNumber > 0) {
+      const id = setTimeout(() => setCountdownNumber((n) => n - 1), 750);
+      return () => clearTimeout(id);
+    }
+    // countdownNumber === 0 → "GO!" frame, then start the quiz
+    const id = setTimeout(() => {
+      quizStartRef.current = Date.now();
+      questionStartRef.current = Date.now();
+      setTimeLeft(quiz.timePerQuestion);
+      setPhase("asking");
+    }, 450);
+    return () => clearTimeout(id);
+  }, [phase, countdownNumber, quiz.timePerQuestion]);
+
   useEffect(() => {
     // Only reset start time if there's no saved progress to restore.
     if (quizStartRef.current === 0) {
@@ -1009,6 +1034,23 @@ export function PlayQuizClient({
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[var(--bg-base)]">
+      {phase === "countdown" ? (
+        <div
+          aria-live="assertive"
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 text-white"
+        >
+          <p className="font-mono text-xs uppercase tracking-[0.4em] opacity-80">
+            {t("quiz.live.getReady") || "Get ready"}
+          </p>
+          <span
+            key={countdownNumber}
+            className="mt-4 select-none font-black tabular-nums leading-none animate-quiz-countdown"
+            style={{ fontSize: "clamp(96px, 22vw, 220px)" }}
+          >
+            {countdownNumber > 0 ? countdownNumber : "GO!"}
+          </span>
+        </div>
+      ) : null}
       <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--bg-base)]/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex-1">
