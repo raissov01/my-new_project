@@ -36,13 +36,41 @@ function cellToString(cell: unknown): string {
   return "";
 }
 
-function normalizeCorrect(value: string): string {
+function normalizeForMatch(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/^[*✓✔✅\s]+|[*✓✔✅\s]+$/g, "")
+    .replace(/\s*\((correct|дұрыс|верно|правильно)\)\s*$/i, "")
+    .trim();
+}
+
+function stripCorrectMarker(value: string): { text: string; marked: boolean } {
+  const text = value.trim();
+  const markerPattern = /(^[*✓✔✅]\s*)|(\s*\((correct|дұрыс|верно|правильно)\)\s*$)/i;
+  return {
+    text: text.replace(markerPattern, "").trim(),
+    marked: markerPattern.test(text),
+  };
+}
+
+function normalizeCorrect(value: string, options?: string[]): string {
   const v = value.trim().toLowerCase();
   if (v === "1" || v === "a") return "a";
   if (v === "2" || v === "b") return "b";
   if (v === "3" || v === "c") return "c";
   if (v === "4" || v === "d") return "d";
   if (v === "5" || v === "e") return "e";
+  if (v === "option a" || v === "answer a" || v === "а") return "a";
+  if (v === "option b" || v === "answer b" || v === "б") return "b";
+  if (v === "option c" || v === "answer c" || v === "в") return "c";
+  if (v === "option d" || v === "answer d" || v === "г") return "d";
+  if (v === "option e" || v === "answer e" || v === "д") return "e";
+  if (options?.length) {
+    const matchedIndex = options.findIndex((option) => normalizeForMatch(option) === normalizeForMatch(value));
+    if (matchedIndex >= 0) return ["a", "b", "c", "d", "e"][matchedIndex] ?? "";
+  }
   return "";
 }
 
@@ -74,11 +102,12 @@ function findQuizizzHeaderRow(rows: unknown[][]): number {
 function parseQuizizzRow(raw: unknown[]): { question: QuizQuestionInput; warnings: string[] } | null {
   const questionText = cellToString(raw[1]);
   const typeRaw = cellToString(raw[2]).toLowerCase();
-  const opt1 = cellToString(raw[3]);
-  const opt2 = cellToString(raw[4]);
-  const opt3 = cellToString(raw[5]);
-  const opt4 = cellToString(raw[6]);
-  const opt5 = cellToString(raw[7]); // Quizizz column H — 5th option
+  const parsedOptions = [raw[3], raw[4], raw[5], raw[6], raw[7]].map((cell) => stripCorrectMarker(cellToString(cell)));
+  const opt1 = parsedOptions[0]?.text ?? "";
+  const opt2 = parsedOptions[1]?.text ?? "";
+  const opt3 = parsedOptions[2]?.text ?? "";
+  const opt4 = parsedOptions[3]?.text ?? "";
+  const opt5 = parsedOptions[4]?.text ?? ""; // Quizizz column H — 5th option
   const correctRaw = cellToString(raw[8]);
   const warnings: string[] = [];
 
@@ -102,7 +131,8 @@ function parseQuizizzRow(raw: unknown[]): { question: QuizQuestionInput; warning
     return { question: { questionText, questionType: "fill_blank", blankAnswer: correctRaw }, warnings };
   }
 
-  const correct = normalizeCorrect(correctRaw);
+  const markedCorrectIndex = parsedOptions.findIndex((option) => option.marked);
+  const correct = normalizeCorrect(correctRaw, [opt1, opt2, opt3, opt4, opt5]) || (markedCorrectIndex >= 0 ? ["a", "b", "c", "d", "e"][markedCorrectIndex] ?? "" : "");
   if (!opt1 || !opt2) warnings.push("Missing options");
   if (!correct) warnings.push("Invalid correct answer (expected 1–5)");
   return {
@@ -261,7 +291,8 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
           // Detect 5-option layout vs 4-option layout.
           const col6 = cellToString(raw[6]);
           const col7 = cellToString(raw[7]);
-          const isNewFormat = Boolean(normalizeCorrect(col7));
+          const nativeOptions = [optionA, optionB, optionC, optionD, col6];
+          const isNewFormat = Boolean(normalizeCorrect(col7, nativeOptions));
           const optionE = isNewFormat ? col6 : "";
           const answerCell = isNewFormat ? col7 : col6;
           const explanation = isNewFormat ? cellToString(raw[8]) : col7;
@@ -285,7 +316,7 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
               break;
             }
             default: {
-              const correct = normalizeCorrect(answerCell);
+              const correct = normalizeCorrect(answerCell, [optionA, optionB, optionC, optionD, optionE]);
               if (!optionA || !optionB || !optionC || !optionD) warnings.push(t("quiz.warnMissingOptions"));
               if (!correct) warnings.push(t("quiz.warnBadCorrect"));
               question = { questionText, questionType: "mcq", optionA, optionB, optionC, optionD, ...(optionE ? { optionE } : {}), correctOption: correct, explanation };

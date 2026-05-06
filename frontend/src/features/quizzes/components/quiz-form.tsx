@@ -103,7 +103,8 @@ function applyTypeChange(
         optionB: q.optionB ?? "",
         optionC: q.optionC ?? "",
         optionD: q.optionD ?? "",
-        correctOption: q.correctOption === "a" || q.correctOption === "b" || q.correctOption === "c" || q.correctOption === "d"
+        optionE: q.optionE ?? "",
+        correctOption: q.correctOption === "a" || q.correctOption === "b" || q.correctOption === "c" || q.correctOption === "d" || q.correctOption === "e"
           ? q.correctOption
           : "a",
         blankAnswer: "",
@@ -405,6 +406,9 @@ export function QuizForm({
   const handleImported = (imported: QuizQuestionInput[]) => {
     const base = keyCounter + questions.length;
     const entries = imported.map((q, i) => ({ ...q, _key: base + i + 1 }));
+    if (imported.some((q) => Boolean(q.optionE))) {
+      setShow5(true);
+    }
     setKeyCounter(base + imported.length + 1);
     setQuestions((prev) => {
       const hasAnyContent = prev.some(

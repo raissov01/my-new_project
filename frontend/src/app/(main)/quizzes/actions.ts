@@ -90,6 +90,7 @@ function sanitizeQuestions(questions: QuizQuestionInput[]): QuizQuestionInput[] 
         optionB: (q.optionB ?? "").trim(),
         optionC: (q.optionC ?? "").trim(),
         optionD: (q.optionD ?? "").trim(),
+        optionE: (q.optionE ?? "").trim(),
         correctOption,
         blankAnswer: (q.blankAnswer ?? "").trim(),
         reorderItems,
