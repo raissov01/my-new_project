@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/midoriya/flashlearn-backend/internal/auth"
+	"github.com/midoriya/flashlearn-backend/internal/delivery"
 	"github.com/midoriya/flashlearn-backend/internal/email"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"golang.org/x/crypto/bcrypt"
@@ -64,11 +65,15 @@ type updateProfileRequest struct {
 }
 
 type authResponse struct {
-	Token string      `json:"token"`
-	User  models.User `json:"user"`
+	Token                string      `json:"token"`
+	User                 models.User `json:"user"`
+	EmailDeliveryStatus  string      `json:"emailDeliveryStatus,omitempty"`
+	EmailDeliveryMessage string      `json:"emailDeliveryMessage,omitempty"`
 }
 
 var phoneCleanupPattern = regexp.MustCompile(`[^\d+]`)
+
+var errEmailSenderNotConfigured = fmt.Errorf("transactional email is not configured")
 
 func normalizePhone(raw string) (*string, error) {
 	phone := phoneCleanupPattern.ReplaceAllString(strings.TrimSpace(raw), "")
@@ -88,6 +93,42 @@ func normalizePhone(raw string) (*string, error) {
 		phone = "+" + phone
 	}
 	return &phone, nil
+}
+
+func (h *AuthHandler) sendVerificationEmail(toEmail, fullName, code, logContext string) error {
+	if h.emailSender == nil {
+		delivery.Record(h.db, delivery.Event{
+			Channel:   "email",
+			Kind:      "verify_email",
+			Recipient: toEmail,
+			Err:       errEmailSenderNotConfigured,
+		})
+		log.Printf("[%s] verification email sender is not configured for %s", logContext, toEmail)
+		return errEmailSenderNotConfigured
+	}
+	if err := h.emailSender.SendVerificationEmail(toEmail, fullName, code); err != nil {
+		log.Printf("[%s] failed to send verification email to %s: %v", logContext, toEmail, err)
+		return err
+	}
+	return nil
+}
+
+func (h *AuthHandler) sendPasswordResetEmail(toEmail, fullName, code string) error {
+	if h.emailSender == nil {
+		delivery.Record(h.db, delivery.Event{
+			Channel:   "email",
+			Kind:      "password_reset",
+			Recipient: toEmail,
+			Err:       errEmailSenderNotConfigured,
+		})
+		log.Printf("[forgot-password] password reset email sender is not configured for %s", toEmail)
+		return errEmailSenderNotConfigured
+	}
+	if err := h.emailSender.SendPasswordResetEmail(toEmail, fullName, code); err != nil {
+		log.Printf("[forgot-password] failed to send reset email to %s: %v", toEmail, err)
+		return err
+	}
+	return nil
 }
 
 // Register creates a new user account and sends a verification email.
@@ -154,13 +195,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Send verification code (non-blocking — don't fail registration if email fails)
-	if h.emailSender != nil {
-		go func() {
-			if err := h.emailSender.SendVerificationEmail(user.Email, user.FullName, verificationCode); err != nil {
-				log.Printf("[register] failed to send verification email to %s: %v", user.Email, err)
-			}
-		}()
+	emailDeliveryStatus := "sent"
+	emailDeliveryMessage := ""
+	if err := h.sendVerificationEmail(user.Email, user.FullName, verificationCode, "register"); err != nil {
+		emailDeliveryStatus = "error"
+		emailDeliveryMessage = "Account created, but the verification email could not be sent. Please try resend verification later or contact support."
 	}
 
 	token, err := auth.GenerateToken(h.jwtSecret, user.ID, user.Email, user.Role)
@@ -169,7 +208,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, authResponse{Token: token, User: user})
+	c.JSON(http.StatusCreated, authResponse{
+		Token:                token,
+		User:                 user,
+		EmailDeliveryStatus:  emailDeliveryStatus,
+		EmailDeliveryMessage: emailDeliveryMessage,
+	})
 }
 
 // Login authenticates a user and returns a JWT.
@@ -544,12 +588,9 @@ func (h *AuthHandler) ResendVerification(c *gin.Context) {
 		return
 	}
 
-	if h.emailSender != nil {
-		go func() {
-			if err := h.emailSender.SendVerificationEmail(user.Email, user.FullName, newCode); err != nil {
-				log.Printf("[resend-verification] failed to send verification email to %s: %v", user.Email, err)
-			}
-		}()
+	if err := h.sendVerificationEmail(user.Email, user.FullName, newCode, "resend-verification"); err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Verification email could not be sent. Please try again later or contact support."})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "If an account exists with that email, a verification code has been sent."})
@@ -593,12 +634,9 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	if h.emailSender != nil {
-		go func() {
-			if err := h.emailSender.SendPasswordResetEmail(user.Email, user.FullName, code); err != nil {
-				log.Printf("[forgot-password] failed to send reset email to %s: %v", user.Email, err)
-			}
-		}()
+	if err := h.sendPasswordResetEmail(user.Email, user.FullName, code); err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Password reset email could not be sent. Please try again later or contact support."})
+		return
 	}
 
 	c.JSON(http.StatusOK, genericResponse)
@@ -719,12 +757,9 @@ func (h *AuthHandler) ChangeVerificationEmail(c *gin.Context) {
 		return
 	}
 
-	if h.emailSender != nil {
-		go func() {
-			if err := h.emailSender.SendVerificationEmail(newEmail, user.FullName, newCode); err != nil {
-				log.Printf("[change-verification-email] failed to send verification email to %s: %v", newEmail, err)
-			}
-		}()
+	if err := h.sendVerificationEmail(newEmail, user.FullName, newCode, "change-verification-email"); err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Verification email could not be sent to the new address. Please try again later or contact support."})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "email": newEmail, "message": "Verification code sent to your new email."})

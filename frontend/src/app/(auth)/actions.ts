@@ -26,6 +26,8 @@ type PublicAuthResponse = {
   user: {
     role: string;
   };
+  emailDeliveryStatus?: "sent" | "error";
+  emailDeliveryMessage?: string;
 };
 
 function getPublicApiBaseUrl() {
@@ -146,7 +148,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   if (password.length < 6) return { error: t("action.passwordMin") };
 
   try {
-    await fetchPublicAuthJson<PublicAuthResponse>("/auth/register", {
+    const resp = await fetchPublicAuthJson<PublicAuthResponse>("/auth/register", {
       email,
       phone: phone || undefined,
       password,
@@ -154,6 +156,10 @@ export async function signup(formData: FormData): Promise<AuthResult> {
       username,
       role,
     });
+
+    if (resp.emailDeliveryStatus === "error") {
+      return { error: t("action.emailDeliveryFailed") };
+    }
 
     return { error: null, message: t("action.checkEmailMessage") };
   } catch (err) {
