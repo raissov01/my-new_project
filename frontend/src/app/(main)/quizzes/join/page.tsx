@@ -43,9 +43,11 @@ function JoinForm() {
         setLoading(false);
         return;
       }
-      // Redirect to live game page
+      // Redirect to live game page. Spectators (role="spectator") get a flag
+      // so the page disables answer inputs.
       const tid = data.teamMode ? `&tid=${data.teamId}` : "";
-      router.push(`/quizzes/live/${trimmedCode}?pid=${data.participantId}${tid}`);
+      const role = data.role === "spectator" ? "&role=spectator" : "";
+      router.push(`/quizzes/live/${trimmedCode}?pid=${data.participantId}${tid}${role}`);
     } catch {
       setError("Network error, please try again");
       setLoading(false);

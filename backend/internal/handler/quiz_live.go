@@ -13,6 +13,7 @@ import (
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // QuizLiveHandler manages live quiz session REST endpoints.
@@ -69,7 +70,7 @@ func (h *QuizLiveHandler) CreateSession(w http.ResponseWriter, r *http.Request) 
 		req.Mode = "teacher_paced"
 	}
 	if req.TeamMode && (req.TeamCount < 2 || req.TeamCount > 4) {
-		req.TeamCount = 2
+		req.TeamCount = 4
 	}
 
 	// Verify quiz exists and user owns it (or it's public)
@@ -133,6 +134,121 @@ func (h *QuizLiveHandler) CreateSession(w http.ResponseWriter, r *http.Request) 
 }
 
 // ──────────────────────────────────────────────────────────────
+// Host control endpoints (force-next, pause, resume, kick, end)
+// All require the caller to be the session creator (host).
+// ──────────────────────────────────────────────────────────────
+
+// hostSessionFromCode loads the session by code and verifies the caller owns it.
+func (h *QuizLiveHandler) hostSessionFromCode(w http.ResponseWriter, r *http.Request) (*models.QuizLiveSession, bool) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return nil, false
+	}
+	code := strings.ToUpper(r.PathValue("code"))
+	if code == "" {
+		writeError(w, http.StatusBadRequest, "missing code", nil)
+		return nil, false
+	}
+	var session models.QuizLiveSession
+	if err := h.db.Where("join_code = ?", code).First(&session).Error; err != nil {
+		writeError(w, http.StatusNotFound, "session not found", nil)
+		return nil, false
+	}
+	if session.HostUserID != userID {
+		writeError(w, http.StatusForbidden, "only the host can perform this action", nil)
+		return nil, false
+	}
+	return &session, true
+}
+
+// POST /api/v1/live-sessions/:code/force-next
+func (h *QuizLiveHandler) ForceNext(w http.ResponseWriter, r *http.Request) {
+	session, ok := h.hostSessionFromCode(w, r)
+	if !ok {
+		return
+	}
+	room := h.hub.GetRoom(session.JoinCode)
+	if room == nil {
+		writeError(w, http.StatusGone, "session not active", nil)
+		return
+	}
+	room.HostForceNext()
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// POST /api/v1/live-sessions/:code/pause
+func (h *QuizLiveHandler) PauseSession(w http.ResponseWriter, r *http.Request) {
+	session, ok := h.hostSessionFromCode(w, r)
+	if !ok {
+		return
+	}
+	room := h.hub.GetRoom(session.JoinCode)
+	if room == nil {
+		writeError(w, http.StatusGone, "session not active", nil)
+		return
+	}
+	room.HostPause()
+	writeJSON(w, http.StatusOK, map[string]string{"status": "paused"})
+}
+
+// POST /api/v1/live-sessions/:code/resume
+func (h *QuizLiveHandler) ResumeSession(w http.ResponseWriter, r *http.Request) {
+	session, ok := h.hostSessionFromCode(w, r)
+	if !ok {
+		return
+	}
+	room := h.hub.GetRoom(session.JoinCode)
+	if room == nil {
+		writeError(w, http.StatusGone, "session not active", nil)
+		return
+	}
+	room.HostResume()
+	writeJSON(w, http.StatusOK, map[string]string{"status": "resumed"})
+}
+
+type kickParticipantRequest struct {
+	ParticipantID string `json:"participantId"`
+}
+
+// POST /api/v1/live-sessions/:code/kick
+func (h *QuizLiveHandler) KickParticipant(w http.ResponseWriter, r *http.Request) {
+	session, ok := h.hostSessionFromCode(w, r)
+	if !ok {
+		return
+	}
+	var req kickParticipantRequest
+	if err := decodeJSON(r, &req); err != nil || req.ParticipantID == "" {
+		writeError(w, http.StatusBadRequest, "missing participantId", err)
+		return
+	}
+	// Verify the participant is in this session before kicking.
+	var part models.QuizLiveParticipant
+	if err := h.db.Where("id = ? AND session_id = ?", req.ParticipantID, session.ID).First(&part).Error; err != nil {
+		writeError(w, http.StatusNotFound, "participant not found", nil)
+		return
+	}
+	room := h.hub.GetRoom(session.JoinCode)
+	if room != nil {
+		room.HostKick(req.ParticipantID)
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "kicked"})
+}
+
+// POST /api/v1/live-sessions/:code/end
+func (h *QuizLiveHandler) EndSession(w http.ResponseWriter, r *http.Request) {
+	session, ok := h.hostSessionFromCode(w, r)
+	if !ok {
+		return
+	}
+	room := h.hub.GetRoom(session.JoinCode)
+	if room != nil {
+		room.HostEndGame()
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ended"})
+}
+
+// ──────────────────────────────────────────────────────────────
 // POST /api/v1/live-sessions/join
 // Student joins by code; creates a participant record.
 // ──────────────────────────────────────────────────────────────
@@ -152,6 +268,7 @@ type joinSessionResponse struct {
 	TotalQ        int    `json:"totalQuestions"`
 	TeamMode      bool   `json:"teamMode"`
 	TeamID        int    `json:"teamId"` // -1 when not in team mode
+	Role          string `json:"role"`   // "player" | "spectator"
 }
 
 func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
@@ -191,26 +308,62 @@ func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 		name = name[:60]
 	}
 
-	// Assign team round-robin based on current participant count.
-	teamID := 0
-	if session.TeamMode && session.TeamCount >= 2 {
-		var count int64
-		h.db.Model(&models.QuizLiveParticipant{}).Where("session_id = ?", session.ID).Count(&count)
-		teamID = int(count) % session.TeamCount
-	}
-
-	// Create participant record
+	// Build participant; team assignment + insert run inside a transaction with
+	// SELECT … FOR UPDATE on the session row so concurrent joins don't both pick
+	// the same team. Within the lock we recount members per team and pick the
+	// team with the fewest members (tiebreak: lowest aggregate score).
 	var uid *string
 	if userID != "" {
 		uid = &userID
 	}
+	teamID := 0
+	// Anyone joining after the game has started becomes a spectator: they can
+	// watch leaderboard/questions but cannot submit answers.
+	isSpectator := session.Status == "active"
 	participant := models.QuizLiveParticipant{
 		SessionID:   session.ID,
 		UserID:      uid,
 		DisplayName: name,
 		TeamID:      teamID,
+		IsSpectator: isSpectator,
 	}
-	if err := h.db.Create(&participant).Error; err != nil {
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		var locked models.QuizLiveSession
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("id = ?", session.ID).First(&locked).Error; err != nil {
+			return err
+		}
+		if locked.TeamMode && locked.TeamCount >= 2 {
+			counts := make([]int64, locked.TeamCount)
+			scores := make([]int64, locked.TeamCount)
+			rows := []struct {
+				TeamID int
+				Cnt    int64
+				Sum    int64
+			}{}
+			tx.Raw(`
+				SELECT team_id AS team_id, COUNT(*) AS cnt, COALESCE(SUM(score),0) AS sum
+				FROM quiz_live_participants
+				WHERE session_id = ?
+				GROUP BY team_id
+			`, locked.ID).Scan(&rows)
+			for _, r := range rows {
+				if r.TeamID >= 0 && r.TeamID < locked.TeamCount {
+					counts[r.TeamID] = r.Cnt
+					scores[r.TeamID] = r.Sum
+				}
+			}
+			best := 0
+			for i := 1; i < locked.TeamCount; i++ {
+				if counts[i] < counts[best] || (counts[i] == counts[best] && scores[i] < scores[best]) {
+					best = i
+				}
+			}
+			teamID = best
+			participant.TeamID = teamID
+		}
+		return tx.Create(&participant).Error
+	}); err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to join session", err)
 		return
 	}
@@ -237,6 +390,11 @@ func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 		teamIDResp = teamID
 	}
 
+	role := "player"
+	if isSpectator {
+		role = "spectator"
+	}
+
 	writeJSON(w, http.StatusOK, joinSessionResponse{
 		ParticipantID: participant.ID,
 		SessionID:     session.ID,
@@ -246,6 +404,7 @@ func (h *QuizLiveHandler) JoinSession(w http.ResponseWriter, r *http.Request) {
 		TotalQ:        len(quiz.Questions),
 		TeamMode:      session.TeamMode,
 		TeamID:        teamIDResp,
+		Role:          role,
 	})
 }
 

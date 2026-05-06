@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, ChevronRight, RotateCcw, XCircle } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
+import { MathText } from "@/components/nuet/math-text";
 import { Button } from "@/components/ui/button";
 import type { NUETQuestion, NUETTopic } from "@/server/integrations/go-backend/nuet";
 import { submitNUETPracticeAttempt } from "../../simulator/actions";
@@ -140,14 +141,17 @@ export function NUETPracticeClient({
                     evaluation?.correct ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"
                   }`}
                 >
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">
-                    {index + 1}. {question.prompt}
-                  </p>
+                  <div className="text-sm font-semibold text-[var(--text-primary)]">
+                    <span>{index + 1}. </span>
+                    <MathText text={question.prompt} />
+                  </div>
                   <p className="mt-2 text-sm text-[var(--text-secondary)]">
                     {t("nuet.practice.yourAnswer")} {selected || "—"} · {t("nuet.practice.correctAnswer")} {evaluation?.expected || "—"}
                   </p>
                   {question.explanation ? (
-                    <p className="mt-2 text-sm text-[var(--text-secondary)]">{question.explanation}</p>
+                    <div className="mt-2 text-sm text-[var(--text-secondary)]">
+                      <MathText text={question.explanation} as="div" />
+                    </div>
                   ) : null}
                 </div>
               );
@@ -189,9 +193,10 @@ export function NUETPracticeClient({
       ) : null}
 
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-        <p className="text-base font-semibold text-[var(--text-primary)]">
-          {currentIndex + 1}. {currentQuestion.prompt}
-        </p>
+        <div className="text-base font-semibold text-[var(--text-primary)]">
+          <span>{currentIndex + 1}. </span>
+          <MathText text={currentQuestion.prompt} />
+        </div>
         <div className="mt-4 grid gap-2">
           {currentQuestion.options.map((option, optionIndex) => {
             const letter = String.fromCharCode(65 + optionIndex);
@@ -217,7 +222,9 @@ export function NUETPracticeClient({
                 <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-xs font-semibold">
                   {letter}
                 </span>
-                <span className="text-sm text-[var(--text-primary)]">{option}</span>
+                <span className="text-sm text-[var(--text-primary)]">
+                  <MathText text={option} />
+                </span>
               </button>
             );
           })}
@@ -239,7 +246,9 @@ export function NUETPracticeClient({
                   {t("nuet.practice.correctAnswer")} {currentQuestion.answer}
                 </p>
                 {currentQuestion.explanation ? (
-                  <p className="mt-2 text-sm text-[var(--text-secondary)]">{currentQuestion.explanation}</p>
+                  <div className="mt-2 text-sm text-[var(--text-secondary)]">
+                    <MathText text={currentQuestion.explanation} as="div" />
+                  </div>
                 ) : null}
               </div>
             </div>

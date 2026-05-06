@@ -6,6 +6,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { getNUETTopic, listNUETMaterials } from "@/server/integrations/go-backend/nuet";
+import { MathText } from "@/components/nuet/math-text";
 
 export async function generateMetadata({
   params,
@@ -91,8 +92,8 @@ export default async function NUETTopicPage({
           <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
             {t("nuet.topicExplanation")}
           </h2>
-          <div className="prose prose-sm max-w-none whitespace-pre-wrap text-[var(--text-primary)]">
-            {topic.explanation}
+          <div className="prose prose-sm max-w-none text-[var(--text-primary)]">
+            <MathText text={topic.explanation} as="div" />
           </div>
         </section>
 

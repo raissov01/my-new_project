@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Clock3, Flag, Loader2 } from "lucide-react";
-import { InlineMath, BlockMath } from "react-katex";
-import "katex/dist/katex.min.css";
+import { MathText } from "@/components/nuet/math-text";
 import { Button } from "@/components/ui/button";
 import {
   completeNUETMockAttempt,
@@ -481,7 +480,7 @@ function QuestionPrompt({ prompt }: { prompt: string }) {
   return (
     <div className="mt-5">
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4 text-base leading-8 text-[var(--text-primary)]">
-        <MathText text={text} />
+        <MathText text={text} as="div" />
       </div>
       {figure ? (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
@@ -541,95 +540,8 @@ function isAbsoluteParabolaFigure(figure: string) {
   return figure.includes("(-3,0)") && figure.includes("(0,9)") && figure.includes("(3,0)");
 }
 
-function MathText({ text }: { text: string }) {
-  const safeText = protectCurrencyDollars(text);
-  const parts = safeText.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\])/g).filter(Boolean);
-  return (
-    <div className="whitespace-pre-wrap">
-      {parts.map((part, index) => {
-        if (part.startsWith("$$") && part.endsWith("$$")) {
-          return (
-            <BlockMath
-              key={`block-${index}`}
-              math={part.slice(2, -2)}
-              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
-            />
-          );
-        }
-        if (part.startsWith("$") && part.endsWith("$")) {
-          return (
-            <InlineMath
-              key={`inline-${index}`}
-              math={part.slice(1, -1)}
-              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
-            />
-          );
-        }
-        if (part.startsWith("\\(") && part.endsWith("\\)")) {
-          return (
-            <InlineMath
-              key={`inline-paren-${index}`}
-              math={part.slice(2, -2)}
-              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
-            />
-          );
-        }
-        if (part.startsWith("\\[") && part.endsWith("\\]")) {
-          return (
-            <BlockMath
-              key={`block-bracket-${index}`}
-              math={part.slice(2, -2)}
-              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
-            />
-          );
-        }
-        const restored = restoreCurrencyDollars(part);
-        const looseMath = normalizeLooseMath(restored);
-        if (looseMath) {
-          return (
-            <InlineMath
-              key={`loose-inline-${index}`}
-              math={looseMath}
-              renderError={() => <span className="whitespace-pre-wrap">{restored}</span>}
-            />
-          );
-        }
-        return <span key={`text-${index}`}>{restored}</span>;
-      })}
-    </div>
-  );
-}
-
-function normalizeLooseMath(text: string) {
-  const trimmed = text.trim();
-  if (!trimmed || trimmed.includes("\n")) return null;
-  if (!/[\\^_√π≤≥±]/.test(trimmed)) return null;
-
-  const withoutLatexCommands = trimmed.replace(/\\[a-zA-Z]+/g, " ");
-  const words = withoutLatexCommands.match(/[A-Za-z]{3,}/g) ?? [];
-  const allowedWords = new Set(["and", "or", "cm", "kmh", "min", "max", "mm"]);
-  if (words.some((word) => !allowedWords.has(word.toLowerCase()))) return null;
-
-  return trimmed
-    .replaceAll("√", "\\sqrt")
-    .replaceAll("π", "\\pi")
-    .replaceAll("≤", "\\leq")
-    .replaceAll("≥", "\\geq")
-    .replaceAll("−", "-")
-    .replaceAll("×", "\\times")
-    .replaceAll("÷", "\\div");
-}
-
 function visibleOptions(options: string[]) {
   return options.map((option) => option.trim()).filter(Boolean);
-}
-
-function protectCurrencyDollars(text: string) {
-  return text.replace(/\$(?=\d)/g, "__NUET_DOLLAR__");
-}
-
-function restoreCurrencyDollars(text: string) {
-  return text.replace(/__NUET_DOLLAR__/g, "$");
 }
 
 function splitPromptAndFigure(prompt: string): { text: string; figure: string | null } {

@@ -211,6 +211,11 @@ func RegisterRoutes(router *gin.Engine) {
 
 		// Live quiz session management (host only — authentication required)
 		internal.POST("/quizzes/:quizID/live-sessions", wrapHTTP(deps.QuizLive.CreateSession))
+		internal.POST("/live-sessions/:code/force-next", wrapHTTP(deps.QuizLive.ForceNext))
+		internal.POST("/live-sessions/:code/pause", wrapHTTP(deps.QuizLive.PauseSession))
+		internal.POST("/live-sessions/:code/resume", wrapHTTP(deps.QuizLive.ResumeSession))
+		internal.POST("/live-sessions/:code/kick", wrapHTTP(deps.QuizLive.KickParticipant))
+		internal.POST("/live-sessions/:code/end", wrapHTTP(deps.QuizLive.EndSession))
 
 		internal.POST("/challenges/attempt", wrapHTTP(deps.Challenge.SaveAttempt))
 		internal.GET("/challenges/ranking/:setID", wrapHTTP(deps.Challenge.GetRanking))

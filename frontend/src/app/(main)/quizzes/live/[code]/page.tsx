@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowDown, ArrowUp, Loader2, Star, Flame, Trophy, WifiOff } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
+import { useGameSound } from "@/hooks/use-game-sound";
+import { SoundSettings } from "@/components/sound-settings";
 
 // ─── WS protocol types ────────────────────────────────────────
 
@@ -16,6 +18,12 @@ type WsMsg =
   | { type: "answer_accepted"; data: AnswerResult }
   | { type: "question_ended"; data: QuestionEndedEvt }
   | { type: "game_ended"; data: { finalLeaderboard: LeaderEntry[]; teamLeaderboard?: TeamScore[] } }
+  | { type: "team_score_updated"; data: { teamId: number; score: number; teamLeaderboard: TeamScore[] } }
+  | { type: "session_paused"; data: { questionIndex: number } }
+  | { type: "session_resumed"; data: { questionIndex: number; deadlineMs: number } }
+  | { type: "force_next"; data: { questionIndex: number } }
+  | { type: "kicked"; data: { reason: string } }
+  | { type: "participant_kicked"; data: { participantId: string; displayName?: string } }
   | { type: "error"; data: { message: string } };
 
 type SessionState = {
@@ -151,6 +159,19 @@ function LiveGameInner() {
   const handleServerMsgRef = useRef<(msg: WsMsg) => void>(() => {});
 
   useEffect(() => { phaseRef.current = phase; }, [phase]);
+
+  const sounds = useGameSound();
+  // Lobby music: loops while in the waiting room (before the host starts
+  // the game and between server-side game-over). Stops as soon as a question
+  // is in flight so it doesn't compete with question audio or the timer.
+  useEffect(() => {
+    if (phase === "waiting") {
+      sounds.play("lobby");
+    } else {
+      sounds.stop("lobby");
+    }
+  }, [phase, sounds]);
+  useEffect(() => () => sounds.stopAll(), [sounds]);
   useEffect(() => { questionEndedRef.current = questionEnded; }, [questionEnded]);
 
   // ── Connect ──
@@ -319,6 +340,12 @@ function LiveGameInner() {
         if (msg.data.teamLeaderboard) setTeamLeaderboard(msg.data.teamLeaderboard);
         setPhase("finished");
         break;
+
+      case "team_score_updated":
+        // Real-time tick — refresh the side team panel without waiting for
+        // the next question_ended.
+        setTeamLeaderboard(msg.data.teamLeaderboard);
+        break;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -414,6 +441,17 @@ function LiveGameInner() {
             ← Back
           </Link>
           <h3 style={{ flex: 1 }}>{quizTitle}</h3>
+          <SoundSettings
+            volume={sounds.volume}
+            muted={sounds.muted}
+            setVolume={sounds.setVolume}
+            toggleMuted={sounds.toggleMuted}
+            labels={{
+              toggleSound: t("quiz.sound.toggleSound"),
+              volume: t("quiz.sound.volume"),
+              muted: t("quiz.sound.muted"),
+            }}
+          />
           <div className="flex items-center gap-3 text-sm">
             {teamMode && myTeamId >= 0 && (
               <span

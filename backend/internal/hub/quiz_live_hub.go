@@ -36,17 +36,28 @@ const (
 
 // Outgoing event types (server → client)
 const (
-	EvtSessionState  = "session_state"
-	EvtPlayerJoined  = "player_joined"
-	EvtPlayerLeft    = "player_left"
-	EvtGameStarted   = "game_started"
-	EvtQuestion      = "question"
-	EvtAnswerOK      = "answer_accepted"
-	EvtAnswerStats   = "answer_stats" // host-only
-	EvtQuestionEnded = "question_ended"
-	EvtGameEnded     = "game_ended"
-	EvtError         = "error"
+	EvtSessionState      = "session_state"
+	EvtPlayerJoined      = "player_joined"
+	EvtPlayerLeft        = "player_left"
+	EvtPlayerOnline      = "player_online"
+	EvtGameStarted       = "game_started"
+	EvtQuestion          = "question"
+	EvtAnswerOK          = "answer_accepted"
+	EvtAnswerStats       = "answer_stats" // host-only
+	EvtQuestionEnded     = "question_ended"
+	EvtGameEnded         = "game_ended"
+	EvtTeamScoreUpdate   = "team_score_updated"
+	EvtSessionPaused     = "session_paused"
+	EvtSessionResumed    = "session_resumed"
+	EvtForceNext         = "force_next"
+	EvtParticipantKicked = "participant_kicked"
+	EvtKicked            = "kicked"
+	EvtError             = "error"
 )
+
+// reconnectGrace is how long a player has to reconnect before being auto-kicked
+// when their WebSocket closes mid-game.
+const reconnectGrace = 30 * time.Second
 
 type InMsg struct {
 	Type string          `json:"type"`
@@ -136,6 +147,7 @@ type LiveQuiz struct {
 type Client struct {
 	conn          *websocket.Conn
 	isHost        bool
+	isSpectator   bool
 	participantID string
 	displayName   string
 	teamID        int
@@ -193,18 +205,26 @@ type Room struct {
 	teamMode  bool
 	teamCount int
 
-	host    *Client
-	players map[string]*Client // participantID → client
+	host       *Client
+	players    map[string]*Client // participantID → client
+	spectators map[string]*Client // participantID → client (post-start joiners)
 
-	currentQ  int
-	qActive   bool
-	qDeadline time.Time
-	qTimer    *time.Timer
+	currentQ        int
+	qActive         bool
+	qDeadline       time.Time
+	qTimer          *time.Timer
+	paused          bool
+	pausedRemaining time.Duration // time left on the question when paused
 
 	scores     map[string]int  // participantID → total score
 	streaks    map[string]int  // participantID → current streak
 	answered   map[string]bool // participantID → answered current question
 	teamScores map[int]int     // teamID → total score (team mode only)
+
+	// reconnect/kick: when a player disconnects mid-game we keep their state
+	// in `players` (with conn=nil) and schedule a kick after reconnectGrace.
+	online      map[string]bool        // participantID → currently connected
+	kickTimers  map[string]*time.Timer // participantID → grace-period timer
 
 	// per-option answer counts for host stats display
 	optionCounts map[string]int // "a","b","c","d","t","f" → count
@@ -222,10 +242,13 @@ func newRoom(db *gorm.DB, hub *Hub, sessionID, joinCode, mode string, teamMode b
 		teamMode:     teamMode,
 		teamCount:    teamCount,
 		players:      make(map[string]*Client),
+		spectators:   make(map[string]*Client),
 		scores:       make(map[string]int),
 		streaks:      make(map[string]int),
 		answered:     make(map[string]bool),
 		teamScores:   make(map[int]int),
+		online:       make(map[string]bool),
+		kickTimers:   make(map[string]*time.Timer),
 		optionCounts: make(map[string]int),
 	}
 }
@@ -277,7 +300,7 @@ func (r *Room) currentQuestion() *LiveQuestion {
 	return &r.quiz.Questions[r.currentQ]
 }
 
-// broadcast sends to all clients (host + players) that are in the room.
+// broadcast sends to all clients (host + players + spectators) that are in the room.
 func (r *Room) broadcast(msg OutMsg) {
 	b, err := json.Marshal(msg)
 	if err != nil {
@@ -295,9 +318,15 @@ func (r *Room) broadcast(msg OutMsg) {
 		default:
 		}
 	}
+	for _, c := range r.spectators {
+		select {
+		case c.send <- b:
+		default:
+		}
+	}
 }
 
-// broadcastPlayers sends to players only.
+// broadcastPlayers sends to players only (excluding host and spectators).
 func (r *Room) broadcastPlayers(msg OutMsg) {
 	b, err := json.Marshal(msg)
 	if err != nil {
@@ -342,6 +371,8 @@ func (r *Room) sendSessionState(c *Client) {
 		Participants   []ParticipantScore `json:"participants"`
 		TeamScores     []TeamScore        `json:"teamScores,omitempty"`
 		MyTeamID       int                `json:"myTeamId"`
+		IsSpectator    bool               `json:"isSpectator"`
+		Paused         bool               `json:"paused"`
 	}
 	c.sendMsg(OutMsg{
 		Type: EvtSessionState,
@@ -357,6 +388,8 @@ func (r *Room) sendSessionState(c *Client) {
 			Participants:   parts,
 			TeamScores:     r.teamLeaderboard(),
 			MyTeamID:       c.teamID,
+			IsSpectator:    c.isSpectator,
+			Paused:         r.paused,
 		},
 	})
 }
@@ -538,6 +571,187 @@ func (r *Room) endGame() {
 	}(r.joinCode)
 }
 
+// scheduleKick arms a timer that removes the player after reconnectGrace
+// elapses without them reconnecting. Must be called without r.mu held.
+func (r *Room) scheduleKick(pid string) {
+	r.mu.Lock()
+	if r.kickTimers == nil {
+		r.kickTimers = make(map[string]*time.Timer)
+	}
+	if t, ok := r.kickTimers[pid]; ok && t != nil {
+		t.Stop()
+	}
+	r.kickTimers[pid] = time.AfterFunc(reconnectGrace, func() {
+		r.mu.Lock()
+		// If they reconnected in time, online flips back true and we abort.
+		if r.online[pid] {
+			delete(r.kickTimers, pid)
+			r.mu.Unlock()
+			return
+		}
+		// Otherwise drop them and notify peers.
+		client := r.players[pid]
+		delete(r.players, pid)
+		delete(r.kickTimers, pid)
+		// Don't delete score — preserved for the final leaderboard if needed.
+		r.mu.Unlock()
+		now := time.Now()
+		r.db.Model(&models.QuizLiveParticipant{}).
+			Where("id = ?", pid).
+			Updates(map[string]any{"is_online": false, "kicked_at": now})
+		displayName := ""
+		if client != nil {
+			displayName = client.displayName
+		}
+		r.broadcast(OutMsg{Type: EvtPlayerLeft, Data: map[string]any{
+			"participantId": pid,
+			"displayName":   displayName,
+			"reason":        "timeout",
+		}})
+	})
+	r.mu.Unlock()
+}
+
+// HostForceNext is the HTTP-driven equivalent of CmdNextQuestion: the host
+// advances regardless of how many players have answered. Unanswered players
+// are recorded as 0-point skipped responses for stats.
+func (r *Room) HostForceNext() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.status != "active" {
+		return
+	}
+	// Persist 0-point "skipped" answers for everyone who didn't submit.
+	if r.qActive {
+		q := r.currentQuestion()
+		if q != nil {
+			for pid := range r.players {
+				if r.answered[pid] {
+					continue
+				}
+				r.db.Create(&models.QuizLiveAnswer{
+					SessionID:     r.sessionID,
+					ParticipantID: pid,
+					QuestionIndex: r.currentQ,
+					IsCorrect:     false,
+					TimeSpent:     0,
+					PointsEarned:  0,
+				})
+				r.streaks[pid] = 0
+				r.answered[pid] = true
+			}
+		}
+	}
+	r.broadcast(OutMsg{Type: EvtForceNext, Data: map[string]any{
+		"questionIndex": r.currentQ,
+	}})
+	if r.qActive {
+		r.endQuestion(false)
+	} else if r.currentQ < len(r.quiz.Questions) {
+		r.showQuestion()
+	}
+}
+
+// HostPause freezes the question timer until HostResume is called.
+func (r *Room) HostPause() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.status != "active" || r.paused {
+		return
+	}
+	r.paused = true
+	if r.qActive && r.qTimer != nil {
+		r.qTimer.Stop()
+		r.qTimer = nil
+		r.pausedRemaining = time.Until(r.qDeadline)
+		if r.pausedRemaining < 0 {
+			r.pausedRemaining = 0
+		}
+	}
+	r.broadcast(OutMsg{Type: EvtSessionPaused, Data: map[string]any{
+		"questionIndex": r.currentQ,
+	}})
+}
+
+// HostResume restarts the question timer with whatever time remained when paused.
+func (r *Room) HostResume() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.status != "active" || !r.paused {
+		return
+	}
+	r.paused = false
+	if r.qActive {
+		remaining := r.pausedRemaining
+		if remaining <= 0 {
+			remaining = 1 * time.Second
+		}
+		r.qDeadline = time.Now().Add(remaining)
+		r.qTimer = time.AfterFunc(remaining, func() {
+			r.mu.Lock()
+			defer r.mu.Unlock()
+			if r.qActive {
+				r.endQuestion(true)
+			}
+		})
+	}
+	r.broadcast(OutMsg{Type: EvtSessionResumed, Data: map[string]any{
+		"questionIndex": r.currentQ,
+		"deadlineMs":    r.qDeadline.UnixMilli(),
+	}})
+}
+
+// HostKick removes a participant immediately. Their WebSocket is closed and
+// kicked_at is recorded so they can't rejoin with the same pid.
+func (r *Room) HostKick(pid string) bool {
+	r.mu.Lock()
+	client := r.players[pid]
+	if client == nil {
+		// Maybe already disconnected — still mark kicked in DB.
+		r.mu.Unlock()
+		now := time.Now()
+		r.db.Model(&models.QuizLiveParticipant{}).
+			Where("id = ?", pid).
+			Updates(map[string]any{"kicked_at": now, "is_online": false})
+		r.broadcast(OutMsg{Type: EvtParticipantKicked, Data: map[string]any{
+			"participantId": pid,
+		}})
+		return true
+	}
+	delete(r.players, pid)
+	if t, ok := r.kickTimers[pid]; ok && t != nil {
+		t.Stop()
+		delete(r.kickTimers, pid)
+	}
+	r.mu.Unlock()
+
+	// Tell the kicked client and close their socket.
+	client.sendMsg(OutMsg{Type: EvtKicked, Data: map[string]any{"reason": "host"}})
+	client.cancel()
+
+	now := time.Now()
+	r.db.Model(&models.QuizLiveParticipant{}).
+		Where("id = ?", pid).
+		Updates(map[string]any{"kicked_at": now, "is_online": false})
+
+	r.broadcast(OutMsg{Type: EvtParticipantKicked, Data: map[string]any{
+		"participantId": pid,
+		"displayName":   client.displayName,
+	}})
+	return true
+}
+
+// HostEndGame finalises the game with current scores.
+func (r *Room) HostEndGame() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.qTimer != nil {
+		r.qTimer.Stop()
+		r.qTimer = nil
+	}
+	r.endGame()
+}
+
 // handleMessage processes an incoming message from a client.
 func (r *Room) handleMessage(c *Client, msg InMsg) {
 	r.mu.Lock()
@@ -577,8 +791,11 @@ func (r *Room) handleMessage(c *Client, msg InMsg) {
 		r.endGame()
 
 	case CmdSubmitAnswer:
-		if c.isHost {
-			return // hosts don't submit answers
+		if c.isHost || c.isSpectator {
+			return // hosts and spectators don't submit answers
+		}
+		if r.paused {
+			return
 		}
 		r.handleAnswer(c, msg.Data)
 	}
@@ -648,6 +865,13 @@ func (r *Room) handleAnswer(c *Client, data json.RawMessage) {
 		r.streaks[c.participantID]++
 		if r.teamMode {
 			r.teamScores[c.teamID] += points
+			// Real-time team leaderboard tick — clients animate the scoreboard
+			// without waiting for question_ended.
+			r.broadcast(OutMsg{Type: EvtTeamScoreUpdate, Data: map[string]any{
+				"teamId":          c.teamID,
+				"score":           r.teamScores[c.teamID],
+				"teamLeaderboard": r.teamLeaderboard(),
+			}})
 		}
 	} else {
 		r.streaks[c.participantID] = 0
@@ -922,42 +1146,88 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		room.mu.Unlock()
 
 	} else {
-		// player
+		// player or spectator
 		if pid == "" {
 			_ = conn.Close(websocket.StatusPolicyViolation, "missing pid")
 			cancel()
 			return
 		}
-		// Verify participant exists in DB
+		// Verify participant exists in DB and is not kicked.
 		var part models.QuizLiveParticipant
 		if err := h.db.Where("id = ? AND session_id = ?", pid, room.sessionID).First(&part).Error; err != nil {
 			_ = conn.Close(websocket.StatusPolicyViolation, "participant not found")
 			cancel()
 			return
 		}
+		if part.KickedAt != nil {
+			_ = conn.Close(websocket.StatusPolicyViolation, "participant kicked")
+			cancel()
+			return
+		}
 		client.participantID = pid
 		client.displayName = part.DisplayName
 		client.teamID = part.TeamID
+		client.isSpectator = part.IsSpectator
 
 		room.mu.Lock()
-		room.players[pid] = client
-		room.scores[pid] = 0
-		room.streaks[pid] = 0
+		// Cancel any pending kick timer (reconnect within grace period).
+		if t, ok := room.kickTimers[pid]; ok && t != nil {
+			t.Stop()
+			delete(room.kickTimers, pid)
+		}
+		isReconnect := false
+		if client.isSpectator {
+			// Replace any prior spectator connection.
+			if prev, ok := room.spectators[pid]; ok && prev != nil {
+				prev.cancel()
+			}
+			room.spectators[pid] = client
+		} else {
+			if prev, ok := room.players[pid]; ok && prev != nil {
+				// Reconnect: replace the old conn but keep score/streak.
+				prev.cancel()
+				isReconnect = true
+			} else {
+				// First-time join: initialise score state.
+				if _, exists := room.scores[pid]; !exists {
+					room.scores[pid] = 0
+				}
+				if _, exists := room.streaks[pid]; !exists {
+					room.streaks[pid] = 0
+				}
+			}
+			room.players[pid] = client
+			room.online[pid] = true
+		}
 		room.mu.Unlock()
 
-		// Notify others
-		room.broadcast(OutMsg{Type: EvtPlayerJoined, Data: map[string]any{
-			"participant": ParticipantScore{
-				ID:          pid,
-				DisplayName: part.DisplayName,
-				TeamID:      part.TeamID,
-			},
-			"count": func() int {
-				room.mu.Lock()
-				defer room.mu.Unlock()
-				return len(room.players)
-			}(),
-		}})
+		// Mark online in DB.
+		h.db.Model(&models.QuizLiveParticipant{}).
+			Where("id = ?", pid).
+			Updates(map[string]any{"is_online": true})
+
+		if !client.isSpectator {
+			if isReconnect {
+				room.broadcast(OutMsg{Type: EvtPlayerOnline, Data: map[string]any{
+					"participantId": pid,
+					"isOnline":      true,
+				}})
+			} else {
+				// First-time join: notify others.
+				room.broadcast(OutMsg{Type: EvtPlayerJoined, Data: map[string]any{
+					"participant": ParticipantScore{
+						ID:          pid,
+						DisplayName: part.DisplayName,
+						TeamID:      part.TeamID,
+					},
+					"count": func() int {
+						room.mu.Lock()
+						defer room.mu.Unlock()
+						return len(room.players)
+					}(),
+				}})
+			}
+		}
 	}
 
 	// Send current session state so the client can restore UI
@@ -991,15 +1261,52 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		cancel()
 		room.mu.Lock()
 		if client.isHost {
-			room.host = nil
-		} else {
-			delete(room.players, client.participantID)
+			if room.host == client {
+				room.host = nil
+			}
+			room.mu.Unlock()
+			return
+		}
+		pid := client.participantID
+		// If this client got replaced (reconnect or kick), do nothing.
+		if client.isSpectator {
+			if cur, ok := room.spectators[pid]; ok && cur == client {
+				delete(room.spectators, pid)
+			}
+			room.mu.Unlock()
+			return
+		}
+		if cur, ok := room.players[pid]; !ok || cur != client {
+			room.mu.Unlock()
+			return
+		}
+		// Mark offline; if game is over or still in lobby, fully remove.
+		if room.status == "finished" {
+			delete(room.players, pid)
+			room.mu.Unlock()
 			room.broadcast(OutMsg{Type: EvtPlayerLeft, Data: map[string]any{
-				"participantId": client.participantID,
+				"participantId": pid,
 				"displayName":   client.displayName,
 			}})
+			return
 		}
+		room.online[pid] = false
+		now := time.Now()
 		room.mu.Unlock()
+
+		// Persist offline + last_seen_at.
+		room.db.Model(&models.QuizLiveParticipant{}).
+			Where("id = ?", pid).
+			Updates(map[string]any{"is_online": false, "last_seen_at": now})
+
+		// Notify host/peers — don't remove the player yet (reconnect grace).
+		room.broadcast(OutMsg{Type: EvtPlayerOnline, Data: map[string]any{
+			"participantId": pid,
+			"isOnline":      false,
+		}})
+
+		// Schedule auto-kick after the grace period if they don't reconnect.
+		room.scheduleKick(pid)
 	}()
 
 	for {

@@ -309,6 +309,12 @@ func AutoMigrate(db *gorm.DB) (err error) {
 	db.Exec(`ALTER TABLE quiz_live_sessions ADD COLUMN IF NOT EXISTS team_count INT NOT NULL DEFAULT 2`)
 	db.Exec(`ALTER TABLE quiz_live_participants ADD COLUMN IF NOT EXISTS team_id INT NOT NULL DEFAULT 0`)
 
+	// Disconnect / spectator tracking columns for live participants.
+	db.Exec(`ALTER TABLE quiz_live_participants ADD COLUMN IF NOT EXISTS is_online BOOLEAN NOT NULL DEFAULT TRUE`)
+	db.Exec(`ALTER TABLE quiz_live_participants ADD COLUMN IF NOT EXISTS is_spectator BOOLEAN NOT NULL DEFAULT FALSE`)
+	db.Exec(`ALTER TABLE quiz_live_participants ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ`)
+	db.Exec(`ALTER TABLE quiz_live_participants ADD COLUMN IF NOT EXISTS kicked_at TIMESTAMPTZ`)
+
 	if err := SeedListeningClips(db); err != nil {
 		return err
 	}

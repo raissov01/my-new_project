@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
       quizTitle: string;
       mode: string;
       totalQuestions: number;
+      teamMode: boolean;
+      teamId: number;
     }>({
       path: "/api/v1/live-sessions/join",
       userId: user?.id ?? "",

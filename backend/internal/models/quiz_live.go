@@ -36,6 +36,10 @@ type QuizLiveParticipant struct {
 	Score       int        `gorm:"not null;default:0" json:"score"`
 	Streak      int        `gorm:"not null;default:0" json:"streak"`
 	TeamID      int        `gorm:"not null;default:0" json:"teamId"`
+	IsOnline    bool       `gorm:"not null;default:true" json:"isOnline"`
+	IsSpectator bool       `gorm:"not null;default:false" json:"isSpectator"`
+	LastSeenAt  *time.Time `json:"lastSeenAt,omitempty"`
+	KickedAt    *time.Time `json:"kickedAt,omitempty"`
 	JoinedAt    time.Time  `gorm:"autoCreateTime" json:"joinedAt"`
 	FinishedAt  *time.Time `json:"finishedAt,omitempty"`
 

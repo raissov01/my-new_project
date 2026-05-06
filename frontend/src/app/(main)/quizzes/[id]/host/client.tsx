@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Copy, Eye, EyeOff, Play, SkipForward, Square, Users, Wifi, WifiOff, Trophy, BarChart3, CheckCircle, ShieldHalf } from "lucide-react";
+import { ArrowLeft, Copy, Eye, EyeOff, Pause, Play, SkipForward, Square, UserX, Users, Wifi, WifiOff, Trophy, BarChart3, CheckCircle, ShieldHalf } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
@@ -12,15 +12,21 @@ import { Button } from "@/components/ui/button";
 type WsMsg =
   | { type: "session_state"; data: SessionState }
   | { type: "player_joined"; data: { participant: Participant; count: number } }
-  | { type: "player_left"; data: { participantId: string; displayName: string } }
+  | { type: "player_left"; data: { participantId: string; displayName: string; reason?: string } }
+  | { type: "player_online"; data: { participantId: string; isOnline: boolean } }
   | { type: "game_started"; data: { totalQuestions: number; mode: string } }
   | { type: "question"; data: QuestionEvt }
   | { type: "answer_stats"; data: AnswerStats }
   | { type: "question_ended"; data: QuestionEndedEvt }
   | { type: "game_ended"; data: { finalLeaderboard: LeaderEntry[]; teamLeaderboard?: TeamScore[] } }
+  | { type: "team_score_updated"; data: { teamId: number; score: number; teamLeaderboard: TeamScore[] } }
+  | { type: "session_paused"; data: { questionIndex: number } }
+  | { type: "session_resumed"; data: { questionIndex: number; deadlineMs: number } }
+  | { type: "force_next"; data: { questionIndex: number } }
+  | { type: "participant_kicked"; data: { participantId: string; displayName?: string } }
   | { type: "error"; data: { message: string } };
 
-type Participant = { id: string; displayName: string; score: number; streak: number; rank: number; teamId: number };
+type Participant = { id: string; displayName: string; score: number; streak: number; rank: number; teamId: number; isOnline?: boolean };
 type LeaderEntry = { id: string; displayName: string; score: number; streak: number; rank: number; teamId: number };
 type TeamScore = { teamId: number; score: number };
 
@@ -111,6 +117,8 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
   const [wsStatus, setWsStatus] = useState<"disconnected" | "connected">("disconnected");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [paused, setPaused] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   // Tracks the last-known rank for each player so we can show rank deltas.
@@ -155,12 +163,36 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
       case "player_joined":
         setParticipants((prev) => {
           const exists = prev.find((p) => p.id === msg.data.participant.id);
-          if (exists) return prev;
-          return [...prev, { ...msg.data.participant, score: 0, streak: 0, rank: 0 }];
+          if (exists) return prev.map((p) => p.id === msg.data.participant.id ? { ...p, isOnline: true } : p);
+          return [...prev, { ...msg.data.participant, score: 0, streak: 0, rank: 0, isOnline: true }];
         });
         break;
 
       case "player_left":
+        setParticipants((prev) => prev.filter((p) => p.id !== msg.data.participantId));
+        break;
+
+      case "player_online":
+        setParticipants((prev) =>
+          prev.map((p) => p.id === msg.data.participantId ? { ...p, isOnline: msg.data.isOnline } : p)
+        );
+        break;
+
+      case "session_paused":
+        setPaused(true);
+        stopTimer();
+        break;
+
+      case "session_resumed":
+        setPaused(false);
+        if (msg.data.deadlineMs) startTimer(msg.data.deadlineMs);
+        break;
+
+      case "force_next":
+        // Server has already advanced — UI reacts to the next "question" event.
+        break;
+
+      case "participant_kicked":
         setParticipants((prev) => prev.filter((p) => p.id !== msg.data.participantId));
         break;
 
@@ -202,6 +234,11 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
         if (msg.data.teamLeaderboard) setTeamLeaderboard(msg.data.teamLeaderboard);
         setPhase("finished");
         break;
+
+      case "team_score_updated":
+        // Real-time tick after each correct answer in team mode.
+        setTeamLeaderboard(msg.data.teamLeaderboard);
+        break;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -228,6 +265,28 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
   const sendCmd = (type: string) => {
     wsRef.current?.send(JSON.stringify({ type }));
   };
+
+  // postHostAction calls the authenticated REST endpoint that drives a host-only
+  // action (force-next, pause, resume, kick, end). The server broadcasts a WS
+  // event so we update local UI on receipt rather than optimistically here.
+  const postHostAction = useCallback(
+    async (action: "force-next" | "pause" | "resume" | "kick" | "end", body?: object) => {
+      if (!joinCode || actionBusy) return;
+      setActionBusy(true);
+      try {
+        await fetch(`/api/quizzes/live-sessions/${joinCode}/${action}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : "{}",
+        });
+      } catch {
+        // Errors are surfaced to the user via the error state if needed.
+      } finally {
+        setActionBusy(false);
+      }
+    },
+    [joinCode, actionBusy]
+  );
 
   const handleCreateSession = async () => {
     setCreating(true);
@@ -436,28 +495,34 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
           <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
             <Users className="h-4 w-4" />
             {t("quiz.live.participants")} — {participants.length}
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {participants.map((p) => (
-              <span
-                key={p.id}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1 text-sm text-[var(--text-primary)]"
-              >
-                {teamMode && (
-                  <span
-                    className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-                    style={{ backgroundColor: TEAM_COLORS[p.teamId] ?? "#888" }}
-                  >
-                    {p.teamId + 1}
-                  </span>
-                )}
-                {p.displayName}
+            {participants.length > 0 ? (
+              <span className="ml-auto text-xs font-semibold text-emerald-400">
+                {t("quiz.live.playersReady").replace("{n}", String(participants.length))}
               </span>
-            ))}
-            {participants.length === 0 ? (
-              <p className="text-sm text-[var(--text-muted)]">{t("quiz.live.waitingPlayers")}</p>
             ) : null}
           </div>
+          {teamMode ? (
+            <LobbyTeamCards
+              teamCount={teamCount}
+              participants={participants}
+              t={t}
+            />
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+              {participants.map((p) => (
+                <LobbyPlayerCard
+                  key={p.id}
+                  name={p.displayName}
+                  online={p.isOnline ?? true}
+                  onKick={() => postHostAction("kick", { participantId: p.id })}
+                  t={t}
+                />
+              ))}
+              {participants.length === 0 ? (
+                <p className="col-span-full text-sm text-[var(--text-muted)]">{t("quiz.live.waitingPlayers")}</p>
+              ) : null}
+            </div>
+          )}
         </div>
 
         <Button
@@ -492,15 +557,28 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
             <ConnectionBadge status={wsStatus} />
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[var(--border)] font-mono font-bold text-[var(--text-primary)]">
-              {timeLeft}
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 font-mono font-bold text-[var(--text-primary)] ${paused ? "border-amber-500/60 bg-amber-500/10" : "border-[var(--border)]"}`}>
+              {paused ? <Pause className="h-4 w-4" /> : timeLeft}
             </div>
-            <Button variant="outline" size="sm" onClick={() => sendCmd("end_game")}>
-              <Square className="h-3.5 w-3.5" />
-              {t("quiz.live.endGame")}
-            </Button>
           </div>
         </div>
+
+        {/* Host control bar — force-next, pause/resume, end. Always visible
+            during a live question; uses authenticated REST endpoints rather
+            than the WS so each call is host-only at the server boundary. */}
+        <HostControlBar
+          paused={paused}
+          actionBusy={actionBusy}
+          onForceNext={() => postHostAction("force-next")}
+          onPause={() => postHostAction("pause")}
+          onResume={() => postHostAction("resume")}
+          onEnd={() => postHostAction("end")}
+          t={t}
+        />
+
+        {teamMode && teamLeaderboard.length > 0 ? (
+          <TeamScoresBar teams={teamLeaderboard} t={t} />
+        ) : null}
 
         <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
           <p className="text-lg font-semibold text-[var(--text-primary)]">{q.questionText}</p>
@@ -615,7 +693,10 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
           </button>
         </div>
         {teamMode && teamLeaderboard.length > 0 && (
-          <TeamLeaderboardPanel teams={teamLeaderboard} t={t} />
+          <>
+            <TeamWinnerBanner teams={teamLeaderboard} t={t} />
+            <TeamLeaderboardPanel teams={teamLeaderboard} t={t} />
+          </>
         )}
         {showLeaderboard ? (
           <LeaderboardTable entries={finalLeaderboard} medal prevRanks={prevRanksRef.current} teamMode={teamMode} />
@@ -684,6 +765,158 @@ function TeamLeaderboardPanel({ teams, t }: { teams: { teamId: number; score: nu
   );
 }
 
+function LobbyTeamCards({
+  teamCount,
+  participants,
+  t,
+}: {
+  teamCount: number;
+  participants: Participant[];
+  t: (k: string) => string;
+}) {
+  const teams = Array.from({ length: teamCount }, (_, i) => ({
+    id: i,
+    members: participants.filter((p) => p.teamId === i),
+  }));
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {teams.map((team) => {
+        const overflow = Math.max(0, team.members.length - 8);
+        const visible = team.members.slice(0, 8);
+        return (
+          <div
+            key={team.id}
+            className="flex h-[120px] w-full flex-col rounded-[1.2rem] border-2 p-3"
+            style={{ borderColor: TEAM_COLORS[team.id] ?? "#888", minWidth: 200 }}
+          >
+            <div className="flex items-center gap-1.5">
+              <span
+                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                style={{ backgroundColor: TEAM_COLORS[team.id] ?? "#888" }}
+              >
+                {team.id + 1}
+              </span>
+              <span className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                {t(TEAM_NAMES_KEY[team.id] ?? "quiz.live.teamRed")}
+              </span>
+              <span className="ml-auto text-xs font-medium text-[var(--text-muted)]">
+                {team.members.length}
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-1">
+              {visible.map((m) => (
+                <span
+                  key={m.id}
+                  title={m.displayName}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+                  style={{ backgroundColor: TEAM_COLORS[team.id] ?? "#888", opacity: 0.85 }}
+                >
+                  {m.displayName.slice(0, 1).toUpperCase()}
+                </span>
+              ))}
+              {overflow > 0 ? (
+                <span className="inline-flex h-6 items-center justify-center rounded-full bg-[var(--bg-surface)] px-2 text-[10px] font-semibold text-[var(--text-secondary)]">
+                  +{overflow}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TeamScoresBar({
+  teams,
+  t,
+}: {
+  teams: { teamId: number; score: number }[];
+  t: (k: string) => string;
+}) {
+  const max = Math.max(1, ...teams.map((tm) => tm.score));
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {teams.map((team) => {
+        const pct = Math.round((team.score / max) * 100);
+        return (
+          <div
+            key={team.teamId}
+            className="rounded-[1rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-3"
+          >
+            <div className="flex items-center gap-1.5">
+              <span
+                className="inline-flex h-4 w-4 shrink-0 rounded-full"
+                style={{ backgroundColor: TEAM_COLORS[team.teamId] ?? "#888" }}
+              />
+              <span className="truncate text-xs font-medium text-[var(--text-primary)]">
+                {t(TEAM_NAMES_KEY[team.teamId] ?? "quiz.live.teamRed")}
+              </span>
+              <span
+                className="ml-auto font-mono text-sm font-bold tabular-nums text-[var(--text-primary)]"
+                style={{ transition: "color 500ms" }}
+              >
+                {team.score}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--bg-base)]">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${pct}%`, backgroundColor: TEAM_COLORS[team.teamId] ?? "#888" }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TeamWinnerBanner({
+  teams,
+  t,
+}: {
+  teams: { teamId: number; score: number }[];
+  t: (k: string) => string;
+}) {
+  const sorted = [...teams].sort((a, b) => b.score - a.score);
+  const winner = sorted[0];
+  if (!winner || winner.score === 0) return null;
+  const tied = sorted.filter((s) => s.score === winner.score).length > 1;
+  const teamName = t(TEAM_NAMES_KEY[winner.teamId] ?? "quiz.live.teamRed");
+  const winLine = tied
+    ? t("quiz.live.team.tie")
+    : t("quiz.live.team.winner").replace("{name}", teamName);
+
+  return (
+    <div
+      className="flex items-center gap-3 rounded-[1.5rem] border-2 p-5"
+      style={{
+        borderColor: TEAM_COLORS[winner.teamId] ?? "#888",
+        backgroundColor: `${TEAM_COLORS[winner.teamId] ?? "#888"}14`,
+      }}
+    >
+      <span
+        className="flex h-12 w-12 items-center justify-center rounded-full text-white"
+        style={{ backgroundColor: TEAM_COLORS[winner.teamId] ?? "#888" }}
+      >
+        <Trophy className="h-6 w-6" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          {t("quiz.live.team.totalScore")}
+        </p>
+        <p className="truncate text-xl font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+          {winLine}
+        </p>
+      </div>
+      <span className="font-mono text-2xl font-bold tabular-nums text-[var(--text-primary)]">
+        {winner.score}
+      </span>
+    </div>
+  );
+}
+
 function LeaderboardTable({
   entries,
   medal,
@@ -743,6 +976,109 @@ function LeaderboardTable({
           })}
         </ul>
       )}
+    </div>
+  );
+}
+
+function HostControlBar({
+  paused,
+  actionBusy,
+  onForceNext,
+  onPause,
+  onResume,
+  onEnd,
+  t,
+}: {
+  paused: boolean;
+  actionBusy: boolean;
+  onForceNext: () => void;
+  onPause: () => void;
+  onResume: () => void;
+  onEnd: () => void;
+  t: (k: string) => string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-[1.2rem] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2">
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={actionBusy}
+        onClick={onForceNext}
+      >
+        <SkipForward className="h-3.5 w-3.5" />
+        {t("quiz.live.host.forceNext")}
+      </Button>
+      {paused ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={actionBusy}
+          onClick={onResume}
+        >
+          <Play className="h-3.5 w-3.5" />
+          {t("quiz.live.host.resume")}
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={actionBusy}
+          onClick={onPause}
+        >
+          <Pause className="h-3.5 w-3.5" />
+          {t("quiz.live.host.pause")}
+        </Button>
+      )}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={actionBusy}
+        onClick={onEnd}
+        className="ml-auto"
+      >
+        <Square className="h-3.5 w-3.5" />
+        {t("quiz.live.host.end")}
+      </Button>
+    </div>
+  );
+}
+
+function LobbyPlayerCard({
+  name,
+  online,
+  onKick,
+  t,
+}: {
+  name: string;
+  online: boolean;
+  onKick: () => void;
+  t: (k: string) => string;
+}) {
+  return (
+    <div
+      className="group relative flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 text-sm text-[var(--text-primary)]"
+      style={{ animation: "leader-enter 0.32s cubic-bezier(0.16,1,0.3,1) both" }}
+    >
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${online ? "bg-emerald-500" : "bg-rose-500"}`}
+        aria-hidden
+      >
+        {name.charAt(0).toUpperCase()}
+      </span>
+      <span className="flex-1 truncate font-medium">{name}</span>
+      <button
+        type="button"
+        onClick={onKick}
+        title={t("quiz.live.host.kick")}
+        aria-label={t("quiz.live.host.kick")}
+        className="shrink-0 rounded-full p-1.5 text-[var(--text-muted)] opacity-0 transition-all hover:bg-rose-500/20 hover:text-rose-400 group-hover:opacity-100 focus:opacity-100"
+      >
+        <UserX className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
