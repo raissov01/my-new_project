@@ -50,30 +50,34 @@ func normaliseForClassifier(s string) string {
 }
 
 // Math rules — ordered most specific first. The first match wins.
+//
+// Ordering rationale: the more specific or higher-confidence keywords
+// run earlier so that, for example, a question about a sphere with a
+// volume formula classifies as compound-3d instead of generic exponents.
 var mathRules = []classifierRule{
-	{slug: "trigonometry-in-right-angled-triangle", match: mustCompile(`\b(sin|cos|tan|sec|csc|cot)\b|hypotenuse|opposite\s+side|adjacent\s+side|\\theta|\\sin|\\cos|\\tan`)},
+	{slug: "trigonometry-in-right-angled-triangle", match: mustCompile(`\b(sin|cos|tan|sec|csc|cot)\b|hypotenuse|opposite\s+side|adjacent\s+side|\\theta|\\sin|\\cos|\\tan|right[\s\-]?angled\s+triangle`)},
 	{slug: "vectors", match: mustCompile(`\bvector\b|\\vec|\\mathbf|magnitude|dot\s+product|cross\s+product|\\overrightarrow`)},
-	{slug: "circle-theorems-especially-with-chords", match: mustCompile(`chord|cyclic\s+quadrilateral|inscribed\s+angle|alternate\s+segment|circle\s+theorem|tangent\s+to\s+the\s+circle`)},
 	{slug: "compound-3d-figure-cylinder-sphere-cone", match: mustCompile(`\bcylinder\b|\bsphere\b|\bcone\b|hemisphere|frustum|surface\s+area|\bvolume\b`)},
-	{slug: "bearings", match: mustCompile(`bearing|due\s+(north|south|east|west)|compass`)},
+	{slug: "circle-theorems-especially-with-chords", match: mustCompile(`chord|cyclic\s+quadrilateral|inscribed\s+angle|alternate\s+segment|circle\s+theorem|tangent\s+to\s+the\s+circle|\bcircle\b|circumference|radius|diameter`)},
+	{slug: "bearings", match: mustCompile(`bearing|due\s+(north|south|east|west)|\bcompass\b`)},
 	{slug: "rhombus-kite-trapezium", match: mustCompile(`rhombus|\bkite\b|trapezium|trapezoid|parallelogram`)},
 	{slug: "real-life-graphs-velocity-time", match: mustCompile(`velocity[\s\-]*time|distance[\s\-]*time|speed[\s\-]*time\s+graph|displacement[\s\-]*time`)},
 	{slug: "vertex-turning-point-of-parabola", match: mustCompile(`vertex|turning\s+point|minimum\s+value|maximum\s+value|axis\s+of\s+symmetry`)},
 	{slug: "graph-transformation-usually-parabola", match: mustCompile(`f\(x[\s\+\-]\d+\)|translate|reflect|transformation\s+of\s+the\s+graph|stretch\s+by\s+a\s+factor`)},
-	{slug: "parallel-and-perpendicular-lines", match: mustCompile(`parallel\s+line|perpendicular\s+line|gradient|slope`)},
-	{slug: "coordinate-geometry", match: mustCompile(`midpoint|distance\s+formula|coordinate\s+plane|\(x_?\d|y[\s_]*=[\s\-]*mx`)},
-	{slug: "exponents-with-bases-2-3-and-5", match: mustCompile(`exponent|\bpower\b|2\^|3\^|5\^|\^\{|\\frac\{1\}\{2\^|index\s+laws`)},
-	{slug: "rounding-to-significant-figures-standard-form", match: mustCompile(`significant\s+figure|standard\s+form|scientific\s+notation|round(ed)?\s+to`)},
-	{slug: "recurring-decimals", match: mustCompile(`recurring|repeating\s+decimal|\\overline`)},
-	{slug: "percentages-word-problem-decrease-increase", match: mustCompile(`percentage\s+(increase|decrease)|percent\s+(increase|decrease)|\bpercent\b|\b%\b`)},
-	{slug: "direct-and-inverse-proportion", match: mustCompile(`directly\s+proportional|inversely\s+proportional|varies\s+(directly|inversely)|in\s+the\s+ratio`)},
-	{slug: "algebraic-simplification-with-x-variable", match: mustCompile(`simplify|factori[sz]e|expand|polynomial|\\frac.*x|x\^2|quadratic`)},
+	{slug: "parallel-and-perpendicular-lines", match: mustCompile(`parallel\s+line|perpendicular\s+line|\bgradient\b|\bslope\b`)},
+	{slug: "coordinate-geometry", match: mustCompile(`midpoint|distance\s+formula|coordinate\s+plane|\bcoordinates?\b|the\s+points?\s*\(|points?\s+[A-Z]\s*\(\s*-?\d|\\left\([^)]*,[^)]*\\right\)|y[\s_]*=[\s\-]*mx|passes\s+through\s+(the\s+)?(point|origin)|\bline\s+(through|joining)`)},
+	{slug: "rounding-to-significant-figures-standard-form", match: mustCompile(`significant\s+figure|standard\s+form|scientific\s+notation|round(ed)?\s+to|nearest\s+(whole|integer|hundredth|tenth)`)},
+	{slug: "recurring-decimals", match: mustCompile(`recurring|repeating\s+decimal|\\overline\{0?\.|\\dot\{`)},
+	{slug: "percentages-word-problem-decrease-increase", match: mustCompile(`percent|%|\\%|increase[ds]?\s+by\s+\d|decrease[ds]?\s+by\s+\d|profit|loss|discount|tax`)},
+	{slug: "direct-and-inverse-proportion", match: mustCompile(`directly\s+proportional|inversely\s+proportional|varies\s+(directly|inversely)|in\s+the\s+ratio|\bratio\b`)},
+	{slug: "exponents-with-bases-2-3-and-5", match: mustCompile(`exponent|index\s+laws|\b[2-9]\^|10\^|2\^\{|3\^\{|5\^\{|10\^\{|\\log_?[\d]|\\cdot\s*10\^`)},
+	{slug: "algebraic-simplification-with-x-variable", match: mustCompile(`simplify|factori[sz]e|expand|polynomial|quadratic|\bequation\b|solve\s+for|find\s+(the\s+)?value\s+of|inequality|in\s+terms\s+of\s+[a-z]\b|x\^2|x\^\{2|\\frac.*[a-z]|\\left\(.*[a-z]|\bnth\s+term\b|n\^\{?th\}?\s+term|operation\s*\\?[A-Za-z]|\bexpression\b`)},
 }
 
 // Critical Thinking rules. Default fallback is "problem-solving".
 var ctRules = []classifierRule{
-	{slug: "data-interpretation", match: mustCompile(`the\s+(table|chart|graph|diagram)\s+(shows|below|above)|according\s+to\s+the\s+(table|chart|graph)|bar\s+chart|pie\s+chart`)},
-	{slug: "pattern-recognition", match: mustCompile(`next\s+(term|number|figure)|complete\s+the\s+(sequence|pattern)|is\s+to\s+\w+\s+as\s+\w+\s+is\s+to|missing\s+(term|number|figure)|analogy`)},
-	{slug: "argument-analysis", match: mustCompile(`weakens?|strengthens?|undermines?|assumption|supports?\s+the\s+(argument|conclusion)|flaw\s+in\s+the\s+(argument|reasoning)`)},
-	{slug: "logical-reasoning", match: mustCompile(`must\s+be\s+true|follows?\s+(logically\s+)?from|logical(ly)?\s+(follows?|implies)|if\s+.*\s+then|valid\s+conclusion`)},
+	{slug: "data-interpretation", match: mustCompile(`the\s+(table|chart|graph|diagram|figure)\s+(shows|below|above|gives)|according\s+to\s+the\s+(table|chart|graph)|bar\s+chart|pie\s+chart|line\s+graph|histogram|\b(table|chart|graph)\b\s+(shows|gives|displays|represents)`)},
+	{slug: "pattern-recognition", match: mustCompile(`next\s+(term|number|figure)|complete\s+the\s+(sequence|pattern)|is\s+to\s+\w+\s+as\s+\w+\s+is\s+to|missing\s+(term|number|figure)|\banalogy\b|sequence\s+below|odd\s+one\s+out`)},
+	{slug: "argument-analysis", match: mustCompile(`weakens?|strengthens?|undermines?|\bassumption\b|supports?\s+the\s+(argument|conclusion)|flaw\s+in\s+the\s+(argument|reasoning)|main\s+point|principle\s+(underlying|behind)`)},
+	{slug: "logical-reasoning", match: mustCompile(`must\s+be\s+true|cannot\s+be\s+true|follows?\s+(logically\s+)?from|logical(ly)?\s+(follows?|implies)|if\s+.*\s+then|valid\s+conclusion|either\s+.*\s+or|none\s+of\s+the\s+above\s+can\s+be`)},
 }

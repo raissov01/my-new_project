@@ -5,7 +5,7 @@ import { ArrowLeft, BookOpen, Brain, FileText, PlayCircle } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { getNUETTopic, listNUETMaterials } from "@/server/integrations/go-backend/nuet";
+import { getNUETTopic, listNUETMaterials, listNUETQuestions } from "@/server/integrations/go-backend/nuet";
 import { MathText } from "@/components/nuet/math-text";
 
 export async function generateMetadata({
@@ -42,14 +42,17 @@ export default async function NUETTopicPage({
   // like topic_algebra, topic_geometry, etc. Slug→topic-key mapping is
   // approximate (best-effort).
   const topicKey = inferTopicKey(slug);
-  const materials = user
-    ? await listNUETMaterials(user.id, {
-        section: topic.section,
-        topic: topicKey,
-        withFile: true,
-        limit: 20,
-      }).catch(() => ({ items: [], total: 0 }))
-    : { items: [], total: 0 };
+  const [materials, examples] = user
+    ? await Promise.all([
+        listNUETMaterials(user.id, {
+          section: topic.section,
+          topic: topicKey,
+          withFile: true,
+          limit: 20,
+        }).catch(() => ({ items: [], total: 0 })),
+        listNUETQuestions(user.id, { topicSlug: topic.slug, limit: 5 }).catch(() => ({ items: [] })),
+      ])
+    : [{ items: [], total: 0 }, { items: [] }];
 
   const SectionIcon = topic.section === "math" ? BookOpen : Brain;
 
@@ -88,14 +91,78 @@ export default async function NUETTopicPage({
       </header>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
-        <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
-            {t("nuet.topicExplanation")}
-          </h2>
-          <div className="prose prose-sm max-w-none text-[var(--text-primary)]">
-            <MathText text={topic.explanation} as="div" />
-          </div>
-        </section>
+        <div className="space-y-6">
+          <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
+              {t("nuet.topicExplanation")}
+            </h2>
+            <div className="prose prose-sm max-w-none text-[var(--text-primary)]">
+              <MathText text={topic.explanation} as="div" />
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+              {t("nuet.topic.examplesTitle")}
+            </h2>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              {t("nuet.topic.examplesDesc")}
+            </p>
+            {examples.items.length === 0 ? (
+              <p className="mt-4 rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg-base)] p-4 text-sm text-[var(--text-muted)]">
+                {t("nuet.topic.examplesEmpty")}
+              </p>
+            ) : (
+              <ol className="mt-4 space-y-3">
+                {examples.items.map((q, index) => (
+                  <li key={q.id} className="rounded-lg border border-[var(--border)] bg-[var(--bg-base)] p-4">
+                    <div className="text-sm font-semibold text-[var(--text-primary)]">
+                      <span>{index + 1}. </span>
+                      <MathText text={q.prompt} />
+                    </div>
+                    <ul className="mt-3 space-y-1.5">
+                      {q.options.map((option, optionIndex) => {
+                        const letter = String.fromCharCode(65 + optionIndex);
+                        return (
+                          <li
+                            key={letter}
+                            className="flex items-start gap-2 text-sm text-[var(--text-secondary)]"
+                          >
+                            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[10px] font-mono text-[var(--text-muted)]">
+                              {letter}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <MathText text={option} />
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <details className="group mt-3 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-sm">
+                      <summary className="cursor-pointer list-none font-mono text-xs uppercase tracking-wide text-[var(--text-muted)] hover:text-[var(--primary)]">
+                        {t("nuet.topic.showSolution")}
+                      </summary>
+                      <div className="mt-2 space-y-2">
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {t("nuet.topic.correctAnswer")} <span className="font-mono text-sm font-semibold text-[var(--text-primary)]">{q.answer}</span>
+                        </p>
+                        {q.explanation && q.explanation.trim() ? (
+                          <div className="text-sm text-[var(--text-secondary)]">
+                            <MathText text={q.explanation} as="div" />
+                          </div>
+                        ) : (
+                          <p className="text-sm italic text-[var(--text-muted)]">
+                            {t("nuet.review.noExplanation")}
+                          </p>
+                        )}
+                      </div>
+                    </details>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+        </div>
 
         <aside className="space-y-4">
           <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
