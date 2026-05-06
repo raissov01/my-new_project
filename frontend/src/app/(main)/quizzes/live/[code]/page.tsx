@@ -413,8 +413,37 @@ function LiveGameInner() {
     );
   }
 
+  if (kicked) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-rose-500/30 bg-rose-500/10">
+          <WifiOff className="h-8 w-8 text-rose-400" />
+        </div>
+        <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+          {t("quiz.live.kickedTitle")}
+        </h2>
+        <p className="text-sm text-[var(--text-secondary)]">{t("quiz.live.kickedBody")}</p>
+        <Link href="/quizzes/join"><Button variant="outline">{t("quiz.live.leaveGame")}</Button></Link>
+      </div>
+    );
+  }
+
   return (
     <div className="page-shell py-4 sm:py-6">
+      {/* Spectator badge — shown for the duration of the game when the
+          player joined after the host started. */}
+      {isSpectator ? (
+        <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-lg)] border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-sm font-medium text-indigo-300">
+          <span aria-hidden>👁</span>
+          {t("quiz.live.spectator")}
+        </div>
+      ) : null}
+      {/* Paused banner */}
+      {paused && phase !== "finished" ? (
+        <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-lg)] border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-300">
+          {t("quiz.live.paused")}
+        </div>
+      ) : null}
       {/* Disconnected full-screen overlay */}
       {wsStatus === "disconnected" && phase !== "finished" ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-base)]/90 p-4 backdrop-blur-sm">
@@ -521,10 +550,12 @@ function LiveGameInner() {
         <QuestionScreen
           evt={currentQEvt}
           timeLeft={timeLeft}
-          selectedOpt={selectedOpt}
+          // For spectators, force selectedOpt non-null so all answer inputs
+          // disable themselves uniformly across question types.
+          selectedOpt={isSpectator ? "spectator" : selectedOpt}
           blankInput={blankInput}
           reorderDraft={reorderDraft}
-          reorderSubmitted={reorderSubmitted}
+          reorderSubmitted={isSpectator ? true : reorderSubmitted}
           matchDraft={matchDraft}
           compDraft={compDraft}
           labelingDraft={labelingDraft}
@@ -534,6 +565,7 @@ function LiveGameInner() {
           onCompChange={setCompDraft}
           onLabelingChange={setLabelingDraft}
           onSelect={(opt) => {
+            if (isSpectator) return;
             setSelectedOpt(opt);
             submitAnswer(opt);
           }}

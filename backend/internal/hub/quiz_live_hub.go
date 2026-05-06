@@ -392,6 +392,26 @@ func (r *Room) sendSessionState(c *Client) {
 			Paused:         r.paused,
 		},
 	})
+
+	// If the game is active and there's a live question, send a question event
+	// so spectators / reconnecting players see the current state immediately.
+	if r.status == "active" && r.qActive && !c.isHost {
+		q := r.currentQuestion()
+		if q != nil {
+			type questionEvt struct {
+				Index    int          `json:"index"`
+				Total    int          `json:"total"`
+				Question LiveQuestion `json:"question"`
+				Deadline int64        `json:"deadlineMs"`
+			}
+			c.sendMsg(OutMsg{Type: EvtQuestion, Data: questionEvt{
+				Index:    r.currentQ,
+				Total:    len(r.quiz.Questions),
+				Question: *q,
+				Deadline: r.qDeadline.UnixMilli(),
+			}})
+		}
+	}
 }
 
 // startGame transitions the room from lobby → active and sends the first question.
