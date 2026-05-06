@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -44,6 +45,7 @@ const verificationCodeExpiry = 30 * time.Minute
 
 type registerRequest struct {
 	Email    string `json:"email" binding:"required,email"`
+	Phone    string `json:"phone"`
 	Password string `json:"password" binding:"required,min=6"`
 	FullName string `json:"fullName" binding:"required"`
 	Username string `json:"username" binding:"required,min=2"`
@@ -62,8 +64,30 @@ type updateProfileRequest struct {
 }
 
 type authResponse struct {
-	Token string       `json:"token"`
-	User  models.User  `json:"user"`
+	Token string      `json:"token"`
+	User  models.User `json:"user"`
+}
+
+var phoneCleanupPattern = regexp.MustCompile(`[^\d+]`)
+
+func normalizePhone(raw string) (*string, error) {
+	phone := phoneCleanupPattern.ReplaceAllString(strings.TrimSpace(raw), "")
+	if phone == "" {
+		return nil, nil
+	}
+	if strings.Count(phone, "+") > 1 || (strings.Contains(phone, "+") && !strings.HasPrefix(phone, "+")) {
+		return nil, fmt.Errorf("invalid phone number")
+	}
+	digits := strings.TrimPrefix(phone, "+")
+	if len(digits) < 7 || len(digits) > 15 {
+		return nil, fmt.Errorf("phone number must contain 7 to 15 digits")
+	}
+	if strings.HasPrefix(phone, "8") && len(digits) == 11 {
+		phone = "+7" + digits[1:]
+	} else if !strings.HasPrefix(phone, "+") {
+		phone = "+" + phone
+	}
+	return &phone, nil
 }
 
 // Register creates a new user account and sends a verification email.
@@ -87,6 +111,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	phone, err := normalizePhone(req.Phone)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if phone != nil {
+		if err := h.db.Where("phone = ?", *phone).First(&existing).Error; err == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "An account with this phone number already exists."})
+			return
+		}
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process password."})
@@ -103,6 +139,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	user := models.User{
 		Email:                   strings.ToLower(strings.TrimSpace(req.Email)),
+		Phone:                   phone,
 		PasswordHash:            string(hash),
 		FullName:                strings.TrimSpace(req.FullName),
 		Username:                strings.TrimSpace(req.Username),

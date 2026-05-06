@@ -17,6 +17,7 @@ const TOKEN_COOKIE = "swr_token";
 type BackendUser = {
   id: string;
   email: string;
+  phone?: string | null;
   fullName: string;
   username: string;
   avatarUrl: string | null;
@@ -162,6 +163,7 @@ export async function getCurrentProfile(
   return {
     id: backendUser.id,
     email: backendUser.email,
+    phone: backendUser.phone,
     full_name: backendUser.fullName,
     username: backendUser.username,
     avatar_url: backendUser.avatarUrl,

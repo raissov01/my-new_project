@@ -6,6 +6,7 @@ import { fetchBackendJson } from "./server";
 type BackendProfileResponse = {
   id: string;
   email: string;
+  phone?: string | null;
   fullName: string;
   username: string;
   avatarUrl: string | null;
@@ -21,6 +22,7 @@ function mapBackendProfileToProfile(response: BackendProfileResponse): Profile {
   return {
     id: response.id,
     email: response.email,
+    phone: response.phone ?? null,
     full_name: response.fullName,
     username: response.username,
     avatar_url: response.avatarUrl,

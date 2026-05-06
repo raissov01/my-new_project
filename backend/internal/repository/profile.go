@@ -23,6 +23,7 @@ func (r *Profile) GetByID(ctx context.Context, userID string) (*model.Profile, e
 		SELECT
 			id,
 			email,
+			phone,
 			full_name,
 			username,
 			avatar_url,
@@ -40,6 +41,7 @@ func (r *Profile) GetByID(ctx context.Context, userID string) (*model.Profile, e
 	err := r.pool.QueryRow(ctx, query, userID).Scan(
 		&profile.ID,
 		&profile.Email,
+		&profile.Phone,
 		&profile.FullName,
 		&profile.Username,
 		&profile.AvatarURL,

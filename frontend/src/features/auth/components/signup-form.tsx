@@ -181,6 +181,7 @@ export function SignupForm() {
       <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
         <Input id="full_name" name="full_name" type="text" label={t("auth.fullName")} placeholder={t("auth.fullNamePlaceholder")} required autoComplete="name" disabled={isDisabled} />
         <Input id="username" name="username" type="text" label={t("auth.username")} placeholder={t("auth.usernamePlaceholder")} required autoComplete="username" disabled={isDisabled} />
+        <Input id="phone" name="phone" type="tel" label={t("auth.phone")} placeholder={t("auth.phonePlaceholder")} autoComplete="tel" disabled={isDisabled} />
         <Input id="email" name="email" type="email" label={t("auth.email")} placeholder={t("auth.emailPlaceholder")} required autoComplete="email" disabled={isDisabled} />
         <PasswordInput
           id="password"

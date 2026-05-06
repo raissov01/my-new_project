@@ -136,6 +136,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("full_name") ?? "").trim();
   const username = String(formData.get("username") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
   const role = String(formData.get("role") ?? "").trim();
 
   if (!email || !password || !fullName || !username || !role) {
@@ -147,6 +148,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   try {
     await fetchPublicAuthJson<PublicAuthResponse>("/auth/register", {
       email,
+      phone: phone || undefined,
       password,
       fullName,
       username,

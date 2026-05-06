@@ -6,6 +6,7 @@ import "time"
 type User struct {
 	ID                        string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Email                     string     `gorm:"uniqueIndex;not null" json:"email"`
+	Phone                     *string    `gorm:"type:varchar(32);uniqueIndex" json:"phone,omitempty"`
 	PasswordHash              string     `gorm:"not null" json:"-"`
 	FullName                  string     `gorm:"not null;default:''" json:"fullName"`
 	Username                  string     `gorm:"uniqueIndex;not null" json:"username"`

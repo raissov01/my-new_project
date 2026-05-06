@@ -250,6 +250,8 @@ func AutoMigrate(db *gorm.DB) (err error) {
 	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS order_index_snapshot INT NOT NULL DEFAULT 0`)
 
 	// ── Billing column additions (idempotent) ───────────────────────────────
+	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(32)`)
+	db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone) WHERE phone IS NOT NULL`)
 	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(20) NOT NULL DEFAULT 'free'`)
 	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ls_customer_id BIGINT`)
 	db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_ls_customer_id ON users(ls_customer_id) WHERE ls_customer_id IS NOT NULL`)

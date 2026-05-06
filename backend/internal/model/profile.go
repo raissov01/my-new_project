@@ -4,6 +4,7 @@ package model
 type Profile struct {
 	ID             string  `json:"id"`
 	Email          string  `json:"email"`
+	Phone          *string `json:"phone,omitempty"`
 	FullName       string  `json:"fullName"`
 	Username       string  `json:"username"`
 	AvatarURL      *string `json:"avatarUrl"`
