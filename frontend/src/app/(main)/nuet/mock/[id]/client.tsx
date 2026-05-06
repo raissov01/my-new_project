@@ -583,10 +583,41 @@ function MathText({ text }: { text: string }) {
             />
           );
         }
-        return <span key={`text-${index}`}>{restoreCurrencyDollars(part)}</span>;
+        const restored = restoreCurrencyDollars(part);
+        const looseMath = normalizeLooseMath(restored);
+        if (looseMath) {
+          return (
+            <InlineMath
+              key={`loose-inline-${index}`}
+              math={looseMath}
+              renderError={() => <span className="whitespace-pre-wrap">{restored}</span>}
+            />
+          );
+        }
+        return <span key={`text-${index}`}>{restored}</span>;
       })}
     </div>
   );
+}
+
+function normalizeLooseMath(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.includes("\n")) return null;
+  if (!/[\\^_√π≤≥±]/.test(trimmed)) return null;
+
+  const withoutLatexCommands = trimmed.replace(/\\[a-zA-Z]+/g, " ");
+  const words = withoutLatexCommands.match(/[A-Za-z]{3,}/g) ?? [];
+  const allowedWords = new Set(["and", "or", "cm", "kmh", "min", "max", "mm"]);
+  if (words.some((word) => !allowedWords.has(word.toLowerCase()))) return null;
+
+  return trimmed
+    .replaceAll("√", "\\sqrt")
+    .replaceAll("π", "\\pi")
+    .replaceAll("≤", "\\leq")
+    .replaceAll("≥", "\\geq")
+    .replaceAll("−", "-")
+    .replaceAll("×", "\\times")
+    .replaceAll("÷", "\\div");
 }
 
 function visibleOptions(options: string[]) {
