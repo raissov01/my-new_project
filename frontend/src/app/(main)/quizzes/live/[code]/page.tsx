@@ -112,8 +112,12 @@ function LiveGameInner() {
   const searchParams = useSearchParams();
   const pid = searchParams.get("pid") ?? "";
   const tidParam = searchParams.get("tid");
+  const roleParam = searchParams.get("role"); // "spectator" when joined after start
 
   const [phase, setPhase] = useState<Phase>("waiting");
+  const [isSpectator, setIsSpectator] = useState<boolean>(roleParam === "spectator");
+  const [paused, setPaused] = useState(false);
+  const [kicked, setKicked] = useState(false);
   const [myTeamId, setMyTeamId] = useState<number>(tidParam !== null ? Number(tidParam) : -1);
   const [teamMode, setTeamMode] = useState(tidParam !== null && tidParam !== "-1");
   const [quizTitle, setQuizTitle] = useState("");
@@ -346,6 +350,33 @@ function LiveGameInner() {
         // the next question_ended.
         setTeamLeaderboard(msg.data.teamLeaderboard);
         break;
+
+      case "session_paused":
+        setPaused(true);
+        stopTimer();
+        break;
+
+      case "session_resumed":
+        setPaused(false);
+        if (msg.data.deadlineMs) startTimer(msg.data.deadlineMs);
+        break;
+
+      case "force_next":
+        // Server has already advanced; UI updates on the next "question" event.
+        break;
+
+      case "kicked":
+        // The host removed us. Show a final "you've been kicked" screen.
+        stopTimer();
+        setKicked(true);
+        try { wsRef.current?.close(); } catch { /* ignore */ }
+        break;
+    }
+    // session_state may include isSpectator after a reconnect.
+    if (msg.type === "session_state") {
+      const st = msg.data as { isSpectator?: boolean; paused?: boolean };
+      if (st.isSpectator) setIsSpectator(true);
+      if (typeof st.paused === "boolean") setPaused(st.paused);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
