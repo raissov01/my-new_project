@@ -42,8 +42,9 @@ export function LandingNav({ locale }: NavProps) {
         background: 'linear-gradient(180deg, var(--paper) 70%, transparent)',
       }}
     >
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
+      <div className="lp-nav-container" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
         <nav
+          className="lp-nav-shell"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -59,13 +60,13 @@ export function LandingNav({ locale }: NavProps) {
           }}
         >
           {/* Brand */}
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, textDecoration: 'none', color: 'inherit' }}>
+          <Link href="/" className="lp-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, textDecoration: 'none', color: 'inherit' }}>
             <Image src="/brand-mark.svg" alt="" width={36} height={36} style={{ height: 36, width: 'auto' }} />
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-              <strong style={{ fontSize: 15.5, fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <strong className="lp-nav-brand-name" style={{ fontSize: 15.5, fontWeight: 800, letterSpacing: '-0.02em' }}>
                 StudyWith<span style={{ color: 'var(--terra)' }}>Raissov</span>
               </strong>
-              <span style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--ink-mute)', fontFamily: "'JetBrains Mono', monospace", marginTop: 3, fontWeight: 500, textTransform: 'uppercase' }}>
+              <span className="lp-nav-brand-subtitle" style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--ink-mute)', fontFamily: "'JetBrains Mono', monospace", marginTop: 3, fontWeight: 500, textTransform: 'uppercase' }}>
                 IELTS · FLASHCARDS · AI
               </span>
             </span>
@@ -81,10 +82,11 @@ export function LandingNav({ locale }: NavProps) {
           </div>
 
           {/* Nav end */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <div className="lp-nav-end" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             {/* Lang dropdown */}
             <div ref={langRef} style={{ position: 'relative' }}>
               <button
+                className="lp-nav-lang"
                 onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
                 aria-haspopup="menu"
                 aria-expanded={open}
@@ -140,8 +142,8 @@ export function LandingNav({ locale }: NavProps) {
               )}
             </div>
 
-            <Link href="/login" style={btnGhostSmStyle}>{t('lp.nav.login')}</Link>
-            <Link href="/signup" style={btnPrimarySmStyle}>{t('lp.nav.signup')}</Link>
+            <Link href="/login" className="lp-nav-login" style={btnGhostSmStyle}>{t('lp.nav.login')}</Link>
+            <Link href="/signup" className="lp-nav-signup" style={btnPrimarySmStyle}>{t('lp.nav.signup')}</Link>
           </div>
         </nav>
       </div>
@@ -149,6 +151,32 @@ export function LandingNav({ locale }: NavProps) {
       <style>{`
         @media (min-width: 880px) {
           .lp-nav-links { display: flex !important; }
+        }
+        @media (max-width: 540px) {
+          .lp-nav-container { padding: 0 12px !important; }
+          .lp-nav-shell {
+            gap: 8px !important;
+            padding: 8px 9px 8px 10px !important;
+            border-radius: 18px !important;
+          }
+          .lp-nav-brand { gap: 7px !important; min-width: 0; }
+          .lp-nav-brand img { width: 28px !important; height: 28px !important; }
+          .lp-nav-brand-name { font-size: 12.5px !important; white-space: nowrap; }
+          .lp-nav-brand-subtitle { display: none !important; }
+          .lp-nav-end { gap: 4px !important; }
+          .lp-nav-lang { padding: 7px 8px !important; font-size: 12px !important; }
+          .lp-nav-login { display: none !important; }
+          .lp-nav-signup {
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+            min-height: 34px;
+          }
+        }
+        @media (max-width: 340px) {
+          .lp-nav-container { padding-inline: 8px !important; }
+          .lp-nav-shell { padding-inline: 8px !important; }
+          .lp-nav-brand-name { max-width: 112px; overflow: hidden; text-overflow: ellipsis; }
+          .lp-nav-signup { padding-inline: 8px !important; font-size: 11.5px !important; }
         }
       `}</style>
     </div>
