@@ -29,10 +29,6 @@ type rawNode struct {
 }
 
 func main() {
-	treePath := "./nuet-materials/tree.json"
-	if len(os.Args) >= 2 {
-		treePath = os.Args[1]
-	}
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("config: %v", err)
@@ -43,16 +39,9 @@ func main() {
 	}
 	ctx := context.Background()
 
-	mathTopics, err := loadMathTopics(treePath)
-	if err != nil {
-		log.Fatalf("load math: %v", err)
-	}
-	log.Printf("[seed] loaded %d math topics from %s", len(mathTopics), treePath)
+	all := database.OfficialNUETTopics()
+	log.Printf("[seed] official syllabus: %d topics", len(all))
 
-	ctTopics := criticalThinkingTopics()
-	log.Printf("[seed] %d critical thinking topics (hardcoded)", len(ctTopics))
-
-	all := append(mathTopics, ctTopics...)
 	for _, t := range all {
 		if err := upsert(ctx, db, t); err != nil {
 			log.Printf("[seed] upsert %s: %v", t.Slug, err)
@@ -60,7 +49,38 @@ func main() {
 		}
 		log.Printf("[seed]   ✓ %s — %s", t.Section, t.Title)
 	}
-	log.Printf("[seed] done — %d topics seeded", len(all))
+
+	// Drop any nuet_topics rows whose slug is no longer part of the
+	// canonical syllabus. This keeps the /nuet/topics index clean and
+	// prevents legacy URLs from showing stale content. Questions whose
+	// topic_id pointed at the dropped row become NULL — re-seeding the
+	// extracted questions reclassifies them via the keyword classifier.
+	keep := database.OfficialNUETSlugs()
+	keepSlice := make([]string, 0, len(keep))
+	for slug := range keep {
+		keepSlice = append(keepSlice, slug)
+	}
+
+	var orphans []models.NUETTopic
+	if err := db.Where("slug NOT IN ?", keepSlice).Find(&orphans).Error; err != nil {
+		log.Printf("[seed] scan orphans: %v", err)
+	} else if len(orphans) > 0 {
+		orphanIDs := make([]string, 0, len(orphans))
+		for _, o := range orphans {
+			orphanIDs = append(orphanIDs, o.ID)
+			log.Printf("[seed]   – %s — %s (orphaned, dropping)", o.Section, o.Title)
+		}
+		if err := db.Model(&models.NUETQuestion{}).
+			Where("topic_id IN ?", orphanIDs).
+			Update("topic_id", nil).Error; err != nil {
+			log.Printf("[seed] null orphan topic_ids: %v", err)
+		}
+		if err := db.Where("id IN ?", orphanIDs).Delete(&models.NUETTopic{}).Error; err != nil {
+			log.Printf("[seed] delete orphans: %v", err)
+		}
+	}
+
+	log.Printf("[seed] done — %d topics seeded, %d removed", len(all), len(orphans))
 }
 
 func upsert(ctx context.Context, db *gorm.DB, t models.NUETTopic) error {

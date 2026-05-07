@@ -46,30 +46,40 @@ type azureConfig struct {
 	Deployment string
 }
 
-// Math topic syllabus the model must pick from. Keep in sync with the slugs
-// produced by cmd/seed-nuet (Telegram-derived) and CT slugs in seed-nuet.
-// Critical Thinking is not LLM-tagged here — the keyword classifier already
-// covers CT 100% via the problem-solving fallback.
+// Math topic syllabus the model must pick from. Mirrors the slugs in
+// internal/database/nuet_official_syllabus.go (Math, 27 topics). CT is
+// not LLM-tagged here — the keyword classifier already covers CT 100%
+// via the problem-solving fallback.
 var mathSyllabus = []struct {
 	Slug, Title, Hint string
 }{
-	{"direct-and-inverse-proportion", "Direct and Inverse Proportion", "y ∝ x or y ∝ 1/x, varies as, ratio"},
-	{"recurring-decimals", "Recurring Decimals", "0.\\overline{ab}, repeating decimal to fraction"},
-	{"algebraic-simplification-with-x-variable", "Algebraic Simplification (with x variable)", "simplify, factor, expand, polynomial, solve for x, inequalities, equations of curves"},
-	{"circle-theorems-especially-with-chords", "Circle Theorems (especially with chords)", "chord, inscribed angle, tangent to circle, cyclic quadrilateral"},
-	{"percentages-word-problem-decrease-increase", "Percentages Word Problem (decrease/increase)", "percent, percentage change, profit, loss, discount"},
-	{"rounding-to-significant-figures-standard-form", "Rounding / Significant Figures / Standard Form", "round to N sig figs, scientific notation, a × 10^n"},
-	{"graph-transformation-usually-parabola", "Graph Transformation (usually Parabola)", "f(x+a), translate, reflect, stretch, transformation of curve"},
-	{"vertex-turning-point-of-parabola", "Vertex / Turning Point of Parabola", "vertex, turning point, max/min value, axis of symmetry"},
+	{"standard-and-compound-units", "Standard and Compound Units", "km/h, m/s, density, pressure, unit conversion"},
+	{"algebraic-expressions", "Algebraic Expressions", "simplify, expand, factor, polynomial, like terms"},
+	{"exponents", "Exponents", "a^n, index laws, negative/fractional exponents, scientific notation"},
+	{"ratio-and-proportion", "Ratio and Proportion", "ratio, share in ratio, scale, equivalent ratios"},
+	{"two-types-of-variations", "Two Types of Variations", "directly/inversely proportional, y = kx, y = k/x"},
+	{"percents", "Percents", "percent, percentage increase/decrease, reverse percentage"},
+	{"word-problems", "Word Problems", "verbal scenario translated into equations: mixture, age, distance"},
+	{"linear-inequalities", "Linear Inequalities", "ax + b < c, sign flip, compound inequalities, absolute value"},
+	{"slope-of-the-line", "Slope of the Line", "gradient, slope formula, parallel/perpendicular lines, equation of line"},
+	{"transformations", "Transformations", "f(x-h)+k, translate, reflect, stretch a graph"},
+	{"quadratic-functions", "Quadratic Functions", "ax^2+bx+c, vertex, completing the square, discriminant"},
+	{"examples-of-quadratic-functions", "Examples of Quadratic Functions", "projectile, area optimisation, profit/cost"},
+	{"graphs-of-quadratic-functions", "Graphs of Quadratic Functions", "sketch parabola, roots, vertex, axis of symmetry"},
+	{"quadratic-inequalities", "Quadratic Inequalities", "ax^2+bx+c > 0 or < 0, sign analysis"},
+	{"rational-expressions", "Rational Expressions", "p(x)/q(x), simplify, common denominator, complex fractions"},
+	{"sequences", "Sequences", "nth term, arithmetic, geometric, recurrence, sum"},
+	{"nonlinear-equations", "Nonlinear Equations", "radical, absolute value, fractional equations, extraneous solutions"},
+	{"geometry", "Geometry", "general angles, parallel lines, congruence, similarity"},
+	{"exponential-functions", "Exponential Functions", "y = a*b^x, growth/decay, half-life, doubling"},
+	{"symbol-functions", "Symbol Functions", "custom operator a★b = ..., interpret and compute"},
+	{"triangles", "Triangles", "Pythagoras, similar triangles, area = 1/2 ab sin C"},
 	{"vectors", "Vectors", "vector, magnitude, dot/cross product, position vector"},
 	{"bearings", "Bearings", "bearing, due north/south, compass directions"},
-	{"parallel-and-perpendicular-lines", "Parallel and Perpendicular Lines", "parallel lines, perpendicular slope, line through points"},
-	{"coordinate-geometry", "Coordinate Geometry", "midpoint, distance formula, line through points, gradient"},
-	{"rhombus-kite-trapezium", "Rhombus / Kite / Trapezium", "rhombus, kite, trapezium, parallelogram (quadrilateral types)"},
-	{"trigonometry-in-right-angled-triangle", "Trigonometry in Right-Angled Triangle", "sin/cos/tan, hypotenuse, opposite, adjacent"},
-	{"exponents-with-bases-2-3-and-5", "Exponents (bases 2, 3, 5, 10)", "a^n, index laws, log base 2/3/5/10"},
-	{"real-life-graphs-velocity-time", "Real-life Graphs (Velocity-Time)", "velocity-time, distance-time, speed-time graph"},
-	{"compound-3d-figure-cylinder-sphere-cone", "Compound 3D Figures (Cylinder/Sphere/Cone)", "cylinder, sphere, cone, surface area, volume of solid"},
+	{"polygons", "Polygons", "rhombus, kite, trapezium, regular polygon, interior angle"},
+	{"circles", "Circles", "chord, tangent, circumference, sector, circle theorem"},
+	{"3d-figures", "3D Figures", "cylinder, sphere, cone, surface area, volume of solid"},
+	{"trigonometry", "Trigonometry", "sin/cos/tan, sine rule, cosine rule, identities"},
 }
 
 const systemPrompt = `You are a NUET Math syllabus tagger. The user gives a single math question; you reply with exactly one topic slug from the provided list, or the literal word "skip" if none fit. No prose, no explanation, just the slug.`
