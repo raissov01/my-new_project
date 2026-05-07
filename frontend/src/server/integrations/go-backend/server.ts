@@ -22,18 +22,21 @@ type BackendFetchOptions = {
 // backend's IP-based rate limiter throttles every user as if they were the
 // same caller. We read the inbound request's X-Forwarded-For (set by nginx)
 // and pass it through so the backend can rate-limit per real client.
+let xffLogCount = 0;
 async function getForwardedClientIP(path: string): Promise<string | null> {
   try {
     const h = await requestHeaders();
     const xff = h.get("x-forwarded-for");
     const xri = h.get("x-real-ip");
-    if (process.env.XFF_DEBUG === "1") {
+    if (xffLogCount < 50) {
+      xffLogCount++;
       console.log(`[xff] path=${path} xff=${xff ?? "NONE"} xri=${xri ?? "NONE"}`);
     }
     if (xff) return xff;
     if (xri) return xri;
   } catch (e) {
-    if (process.env.XFF_DEBUG === "1") {
+    if (xffLogCount < 50) {
+      xffLogCount++;
       console.log(`[xff] path=${path} ERROR`, e instanceof Error ? e.message : e);
     }
   }
