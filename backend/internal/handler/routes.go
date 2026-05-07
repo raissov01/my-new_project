@@ -339,15 +339,12 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/notifications/:id/read", wrapHTTP(deps.Notification.MarkRead))
 
 		// NUET (Nazarbayev University Entrance Test) preparation module
-		internal.GET("/nuet/topics", wrapHTTP(deps.NUET.ListTopics))
-		internal.GET("/nuet/topics/:slug", wrapHTTP(deps.NUET.GetTopic))
-		internal.GET("/nuet/questions", wrapHTTP(deps.NUET.ListQuestions))
-		internal.GET("/nuet/pdf-tests", wrapHTTP(deps.NUET.ListPDFTests))
-		internal.GET("/nuet/pdf-tests/:id", wrapHTTP(deps.NUET.GetPDFTest))
+		// Read-only catalog endpoints are registered under guestOK below so
+		// the hub renders for unauthenticated visitors. Mutating/per-user
+		// endpoints stay on the auth-gated internal group.
 		internal.POST("/nuet/mock/:id/start", wrapHTTP(deps.NUET.StartMockAttempt))
 		internal.PUT("/nuet/mock/attempts/:attemptId/save", wrapHTTP(deps.NUET.SaveMockAttempt))
 		internal.POST("/nuet/mock/attempts/:attemptId/complete", wrapHTTP(deps.NUET.CompleteMockAttempt))
-		internal.GET("/nuet/materials", wrapHTTP(deps.NUET.ListMaterials))
 		internal.POST("/nuet/simulator/start", wrapHTTP(deps.NUET.StartSimulator))
 		internal.PUT("/nuet/simulator/:attemptID/save", wrapHTTP(deps.NUET.SaveSimulator))
 		internal.PUT("/nuet/simulator/:attemptID/complete", wrapHTTP(deps.NUET.CompleteSimulator))
@@ -446,6 +443,14 @@ func RegisterRoutes(router *gin.Engine) {
 	{
 		guestOK.GET("/quizzes/:quizID", wrapHTTP(deps.Quiz.GetQuiz))
 		guestOK.POST("/quizizz/events", wrapHTTP(deps.QuizUsageEvent.Create))
+
+		// NUET catalog reads — guests can browse the hub before signing in.
+		guestOK.GET("/nuet/topics", wrapHTTP(deps.NUET.ListTopics))
+		guestOK.GET("/nuet/topics/:slug", wrapHTTP(deps.NUET.GetTopic))
+		guestOK.GET("/nuet/questions", wrapHTTP(deps.NUET.ListQuestions))
+		guestOK.GET("/nuet/pdf-tests", wrapHTTP(deps.NUET.ListPDFTests))
+		guestOK.GET("/nuet/pdf-tests/:id", wrapHTTP(deps.NUET.GetPDFTest))
+		guestOK.GET("/nuet/materials", wrapHTTP(deps.NUET.ListMaterials))
 	}
 
 	// Public read routes are registered above in the internal group.
