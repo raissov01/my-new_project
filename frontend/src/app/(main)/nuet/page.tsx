@@ -4,8 +4,9 @@ import { BookOpen, Brain, FileText, Globe2, GraduationCap, Library, Map, ScrollT
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { listNUETTopics, getNUETDashboard, getNUETDailyChallenge } from "@/server/integrations/go-backend/nuet";
+import { listNUETTopics, getNUETDashboard, getNUETDailyChallenge, listNUETAttempts } from "@/server/integrations/go-backend/nuet";
 import { NUETDailyChallengeWidget } from "./daily-challenge";
+import { NUETInProgressCard } from "./in-progress-card";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -22,11 +23,16 @@ export default async function NUETHubPage() {
   const t = createTranslator(locale);
   const user = await getCurrentUser();
 
-  const [mathTopics, ctTopics, dashboard, daily] = await Promise.all([
+  const [mathTopics, ctTopics, dashboard, daily, inProgress] = await Promise.all([
     listNUETTopics(user?.id ?? "", "math").catch(() => ({ items: [] })),
     listNUETTopics(user?.id ?? "", "critical_thinking").catch(() => ({ items: [] })),
     user ? getNUETDashboard(user.id).catch(() => null) : null,
     getNUETDailyChallenge(user?.id ?? "").catch(() => ({ date: "", questions: [] })),
+    user
+      ? listNUETAttempts(user.id, { status: "in_progress", limit: 5 }).catch(
+          () => ({ attempts: [], total: 0, limit: 0, offset: 0 })
+        )
+      : null,
   ]);
 
   const modules = [
@@ -127,6 +133,31 @@ export default async function NUETHubPage() {
           <StatCell label={t("nuet.statMaxScore")} value="240" />
         </div>
       </section>
+
+      {/* Pick up where you left off */}
+      {inProgress && inProgress.attempts.length > 0 ? (
+        <section className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+                {t("nuet.inProgress.title")}
+              </h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                {t("nuet.inProgress.subtitle")}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 space-y-3">
+            {inProgress.attempts.map((attempt) => (
+              <NUETInProgressCard
+                key={attempt.id}
+                attempt={attempt}
+                locale={locale}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Daily challenge */}
       {daily.questions.length > 0 ? (
