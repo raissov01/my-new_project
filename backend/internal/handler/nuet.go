@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
+	"math/rand"
 	"net/http"
 	"sort"
 	"strconv"
@@ -243,6 +245,144 @@ func (h *NUETHandler) ListQuestions(w http.ResponseWriter, r *http.Request) {
 		resp["topic"] = topic
 	}
 	jsonOK(w, resp)
+}
+
+// GET /nuet/daily-challenge[?date=YYYY-MM-DD]
+//
+// Returns a deterministic 3-question set for the given user/date so that all
+// of today's sessions share the same picks. The mix is 2 Math + 1 Critical
+// Thinking when both pools are populated; otherwise it falls back to whatever
+// is available. userID may be empty (guest); guests share one daily set.
+func (h *NUETHandler) DailyChallenge(w http.ResponseWriter, r *http.Request) {
+	userID, _ := middleware.UserIDFromContext(r.Context())
+
+	dateStr := strings.TrimSpace(r.URL.Query().Get("date"))
+	if dateStr == "" {
+		dateStr = time.Now().UTC().Format("2006-01-02")
+	} else if _, err := time.Parse("2006-01-02", dateStr); err != nil {
+		jsonErr(w, "invalid date (expect YYYY-MM-DD)", http.StatusBadRequest)
+		return
+	}
+
+	seed := dailyChallengeSeed(userID, dateStr)
+
+	mathIDs, err := h.loadDailyChallengeIDs("math")
+	if err != nil {
+		jsonErr(w, "failed to load math pool", http.StatusInternalServerError)
+		return
+	}
+	ctIDs, err := h.loadDailyChallengeIDs("critical_thinking")
+	if err != nil {
+		jsonErr(w, "failed to load CT pool", http.StatusInternalServerError)
+		return
+	}
+
+	pickedIDs := pickDailyChallengeIDs(mathIDs, ctIDs, seed, 3)
+	if len(pickedIDs) == 0 {
+		jsonOK(w, map[string]any{"date": dateStr, "questions": []any{}})
+		return
+	}
+
+	var questions []models.NUETQuestion
+	if err := h.db.Where("id IN ?", pickedIDs).Find(&questions).Error; err != nil {
+		jsonErr(w, "failed to load daily questions", http.StatusInternalServerError)
+		return
+	}
+
+	byID := make(map[string]models.NUETQuestion, len(questions))
+	for _, q := range questions {
+		byID[q.ID] = q
+	}
+	items := make([]nuetQuestionItem, 0, len(pickedIDs))
+	for _, id := range pickedIDs {
+		question, ok := byID[id]
+		if !ok {
+			continue
+		}
+		items = append(items, nuetQuestionItem{
+			ID:          question.ID,
+			TopicID:     derefNUETString(question.TopicID),
+			Section:     question.Section,
+			Difficulty:  question.Difficulty,
+			Prompt:      question.Prompt,
+			Options:     parseNUETStringArray(question.Options),
+			Answer:      normalizeAnswerLetter(question.Answer),
+			Explanation: question.Explanation,
+		})
+	}
+
+	jsonOK(w, map[string]any{"date": dateStr, "questions": items})
+}
+
+func (h *NUETHandler) loadDailyChallengeIDs(section string) ([]string, error) {
+	var ids []string
+	if err := h.db.Table("nuet_questions").
+		Where("section = ?", section).
+		Pluck("id", &ids).Error; err != nil {
+		return nil, err
+	}
+	return ids, nil
+}
+
+// dailyChallengeSeed mixes user identity and the date into a 64-bit seed so
+// the same (user, day) returns the same 3 questions, while different days or
+// different users get a fresh shuffle.
+func dailyChallengeSeed(userID, dateStr string) int64 {
+	hasher := fnv.New64a()
+	hasher.Write([]byte(userID))
+	hasher.Write([]byte{'|'})
+	hasher.Write([]byte(dateStr))
+	return int64(hasher.Sum64())
+}
+
+// pickDailyChallengeIDs returns up to `total` question IDs, preferring a
+// 2-math + 1-CT mix when both pools are available. Falls back to whichever
+// pool has questions when one is empty.
+func pickDailyChallengeIDs(mathIDs, ctIDs []string, seed int64, total int) []string {
+	rng := rand.New(rand.NewSource(seed))
+
+	mathPool := append([]string(nil), mathIDs...)
+	ctPool := append([]string(nil), ctIDs...)
+	rng.Shuffle(len(mathPool), func(i, j int) { mathPool[i], mathPool[j] = mathPool[j], mathPool[i] })
+	rng.Shuffle(len(ctPool), func(i, j int) { ctPool[i], ctPool[j] = ctPool[j], ctPool[i] })
+
+	mathQuota := 2
+	ctQuota := 1
+	if total < mathQuota+ctQuota {
+		mathQuota = total
+		ctQuota = 0
+	}
+
+	out := make([]string, 0, total)
+	if len(mathPool) >= mathQuota {
+		out = append(out, mathPool[:mathQuota]...)
+		mathPool = mathPool[mathQuota:]
+	} else {
+		out = append(out, mathPool...)
+		mathPool = nil
+	}
+	if len(ctPool) >= ctQuota {
+		out = append(out, ctPool[:ctQuota]...)
+		ctPool = ctPool[ctQuota:]
+	} else {
+		out = append(out, ctPool...)
+		ctPool = nil
+	}
+
+	for len(out) < total {
+		if len(mathPool) > 0 {
+			out = append(out, mathPool[0])
+			mathPool = mathPool[1:]
+			continue
+		}
+		if len(ctPool) > 0 {
+			out = append(out, ctPool[0])
+			ctPool = ctPool[1:]
+			continue
+		}
+		break
+	}
+	return out
 }
 
 // ── PDF mock catalog ─────────────────────────────────────────────────
@@ -1538,7 +1678,9 @@ func (h *NUETHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 		Where("has_media = true").
 		Count(&materialCount)
 
-	weakTopics := h.computeNUETWeakTopics(userID, 5)
+	topicAccuracy := h.computeNUETTopicAccuracy(userID)
+	weakTopics := pickNUETTopicsByAccuracy(topicAccuracy, 5, false, 1)
+	strongTopics := pickNUETTopicsByAccuracy(topicAccuracy, 5, true, 3)
 
 	jsonOK(w, map[string]any{
 		"totalAttempts":     totalAttempts,
@@ -1550,6 +1692,7 @@ func (h *NUETHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 		"topicCount":        topicCount,
 		"materialCount":     materialCount,
 		"weakTopics":        weakTopics,
+		"strongTopics":      strongTopics,
 	})
 }
 
@@ -1562,11 +1705,12 @@ type nuetWeakTopic struct {
 	Accuracy float64 `json:"accuracy"`
 }
 
-// computeNUETWeakTopics aggregates per-topic accuracy across all the user's
+// computeNUETTopicAccuracy aggregates per-topic accuracy across all the user's
 // completed attempts. The topic_id is taken from each question's row, not
 // from the attempt itself, so this works for full mocks that span every
-// topic. Returns the lowest-accuracy topics first (with at least 1 sample).
-func (h *NUETHandler) computeNUETWeakTopics(userID string, limit int) []nuetWeakTopic {
+// topic. Returns every topic that has at least one sampled answer, unsorted.
+// Callers pick the weakest/strongest via pickNUETTopicsByAccuracy.
+func (h *NUETHandler) computeNUETTopicAccuracy(userID string) []nuetWeakTopic {
 	var attempts []models.NUETAttempt
 	if err := h.db.
 		Select("id, results").
@@ -1670,16 +1814,36 @@ func (h *NUETHandler) computeNUETWeakTopics(userID string, limit int) []nuetWeak
 			Accuracy: float64(bucket.correct) / float64(bucket.total),
 		})
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Accuracy != out[j].Accuracy {
-			return out[i].Accuracy < out[j].Accuracy
-		}
-		return out[i].Total > out[j].Total
-	})
-	if len(out) > limit {
-		out = out[:limit]
-	}
 	return out
+}
+
+// pickNUETTopicsByAccuracy filters rows by minTotal and returns the top-N
+// either descending (strongest first) or ascending (weakest first). Ties are
+// broken by total sample count (more samples first) so a topic with one lucky
+// answer doesn't outrank one with twenty.
+func pickNUETTopicsByAccuracy(rows []nuetWeakTopic, limit int, descending bool, minTotal int) []nuetWeakTopic {
+	if len(rows) == 0 {
+		return nil
+	}
+	filtered := make([]nuetWeakTopic, 0, len(rows))
+	for _, row := range rows {
+		if row.Total >= minTotal {
+			filtered = append(filtered, row)
+		}
+	}
+	sort.Slice(filtered, func(i, j int) bool {
+		if filtered[i].Accuracy != filtered[j].Accuracy {
+			if descending {
+				return filtered[i].Accuracy > filtered[j].Accuracy
+			}
+			return filtered[i].Accuracy < filtered[j].Accuracy
+		}
+		return filtered[i].Total > filtered[j].Total
+	})
+	if len(filtered) > limit {
+		filtered = filtered[:limit]
+	}
+	return filtered
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────

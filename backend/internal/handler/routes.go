@@ -448,6 +448,7 @@ func RegisterRoutes(router *gin.Engine) {
 		guestOK.GET("/nuet/topics", wrapHTTP(deps.NUET.ListTopics))
 		guestOK.GET("/nuet/topics/:slug", wrapHTTP(deps.NUET.GetTopic))
 		guestOK.GET("/nuet/questions", wrapHTTP(deps.NUET.ListQuestions))
+		guestOK.GET("/nuet/daily-challenge", wrapHTTP(deps.NUET.DailyChallenge))
 		guestOK.GET("/nuet/pdf-tests", wrapHTTP(deps.NUET.ListPDFTests))
 		guestOK.GET("/nuet/pdf-tests/:id", wrapHTTP(deps.NUET.GetPDFTest))
 		guestOK.GET("/nuet/materials", wrapHTTP(deps.NUET.ListMaterials))

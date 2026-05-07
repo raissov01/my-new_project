@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, GraduationCap, Library, ScrollText, Target, TrendingDown, Trophy } from "lucide-react";
+import { ArrowLeft, BookOpen, GraduationCap, Library, ScrollText, Target, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { getNUETDashboard } from "@/server/integrations/go-backend/nuet";
+import { getNUETDashboard, type NUETWeakTopic } from "@/server/integrations/go-backend/nuet";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -133,61 +133,30 @@ export default async function NUETDashboardPage() {
         />
       </section>
 
-      {/* Weak topics */}
-      <section className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
-        <div className="flex items-start gap-3">
-          <TrendingDown className="mt-1 h-5 w-5 shrink-0 text-rose-500" />
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-              {t("nuet.weakTopicsTitle")}
-            </h2>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              {t("nuet.weakTopicsDesc")}
-            </p>
-          </div>
-        </div>
-        {!dashboard.weakTopics || dashboard.weakTopics.length === 0 ? (
-          <p className="mt-4 rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg-base)] p-4 text-sm text-[var(--text-muted)]">
-            {t("nuet.weakTopicsEmpty")}
-          </p>
-        ) : (
-          <ol className="mt-4 space-y-2">
-            {dashboard.weakTopics.map((wt) => {
-              const pct = Math.round(wt.accuracy * 100);
-              const tone = pct < 40 ? "rose" : pct < 70 ? "amber" : "emerald";
-              const barColor =
-                tone === "rose" ? "bg-rose-500" : tone === "amber" ? "bg-amber-500" : "bg-emerald-500";
-              const textColor =
-                tone === "rose" ? "text-rose-600" : tone === "amber" ? "text-amber-600" : "text-emerald-600";
-              return (
-                <li key={wt.slug}>
-                  <Link
-                    href={`/nuet/topics/${wt.slug}`}
-                    className="group block rounded-lg border border-[var(--border)] bg-[var(--bg-base)] p-3 transition hover:border-[var(--primary)]"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--primary)]">
-                          {wt.title}
-                        </p>
-                        <p className="text-[11px] text-[var(--text-muted)]">
-                          {wt.section === "math" ? t("nuet.sectionMath") : t("nuet.sectionCT")} ·{" "}
-                          {t("nuet.weakTopicsAttempted").replace("{n}", String(wt.total))}
-                        </p>
-                      </div>
-                      <span className={`font-mono text-sm font-semibold ${textColor}`}>
-                        {pct}%
-                      </span>
-                    </div>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
-                      <div className={`h-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
-        )}
+      {/* Weak / strong topics */}
+      <section className="mt-6 grid gap-6 lg:grid-cols-2">
+        <TopicAccuracyPanel
+          tone="weak"
+          icon={<TrendingDown className="mt-1 h-5 w-5 shrink-0 text-rose-500" />}
+          title={t("nuet.weakTopicsTitle")}
+          description={t("nuet.weakTopicsDesc")}
+          emptyText={t("nuet.weakTopicsEmpty")}
+          topics={dashboard.weakTopics}
+          sectionMath={t("nuet.sectionMath")}
+          sectionCt={t("nuet.sectionCT")}
+          attemptedTpl={t("nuet.weakTopicsAttempted")}
+        />
+        <TopicAccuracyPanel
+          tone="strong"
+          icon={<TrendingUp className="mt-1 h-5 w-5 shrink-0 text-emerald-500" />}
+          title={t("nuet.strongTopicsTitle")}
+          description={t("nuet.strongTopicsDesc")}
+          emptyText={t("nuet.strongTopicsEmpty")}
+          topics={dashboard.strongTopics}
+          sectionMath={t("nuet.sectionMath")}
+          sectionCt={t("nuet.sectionCT")}
+          attemptedTpl={t("nuet.weakTopicsAttempted")}
+        />
       </section>
 
       {/* CTAs */}
@@ -231,6 +200,90 @@ export default async function NUETDashboardPage() {
       </section>
     </div>
   );
+}
+
+function TopicAccuracyPanel({
+  tone,
+  icon,
+  title,
+  description,
+  emptyText,
+  topics,
+  sectionMath,
+  sectionCt,
+  attemptedTpl,
+}: {
+  tone: "weak" | "strong";
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  emptyText: string;
+  topics: NUETWeakTopic[] | undefined;
+  sectionMath: string;
+  sectionCt: string;
+  attemptedTpl: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+      <div className="flex items-start gap-3">
+        {icon}
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">{description}</p>
+        </div>
+      </div>
+      {!topics || topics.length === 0 ? (
+        <p className="mt-4 rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg-base)] p-4 text-sm text-[var(--text-muted)]">
+          {emptyText}
+        </p>
+      ) : (
+        <ol className="mt-4 space-y-2">
+          {topics.map((entry) => {
+            const pct = Math.round(entry.accuracy * 100);
+            const palette = topicAccuracyPalette(tone, pct);
+            return (
+              <li key={entry.slug}>
+                <Link
+                  href={`/nuet/topics/${entry.slug}`}
+                  className="group block rounded-lg border border-[var(--border)] bg-[var(--bg-base)] p-3 transition hover:border-[var(--primary)]"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--primary)]">
+                        {entry.title}
+                      </p>
+                      <p className="text-[11px] text-[var(--text-muted)]">
+                        {entry.section === "math" ? sectionMath : sectionCt} ·{" "}
+                        {attemptedTpl.replace("{n}", String(entry.total))}
+                      </p>
+                    </div>
+                    <span className={`font-mono text-sm font-semibold ${palette.text}`}>
+                      {pct}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
+                    <div
+                      className={`h-full transition-all ${palette.bar}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+function topicAccuracyPalette(tone: "weak" | "strong", pct: number) {
+  if (tone === "strong") {
+    return { bar: "bg-emerald-500", text: "text-emerald-600" };
+  }
+  if (pct < 40) return { bar: "bg-rose-500", text: "text-rose-600" };
+  if (pct < 70) return { bar: "bg-amber-500", text: "text-amber-600" };
+  return { bar: "bg-emerald-500", text: "text-emerald-600" };
 }
 
 function StatCard({

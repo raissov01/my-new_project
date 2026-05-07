@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   CartesianGrid,
@@ -255,6 +257,16 @@ export function NUETHistoryClient({
             {!attempt.scoreAvailable && attempt.scoreReason ? (
               <p className="mt-4 text-sm text-amber-700">{attempt.scoreReason}</p>
             ) : null}
+
+            <div className="mt-4 flex justify-end">
+              <Link
+                href={`/nuet/history/${attempt.id}`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--primary)] hover:underline"
+              >
+                {t("nuet.review.openLink")}
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
           </article>
         ))}
       </div>

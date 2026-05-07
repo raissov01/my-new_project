@@ -4,7 +4,8 @@ import { BookOpen, Brain, FileText, Globe2, GraduationCap, Library, Map, ScrollT
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { listNUETTopics, getNUETDashboard } from "@/server/integrations/go-backend/nuet";
+import { listNUETTopics, getNUETDashboard, getNUETDailyChallenge } from "@/server/integrations/go-backend/nuet";
+import { NUETDailyChallengeWidget } from "./daily-challenge";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -21,10 +22,11 @@ export default async function NUETHubPage() {
   const t = createTranslator(locale);
   const user = await getCurrentUser();
 
-  const [mathTopics, ctTopics, dashboard] = await Promise.all([
+  const [mathTopics, ctTopics, dashboard, daily] = await Promise.all([
     listNUETTopics(user?.id ?? "", "math").catch(() => ({ items: [] })),
     listNUETTopics(user?.id ?? "", "critical_thinking").catch(() => ({ items: [] })),
     user ? getNUETDashboard(user.id).catch(() => null) : null,
+    getNUETDailyChallenge(user?.id ?? "").catch(() => ({ date: "", questions: [] })),
   ]);
 
   const modules = [
@@ -125,6 +127,13 @@ export default async function NUETHubPage() {
           <StatCell label={t("nuet.statMaxScore")} value="240" />
         </div>
       </section>
+
+      {/* Daily challenge */}
+      {daily.questions.length > 0 ? (
+        <div className="mt-8">
+          <NUETDailyChallengeWidget date={daily.date} questions={daily.questions} />
+        </div>
+      ) : null}
 
       {/* Module grid */}
       <section className="mt-8">

@@ -36,6 +36,7 @@ export type NUETDashboard = {
   topicCount: number;
   materialCount: number;
   weakTopics?: NUETWeakTopic[];
+  strongTopics?: NUETWeakTopic[];
 };
 
 export type NUETWeakTopic = {
@@ -232,6 +233,22 @@ export async function listNUETAttempts(
 
   return fetchBackendJson<{ attempts: NUETAttempt[]; total: number; limit: number; offset: number }>({
     path: `/api/v1/nuet/attempts?${qs.toString()}`,
+    userId,
+  });
+}
+
+export type NUETDailyChallenge = {
+  date: string;
+  questions: NUETQuestion[];
+};
+
+export async function getNUETDailyChallenge(
+  userId: string,
+  date?: string
+): Promise<NUETDailyChallenge> {
+  const qs = date ? `?date=${encodeURIComponent(date)}` : "";
+  return fetchBackendJson<NUETDailyChallenge>({
+    path: `/api/v1/nuet/daily-challenge${qs}`,
     userId,
   });
 }

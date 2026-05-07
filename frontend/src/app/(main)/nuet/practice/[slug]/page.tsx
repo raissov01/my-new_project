@@ -8,6 +8,24 @@ import { getCurrentUser } from "@/server/auth";
 import { getNUETTopic, listNUETQuestions } from "@/server/integrations/go-backend/nuet";
 import { NUETPracticeClient } from "./practice-client";
 
+const DRILL_OPTIONS = [
+  { value: "5", limit: 5 },
+  { value: "10", limit: 10 },
+  { value: "20", limit: 20 },
+  { value: "all", limit: 100 },
+] as const;
+
+type DrillValue = (typeof DRILL_OPTIONS)[number]["value"];
+
+function resolveDrill(raw: string | undefined): {
+  value: DrillValue;
+  limit: number;
+} {
+  const match = DRILL_OPTIONS.find((option) => option.value === raw);
+  if (match) return { value: match.value, limit: match.limit };
+  return { value: "10", limit: 10 };
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -26,10 +44,15 @@ export async function generateMetadata({
 
 export default async function NUETPracticeTopicPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ n?: string | string[] }>;
 }) {
   const { slug } = await params;
+  const search = await searchParams;
+  const rawN = Array.isArray(search.n) ? search.n[0] : search.n;
+  const drill = resolveDrill(rawN);
   const locale = await getServerLocale();
   const t = createTranslator(locale);
   const user = await getCurrentUser();
@@ -50,7 +73,7 @@ export default async function NUETPracticeTopicPage({
 
   const questionData = await listNUETQuestions(user.id, {
     topicSlug: slug,
-    limit: 10,
+    limit: drill.limit,
   }).catch(() => ({ items: [] }));
 
   return (
@@ -72,7 +95,51 @@ export default async function NUETPracticeTopicPage({
         </p>
       ) : null}
 
+      <DrillSelector slug={slug} active={drill.value} t={t} />
+
       <NUETPracticeClient topic={topic} questions={questionData.items} />
+    </div>
+  );
+}
+
+function DrillSelector({
+  slug,
+  active,
+  t,
+}: {
+  slug: string;
+  active: DrillValue;
+  t: ReturnType<typeof createTranslator>;
+}) {
+  return (
+    <div className="mt-5 flex flex-wrap items-center gap-2">
+      <span className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
+        {t("nuet.practice.drillLengthLabel")}
+      </span>
+      {DRILL_OPTIONS.map((option) => {
+        const isActive = option.value === active;
+        const href =
+          option.value === "10"
+            ? `/nuet/practice/${slug}`
+            : `/nuet/practice/${slug}?n=${option.value}`;
+        const label =
+          option.value === "all"
+            ? t("nuet.practice.drillLengthAll")
+            : t("nuet.practice.drillLengthN", { n: option.value });
+        return (
+          <Link
+            key={option.value}
+            href={href}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+              isActive
+                ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-secondary)] hover:border-[var(--primary)]"
+            }`}
+          >
+            {label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
