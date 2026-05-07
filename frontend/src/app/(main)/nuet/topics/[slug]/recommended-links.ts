@@ -4,6 +4,11 @@
 //
 // Paths are stable enough that we can hard-code without verification noise;
 // if a destination changes, the click still lands on a useful neighbour.
+//
+// Vitaliy Collection (https://decorous-giant-147.notion.site) deep-links
+// were extracted from the public Notion record map and point at the
+// matching topical sub-page; each contains real NUET past-leak questions
+// with solutions hidden behind a toggle.
 
 export type RecommendedLink = {
   label: string;
@@ -11,8 +16,17 @@ export type RecommendedLink = {
   source: string;
 };
 
+// Vitaliy NUET Math Collection sub-page IDs (no hyphens). Notion public
+// site URL format: {workspace}.notion.site/{idWithoutHyphens}.
+const VITALIY = (id: string) => `https://decorous-giant-147.notion.site/${id}`;
+
 export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   "direct-and-inverse-proportion": [
+    {
+      label: "Vitaliy: Ratio, proportions, percent",
+      url: VITALIY("14178777b7b980339eb2f2bd5a4bcdf4"),
+      source: "Vitaliy NUET",
+    },
     {
       label: "Direct & Inverse Proportion",
       url: "https://www.mathsisfun.com/algebra/proportional.html",
@@ -26,6 +40,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   "recurring-decimals": [
     {
+      label: "Vitaliy: Expressions",
+      url: VITALIY("14178777b7b980d58bcaf30cab283efc"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Recurring Decimals to Fractions",
       url: "https://corbettmaths.com/2013/03/24/recurring-decimals-to-fractions/",
       source: "Corbettmaths",
@@ -33,17 +52,27 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   "algebraic-simplification-with-x-variable": [
     {
+      label: "Vitaliy: Expressions",
+      url: VITALIY("14178777b7b980d58bcaf30cab283efc"),
+      source: "Vitaliy NUET",
+    },
+    {
+      label: "Vitaliy: Equations and Systems",
+      url: VITALIY("14178777b7b98074b3e7ee536c512246"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Algebraic expressions",
       url: "https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:foundation-algebra",
       source: "Khan Academy",
     },
-    {
-      label: "Simplifying expressions",
-      url: "https://corbettmaths.com/2013/02/14/simplifying-expressions/",
-      source: "Corbettmaths",
-    },
   ],
   "circle-theorems-especially-with-chords": [
+    {
+      label: "Vitaliy: Circles",
+      url: VITALIY("14178777b7b9801c929de3a4edabad95"),
+      source: "Vitaliy NUET",
+    },
     {
       label: "Circle Theorems",
       url: "https://www.mathsisfun.com/geometry/circle-theorems.html",
@@ -57,6 +86,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   "percentages-word-problem-decrease-increase": [
     {
+      label: "Vitaliy: Ratio, proportions, percent",
+      url: VITALIY("14178777b7b980339eb2f2bd5a4bcdf4"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Percent change",
       url: "https://www.khanacademy.org/math/cc-seventh-grade-math/cc-7th-fractions-decimals/cc-7th-percent-word-problems",
       source: "Khan Academy",
@@ -68,6 +102,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
     },
   ],
   "rounding-to-significant-figures-standard-form": [
+    {
+      label: "Vitaliy: Additional Problems",
+      url: VITALIY("15578777b7b98090847ac728abe22ac1"),
+      source: "Vitaliy NUET",
+    },
     {
       label: "Standard Form",
       url: "https://www.mathsisfun.com/numbers/standard-notation.html",
@@ -81,6 +120,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   "graph-transformation-usually-parabola": [
     {
+      label: "Vitaliy: Quadratics and Lines",
+      url: VITALIY("14178777b7b980138c71d08ea45fd868"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Function transformations",
       url: "https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:functions",
       source: "Khan Academy",
@@ -92,6 +136,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
     },
   ],
   "vertex-turning-point-of-parabola": [
+    {
+      label: "Vitaliy: Quadratics and Lines",
+      url: VITALIY("14178777b7b980138c71d08ea45fd868"),
+      source: "Vitaliy NUET",
+    },
     {
       label: "Quadratic vertex form",
       url: "https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:quadratic-functions-equations",
@@ -105,6 +154,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   vectors: [
     {
+      label: "Vitaliy: Triangles and Trigonometry",
+      url: VITALIY("14178777b7b980e6aca0fe89aba8243a"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Vectors",
       url: "https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:vectors",
       source: "Khan Academy",
@@ -116,6 +170,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
     },
   ],
   bearings: [
+    {
+      label: "Vitaliy: Bearing",
+      url: VITALIY("14178777b7b9801093d4c2b51051dd70"),
+      source: "Vitaliy NUET",
+    },
     {
       label: "Bearings",
       url: "https://corbettmaths.com/2013/03/27/bearings/",
@@ -129,6 +188,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   "parallel-and-perpendicular-lines": [
     {
+      label: "Vitaliy: Lines",
+      url: VITALIY("14178777b7b9801b88b2d65df0aff5a3"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Parallel & Perpendicular Lines",
       url: "https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:linear-equations-graphs",
       source: "Khan Academy",
@@ -140,6 +204,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
     },
   ],
   "coordinate-geometry": [
+    {
+      label: "Vitaliy: Lines",
+      url: VITALIY("14178777b7b9801b88b2d65df0aff5a3"),
+      source: "Vitaliy NUET",
+    },
     {
       label: "Coordinate plane",
       url: "https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:linear-equations-graphs",
@@ -153,12 +222,22 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   "rhombus-kite-trapezium": [
     {
+      label: "Vitaliy: Quadrilaterals",
+      url: VITALIY("14178777b7b98053941cd792210576d8"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Quadrilaterals",
       url: "https://www.mathsisfun.com/quadrilaterals.html",
       source: "Math is Fun",
     },
   ],
   "trigonometry-in-right-angled-triangle": [
+    {
+      label: "Vitaliy: Triangles and Trigonometry",
+      url: VITALIY("14178777b7b980e6aca0fe89aba8243a"),
+      source: "Vitaliy NUET",
+    },
     {
       label: "Right Triangle Trigonometry",
       url: "https://www.khanacademy.org/math/trigonometry/trigonometry-right-triangles",
@@ -172,6 +251,11 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   "exponents-with-bases-2-3-and-5": [
     {
+      label: "Vitaliy: Expressions",
+      url: VITALIY("14178777b7b980d58bcaf30cab283efc"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Exponents (Powers)",
       url: "https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:exp-and-log",
       source: "Khan Academy",
@@ -184,12 +268,22 @@ export const TOPIC_LINKS: Record<string, RecommendedLink[]> = {
   ],
   "real-life-graphs-velocity-time": [
     {
+      label: "Vitaliy: Additional Problems",
+      url: VITALIY("15578777b7b98090847ac728abe22ac1"),
+      source: "Vitaliy NUET",
+    },
+    {
       label: "Velocity-Time Graphs",
       url: "https://corbettmaths.com/2013/05/13/velocity-time-graphs/",
       source: "Corbettmaths",
     },
   ],
   "compound-3d-figure-cylinder-sphere-cone": [
+    {
+      label: "Vitaliy: Geometry 3D",
+      url: VITALIY("14178777b7b9801eaa0cd5560fc7cd39"),
+      source: "Vitaliy NUET",
+    },
     {
       label: "Volume of Solids",
       url: "https://www.mathsisfun.com/geometry/cylinder.html",
