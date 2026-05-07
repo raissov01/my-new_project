@@ -8,7 +8,6 @@ import {
   Clock3,
   Globe2,
   Lock,
-  Play,
   Radio,
   Target,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { getQuizById, getQuizStats, type QuestionStat } from "@/server/services/
 import { ShareQuizButton } from "@/features/quizzes/components/share-quiz-button";
 import { QuizSplitLinks } from "@/features/quizzes/components/quiz-split-links";
 import { QuizPageTracker } from "@/features/quizzes/components/quiz-page-tracker";
+import { StartQuizControls } from "@/features/quizzes/components/start-quiz-controls";
 
 interface QuizDetailPageProps {
   params: Promise<{ id: string }>;
@@ -157,10 +157,11 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <Link href={`/quizzes/${quiz.id}/play`} className="nd-btn-primary">
-            <Play style={{ width: 15, height: 15 }} />
-            {t("quiz.startQuiz")}
-          </Link>
+          <StartQuizControls
+            quizId={quiz.id}
+            startLabel={t("quiz.startQuiz")}
+            timerToggleLabel={t("quiz.timerEnabled")}
+          />
           {quiz.isAuthor ? (
             <>
               <Link href={`/quizzes/${quiz.id}/edit`} className="nd-btn-soft">

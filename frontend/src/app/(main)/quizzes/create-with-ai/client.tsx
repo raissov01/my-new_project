@@ -379,7 +379,7 @@ function PreviewStep({
           subject: "",
           isPublic: false,
           timePerQuestion: 30,
-          shuffleOptions: true,
+          shuffleOptions: false,
           showAnswerAnimations: true,
           powerUpsEnabled: false,
           tags: [],

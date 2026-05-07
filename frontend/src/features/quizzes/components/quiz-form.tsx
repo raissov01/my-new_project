@@ -309,7 +309,7 @@ export function QuizForm({
   initialSubject = "",
   initialIsPublic = true,
   initialTimePerQuestion = 30,
-  initialShuffleOptions = true,
+  initialShuffleOptions = false,
   initialShowAnswerAnimations = true,
   initialPowerUpsEnabled = true,
   initialTags,

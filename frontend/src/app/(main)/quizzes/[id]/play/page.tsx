@@ -6,7 +6,12 @@ import { PlayQuizClient } from "./client";
 
 interface PlayPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ from?: string; limit?: string; part?: string }>;
+  searchParams: Promise<{
+    from?: string;
+    limit?: string;
+    part?: string;
+    notimer?: string;
+  }>;
 }
 
 function parsePositiveInt(value: string | undefined): number | null {
@@ -18,7 +23,8 @@ function parsePositiveInt(value: string | undefined): number | null {
 export default async function PlayQuizPage({ params, searchParams }: PlayPageProps) {
   const user = await getCurrentUser();
   const { id } = await params;
-  const { from, limit, part } = await searchParams;
+  const { from, limit, part, notimer } = await searchParams;
+  const noTimer = notimer === "1" || notimer === "true";
 
   const quiz = await getQuizById(id);
   if (!quiz) {
@@ -44,9 +50,13 @@ export default async function PlayQuizPage({ params, searchParams }: PlayPagePro
   const partLabel = isPart
     ? `Part ${parsePositiveInt(part) ?? Math.floor(startIndex / Math.max(1, maxLimit)) + 1} · Q${startIndex + 1}-${endIndex}`
     : undefined;
-  const progressKey = isPart
+  const baseProgressKey = isPart
     ? `${quiz.id}_q${startIndex + 1}-${endIndex}`
     : quiz.id;
+  // Untimed runs save progress under a separate key so a half-finished timed
+  // attempt doesn't get auto-resumed when the player switches to no-timer
+  // mode, and vice versa.
+  const progressKey = noTimer ? `${baseProgressKey}_nt` : baseProgressKey;
   const playableQuiz = isPart
     ? {
         ...quiz,
@@ -62,6 +72,7 @@ export default async function PlayQuizPage({ params, searchParams }: PlayPagePro
       isGuest={!user}
       partLabel={partLabel}
       progressKey={progressKey}
+      noTimer={noTimer}
     />
   );
 }

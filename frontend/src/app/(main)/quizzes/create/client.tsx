@@ -39,7 +39,7 @@ export function CreateQuizClient() {
       cancelLabel={t("quiz.cancel")}
       initialIsPublic={true}
       initialTimePerQuestion={30}
-      initialShuffleOptions={true}
+      initialShuffleOptions={false}
       onSubmit={submitQuiz}
     />
   );

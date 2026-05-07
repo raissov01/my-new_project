@@ -133,6 +133,10 @@ interface PlayQuizClientProps {
   // Stable scope for saved progress/results when the same quiz is played in parts.
   progressKey?: string;
   partLabel?: string;
+  // Untimed graded run. Same as play mode (submits attempt, saves progress)
+  // but with the per-question countdown disabled. Power-ups are turned off
+  // because +10s and ticktock UX assume a running clock.
+  noTimer?: boolean;
 }
 
 const GUEST_ATTEMPTS_KEY = "guest_quiz_attempts";
@@ -183,12 +187,17 @@ export function PlayQuizClient({
   isGuest = false,
   progressKey,
   partLabel,
+  noTimer = false,
 }: PlayQuizClientProps) {
   const isPractice = mode === "practice";
+  // timerOff covers any code path that depends on a running clock —
+  // the per-question interval, the ticktock urgency loop, the timer bar.
+  const timerOff = isPractice || noTimer;
   const sounds = useGameSound();
   // Power-ups are disabled in practice mode (it's a focused review, not a
-  // gamified run) and when the quiz owner has turned them off.
-  const powerUpsEnabled = !isPractice && (quiz.powerUpsEnabled ?? true);
+  // gamified run), in untimed mode (+10s is meaningless), and when the quiz
+  // owner has turned them off.
+  const powerUpsEnabled = !isPractice && !noTimer && (quiz.powerUpsEnabled ?? true);
   const powerUps = usePowerUps(powerUpsEnabled);
   // Client-only coin counter so Double Points has something to multiply.
   // Kept separate from the backend's authoritative % score so grading
@@ -886,14 +895,14 @@ export function PlayQuizClient({
   }, [questionType, recordMcq, recordMcqMulti, recordTrueFalse, recordBlank, recordReorder, recordMatching, recordHotspot, recordPoll, recordDropdown, recordCategorization, recordDrawing, recordVoiceResponse, recordAnswer]);
 
   // Countdown timer; auto-skips via handleTimeout when it hits 0.
-  // Practice mode disables the timer entirely so students can dwell on
-  // questions they previously got wrong.
+  // Practice and untimed modes disable the timer entirely so students can
+  // dwell on each question.
   const handleTimeoutRef = useRef(handleTimeout);
   useEffect(() => {
     handleTimeoutRef.current = handleTimeout;
   });
   useEffect(() => {
-    if (phase !== "asking" || isPractice) return;
+    if (phase !== "asking" || timerOff) return;
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -905,12 +914,12 @@ export function PlayQuizClient({
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [phase, currentIdx, isPractice]);
+  }, [phase, currentIdx, timerOff]);
 
   // Ticktock urgency loop: starts when 10 seconds remain, stops as soon as
   // the timer expires or the question phase changes (reveal, submit, etc).
   useEffect(() => {
-    if (phase !== "asking" || isPractice) {
+    if (phase !== "asking" || timerOff) {
       sounds.stop("ticktock");
       return;
     }
@@ -922,7 +931,7 @@ export function PlayQuizClient({
     return () => {
       sounds.stop("ticktock");
     };
-  }, [phase, timeLeft, isPractice, sounds]);
+  }, [phase, timeLeft, timerOff, sounds]);
 
   useEffect(() => {
     return () => clearAdvanceTimer();
@@ -1145,6 +1154,10 @@ export function PlayQuizClient({
                 <span className="inline-flex items-center gap-1.5 text-[var(--primary)]">
                   {t("quiz.practice.label")}
                 </span>
+              ) : noTimer ? (
+                <span className="inline-flex items-center gap-1.5 text-[var(--primary)]">
+                  {t("quiz.noTimer.label")}
+                </span>
               ) : (
                 <span className="inline-flex items-center gap-2.5">
                   {powerUpsEnabled && coins > 0 ? (
@@ -1188,7 +1201,7 @@ export function PlayQuizClient({
             <span className="hidden sm:inline">{t("quiz.play.exit")}</span>
           </button>
         </div>
-        {isPractice ? null : (
+        {timerOff ? null : (
           <div className="h-1.5 bg-[var(--bg-soft)]">
             <div
               className={`h-full transition-[width,background-color] duration-1000 ease-linear ${timerBarColor}${timerProgress < 0.2 ? " animate-pulse" : ""}`}
