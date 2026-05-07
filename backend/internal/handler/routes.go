@@ -346,6 +346,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.PUT("/nuet/mock/attempts/:attemptId/save", wrapHTTP(deps.NUET.SaveMockAttempt))
 		internal.POST("/nuet/mock/attempts/:attemptId/complete", wrapHTTP(deps.NUET.CompleteMockAttempt))
 		internal.POST("/nuet/simulator/start", wrapHTTP(deps.NUET.StartSimulator))
+		internal.GET("/nuet/simulator/:attemptID", wrapHTTP(deps.NUET.ResumeSimulator))
 		internal.PUT("/nuet/simulator/:attemptID/save", wrapHTTP(deps.NUET.SaveSimulator))
 		internal.PUT("/nuet/simulator/:attemptID/complete", wrapHTTP(deps.NUET.CompleteSimulator))
 		internal.POST("/nuet/simulator/:attemptID/violations", wrapHTTP(deps.NUET.LogSimulatorViolation))

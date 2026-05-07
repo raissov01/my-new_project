@@ -259,3 +259,23 @@ export async function getNUETAttempt(userId: string, id: string): Promise<NUETAt
     userId,
   });
 }
+
+export type NUETSimulatorResume = {
+  attempt: NUETAttempt;
+  questions: NUETSimulatorQuestion[];
+  durationMinutes: number;
+  strictMode: boolean;
+  responses: Record<string, string>;
+  marked: string[];
+  timeTakenSecs: number;
+};
+
+export async function getNUETSimulatorResume(
+  userId: string,
+  attemptId: string
+): Promise<NUETSimulatorResume> {
+  return fetchBackendJson<NUETSimulatorResume>({
+    path: `/api/v1/nuet/simulator/${encodeURIComponent(attemptId)}`,
+    userId,
+  });
+}

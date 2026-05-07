@@ -30,17 +30,24 @@ import {
   type NUETAttemptActionResult,
   type NUETSimulatorQuestion,
 } from "./actions";
+import type { NUETSimulatorResume } from "@/server/integrations/go-backend/nuet";
 
-type Stage = "configure" | "starting" | "exam" | "submitting" | "results";
+type Stage = "configure" | "starting" | "resume_prompt" | "exam" | "submitting" | "results";
 type SectionChoice = "full" | "math" | "ct";
 
 const ANSWER_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 
-export function NUETSimulatorClient() {
+export function NUETSimulatorClient({
+  initialResume,
+}: {
+  initialResume?: NUETSimulatorResume | null;
+}) {
   const { t } = useLocale();
-  const [stage, setStage] = useState<Stage>("configure");
+  const [stage, setStage] = useState<Stage>(
+    initialResume ? "resume_prompt" : "configure"
+  );
   const [section, setSection] = useState<SectionChoice>("full");
-  const [strictMode, setStrictMode] = useState(true);
+  const [strictMode, setStrictMode] = useState(initialResume?.strictMode ?? true);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<NUETSimulatorQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -242,6 +249,51 @@ export function NUETSimulatorClient() {
     }
   }
 
+  async function handleResume() {
+    if (!initialResume) return;
+    setError(null);
+    setViolationBanner(null);
+    setExpandedReview({});
+
+    const elapsed = Math.max(0, initialResume.timeTakenSecs);
+    const totalSecs = initialResume.durationMinutes * 60;
+    const remaining = Math.max(1, totalSecs - elapsed);
+    const restoredMarked = new Set(initialResume.marked ?? []);
+
+    setAttemptId(initialResume.attempt.id);
+    setQuestions(initialResume.questions);
+    setAnswers(initialResume.responses ?? {});
+    setMarked(restoredMarked);
+    setCurrentIndex(0);
+    setDurationMinutes(initialResume.durationMinutes);
+    setTimeLeft(remaining);
+    setResult(null);
+    setStrictMode(initialResume.strictMode);
+
+    if (initialResume.strictMode) {
+      try {
+        await examMode.requestFullscreen();
+      } catch {
+        // Fullscreen request can fail; the strict-mode policy will still
+        // monitor for violations once the exam stage is active.
+      }
+    }
+    setStage("exam");
+  }
+
+  async function handleAbandonResume() {
+    if (!initialResume) {
+      setStage("configure");
+      return;
+    }
+    try {
+      await abandonNUETAttempt(initialResume.attempt.id);
+    } catch {
+      // ignore — we still drop the user back to configure so they can start fresh
+    }
+    setStage("configure");
+  }
+
   async function handleBack() {
     clearIntervals();
     if (attemptId && stage === "exam") {
@@ -274,6 +326,77 @@ export function NUETSimulatorClient() {
 
   function jumpTo(index: number) {
     setCurrentIndex(index);
+  }
+
+  if (stage === "resume_prompt" && initialResume) {
+    const elapsed = Math.max(0, initialResume.timeTakenSecs);
+    const totalSecs = initialResume.durationMinutes * 60;
+    const remainingSecs = Math.max(0, totalSecs - elapsed);
+    const remainingMin = Math.ceil(remainingSecs / 60);
+    const answeredCount = Object.values(initialResume.responses ?? {}).filter(
+      Boolean
+    ).length;
+    const startedAt = new Date(initialResume.attempt.startedAt);
+    return (
+      <section className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+          {t("nuet.simulator.resumeLabel")}
+        </p>
+        <h2 className="mt-2 text-2xl font-bold text-[var(--text-primary)]">
+          {t("nuet.simulator.resumeTitle")}
+        </h2>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          {t("nuet.simulator.resumeBody")}
+        </p>
+
+        <dl className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
+            <dt className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+              {t("nuet.simulator.resumeStarted")}
+            </dt>
+            <dd className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+              {startedAt.toLocaleString()}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
+            <dt className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+              {t("nuet.simulator.resumeAnswered")}
+            </dt>
+            <dd className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+              {answeredCount} / {initialResume.questions.length}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
+            <dt className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+              {t("nuet.simulator.resumeRemaining")}
+            </dt>
+            <dd className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+              {remainingMin} min
+            </dd>
+          </div>
+        </dl>
+
+        {error ? (
+          <p className="mt-4 flex items-start gap-2 text-sm text-rose-600">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            {error}
+          </p>
+        ) : null}
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button onClick={() => void handleResume()} className="px-6">
+            {t("nuet.simulator.resumeContinue")}
+          </Button>
+          <button
+            type="button"
+            onClick={() => void handleAbandonResume()}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:border-rose-400 hover:text-rose-600"
+          >
+            {t("nuet.simulator.resumeAbandon")}
+          </button>
+        </div>
+      </section>
+    );
   }
 
   if (stage === "configure" || stage === "starting") {

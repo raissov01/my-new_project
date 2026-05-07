@@ -3,6 +3,11 @@ import Link from "next/link";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
+import {
+  getNUETSimulatorResume,
+  listNUETAttempts,
+  type NUETSimulatorResume,
+} from "@/server/integrations/go-backend/nuet";
 import { NUETSimulatorClient } from "./client";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,6 +36,17 @@ export default async function NUETSimulatorPage() {
     );
   }
 
+  let resume: NUETSimulatorResume | null = null;
+  const inProgress = await listNUETAttempts(user.id, {
+    status: "in_progress",
+    attemptType: "full_mock",
+    limit: 1,
+  }).catch(() => ({ attempts: [], total: 0, limit: 0, offset: 0 }));
+  const candidate = inProgress.attempts[0];
+  if (candidate) {
+    resume = await getNUETSimulatorResume(user.id, candidate.id).catch(() => null);
+  }
+
   return (
     <div className="page-shell py-6 sm:py-8">
       <div className="rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--bg-soft)] to-[var(--bg-surface)] p-5 sm:p-6">
@@ -52,7 +68,7 @@ export default async function NUETSimulatorPage() {
         </div>
       </div>
 
-      <NUETSimulatorClient />
+      <NUETSimulatorClient initialResume={resume} />
     </div>
   );
 }

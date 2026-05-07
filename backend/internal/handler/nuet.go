@@ -786,6 +786,86 @@ func (h *NUETHandler) StartSimulator(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GET /nuet/simulator/:attemptID
+//
+// Returns the in-progress simulator attempt with its question set, saved
+// responses, marked-question IDs, and elapsed time so the client can pick
+// up exactly where the user left off. Requires the attempt to belong to
+// the caller and to still be in_progress; non-simulator attempts are
+// rejected with 409.
+func (h *NUETHandler) ResumeSimulator(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	attemptID := strings.TrimSpace(r.PathValue("attemptID"))
+	if attemptID == "" {
+		writeError(w, http.StatusBadRequest, "attemptID required", nil)
+		return
+	}
+
+	var attempt models.NUETAttempt
+	if err := h.db.Where("id = ? AND user_id = ?", attemptID, userID).First(&attempt).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			writeError(w, http.StatusNotFound, "attempt not found", nil)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "failed to load attempt", err)
+		return
+	}
+	if attempt.Status != "in_progress" {
+		writeError(w, http.StatusConflict, "attempt is not in progress", nil)
+		return
+	}
+	if attempt.AttemptType != "full_mock" && attempt.AttemptType != "section_practice" {
+		writeError(w, http.StatusConflict, "attempt is not a simulator run", nil)
+		return
+	}
+
+	questionIDs := parseNUETStringArray(attempt.QuestionSet)
+	if len(questionIDs) == 0 {
+		writeError(w, http.StatusInternalServerError, "attempt has no question set", nil)
+		return
+	}
+
+	questionMap, err := h.loadNUETQuestionsByIDs(questionIDs)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load simulator questions", err)
+		return
+	}
+
+	simulatorQuestions := make([]nuetSimulatorQuestion, 0, len(questionIDs))
+	for index, id := range questionIDs {
+		question, ok := questionMap[id]
+		if !ok {
+			continue
+		}
+		simulatorQuestions = append(simulatorQuestions, nuetSimulatorQuestion{
+			ID:         question.ID,
+			Number:     index + 1,
+			Section:    question.Section,
+			Difficulty: question.Difficulty,
+			Prompt:     question.Prompt,
+			Options:    parseNUETStringArray(question.Options),
+		})
+	}
+
+	state := parseNUETSimulatorState(attempt.Answers)
+	_, durationMinutes, _ := normalizeNUETSimulatorSection(attempt.Section)
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"attempt":         buildNUETAttemptResponse(attempt, nil, &nuetScoreMeta{ScoreAvailable: false}, nil),
+		"questions":       simulatorQuestions,
+		"durationMinutes": durationMinutes,
+		"strictMode":      attempt.StrictMode,
+		"responses":       state.Responses,
+		"marked":          state.Marked,
+		"timeTakenSecs":   attempt.TimeTakenSecs,
+	})
+}
+
 // PUT /nuet/simulator/:attemptID/save
 func (h *NUETHandler) SaveSimulator(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
