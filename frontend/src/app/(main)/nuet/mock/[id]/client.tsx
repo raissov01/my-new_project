@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Clock3, Flag, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Clock3, Flag, LayoutGrid, Loader2, X } from "lucide-react";
 import { MathText } from "@/components/nuet/math-text";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useScreenWakeLock } from "@/hooks/use-wake-lock";
 import { Button } from "@/components/ui/button";
 import {
   completeNUETMockAttempt,
@@ -47,6 +48,8 @@ export function NUETMockClient({
   const [saveLabel, setSaveLabel] = useState("");
   const [result, setResult] = useState<NUETMockCompleteResponse | null>(null);
   const [expandedResult, setExpandedResult] = useState<Record<string, boolean>>({});
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  useScreenWakeLock(stage === "exam");
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autosaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -362,13 +365,46 @@ export function NUETMockClient({
   }
 
   return (
-    <div className="mt-6 grid gap-5 lg:grid-cols-[290px_1fr]">
-      <aside className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+    <div className="lg:mt-6 lg:grid lg:grid-cols-[290px_1fr] lg:gap-5">
+      {/* Mobile sticky header */}
+      <div className="sticky top-0 z-30 -mx-4 flex items-center gap-2 border-b border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 sm:-mx-6 sm:px-6 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileNavOpen(true)}
+          aria-label={t("nuet.simulator.openNav")}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)]"
+        >
+          <LayoutGrid className="h-4 w-4" />
+          {currentIndex + 1}/{questions.length}
+        </button>
+        <div className="ml-auto flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-semibold text-[var(--text-primary)]">
+          <Clock3 className="h-4 w-4" />
+          {formatTime(timeLeft)}
+        </div>
+      </div>
+
+      <aside
+        className={`space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 ${
+          mobileNavOpen
+            ? "fixed inset-0 z-40 m-0 h-full overflow-y-auto rounded-none lg:relative lg:inset-auto lg:m-0 lg:h-auto lg:overflow-visible lg:rounded-2xl"
+            : "hidden lg:block"
+        }`}
+      >
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-[var(--text-primary)]">{testName}</p>
-          <div className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-sm font-semibold text-[var(--text-primary)]">
-            <Clock3 className="mr-1 inline h-4 w-4" />
-            {formatTime(timeLeft)}
+          <p className="truncate text-sm font-medium text-[var(--text-primary)]">{testName}</p>
+          <div className="flex items-center gap-2">
+            <div className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-sm font-semibold text-[var(--text-primary)]">
+              <Clock3 className="mr-1 inline h-4 w-4" />
+              {formatTime(timeLeft)}
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(false)}
+              aria-label={t("nuet.simulator.closeNav")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-muted)] lg:hidden"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
@@ -380,7 +416,7 @@ export function NUETMockClient({
         {saveLabel ? <p className="text-xs text-[var(--text-muted)]">{saveLabel}</p> : null}
         {error ? <p className="text-xs text-amber-700">{error}</p> : null}
 
-        <div className="grid grid-cols-10 gap-2">
+        <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
           {questions.map((question, index) => {
             const isMarked = marked.has(question.id);
             const answered = Boolean(answers[question.id]);
@@ -394,7 +430,10 @@ export function NUETMockClient({
               <button
                 key={question.id}
                 type="button"
-                onClick={() => setCurrentIndex(index)}
+                onClick={() => {
+                  setCurrentIndex(index);
+                  setMobileNavOpen(false);
+                }}
                 className={`aspect-square rounded-md border text-xs font-semibold transition ${baseClass} ${activeClass}`}
               >
                 {index + 1}
@@ -404,7 +443,7 @@ export function NUETMockClient({
         </div>
       </aside>
 
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 pb-24 sm:p-6 sm:pb-24 lg:mt-0 lg:pb-6">
         {activeQuestion ? (
           <>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -417,7 +456,7 @@ export function NUETMockClient({
               <button
                 type="button"
                 onClick={() => toggleMarked(activeQuestion.id)}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm ${
+                className={`hidden items-center gap-2 rounded-full border px-3 py-2 text-sm sm:inline-flex ${
                   marked.has(activeQuestion.id)
                     ? "border-amber-300 bg-amber-50 text-amber-700"
                     : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)]"
@@ -456,7 +495,7 @@ export function NUETMockClient({
               })}
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-8 hidden flex-wrap items-center justify-between gap-3 lg:flex">
               <Button
                 variant="ghost"
                 onClick={() => setCurrentIndex((current) => Math.max(0, current - 1))}
@@ -491,6 +530,52 @@ export function NUETMockClient({
           </div>
         )}
       </section>
+
+      {/* Mobile bottom action bar */}
+      {activeQuestion ? (
+        <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 gap-2 border-t border-[var(--border)] bg-[var(--bg-base)] p-2 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setCurrentIndex((current) => Math.max(0, current - 1))}
+            disabled={currentIndex === 0}
+            className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] disabled:opacity-40"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Prev
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleMarked(activeQuestion.id)}
+            className={`inline-flex items-center justify-center gap-1 rounded-lg border px-3 py-2.5 text-sm font-medium ${
+              marked.has(activeQuestion.id)
+                ? "border-amber-300 bg-amber-50 text-amber-700"
+                : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)]"
+            }`}
+          >
+            <Flag className="h-4 w-4" />
+            {marked.has(activeQuestion.id) ? "Unmark" : "Mark"}
+          </button>
+          {currentIndex === questions.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => void submitAttempt()}
+              disabled={stage === "submitting"}
+              className="inline-flex items-center justify-center gap-1 rounded-lg bg-[var(--primary)] px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {stage === "submitting" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCurrentIndex((current) => Math.min(questions.length - 1, current + 1))}
+              className="inline-flex items-center justify-center gap-1 rounded-lg bg-[var(--primary)] px-3 py-2.5 text-sm font-semibold text-white"
+            >
+              Next
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
