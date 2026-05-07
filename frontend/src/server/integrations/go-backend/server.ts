@@ -1,5 +1,6 @@
 import "server-only";
 
+import { headers as requestHeaders } from "next/headers";
 import { getBackendBaseUrl, getBackendInternalToken } from "./env";
 
 type BackendFetchOptions = {
@@ -16,6 +17,24 @@ type BackendFetchOptions = {
   };
 };
 
+// In production all SSR traffic to the Go backend exits the frontend container
+// from a single Docker-network IP. Without forwarding the real client IP, the
+// backend's IP-based rate limiter throttles every user as if they were the
+// same caller. We read the inbound request's X-Forwarded-For (set by nginx)
+// and pass it through so the backend can rate-limit per real client.
+async function getForwardedClientIP(): Promise<string | null> {
+  try {
+    const h = await requestHeaders();
+    const xff = h.get("x-forwarded-for");
+    if (xff) return xff;
+    const xri = h.get("x-real-ip");
+    if (xri) return xri;
+  } catch {
+    // headers() is not available outside a request scope (e.g. background jobs).
+  }
+  return null;
+}
+
 export async function fetchBackendJson<T>(options: BackendFetchOptions): Promise<T> {
   const baseUrl = getBackendBaseUrl();
   const internalToken = getBackendInternalToken();
@@ -27,6 +46,8 @@ export async function fetchBackendJson<T>(options: BackendFetchOptions): Promise
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 8_000);
 
+  const forwardedFor = await getForwardedClientIP();
+
   try {
     const response = await fetch(`${baseUrl}${options.path}`, {
       method: options.method ?? "GET",
@@ -34,6 +55,7 @@ export async function fetchBackendJson<T>(options: BackendFetchOptions): Promise
       headers: {
         Authorization: `Bearer ${internalToken}`,
         "X-User-ID": options.userId,
+        ...(forwardedFor ? { "X-Forwarded-For": forwardedFor } : {}),
         ...(options.headers ?? {}),
       },
       cache: options.cache ?? "no-store",
@@ -69,12 +91,15 @@ export async function fetchBackendRaw(
     throw new Error("GO_BACKEND_BRIDGE_NOT_CONFIGURED");
   }
 
+  const forwardedFor = await getForwardedClientIP();
+
   const response = await fetch(`${baseUrl}${options.path}`, {
     method: options.method ?? "GET",
     body: options.body ?? null,
     headers: {
       Authorization: `Bearer ${internalToken}`,
       "X-User-ID": options.userId,
+      ...(forwardedFor ? { "X-Forwarded-For": forwardedFor } : {}),
       ...(options.headers ?? {}),
     },
     cache: "no-store",

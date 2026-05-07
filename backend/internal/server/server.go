@@ -62,6 +62,14 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	router := gin.New()
+	// Trust X-Forwarded-For from any proxy: the backend container is only
+	// reachable through nginx and the frontend SSR layer over the internal
+	// Docker network — never directly from the public internet. Without this,
+	// c.ClientIP() returns the frontend container IP and the IP rate limiter
+	// throttles all SSR users as if they were the same caller.
+	if err := router.SetTrustedProxies([]string{"0.0.0.0/0", "::/0"}); err != nil {
+		return nil, fmt.Errorf("set trusted proxies: %w", err)
+	}
 	router.Use(gin.Logger(), gin.Recovery(), middleware.APIMetrics())
 
 	gameSvc := service.NewGamification(gormDB, email.NewSender(cfg.ResendAPIKey, cfg.ResendFrom, cfg.FrontendURL, gormDB))
