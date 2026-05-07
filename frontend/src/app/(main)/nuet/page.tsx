@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Brain, FileText, GraduationCap, Library, Map, ScrollText, Trophy } from "lucide-react";
+import { BookOpen, Brain, FileText, Globe2, GraduationCap, Library, Map, ScrollText, Trophy } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
@@ -75,6 +75,14 @@ export default async function NUETHubPage() {
       meta: "18 PDF",
       href: "/nuet/pdf-tests",
       tone: "blue" as const,
+    },
+    {
+      icon: Globe2,
+      titleKey: "nuet.mod.resources",
+      descKey: "nuet.mod.resourcesDesc",
+      meta: t("nuet.mod.resourcesMeta"),
+      href: "/nuet/resources",
+      tone: "green" as const,
     },
   ];
 

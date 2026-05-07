@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BookOpen, Brain, FileText, PlayCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, ExternalLink, FileText, PlayCircle } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { getNUETTopic, listNUETMaterials, listNUETQuestions } from "@/server/integrations/go-backend/nuet";
 import { MathText } from "@/components/nuet/math-text";
+import { TOPIC_LINKS } from "./recommended-links";
 
 export async function generateMetadata({
   params,
@@ -165,6 +166,36 @@ export default async function NUETTopicPage({
         </div>
 
         <aside className="space-y-4">
+          {TOPIC_LINKS[topic.slug] && TOPIC_LINKS[topic.slug].length > 0 ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+              <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
+                {t("nuet.topic.recommendedLinks")}
+              </h3>
+              <ul className="space-y-2">
+                {TOPIC_LINKS[topic.slug].map((link) => (
+                  <li key={link.url}>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="group flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-[var(--bg-base)]"
+                    >
+                      <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-[var(--text-muted)] group-hover:text-[var(--primary)]" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs font-medium text-[var(--text-primary)] group-hover:text-[var(--primary)]">
+                          {link.label}
+                        </span>
+                        <span className="block text-[10px] font-mono uppercase tracking-wide text-[var(--text-muted)]">
+                          {link.source}
+                        </span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
             <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
               {t("nuet.relatedMaterials")}
