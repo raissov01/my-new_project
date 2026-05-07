@@ -31,14 +31,12 @@ export default async function NUETMaterialsPage({
   const t = createTranslator(locale);
   const user = await getCurrentUser();
 
-  const data = user
-    ? await listNUETMaterials(user.id, {
-        section: params.section,
-        type: params.type,
-        withFile: true,
-        limit: 100,
-      }).catch(() => ({ items: [], total: 0 }))
-    : { items: [], total: 0 };
+  const data = await listNUETMaterials(user?.id ?? "", {
+    section: params.section,
+    type: params.type,
+    withFile: true,
+    limit: 100,
+  }).catch(() => ({ items: [], total: 0 }));
 
   const sectionFilters = [
     { key: undefined, label: t("nuet.filterAll") },

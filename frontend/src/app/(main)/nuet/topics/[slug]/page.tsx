@@ -43,17 +43,16 @@ export default async function NUETTopicPage({
   // like topic_algebra, topic_geometry, etc. Slug→topic-key mapping is
   // approximate (best-effort).
   const topicKey = inferTopicKey(slug);
-  const [materials, examples] = user
-    ? await Promise.all([
-        listNUETMaterials(user.id, {
-          section: topic.section,
-          topic: topicKey,
-          withFile: true,
-          limit: 20,
-        }).catch(() => ({ items: [], total: 0 })),
-        listNUETQuestions(user.id, { topicSlug: topic.slug, limit: 5 }).catch(() => ({ items: [] })),
-      ])
-    : [{ items: [], total: 0 }, { items: [] }];
+  const userId = user?.id ?? "";
+  const [materials, examples] = await Promise.all([
+    listNUETMaterials(userId, {
+      section: topic.section,
+      topic: topicKey,
+      withFile: true,
+      limit: 20,
+    }).catch(() => ({ items: [], total: 0 })),
+    listNUETQuestions(userId, { topicSlug: topic.slug, limit: 5 }).catch(() => ({ items: [] })),
+  ]);
 
   const SectionIcon = topic.section === "math" ? BookOpen : Brain;
 
