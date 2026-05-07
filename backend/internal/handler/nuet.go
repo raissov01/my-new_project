@@ -667,7 +667,13 @@ func (h *NUETHandler) CompleteMockAttempt(w http.ResponseWriter, r *http.Request
 	}
 
 	answersJSON := marshalNUETJSON(answers)
-	resultsJSON := marshalNUETJSON(results)
+	// Persist evaluations in the same shape the simulator uses so the
+	// /nuet/history/[attemptId] review page can read PDF-test attempts via
+	// parseNUETStoredEvaluations. The response keeps the legacy `results`
+	// array shape for backward compatibility.
+	resultsJSON := marshalNUETJSON(map[string]any{
+		"evaluations": score.Evaluations,
+	})
 	now := time.Now()
 	if err := h.db.Model(&attempt).Updates(map[string]any{
 		"answers":         &answersJSON,
@@ -1587,7 +1593,59 @@ func (h *NUETHandler) GetAttempt(w http.ResponseWriter, r *http.Request) {
 
 	meta := h.lookupNUETScoreMeta(attempt)
 	names := h.lookupNUETAttemptNames(attempt)
-	writeJSON(w, http.StatusOK, buildNUETAttemptResponse(attempt, parseNUETStoredEvaluations(attempt.Results), meta, names))
+	evaluations := parseNUETStoredEvaluations(attempt.Results)
+	h.enrichNUETEvaluations(evaluations)
+	writeJSON(w, http.StatusOK, buildNUETAttemptResponse(attempt, evaluations, meta, names))
+}
+
+// enrichNUETEvaluations fills missing Prompt/Section fields on evaluations
+// by looking up the underlying question. This matters for legacy PDF-test
+// attempts whose stored shape (nuetMockResultItem) did not include prompt
+// or section. Mutates the slice in place.
+func (h *NUETHandler) enrichNUETEvaluations(evaluations []nuetAnswerEvaluation) {
+	if len(evaluations) == 0 {
+		return
+	}
+	missing := make([]string, 0)
+	for _, ev := range evaluations {
+		if ev.QuestionID == "" {
+			continue
+		}
+		if ev.Prompt == "" || ev.Section == "" {
+			missing = append(missing, ev.QuestionID)
+		}
+	}
+	if len(missing) == 0 {
+		return
+	}
+	type qrow struct {
+		ID      string
+		Prompt  string
+		Section string
+	}
+	var rows []qrow
+	if err := h.db.Table("nuet_questions").
+		Select("id, prompt, section").
+		Where("id IN ?", missing).
+		Scan(&rows).Error; err != nil {
+		return
+	}
+	byID := make(map[string]qrow, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row
+	}
+	for i := range evaluations {
+		row, ok := byID[evaluations[i].QuestionID]
+		if !ok {
+			continue
+		}
+		if evaluations[i].Prompt == "" {
+			evaluations[i].Prompt = row.Prompt
+		}
+		if evaluations[i].Section == "" {
+			evaluations[i].Section = row.Section
+		}
+	}
 }
 
 // GET /nuet/attempts?status=in_progress|completed|abandoned
@@ -2191,13 +2249,32 @@ func parseNUETStoredEvaluations(raw *string) []nuetAnswerEvaluation {
 	if raw == nil || strings.TrimSpace(*raw) == "" {
 		return nil
 	}
+	// Preferred shape (simulator + new PDF attempts): {"evaluations": [...]}
 	var payload struct {
 		Evaluations []nuetAnswerEvaluation `json:"evaluations"`
 	}
-	if err := json.Unmarshal([]byte(*raw), &payload); err != nil {
+	if err := json.Unmarshal([]byte(*raw), &payload); err == nil && len(payload.Evaluations) > 0 {
+		return payload.Evaluations
+	}
+	// Legacy PDF-test shape: top-level array of nuetMockResultItem. Convert
+	// so callers see a single evaluation type. Prompt/section are absent in
+	// this shape; the review page falls back gracefully.
+	var legacy []nuetMockResultItem
+	if err := json.Unmarshal([]byte(*raw), &legacy); err != nil {
 		return nil
 	}
-	return payload.Evaluations
+	out := make([]nuetAnswerEvaluation, 0, len(legacy))
+	for i, item := range legacy {
+		out = append(out, nuetAnswerEvaluation{
+			Question:    i + 1,
+			QuestionID:  item.QuestionID,
+			Expected:    item.Expected,
+			Received:    item.Given,
+			Explanation: item.Explanation,
+			Correct:     item.Correct,
+		})
+	}
+	return out
 }
 
 func parseNUETStringArray(raw *string) []string {
