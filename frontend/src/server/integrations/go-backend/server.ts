@@ -22,15 +22,20 @@ type BackendFetchOptions = {
 // backend's IP-based rate limiter throttles every user as if they were the
 // same caller. We read the inbound request's X-Forwarded-For (set by nginx)
 // and pass it through so the backend can rate-limit per real client.
-async function getForwardedClientIP(): Promise<string | null> {
+async function getForwardedClientIP(path: string): Promise<string | null> {
   try {
     const h = await requestHeaders();
     const xff = h.get("x-forwarded-for");
-    if (xff) return xff;
     const xri = h.get("x-real-ip");
+    if (process.env.XFF_DEBUG === "1") {
+      console.log(`[xff] path=${path} xff=${xff ?? "NONE"} xri=${xri ?? "NONE"}`);
+    }
+    if (xff) return xff;
     if (xri) return xri;
-  } catch {
-    // headers() is not available outside a request scope (e.g. background jobs).
+  } catch (e) {
+    if (process.env.XFF_DEBUG === "1") {
+      console.log(`[xff] path=${path} ERROR`, e instanceof Error ? e.message : e);
+    }
   }
   return null;
 }
@@ -46,7 +51,7 @@ export async function fetchBackendJson<T>(options: BackendFetchOptions): Promise
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 8_000);
 
-  const forwardedFor = await getForwardedClientIP();
+  const forwardedFor = await getForwardedClientIP(options.path);
 
   try {
     const response = await fetch(`${baseUrl}${options.path}`, {
@@ -91,7 +96,7 @@ export async function fetchBackendRaw(
     throw new Error("GO_BACKEND_BRIDGE_NOT_CONFIGURED");
   }
 
-  const forwardedFor = await getForwardedClientIP();
+  const forwardedFor = await getForwardedClientIP(options.path);
 
   const response = await fetch(`${baseUrl}${options.path}`, {
     method: options.method ?? "GET",
