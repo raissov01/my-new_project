@@ -7,6 +7,7 @@ import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { getNUETTopic, listNUETMaterials, listNUETQuestions } from "@/server/integrations/go-backend/nuet";
 import { MathText } from "@/components/nuet/math-text";
+import { PrintButton } from "@/components/nuet/print-button";
 import { TOPIC_LINKS } from "./recommended-links";
 
 export async function generateMetadata({
@@ -60,7 +61,7 @@ export default async function NUETTopicPage({
     <article className="page-shell py-6 sm:py-10">
       <Link
         href="/nuet/topics"
-        className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+        className="print-hide inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)]"
       >
         <ArrowLeft className="h-4 w-4" />
         {t("nuet.backToTopics")}
@@ -81,18 +82,21 @@ export default async function NUETTopicPage({
             {topic.description}
           </p>
         ) : null}
-        <Link
-          href={`/nuet/practice/${topic.slug}`}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-        >
-          <PlayCircle className="h-4 w-4" />
-          {t("nuet.mod.practice")}
-        </Link>
+        <div className="mt-4 flex flex-wrap gap-3 print-hide">
+          <Link
+            href={`/nuet/practice/${topic.slug}`}
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+          >
+            <PlayCircle className="h-4 w-4" />
+            {t("nuet.mod.practice")}
+          </Link>
+          <PrintButton />
+        </div>
       </header>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+          <section className="print-paper rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
             <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
               {t("nuet.topicExplanation")}
             </h2>
@@ -101,7 +105,7 @@ export default async function NUETTopicPage({
             </div>
           </section>
 
-          <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+          <section className="print-hide rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
             <h2 className="text-lg font-semibold text-[var(--text-primary)]">
               {t("nuet.topic.examplesTitle")}
             </h2>
@@ -164,7 +168,7 @@ export default async function NUETTopicPage({
           </section>
         </div>
 
-        <aside className="space-y-4">
+        <aside className="print-hide space-y-4">
           {TOPIC_LINKS[topic.slug] && TOPIC_LINKS[topic.slug].length > 0 ? (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
               <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">

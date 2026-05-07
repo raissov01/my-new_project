@@ -1894,3 +1894,42 @@ a, button, input, textarea, select {
   animation: quiz-countdown-pop 750ms cubic-bezier(.25, .9, .35, 1.1) forwards;
   display: inline-block;
 }
+
+/* ── Print mode (used by /nuet/topics/[slug] PDF export) ───────────────── */
+@media print {
+  /* Strip the app chrome so the printed page is just the explanation. */
+  .nd-sidebar,
+  .nd-sidebar-topbar,
+  .print-hide {
+    display: none !important;
+  }
+  /* The (main) layout reserves left padding for the docked sidebar; reset
+     it on print so the content uses the full page width. */
+  body,
+  body > div,
+  body > div > div {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+  }
+  body {
+    background: white !important;
+  }
+  /* Make the printable surface look like plain paper. */
+  .print-paper {
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    padding: 0 !important;
+  }
+  .print-paper * {
+    color: #111 !important;
+    background: transparent !important;
+  }
+  /* Avoid splitting math blocks across pages where possible. */
+  .katex-display,
+  .katex {
+    page-break-inside: avoid;
+  }
+}
+
