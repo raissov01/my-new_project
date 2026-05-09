@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   CartesianGrid,
@@ -32,6 +32,37 @@ export function NUETHistoryClient({
 }) {
   const { t } = useLocale();
   const [filter, setFilter] = useState<ChartFilter>("all");
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"date_desc" | "score_desc" | "score_asc">("date_desc");
+
+  // List-section filtering — independent from the chart filter so the user
+  // can keep their chart view while narrowing the list. Matches against the
+  // attempt title (test name / topic / mock label) and the date string.
+  const visibleAttempts = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let items = attempts;
+    if (q) {
+      items = items.filter((a) => {
+        const title =
+          a.attemptType === "pdf_test"
+            ? a.pdfTestName ?? ""
+            : a.attemptType === "full_mock"
+              ? "mock simulator"
+              : a.topicTitle ?? a.attemptType;
+        const haystack = `${title} ${a.attemptType} ${a.section ?? ""} ${a.createdAt}`.toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+    const sorted = [...items];
+    if (sortBy === "score_desc") {
+      sorted.sort((a, b) => b.scoreTotal - a.scoreTotal);
+    } else if (sortBy === "score_asc") {
+      sorted.sort((a, b) => a.scoreTotal - b.scoreTotal);
+    } else {
+      sorted.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    }
+    return sorted;
+  }, [attempts, query, sortBy]);
 
   const scoredAttempts = useMemo(
     () => attempts.filter((attempt) => attempt.status === "completed" && attempt.scoreAvailable),
@@ -225,8 +256,40 @@ export function NUETHistoryClient({
         </section>
       )}
 
+      {attempts.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
+          <label className="flex flex-1 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-sm">
+            <Search className="h-4 w-4 text-[var(--text-muted)]" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("nuet.history.searchPlaceholder")}
+              className="w-full bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
+            />
+          </label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-sm text-[var(--text-primary)]"
+          >
+            <option value="date_desc">{t("nuet.history.sortDateDesc")}</option>
+            <option value="score_desc">{t("nuet.history.sortScoreDesc")}</option>
+            <option value="score_asc">{t("nuet.history.sortScoreAsc")}</option>
+          </select>
+          <span className="font-mono text-xs text-[var(--text-muted)]">
+            {visibleAttempts.length} / {attempts.length}
+          </span>
+        </div>
+      ) : null}
+
       <div className="space-y-3">
-        {attempts.map((attempt) => (
+        {visibleAttempts.length === 0 && query ? (
+          <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-base)] p-6 text-center text-sm text-[var(--text-muted)]">
+            {t("nuet.history.searchEmpty")}
+          </p>
+        ) : null}
+        {visibleAttempts.map((attempt) => (
           <article key={attempt.id} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>

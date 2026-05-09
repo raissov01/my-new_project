@@ -7,6 +7,7 @@ import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { getNUETAttempt } from "@/server/integrations/go-backend/nuet";
 import { NUETReviewClient } from "./client";
+import { PrintButton } from "@/components/nuet/print-button";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -56,10 +57,10 @@ export default async function NUETAttemptReviewPage({
         : attempt.topicTitle || t("nuet.mod.practice");
 
   return (
-    <div className="page-shell py-6 sm:py-10">
+    <div className="page-shell print-paper py-6 sm:py-10">
       <Link
         href="/nuet/history"
-        className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+        className="print-hide inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)]"
       >
         <ArrowLeft className="h-4 w-4" />
         {t("nuet.review.backToHistory")}
@@ -75,6 +76,9 @@ export default async function NUETAttemptReviewPage({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 text-sm">
+          <div className="print-hide">
+            <PrintButton />
+          </div>
           <Stat
             label={t("nuet.review.score")}
             value={String(attempt.scoreTotal)}

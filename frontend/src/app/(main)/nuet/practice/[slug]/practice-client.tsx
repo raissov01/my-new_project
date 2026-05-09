@@ -184,9 +184,20 @@ export function NUETPracticeClient({
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
           <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("nuet.practice.reviewTitle")}</h3>
           <div className="mt-4 space-y-3">
-            {questions.map((question, index) => {
-              const evaluation = result.evaluations?.[index];
-              const selected = answers[question.id];
+            {(() => {
+              // Build a questionId → evaluation map first. The previous code
+              // looked up evaluations by index, which silently mismatched
+              // when the backend skipped a question or returned them in a
+              // different order — students saw the wrong correctness badge
+              // on each row.
+              const evalById = new Map(
+                (result.evaluations ?? [])
+                  .filter((ev) => ev.questionId)
+                  .map((ev) => [ev.questionId as string, ev])
+              );
+              return questions.map((question, index) => {
+                const evaluation = evalById.get(question.id);
+                const selected = answers[question.id];
               return (
                 <div
                   key={question.id}
@@ -208,7 +219,8 @@ export function NUETPracticeClient({
                   ) : null}
                 </div>
               );
-            })}
+              });
+            })()}
           </div>
         </div>
       </div>
