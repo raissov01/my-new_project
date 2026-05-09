@@ -8,6 +8,19 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { getIELTSDashboard, getIELTSWeakness, getRoadmapProgress } from "../simulator/attempt-actions";
 
+// BCP-47 tags for browser-side date formatting. Locale codes "kk", "ru", "en"
+// don't map 1:1 to Intl date locales — derive a regional tag so users see
+// dates in their own language.
+const DATE_LOCALES: Record<string, string> = { kk: "kk-KZ", ru: "ru-RU", en: "en-US" };
+
+const READINESS_BADGE: Record<string, string> = {
+  "exam ready": "bg-emerald-500/10 text-emerald-400",
+  "strong progress": "bg-blue-500/10 text-blue-400",
+  "on track": "bg-amber-500/10 text-amber-400",
+  "building momentum": "bg-indigo-500/10 text-indigo-400",
+  "just started": "bg-[var(--bg-soft)] text-[var(--text-muted)]",
+};
+
 type DashboardData = {
   recentAttempts: Array<{
     id: string;
@@ -59,7 +72,8 @@ type RoadmapProgress = {
 };
 
 export function IELTSDashboardClient() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const dateLocale = DATE_LOCALES[locale] ?? "en-US";
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [weakness, setWeakness] = useState<WeaknessData | null>(null);
   const [roadmap, setRoadmap] = useState<RoadmapProgress | null>(null);
@@ -77,7 +91,7 @@ export function IELTSDashboardClient() {
         setRoadmap((progress as { progress: RoadmapProgress | null }).progress);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "error");
+      setError(err instanceof Error ? err.message : "");
     } finally {
       setLoading(false);
     }
@@ -93,7 +107,10 @@ export function IELTSDashboardClient() {
       { label: t("ielts.dashboard.writing"), value: dashboard.writingAvgBand },
       { label: t("ielts.dashboard.speaking"), value: dashboard.speakingAvgBand },
     ];
-  }, [dashboard]);
+  }, [dashboard, t]);
+
+  const bandPrefix = t("ielts.dashboard.bandPrefix");
+  const naShort = t("ielts.dashboard.naShort");
 
   if (loading) {
     return (
@@ -121,9 +138,9 @@ export function IELTSDashboardClient() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 sm:p-8">
+      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 sm:p-8" role="alert">
         <div className="flex flex-col items-center gap-4 text-center">
-          <AlertCircle className="h-10 w-10 text-red-400" />
+          <AlertCircle className="h-10 w-10 text-red-400" aria-hidden="true" />
           <div>
             <p className="font-semibold text-[var(--text-primary)]">{t("error.pageTitle")}</p>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("error.pageBody")}</p>
@@ -132,7 +149,7 @@ export function IELTSDashboardClient() {
             onClick={() => void load()}
             className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-elevated)]"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
             {t("error.tryAgain")}
           </button>
         </div>
@@ -165,26 +182,37 @@ export function IELTSDashboardClient() {
       <section className="grid gap-4 lg:grid-cols-[1.3fr_0.9fr]">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
           <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
-            <BookOpen className="h-4 w-4" />
+            <BookOpen className="h-4 w-4" aria-hidden="true" />
             {t("ielts.dashboard.recentAttempts")}
           </div>
           <div className="mt-4 space-y-3">
-            {dashboard.recentAttempts.map((attempt) => (
-              <div key={attempt.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-medium text-[var(--text-primary)]">{attempt.attemptType.replaceAll("_", " ")}</p>
-                    <p className="text-xs text-[var(--text-secondary)]">{attempt.section} · {t("ielts.dashboard.bandTarget")} {attempt.bandTarget}</p>
+            {dashboard.recentAttempts.length === 0 && (
+              <p className="text-sm text-[var(--text-muted)]">{t("ielts.dashboard.recentAttemptsEmpty")}</p>
+            )}
+            {dashboard.recentAttempts.map((attempt) => {
+              const typeKey = `ielts.attemptType.${attempt.attemptType}`;
+              const statusKey = `ielts.attemptStatus.${attempt.status}`;
+              const typeLabel = t(typeKey);
+              const statusLabel = t(statusKey);
+              return (
+                <div key={attempt.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-[var(--text-primary)]">
+                        {typeLabel === typeKey ? attempt.attemptType.replaceAll("_", " ") : typeLabel}
+                      </p>
+                      <p className="text-xs text-[var(--text-secondary)]">{attempt.section} · {t("ielts.dashboard.bandTarget")} {attempt.bandTarget}</p>
+                    </div>
+                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--text-secondary)]">
+                      {statusLabel === statusKey ? attempt.status : statusLabel}
+                    </span>
                   </div>
-                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--text-secondary)]">
-                    {attempt.status}
-                  </span>
+                  <div className="mt-2 text-xs text-[var(--text-muted)]">
+                    {t("ielts.dashboard.violations")}: {attempt.violationCount} · {new Date(attempt.createdAt).toLocaleString(dateLocale)}
+                  </div>
                 </div>
-                <div className="mt-2 text-xs text-[var(--text-muted)]">
-                  {t("ielts.dashboard.violations")}: {attempt.violationCount} · {new Date(attempt.createdAt).toLocaleString()}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -193,19 +221,18 @@ export function IELTSDashboardClient() {
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
-                <Sparkles className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
                 {t("ielts.dashboard.yourRoadmap")}
               </div>
-              {roadmap && (
-                <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                  roadmap.readiness === "exam ready" ? "bg-emerald-500/10 text-emerald-400" :
-                  roadmap.readiness === "strong progress" ? "bg-blue-500/10 text-blue-400" :
-                  roadmap.readiness === "on track" ? "bg-amber-500/10 text-amber-400" :
-                  "bg-[var(--bg-soft)] text-[var(--text-muted)]"
-                }`}>
-                  {roadmap.readiness}
-                </span>
-              )}
+              {roadmap && (() => {
+                const readinessKey = `ielts.readiness.${roadmap.readiness}`;
+                const readinessLabel = t(readinessKey);
+                return (
+                  <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${READINESS_BADGE[roadmap.readiness] ?? "bg-[var(--bg-soft)] text-[var(--text-muted)]"}`}>
+                    {readinessLabel === readinessKey ? roadmap.readiness : readinessLabel}
+                  </span>
+                );
+              })()}
             </div>
 
             {roadmap ? (
@@ -216,7 +243,14 @@ export function IELTSDashboardClient() {
                     <span>{t("ielts.dashboard.completion")}</span>
                     <span className="font-semibold text-[var(--text-primary)]">{roadmap.completionPercent}%</span>
                   </div>
-                  <div className="mt-1.5 h-2.5 rounded-full bg-[var(--bg-soft)]">
+                  <div
+                    className="mt-1.5 h-2.5 rounded-full bg-[var(--bg-soft)]"
+                    role="progressbar"
+                    aria-label={t("ielts.dashboard.progressLabel")}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.min(100, Math.max(0, roadmap.completionPercent))}
+                  >
                     <div
                       className="h-2.5 rounded-full bg-gradient-to-r from-[var(--primary)] to-cyan-400 transition-all"
                       style={{ width: `${Math.min(100, roadmap.completionPercent)}%` }}
@@ -235,15 +269,15 @@ export function IELTSDashboardClient() {
                     <p className="text-[10px] text-[var(--text-muted)]">{t("ielts.dashboard.week")}</p>
                   </div>
                   <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-center">
-                    <p className="text-lg font-bold text-[var(--text-primary)]">{roadmap.daysLeft >= 0 ? roadmap.daysLeft : "—"}</p>
+                    <p className="text-lg font-bold text-[var(--text-primary)]">{roadmap.daysLeft >= 0 ? roadmap.daysLeft : naShort}</p>
                     <p className="text-[10px] text-[var(--text-muted)]">{t("ielts.dashboard.daysLeft")}</p>
                   </div>
                 </div>
 
                 {/* Band target */}
                 <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-sm">
-                  <span className="text-[var(--text-secondary)]">Band {roadmap.currentBand} → {roadmap.targetBand}</span>
-                  <Target className="h-4 w-4 text-[var(--text-muted)]" />
+                  <span className="text-[var(--text-secondary)]">{bandPrefix} {roadmap.currentBand} → {roadmap.targetBand}</span>
+                  <Target className="h-4 w-4 text-[var(--text-muted)]" aria-hidden="true" />
                 </div>
 
                 <div className="flex gap-2">
@@ -269,9 +303,16 @@ export function IELTSDashboardClient() {
                 <div key={item.label}>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-[var(--text-secondary)]">{item.label}</span>
-                    <span className="font-medium text-[var(--text-primary)]">Band {item.value.toFixed(1)}</span>
+                    <span className="font-medium text-[var(--text-primary)]">{bandPrefix} {item.value.toFixed(1)}</span>
                   </div>
-                  <div className="mt-2 h-2 rounded-full bg-[var(--bg-soft)]">
+                  <div
+                    className="mt-2 h-2 rounded-full bg-[var(--bg-soft)]"
+                    role="progressbar"
+                    aria-label={`${item.label} ${bandPrefix}`}
+                    aria-valuemin={0}
+                    aria-valuemax={9}
+                    aria-valuenow={Math.max(0, Math.min(9, item.value))}
+                  >
                     <div className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" style={{ width: `${Math.min(100, item.value * 11.111)}%` }} />
                   </div>
                 </div>
@@ -283,43 +324,57 @@ export function IELTSDashboardClient() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-          <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]"><PenLine className="h-4 w-4" /> {t("ielts.dashboard.recentWriting")}</div>
+          <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]"><PenLine className="h-4 w-4" aria-hidden="true" /> {t("ielts.dashboard.recentWriting")}</div>
           <div className="mt-4 space-y-3">
-            {dashboard.recentWriting.map((item) => (
-              <div key={item.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[var(--text-primary)]">{item.taskType}</span>
-                  <span className="font-medium text-emerald-400">Band {item.overallBand.toFixed(1)}</span>
+            {dashboard.recentWriting.length === 0 && (
+              <p className="text-sm text-[var(--text-muted)]">{t("ielts.dashboard.recentWritingEmpty")}</p>
+            )}
+            {dashboard.recentWriting.map((item) => {
+              const taskKey = `ielts.taskType.${item.taskType}`;
+              const taskLabel = t(taskKey);
+              return (
+                <div key={item.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[var(--text-primary)]">{taskLabel === taskKey ? item.taskType : taskLabel}</span>
+                    <span className="font-medium text-emerald-400">{bandPrefix} {item.overallBand.toFixed(1)}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">{new Date(item.createdAt).toLocaleString(dateLocale)}</p>
                 </div>
-                <p className="mt-1 text-xs text-[var(--text-muted)]">{new Date(item.createdAt).toLocaleString()}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-          <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]"><Mic className="h-4 w-4" /> {t("ielts.dashboard.recentSpeaking")}</div>
+          <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]"><Mic className="h-4 w-4" aria-hidden="true" /> {t("ielts.dashboard.recentSpeaking")}</div>
           <div className="mt-4 space-y-3">
-            {dashboard.recentSpeaking.map((item) => (
-              <div key={item.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[var(--text-primary)]">{item.part}</span>
-                  <span className="font-medium text-violet-400">Band {item.overallBand.toFixed(1)}</span>
+            {dashboard.recentSpeaking.length === 0 && (
+              <p className="text-sm text-[var(--text-muted)]">{t("ielts.dashboard.recentSpeakingEmpty")}</p>
+            )}
+            {dashboard.recentSpeaking.map((item) => {
+              const partKey = `ielts.part.${item.part}`;
+              const partLabel = t(partKey);
+              return (
+                <div key={item.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[var(--text-primary)]">{partLabel === partKey ? item.part : partLabel}</span>
+                    <span className="font-medium text-violet-400">{bandPrefix} {item.overallBand.toFixed(1)}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">{new Date(item.createdAt).toLocaleString(dateLocale)}</p>
                 </div>
-                <p className="mt-1 text-xs text-[var(--text-muted)]">{new Date(item.createdAt).toLocaleString()}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
         <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
-          <CalendarDays className="h-4 w-4" /> {t("ielts.dashboard.weaknessAnalysis")}
+          <CalendarDays className="h-4 w-4" aria-hidden="true" /> {t("ielts.dashboard.weaknessAnalysis")}
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <WeaknessCard title={t("ielts.dashboard.writing")} weakest={weakness.writingWeakest} band={weakness.writingWeakestBand} criteria={weakness.writingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} />
-          <WeaknessCard title={t("ielts.dashboard.speaking")} weakest={weakness.speakingWeakest} band={weakness.speakingWeakestBand} criteria={weakness.speakingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} />
+          <WeaknessCard title={t("ielts.dashboard.writing")} weakest={weakness.writingWeakest} band={weakness.writingWeakestBand} criteria={weakness.writingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} bandPrefix={bandPrefix} naShort={naShort} />
+          <WeaknessCard title={t("ielts.dashboard.speaking")} weakest={weakness.speakingWeakest} band={weakness.speakingWeakestBand} criteria={weakness.speakingCriteria} criteriaLabels={criteriaLabels} weakestLabel={t("ielts.dashboard.weakest")} bandPrefix={bandPrefix} naShort={naShort} />
         </div>
         <div className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
           {weakness.recommendations.map((item) => <p key={item}>• {item}</p>)}
@@ -329,23 +384,24 @@ export function IELTSDashboardClient() {
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string }>; label: string; value: number }) {
+function StatCard({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>; label: string; value: number }) {
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
       <div className="flex items-center justify-between">
         <div className="text-sm text-[var(--text-secondary)]">{label}</div>
-        <Icon className="h-4 w-4 text-[var(--primary)]" />
+        <Icon className="h-4 w-4 text-[var(--primary)]" aria-hidden={true} />
       </div>
       <div className="mt-3 text-3xl font-semibold text-[var(--text-primary)]">{value}</div>
     </div>
   );
 }
 
-function WeaknessCard({ title, weakest, band, criteria, criteriaLabels, weakestLabel }: { title: string; weakest: string; band: number; criteria: Record<string, number>; criteriaLabels: Record<string, string>; weakestLabel: string }) {
+function WeaknessCard({ title, weakest, band, criteria, criteriaLabels, weakestLabel, bandPrefix, naShort }: { title: string; weakest: string; band: number; criteria: Record<string, number>; criteriaLabels: Record<string, string>; weakestLabel: string; bandPrefix: string; naShort: string }) {
+  const weakestLabelText = weakest ? (criteriaLabels[weakest] ?? weakest) : naShort;
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
       <h3 className="font-semibold text-[var(--text-primary)]">{title}</h3>
-      <p className="mt-2 text-sm text-[var(--text-secondary)]">{weakestLabel}: {weakest || "n/a"} · Band {band.toFixed(1)}</p>
+      <p className="mt-2 text-sm text-[var(--text-secondary)]">{weakestLabel}: {weakestLabelText} · {bandPrefix} {band.toFixed(1)}</p>
       <div className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
         {Object.entries(criteria).map(([key, value]) => (
           <div key={key} className="flex items-center justify-between gap-3">
