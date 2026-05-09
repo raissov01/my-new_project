@@ -4,6 +4,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/server/auth";
 import { getPlacement, getIELTSMap, getProgress } from "@/features/learn/api";
 import { Lock, Star, Trophy } from "lucide-react";
+import { createTranslator } from "@/lib/shared/i18n";
+import { getServerLocale } from "@/server/i18n";
 
 export const metadata: Metadata = {
   title: "IELTS Roadmap | StudyWithRaissov",
@@ -14,14 +16,17 @@ export default async function IELTSRoadmapPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [mapData, progress, placement] = await Promise.all([
+  const [mapData, progress, placement, locale] = await Promise.all([
     getIELTSMap(),
     getProgress(),
     getPlacement(),
+    getServerLocale(),
   ]);
+  const t = createTranslator(locale);
 
   const units = mapData.units;
   const userLevel = placement?.level ?? "A1";
+  const lessonsDone = progress?.lessonsCompleted ?? 0;
 
   return (
     <div className="page-shell py-4 sm:py-6">
@@ -29,14 +34,14 @@ export default async function IELTSRoadmapPage() {
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Link href="/ielts" className="nd-btn-soft">
-            ← IELTS
+            ← {t("ielts.hubTitle")}
           </Link>
-          <h3>IELTS Roadmap</h3>
+          <h3>{t("ielts.roadmap.title")}</h3>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            Level: {userLevel}
+            {t("ielts.roadmap.levelLabel")}: {userLevel}
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            {progress?.lessonsCompleted ?? 0} lessons done
+            {t("ielts.roadmap.lessonsDone").replace("{n}", String(lessonsDone))}
           </span>
         </div>
       </div>
@@ -53,7 +58,7 @@ export default async function IELTSRoadmapPage() {
             marginBottom: 18,
           }}
         >
-          <p style={{ fontSize: 14, color: "var(--ink-mute)" }}>IELTS units are being loaded…</p>
+          <p style={{ fontSize: 14, color: "var(--ink-mute)" }}>{t("ielts.roadmap.loadingUnits")}</p>
         </div>
       )}
 
