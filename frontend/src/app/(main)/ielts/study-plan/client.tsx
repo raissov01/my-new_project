@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
@@ -120,6 +121,32 @@ type WizardData = {
   struggles: string[];
 };
 
+// BCP-47 tags for browser-side date formatting.
+const DATE_LOCALES: Record<string, string> = { kk: "kk-KZ", ru: "ru-RU", en: "en-US" };
+
+const STRUGGLE_OPTIONS = [
+  { value: "timing", key: "ielts.studyPlan.struggle.timing" },
+  { value: "grammar", key: "ielts.studyPlan.struggle.grammar" },
+  { value: "vocabulary", key: "ielts.studyPlan.struggle.vocabulary" },
+  { value: "reading speed", key: "ielts.studyPlan.struggle.readingSpeed" },
+  { value: "listening focus", key: "ielts.studyPlan.struggle.listeningFocus" },
+  { value: "writing structure", key: "ielts.studyPlan.struggle.writingStructure" },
+  { value: "speaking confidence", key: "ielts.studyPlan.struggle.speakingConfidence" },
+];
+
+function skillLabel(t: (key: string, vars?: Record<string, string | number>) => string, skill: string): string {
+  const key = `ielts.skill.${skill}`;
+  const label = t(key);
+  return label === key ? skill.charAt(0).toUpperCase() + skill.slice(1) : label;
+}
+
+function struggleLabel(t: (key: string, vars?: Record<string, string | number>) => string, value: string): string {
+  const opt = STRUGGLE_OPTIONS.find((o) => o.value === value);
+  if (!opt) return value;
+  const label = t(opt.key);
+  return label === opt.key ? value : label;
+}
+
 export function IELTSStudyPlanClient({
   initialPlan,
   initialTaskStatuses,
@@ -128,7 +155,8 @@ export function IELTSStudyPlanClient({
   initialTaskStatuses: Record<string, string>;
 }) {
   const { user } = useAuth();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const dateLocale = DATE_LOCALES[locale] ?? "en-US";
   const [plan, setPlan] = useState<StudyPlan | null>(initialPlan as StudyPlan | null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -237,30 +265,35 @@ export function IELTSStudyPlanClient({
         <div>
           <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.dashboard.yourRoadmap")}</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            {new Date(plan.createdAt).toLocaleDateString()} • {plan.examType === "academic" ? t("studyPlan.academic") : t("studyPlan.generalTraining")}
+            {new Date(plan.createdAt).toLocaleDateString(dateLocale)} • {plan.examType === "academic" ? t("studyPlan.academic") : t("studyPlan.generalTraining")}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-0.5">
+          <div className="inline-flex rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-soft)] p-0.5" role="group" aria-label={t("ielts.studyPlan.viewMode.roadmap")}>
             {(["roadmap", "checklist", "guide"] as const).map((mode) => (
-              <button key={mode} onClick={() => setViewMode(mode)} className={`rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === mode ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]" : "text-[var(--text-muted)]"}`}>
-                {mode === "roadmap" ? "Roadmap" : mode === "checklist" ? "Checklist" : "Full Guide"}
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                aria-pressed={viewMode === mode}
+                className={`rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === mode ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]" : "text-[var(--text-muted)]"}`}
+              >
+                {t(`ielts.studyPlan.viewMode.${mode}`)}
               </button>
             ))}
           </div>
           <Button variant="secondary" onClick={() => { setShowWizard(true); setWizardStep(0); }}>
-            <RefreshCw className="h-4 w-4" />
-            Regenerate
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            {t("ielts.studyPlan.regenerate")}
           </Button>
         </div>
       </div>
 
       {/* Summary cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard icon={Target} label="Current band" value={plan.currentBand} color="text-amber-500 bg-amber-500/10" />
-        <SummaryCard icon={TrendingUp} label="Target band" value={plan.targetBand} color="text-emerald-500 bg-emerald-500/10" />
-        <SummaryCard icon={Clock} label="Weekly hours" value={`${plan.weeklyHours}h`} color="text-blue-500 bg-blue-500/10" />
-        <SummaryCard icon={CalendarDays} label="Exam date" value={plan.examDate ? new Date(plan.examDate).toLocaleDateString() : "Not set"} color="text-violet-500 bg-violet-500/10" />
+        <SummaryCard icon={Target} label={t("ielts.studyPlan.currentBand")} value={plan.currentBand} color="text-amber-500 bg-amber-500/10" />
+        <SummaryCard icon={TrendingUp} label={t("ielts.studyPlan.targetBand")} value={plan.targetBand} color="text-emerald-500 bg-emerald-500/10" />
+        <SummaryCard icon={Clock} label={t("ielts.studyPlan.weeklyHours")} value={`${plan.weeklyHours}h`} color="text-blue-500 bg-blue-500/10" />
+        <SummaryCard icon={CalendarDays} label={t("ielts.studyPlan.examDate")} value={plan.examDate ? new Date(plan.examDate).toLocaleDateString(dateLocale) : t("ielts.studyPlan.notSet")} color="text-violet-500 bg-violet-500/10" />
       </div>
 
       {/* Priority skills */}
@@ -272,8 +305,8 @@ export function IELTSStudyPlanClient({
               const Icon = SKILL_ICONS[skill] ?? Zap;
               return (
                 <span key={skill} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--primary)]">
-                  <Icon className="h-3.5 w-3.5" />
-                  {skill.charAt(0).toUpperCase() + skill.slice(1)}
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {skillLabel(t, skill)}
                 </span>
               );
             })}
@@ -301,8 +334,8 @@ export function IELTSStudyPlanClient({
           {(!plan.planData?.phases || plan.planData.phases.length === 0) && plan.planData?.weeklyGoals && (
             <VisualRoadmapTimeline
               phases={plan.planData.weeklyGoals.map((w) => ({
-                name: `Week ${w.week}`,
-                weeks: `Week ${w.week}`,
+                name: t("ielts.studyPlan.weekN", { n: w.week }),
+                weeks: t("ielts.studyPlan.weekN", { n: w.week }),
                 goal: w.focus,
                 actions: "",
                 avoid: "",
@@ -333,8 +366,8 @@ export function IELTSStudyPlanClient({
                 return (
                   <div key={skill} className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
                     <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-[var(--primary)]" />
-                      <span className="text-sm font-bold text-[var(--text-primary)]">{skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                      <Icon className="h-4 w-4 text-[var(--primary)]" aria-hidden="true" />
+                      <span className="text-sm font-bold text-[var(--text-primary)]">{skillLabel(t, skill)}</span>
                     </div>
                     <p className="mt-2 text-xs leading-5 text-[var(--text-secondary)]">{guide}</p>
                   </div>
@@ -364,22 +397,22 @@ export function IELTSStudyPlanClient({
               <h3 className="text-base font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.personalizedStrategy")}</h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {plan.planData.strategy.whatToFocusFirst && (
-                  <StrategyCard title="What to focus on first" icon="🎯" text={plan.planData.strategy.whatToFocusFirst} />
+                  <StrategyCard title={t("ielts.studyPlan.strategy.whatToFocusFirst")} icon="🎯" text={plan.planData.strategy.whatToFocusFirst} />
                 )}
                 {plan.planData.strategy.urgentSkills && (
-                  <StrategyCard title="Skills needing urgent work" icon="🔴" text={plan.planData.strategy.urgentSkills} />
+                  <StrategyCard title={t("ielts.studyPlan.strategy.urgentSkills")} icon="🔴" text={plan.planData.strategy.urgentSkills} />
                 )}
                 {plan.planData.strategy.stableSkills && (
-                  <StrategyCard title="Your stable skills" icon="✅" text={plan.planData.strategy.stableSkills} />
+                  <StrategyCard title={t("ielts.studyPlan.strategy.stableSkills")} icon="✅" text={plan.planData.strategy.stableSkills} />
                 )}
                 {plan.planData.strategy.commonMistakes && (
-                  <StrategyCard title="Mistakes slowing your progress" icon="⚠️" text={plan.planData.strategy.commonMistakes} />
+                  <StrategyCard title={t("ielts.studyPlan.strategy.commonMistakes")} icon="⚠️" text={plan.planData.strategy.commonMistakes} />
                 )}
                 {plan.planData.strategy.dailyStructure && (
-                  <StrategyCard title="Recommended daily structure" icon="📅" text={plan.planData.strategy.dailyStructure} />
+                  <StrategyCard title={t("ielts.studyPlan.strategy.dailyStructure")} icon="📅" text={plan.planData.strategy.dailyStructure} />
                 )}
                 {plan.planData.strategy.timingStrategy && (
-                  <StrategyCard title="Timing strategy" icon="⏱️" text={plan.planData.strategy.timingStrategy} />
+                  <StrategyCard title={t("ielts.studyPlan.strategy.timingStrategy")} icon="⏱️" text={plan.planData.strategy.timingStrategy} />
                 )}
               </div>
             </div>
@@ -403,12 +436,12 @@ export function IELTSStudyPlanClient({
                     <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{phase.actions}</p>
                     {phase.avoid && (
                       <p className="mt-2 rounded-[var(--radius-md)] border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-500">
-                        Avoid: {phase.avoid}
+                        {t("ielts.studyPlan.avoidLabel")}: {phase.avoid}
                       </p>
                     )}
                     {phase.expectedProgress && (
                       <p className="mt-2 rounded-[var(--radius-md)] border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-400">
-                        Expected: {phase.expectedProgress}
+                        {t("ielts.studyPlan.expectedLabel")}: {phase.expectedProgress}
                       </p>
                     )}
                   </div>
@@ -420,15 +453,15 @@ export function IELTSStudyPlanClient({
           {/* Module guide */}
           {plan.planData?.moduleGuide && (
             <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
-              <h3 className="text-base font-bold text-[var(--text-primary)]">Module-by-Module Guide</h3>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.moduleByModule")}</h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {Object.entries(plan.planData.moduleGuide).map(([skill, guide]) => {
                   const Icon = SKILL_ICONS[skill] ?? Zap;
                   return (
                     <div key={skill} className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
                       <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-[var(--primary)]" />
-                        <span className="text-sm font-bold text-[var(--text-primary)]">{skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                        <Icon className="h-4 w-4 text-[var(--primary)]" aria-hidden="true" />
+                        <span className="text-sm font-bold text-[var(--text-primary)]">{skillLabel(t, skill)}</span>
                       </div>
                       <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{guide}</p>
                     </div>
@@ -477,7 +510,7 @@ export function IELTSStudyPlanClient({
           {/* Weekly plan with checklists */}
           {plan.planData?.weeklyGoals && plan.planData.weeklyGoals.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">Weekly Checklist</h3>
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.weeklyChecklist")}</h3>
               {plan.planData.weeklyGoals.map((week) => (
                 <WeekCard key={week.week} week={week} taskStatuses={taskStatuses} onToggleTask={handleTaskToggle} />
               ))}
@@ -504,7 +537,7 @@ export function IELTSStudyPlanClient({
       {/* Raw fallback */}
       {plan.planData?.raw && !plan.planData?.weeklyGoals && (
         <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Plan Details</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.planDetails")}</h3>
           <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.raw}</div>
         </div>
       )}
@@ -518,9 +551,9 @@ export function IELTSStudyPlanClient({
       {/* Plan version history */}
       {plan.version > 1 && (
         <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Plan Version</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.planVersion")}</h3>
           <p className="mt-2 text-xs text-[var(--text-muted)]">
-            Version {plan.version} • {plan.versionReason || "updated"}
+            {t("ielts.studyPlan.versionN", { n: plan.version })} • {plan.versionReason || t("ielts.studyPlan.updated")}
           </p>
         </div>
       )}
@@ -535,10 +568,15 @@ export function IELTSStudyPlanClient({
 // ── Adaptive Banner ─────────────────────────────────────────────────────────
 
 function AdaptiveBanner({ planId, onRegenerate }: { planId: string; onRegenerate: () => void }) {
+  const { t } = useLocale();
   const [adaptive, setAdaptive] = useState<{ status: string; level: number; message: string } | null>(null);
 
   useEffect(() => {
-    checkAdaptive().then((data) => setAdaptive(data)).catch(() => {});
+    let cancelled = false;
+    checkAdaptive().then((data) => {
+      if (!cancelled) setAdaptive(data);
+    }).catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   if (!adaptive || adaptive.status === "stable" || adaptive.status === "no_plan") return null;
@@ -550,15 +588,15 @@ function AdaptiveBanner({ planId, onRegenerate }: { planId: string; onRegenerate
   };
 
   return (
-    <div className={`rounded-[var(--radius-xl)] border p-5 ${colors[adaptive.status as keyof typeof colors] ?? "border-[var(--border)] bg-[var(--bg-surface)]"}`}>
+    <div className={`rounded-[var(--radius-xl)] border p-5 ${colors[adaptive.status as keyof typeof colors] ?? "border-[var(--border)] bg-[var(--bg-surface)]"}`} role="status">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold">Roadmap Check-in</h3>
+          <h3 className="text-sm font-semibold">{t("ielts.studyPlan.checkin")}</h3>
           <p className="mt-1 text-sm leading-6">{adaptive.message}</p>
         </div>
         {adaptive.level >= 3 && (
           <Button size="sm" variant="secondary" onClick={onRegenerate}>
-            <RefreshCw className="h-3.5 w-3.5" /> Adjust roadmap
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" /> {t("ielts.studyPlan.adjustRoadmap")}
           </Button>
         )}
       </div>
@@ -569,6 +607,7 @@ function AdaptiveBanner({ planId, onRegenerate }: { planId: string; onRegenerate
 // ── Weekly Reflection ───────────────────────────────────────────────────────
 
 function WeeklyReflectionForm({ planId, currentWeek }: { planId: string; currentWeek: number }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -601,14 +640,14 @@ function WeeklyReflectionForm({ planId, currentWeek }: { planId: string; current
 
   if (submitted) {
     return (
-      <div className="rounded-[var(--radius-xl)] border border-emerald-500/20 bg-emerald-500/5 p-5">
+      <div className="rounded-[var(--radius-xl)] border border-emerald-500/20 bg-emerald-500/5 p-5" role="status">
         <div className="flex items-center gap-2 text-sm font-semibold text-emerald-400">
-          <CheckCircle2 className="h-4 w-4" />
-          Week {currentWeek} reflection submitted
+          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+          {t("ielts.studyPlan.weekReflectionSubmitted", { n: currentWeek })}
         </div>
         {coachNote && (
           <div className="mt-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-            <p className="text-xs font-semibold text-[var(--primary)]">AI Coach Note</p>
+            <p className="text-xs font-semibold text-[var(--primary)]">{t("ielts.studyPlan.aiCoachNote")}</p>
             <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{coachNote}</p>
           </div>
         )}
@@ -616,36 +655,42 @@ function WeeklyReflectionForm({ planId, currentWeek }: { planId: string; current
     );
   }
 
+  const reflectionId = `weekly-checkin-${currentWeek}`;
   return (
     <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between text-left">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between text-left"
+        aria-expanded={open}
+        aria-controls={reflectionId}
+      >
         <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
-          <Sparkles className="h-4 w-4 text-[var(--primary)]" />
-          Weekly Check-in (Week {currentWeek})
+          <Sparkles className="h-4 w-4 text-[var(--primary)]" aria-hidden="true" />
+          {t("ielts.studyPlan.weeklyCheckin", { n: currentWeek })}
         </div>
-        <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} />
+        <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} aria-hidden="true" />
       </button>
 
       {open && (
-        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-          <ReflectionField name="completed" label="What did you complete this week?" placeholder="e.g. 3 reading practices, 2 writing tasks" />
-          <ReflectionField name="difficult" label="What was difficult?" placeholder="e.g. Writing Task 2 timing, vocabulary" />
-          <ReflectionField name="improved" label="Which section improved most?" placeholder="e.g. Listening comprehension" />
-          <ReflectionField name="slowedDown" label="What slowed you down?" placeholder="e.g. Work schedule, fatigue" />
+        <form id={reflectionId} onSubmit={handleSubmit} className="mt-4 space-y-3">
+          <ReflectionField name="completed" label={t("ielts.studyPlan.reflection.completed")} placeholder={t("ielts.studyPlan.reflection.completedPlaceholder")} />
+          <ReflectionField name="difficult" label={t("ielts.studyPlan.reflection.difficult")} placeholder={t("ielts.studyPlan.reflection.difficultPlaceholder")} />
+          <ReflectionField name="improved" label={t("ielts.studyPlan.reflection.improved")} placeholder={t("ielts.studyPlan.reflection.improvedPlaceholder")} />
+          <ReflectionField name="slowedDown" label={t("ielts.studyPlan.reflection.slowedDown")} placeholder={t("ielts.studyPlan.reflection.slowedDownPlaceholder")} />
           <div>
-            <label className="text-xs font-medium text-[var(--text-secondary)]">Next week preference</label>
+            <label className="text-xs font-medium text-[var(--text-secondary)]">{t("ielts.studyPlan.reflection.nextWeek")}</label>
             <div className="mt-1.5 flex gap-2">
-              {["lighter", "same", "intensive"].map((opt) => (
+              {(["lighter", "same", "intensive"] as const).map((opt) => (
                 <label key={opt} className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)] has-[:checked]:border-[var(--primary)]/30 has-[:checked]:bg-[var(--primary-soft)] has-[:checked]:text-[var(--primary)]">
                   <input type="radio" name="nextWeek" value={opt} defaultChecked={opt === "same"} className="sr-only" />
-                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                  {t(`ielts.studyPlan.reflection.${opt}`)}
                 </label>
               ))}
             </div>
           </div>
           <Button type="submit" size="sm" disabled={submitting}>
-            {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-            Submit & get AI coach note
+            {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />}
+            {t("ielts.studyPlan.reflection.submit")}
           </Button>
         </form>
       )}
@@ -654,10 +699,11 @@ function WeeklyReflectionForm({ planId, currentWeek }: { planId: string; current
 }
 
 function ReflectionField({ name, label, placeholder }: { name: string; label: string; placeholder: string }) {
+  const id = `reflection-${name}`;
   return (
     <div>
-      <label className="text-xs font-medium text-[var(--text-secondary)]">{label}</label>
-      <input name={name} placeholder={placeholder} className="mt-1 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]" />
+      <label htmlFor={id} className="text-xs font-medium text-[var(--text-secondary)]">{label}</label>
+      <input id={id} name={name} placeholder={placeholder} className="mt-1 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]" />
     </div>
   );
 }
@@ -665,6 +711,8 @@ function ReflectionField({ name, label, placeholder }: { name: string; label: st
 // ── Plan History ────────────────────────────────────────────────────────────
 
 function PlanHistorySection() {
+  const { t, locale } = useLocale();
+  const dateLocale = DATE_LOCALES[locale] ?? "en-US";
   const [plans, setPlans] = useState<Array<Record<string, unknown>>>([]);
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -684,32 +732,38 @@ function PlanHistorySection() {
   const archivedPlans = plans.filter((p) => p.status === "archived");
   if (!open && archivedPlans.length === 0 && loaded) return null;
 
+  const historyId = "roadmap-history";
   return (
     <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-      <button onClick={loadHistory} className="flex w-full items-center justify-between text-left">
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Roadmap History</h3>
-        <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} />
+      <button
+        onClick={loadHistory}
+        className="flex w-full items-center justify-between text-left"
+        aria-expanded={open}
+        aria-controls={historyId}
+      >
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.history")}</h3>
+        <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} aria-hidden="true" />
       </button>
 
       {open && archivedPlans.length > 0 && (
-        <div className="mt-4 space-y-2">
+        <div id={historyId} className="mt-4 space-y-2">
           {archivedPlans.map((p) => (
             <div key={String(p.id)} className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-semibold text-[var(--text-primary)]">
-                    Version {String(p.version ?? "?")}
+                    {t("ielts.studyPlan.versionN", { n: String(p.version ?? "?") })}
                   </span>
                   <span className="ml-2 text-xs text-[var(--text-muted)]">
-                    {p.versionReason ? String(p.versionReason) : "archived"}
+                    {p.versionReason ? String(p.versionReason) : t("ielts.studyPlan.archived")}
                   </span>
                 </div>
                 <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
-                  {p.createdAt ? new Date(String(p.createdAt)).toLocaleDateString() : ""}
+                  {p.createdAt ? new Date(String(p.createdAt)).toLocaleDateString(dateLocale) : ""}
                 </span>
               </div>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                Band {String(p.currentBand ?? "?")} → {String(p.targetBand ?? "?")} • {String(p.examType ?? "academic")}
+                {t("ielts.dashboard.bandPrefix")} {String(p.currentBand ?? "?")} → {String(p.targetBand ?? "?")} • {p.examType === "general" ? t("studyPlan.generalTraining") : t("studyPlan.academic")}
               </p>
             </div>
           ))}
@@ -717,7 +771,7 @@ function PlanHistorySection() {
       )}
 
       {open && archivedPlans.length === 0 && (
-        <p className="mt-3 text-xs text-[var(--text-muted)]">No previous roadmap versions yet.</p>
+        <p id={historyId} className="mt-3 text-xs text-[var(--text-muted)]">{t("ielts.studyPlan.historyEmpty")}</p>
       )}
     </div>
   );
@@ -813,24 +867,37 @@ function WizardFlow({
         {step === 1 && (
           <div className="space-y-5">
             <div>
-              <label className="text-sm font-medium text-[var(--text-primary)]">Current estimated band</label>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <label className="text-sm font-medium text-[var(--text-primary)]">{t("ielts.studyPlan.wizard.currentEstimated")}</label>
+              <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={t("ielts.studyPlan.wizard.currentEstimated")}>
                 {BAND_OPTIONS.map((band) => (
-                  <button key={band} onClick={() => onChange({ currentBand: band })} className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm font-semibold transition-all ${data.currentBand === band ? "border-amber-500 bg-amber-500/10 text-amber-500" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"}`}>
+                  <button
+                    key={band}
+                    onClick={() => onChange({ currentBand: band })}
+                    aria-pressed={data.currentBand === band}
+                    className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm font-semibold transition-all ${data.currentBand === band ? "border-amber-500 bg-amber-500/10 text-amber-500" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"}`}
+                  >
                     {band}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-[var(--text-primary)]">Main struggles</label>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">Select all that apply</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {["timing", "grammar", "vocabulary", "reading speed", "listening focus", "writing structure", "speaking confidence"].map((s) => (
-                  <button key={s} onClick={() => onChange({ struggles: data.struggles.includes(s) ? data.struggles.filter((x) => x !== s) : [...data.struggles, s] })} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${data.struggles.includes(s) ? "border-red-500/30 bg-red-500/10 text-red-400" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"}`}>
-                    {s}
-                  </button>
-                ))}
+              <label className="text-sm font-medium text-[var(--text-primary)]">{t("ielts.studyPlan.wizard.struggles")}</label>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">{t("ielts.studyPlan.wizard.selectAll")}</p>
+              <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={t("ielts.studyPlan.wizard.struggles")}>
+                {STRUGGLE_OPTIONS.map(({ value, key }) => {
+                  const active = data.struggles.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => onChange({ struggles: active ? data.struggles.filter((x) => x !== value) : [...data.struggles, value] })}
+                      aria-pressed={active}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${active ? "border-red-500/30 bg-red-500/10 text-red-400" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"}`}
+                    >
+                      {t(key)}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -839,16 +906,16 @@ function WizardFlow({
         {step === 2 && (
           <div className="space-y-5">
             <div>
-              <label className="text-sm font-medium text-[var(--text-primary)]">Exam date</label>
-              <input type="date" value={data.examDate} onChange={(e) => onChange({ examDate: e.target.value })} className="mt-2 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]" />
+              <label htmlFor="exam-date" className="text-sm font-medium text-[var(--text-primary)]">{t("ielts.studyPlan.wizard.examDate")}</label>
+              <input id="exam-date" type="date" value={data.examDate} onChange={(e) => onChange({ examDate: e.target.value })} className="mt-2 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]" />
             </div>
             <div>
-              <label className="text-sm font-medium text-[var(--text-primary)]">Weekly study hours: {data.weeklyHours}h</label>
-              <input type="range" min={3} max={40} value={data.weeklyHours} onChange={(e) => onChange({ weeklyHours: parseInt(e.target.value) })} className="mt-2 w-full accent-[var(--primary)]" />
+              <label htmlFor="weekly-hours" className="text-sm font-medium text-[var(--text-primary)]">{t("ielts.studyPlan.wizard.weeklyHoursLabel", { n: data.weeklyHours })}</label>
+              <input id="weekly-hours" type="range" min={3} max={40} value={data.weeklyHours} onChange={(e) => onChange({ weeklyHours: parseInt(e.target.value) })} className="mt-2 w-full accent-[var(--primary)]" />
               <div className="mt-1 flex justify-between text-xs text-[var(--text-muted)]">
-                <span>3h (light)</span>
-                <span>20h (moderate)</span>
-                <span>40h (intensive)</span>
+                <span>{t("ielts.studyPlan.wizard.hoursLight")}</span>
+                <span>{t("ielts.studyPlan.wizard.hoursMod")}</span>
+                <span>{t("ielts.studyPlan.wizard.hoursIntensive")}</span>
               </div>
             </div>
           </div>
@@ -857,30 +924,40 @@ function WizardFlow({
         {step === 3 && (
           <div className="space-y-5">
             <div>
-              <label className="text-sm font-medium text-[var(--text-primary)]">Weakest skills</label>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <label className="text-sm font-medium text-[var(--text-primary)]">{t("ielts.studyPlan.wizard.weakestSkills")}</label>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label={t("ielts.studyPlan.wizard.weakestSkills")}>
                 {SKILLS.map((skill) => {
                   const Icon = SKILL_ICONS[skill] ?? Zap;
                   const isWeak = data.weakSections.includes(skill);
                   return (
-                    <button key={skill} onClick={() => onChange({ weakSections: isWeak ? data.weakSections.filter((s) => s !== skill) : [...data.weakSections, skill] })} className={`flex flex-col items-center gap-2 rounded-[var(--radius-lg)] border p-4 transition-all ${isWeak ? "border-red-500/30 bg-red-500/10" : "border-[var(--border)] hover:border-[var(--border-strong)]"}`}>
-                      <Icon className={`h-5 w-5 ${isWeak ? "text-red-400" : "text-[var(--text-muted)]"}`} />
-                      <span className={`text-xs font-semibold ${isWeak ? "text-red-400" : "text-[var(--text-secondary)]"}`}>{skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                    <button
+                      key={skill}
+                      onClick={() => onChange({ weakSections: isWeak ? data.weakSections.filter((s) => s !== skill) : [...data.weakSections, skill] })}
+                      aria-pressed={isWeak}
+                      className={`flex flex-col items-center gap-2 rounded-[var(--radius-lg)] border p-4 transition-all ${isWeak ? "border-red-500/30 bg-red-500/10" : "border-[var(--border)] hover:border-[var(--border-strong)]"}`}
+                    >
+                      <Icon className={`h-5 w-5 ${isWeak ? "text-red-400" : "text-[var(--text-muted)]"}`} aria-hidden="true" />
+                      <span className={`text-xs font-semibold ${isWeak ? "text-red-400" : "text-[var(--text-secondary)]"}`}>{skillLabel(t, skill)}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-[var(--text-primary)]">Strongest skills</label>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <label className="text-sm font-medium text-[var(--text-primary)]">{t("ielts.studyPlan.wizard.strongestSkills")}</label>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label={t("ielts.studyPlan.wizard.strongestSkills")}>
                 {SKILLS.map((skill) => {
                   const Icon = SKILL_ICONS[skill] ?? Zap;
                   const isStrong = data.strengths.includes(skill);
                   return (
-                    <button key={skill} onClick={() => onChange({ strengths: isStrong ? data.strengths.filter((s) => s !== skill) : [...data.strengths, skill] })} className={`flex flex-col items-center gap-2 rounded-[var(--radius-lg)] border p-4 transition-all ${isStrong ? "border-emerald-500/30 bg-emerald-500/10" : "border-[var(--border)] hover:border-[var(--border-strong)]"}`}>
-                      <Icon className={`h-5 w-5 ${isStrong ? "text-emerald-400" : "text-[var(--text-muted)]"}`} />
-                      <span className={`text-xs font-semibold ${isStrong ? "text-emerald-400" : "text-[var(--text-secondary)]"}`}>{skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                    <button
+                      key={skill}
+                      onClick={() => onChange({ strengths: isStrong ? data.strengths.filter((s) => s !== skill) : [...data.strengths, skill] })}
+                      aria-pressed={isStrong}
+                      className={`flex flex-col items-center gap-2 rounded-[var(--radius-lg)] border p-4 transition-all ${isStrong ? "border-emerald-500/30 bg-emerald-500/10" : "border-[var(--border)] hover:border-[var(--border-strong)]"}`}
+                    >
+                      <Icon className={`h-5 w-5 ${isStrong ? "text-emerald-400" : "text-[var(--text-muted)]"}`} aria-hidden="true" />
+                      <span className={`text-xs font-semibold ${isStrong ? "text-emerald-400" : "text-[var(--text-secondary)]"}`}>{skillLabel(t, skill)}</span>
                     </button>
                   );
                 })}
@@ -889,49 +966,56 @@ function WizardFlow({
           </div>
         )}
 
-        {step === 4 && (
-          <div className="space-y-4">
-            <p className="text-sm text-[var(--text-secondary)]">Review your profile and generate a personalized roadmap.</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <ReviewItem label="Target" value={`Band ${data.targetBand}`} />
-              <ReviewItem label="Current" value={`Band ${data.currentBand}`} />
-              <ReviewItem label={t("studyPlan.examType")} value={data.examType === "academic" ? t("studyPlan.academic") : t("studyPlan.generalTraining")} />
-              <ReviewItem label="Weekly hours" value={`${data.weeklyHours}h / week`} />
-              <ReviewItem label="Exam date" value={data.examDate || "Not set"} />
-              <ReviewItem label="Weak areas" value={data.weakSections.join(", ") || "None"} />
-              <ReviewItem label="Strengths" value={data.strengths.join(", ") || "None"} />
-              <ReviewItem label="Struggles" value={data.struggles.join(", ") || "None"} />
+        {step === 4 && (() => {
+          const bandPrefix = t("ielts.dashboard.bandPrefix");
+          const noneLabel = t("ielts.studyPlan.wizard.none");
+          const weakSectionLabels = data.weakSections.map((s) => skillLabel(t, s)).join(", ") || noneLabel;
+          const strengthLabels = data.strengths.map((s) => skillLabel(t, s)).join(", ") || noneLabel;
+          const struggleLabels = data.struggles.map((s) => struggleLabel(t, s)).join(", ") || noneLabel;
+          return (
+            <div className="space-y-4">
+              <p className="text-sm text-[var(--text-secondary)]">{t("ielts.studyPlan.wizard.review")}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ReviewItem label={t("ielts.studyPlan.wizard.target")} value={`${bandPrefix} ${data.targetBand}`} />
+                <ReviewItem label={t("ielts.studyPlan.wizard.current")} value={`${bandPrefix} ${data.currentBand}`} />
+                <ReviewItem label={t("studyPlan.examType")} value={data.examType === "academic" ? t("studyPlan.academic") : t("studyPlan.generalTraining")} />
+                <ReviewItem label={t("ielts.studyPlan.weeklyHours")} value={`${data.weeklyHours}h / week`} />
+                <ReviewItem label={t("ielts.studyPlan.examDate")} value={data.examDate || t("ielts.studyPlan.notSet")} />
+                <ReviewItem label={t("ielts.studyPlan.wizard.weakAreas")} value={weakSectionLabels} />
+                <ReviewItem label={t("ielts.studyPlan.wizard.strengths")} value={strengthLabels} />
+                <ReviewItem label={t("ielts.studyPlan.wizard.strugglesLabel")} value={struggleLabels} />
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Navigation */}
       <div className="mt-8 flex items-center justify-between">
         {step > 0 ? (
           <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4" /> Back
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> {t("ielts.studyPlan.wizard.back")}
           </Button>
         ) : <div />}
 
         {step < wizardSteps.length - 1 ? (
           <Button onClick={onNext}>
-            {t("studyPlan.next")} <ArrowRight className="h-4 w-4" />
+            {t("studyPlan.next")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         ) : isLoggedIn ? (
           <Button onClick={onGenerate} disabled={submitting}>
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {submitting ? "Generating roadmap..." : "Generate my roadmap"}
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Sparkles className="h-4 w-4" aria-hidden="true" />}
+            {submitting ? t("ielts.studyPlan.wizard.generating") : t("ielts.studyPlan.wizard.generate")}
           </Button>
         ) : (
           <AuthRequiredPrompt
-            triggerLabel="Generate my roadmap"
-            title="Sign in to generate your roadmap"
-            description="Your personalized IELTS study plan will be created with AI based on your profile. Create a free account to save and access it anytime."
-            loginLabel="Log in"
-            signupLabel="Sign up free"
-            cancelLabel="Continue browsing"
-            icon={<Sparkles className="h-4 w-4" />}
+            triggerLabel={t("ielts.studyPlan.wizard.generate")}
+            title={t("ielts.studyPlan.wizard.signinTitle")}
+            description={t("ielts.studyPlan.wizard.signinDesc")}
+            loginLabel={t("ielts.studyPlan.wizard.login")}
+            signupLabel={t("ielts.studyPlan.wizard.signup")}
+            cancelLabel={t("ielts.studyPlan.wizard.cancel")}
+            icon={<Sparkles className="h-4 w-4" aria-hidden="true" />}
           />
         )}
       </div>
@@ -946,9 +1030,10 @@ function WeekCard({ week, taskStatuses, onToggleTask }: {
   taskStatuses: Record<string, string>;
   onToggleTask: (week: number, day: string, skill: string, activity: string) => void;
 }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(week.week === 1);
 
-  const completedCount = week.tasks?.filter((t) => taskStatuses[`${week.week}-${t.day}-${t.skill}`] === "completed").length ?? 0;
+  const completedCount = week.tasks?.filter((task) => taskStatuses[`${week.week}-${task.day}-${task.skill}`] === "completed").length ?? 0;
   const totalCount = week.tasks?.length ?? 0;
 
   const SKILL_LINKS: Record<string, string> = {
@@ -960,30 +1045,36 @@ function WeekCard({ week, taskStatuses, onToggleTask }: {
     grammar: "/flashcards",
   };
 
+  const weekId = `week-${week.week}`;
   return (
     <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--bg-soft)]">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--bg-soft)]"
+        aria-expanded={open}
+        aria-controls={weekId}
+      >
         <div className="flex items-center gap-3">
           <div className={`flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] text-sm font-bold ${
             completedCount === totalCount && totalCount > 0
               ? "bg-emerald-500/10 text-emerald-400"
               : "bg-[var(--primary-soft)] text-[var(--primary)]"
           }`}>
-            {completedCount === totalCount && totalCount > 0 ? <CheckCircle2 className="h-5 w-5" /> : `W${week.week}`}
+            {completedCount === totalCount && totalCount > 0 ? <CheckCircle2 className="h-5 w-5" aria-hidden="true" /> : t("ielts.studyPlan.weekShort", { n: week.week })}
           </div>
           <div>
-            <p className="text-sm font-semibold text-[var(--text-primary)]">Week {week.week}</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.weekN", { n: week.week })}</p>
             <p className="text-xs text-[var(--text-muted)]">{week.focus}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-[var(--text-muted)]">{completedCount}/{totalCount}</span>
-          <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} />
+          <ArrowRight className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-90" : ""}`} aria-hidden="true" />
         </div>
       </button>
 
       {open && week.tasks && week.tasks.length > 0 && (
-        <div className="border-t border-[var(--border)] px-5 py-4">
+        <div id={weekId} className="border-t border-[var(--border)] px-5 py-4">
           <div className="space-y-2.5">
             {week.tasks.map((task, i) => (
               <TaskRow key={i} task={task} isDone={taskStatuses[`${week.week}-${task.day}-${task.skill}`] === "completed"} onToggle={() => onToggleTask(week.week, task.day, task.skill, task.activity)} actionLink={SKILL_LINKS[task.skill]} />
@@ -1006,6 +1097,7 @@ function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhas
   onToggleTask: (week: number, day: string, skill: string, activity: string) => void;
   currentWeek: number;
 }) {
+  const { t } = useLocale();
   // Calculate phase completion from task statuses
   function getPhaseCompletion(phaseIndex: number): number {
     // Map phases to weeks: phase 0 → weeks 1-2, phase 1 → weeks 3-4, etc.
@@ -1017,9 +1109,9 @@ function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhas
     let total = 0;
     let done = 0;
     for (const w of phaseWeeks) {
-      for (const t of w.tasks) {
+      for (const task of w.tasks) {
         total++;
-        if (taskStatuses[`${w.week}-${t.day}-${t.skill}`] === "completed") done++;
+        if (taskStatuses[`${w.week}-${task.day}-${task.skill}`] === "completed") done++;
       }
     }
     return total > 0 ? Math.round((done / total) * 100) : 0;
@@ -1057,8 +1149,8 @@ function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhas
     <div className="space-y-6">
       {/* Timeline visualization */}
       <div className="relative rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
-        <h3 className="text-base font-bold text-[var(--text-primary)]">Your Learning Journey</h3>
-        <p className="mt-1 text-xs text-[var(--text-muted)]">{phases.length} phases • {weeklyGoals.length} weeks</p>
+        <h3 className="text-base font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.timeline.title")}</h3>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">{t("ielts.studyPlan.timeline.summary", { phases: phases.length, weeks: weeklyGoals.length })}</p>
 
         {/* Phase nodes */}
         <div className="mt-6 flex flex-col gap-0 sm:flex-row sm:items-start sm:gap-0">
@@ -1076,6 +1168,9 @@ function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhas
                   {/* Node */}
                   <button
                     onClick={() => onSelectPhase(isSelected ? null : i)}
+                    aria-pressed={isSelected}
+                    aria-current={isCurrent ? "step" : undefined}
+                    aria-label={`${phase.name} — ${t("ielts.studyPlan.timeline.percentComplete", { p: completion })}`}
                     className={`relative z-10 flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full border-[3px] transition-all sm:mx-auto ${
                       isSelected
                         ? `${colors.border} ${colors.soft} ring-4 ring-[var(--primary-soft)]`
@@ -1087,7 +1182,7 @@ function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhas
                     }`}
                   >
                     {isPast ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                      <CheckCircle2 className="h-5 w-5 text-emerald-400" aria-hidden="true" />
                     ) : (
                       <>
                         <span className={`text-xs font-bold ${isCurrent || isSelected ? colors.text : "text-[var(--text-muted)]"}`}>{completion}%</span>
@@ -1109,7 +1204,7 @@ function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhas
                   <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{phase.weeks}</p>
                   {isCurrent && (
                     <span className={`mt-1 inline-block rounded-full ${colors.soft} px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${colors.text}`}>
-                      Current
+                      {t("ielts.studyPlan.timeline.current")}
                     </span>
                   )}
                 </div>
@@ -1129,7 +1224,7 @@ function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhas
               </div>
               <div>
                 <h3 className="text-base font-bold text-[var(--text-primary)]">{phases[selectedPhase].name}</h3>
-                <p className="text-xs text-[var(--text-muted)]">{phases[selectedPhase].weeks} • {getPhaseCompletion(selectedPhase)}% complete</p>
+                <p className="text-xs text-[var(--text-muted)]">{phases[selectedPhase].weeks} • {t("ielts.studyPlan.timeline.percentComplete", { p: getPhaseCompletion(selectedPhase) })}</p>
               </div>
             </div>
 
@@ -1142,13 +1237,13 @@ function VisualRoadmapTimeline({ phases, weeklyGoals, taskStatuses, selectedPhas
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {phases[selectedPhase].avoid && (
                 <div className="rounded-[var(--radius-md)] border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Avoid</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">{t("ielts.studyPlan.timeline.avoid")}</p>
                   <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{phases[selectedPhase].avoid}</p>
                 </div>
               )}
               {phases[selectedPhase].expectedProgress && (
                 <div className="rounded-[var(--radius-md)] border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Expected Progress</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">{t("ielts.studyPlan.timeline.expectedProgress")}</p>
                   <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{phases[selectedPhase].expectedProgress}</p>
                 </div>
               )}
@@ -1177,33 +1272,44 @@ function TaskRow({ task, isDone, onToggle, actionLink }: {
   onToggle: () => void;
   actionLink?: string;
 }) {
+  const { t } = useLocale();
   const [expanded, setExpanded] = useState(false);
   const Icon = SKILL_ICONS[task.skill] ?? Zap;
   const hasDetails = task.howTo || task.whatToAvoid || task.whyItMatters || task.details;
+  const minSuffix = t("ielts.studyPlan.task.minSuffix");
 
   return (
     <div className={`rounded-[var(--radius-md)] border transition-all ${isDone ? "border-emerald-500/20 bg-emerald-500/5" : "border-[var(--border)] bg-[var(--bg-elevated)]"}`}>
       <div className="flex items-start gap-3 p-3">
-        <button onClick={onToggle} className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all ${isDone ? "border-emerald-500 bg-emerald-500 text-white" : "border-[var(--border-strong)] hover:border-[var(--primary)]"}`}>
-          {isDone && <CheckCircle2 className="h-3.5 w-3.5" />}
+        <button
+          onClick={onToggle}
+          aria-pressed={isDone}
+          aria-label={task.activity}
+          className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all ${isDone ? "border-emerald-500 bg-emerald-500 text-white" : "border-[var(--border-strong)] hover:border-[var(--primary)]"}`}
+        >
+          {isDone && <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />}
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <Icon className={`h-3.5 w-3.5 ${isDone ? "text-emerald-400" : "text-[var(--text-muted)]"}`} />
+            <Icon className={`h-3.5 w-3.5 ${isDone ? "text-emerald-400" : "text-[var(--text-muted)]"}`} aria-hidden="true" />
             <span className={`text-xs font-semibold ${isDone ? "text-emerald-400 line-through" : "text-[var(--text-primary)]"}`}>{task.day}</span>
             <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
-              {task.skill} • {task.durationMinutes}min
+              {skillLabel(t, task.skill)} • {task.durationMinutes}{minSuffix}
             </span>
           </div>
-          <button onClick={() => hasDetails && setExpanded(!expanded)} className={`mt-0.5 text-left text-xs ${isDone ? "text-[var(--text-muted)] line-through" : "text-[var(--text-secondary)]"} ${hasDetails && !isDone ? "cursor-pointer hover:text-[var(--text-primary)]" : ""}`}>
+          <button
+            onClick={() => hasDetails && setExpanded(!expanded)}
+            aria-expanded={hasDetails ? expanded : undefined}
+            className={`mt-0.5 text-left text-xs ${isDone ? "text-[var(--text-muted)] line-through" : "text-[var(--text-secondary)]"} ${hasDetails && !isDone ? "cursor-pointer hover:text-[var(--text-primary)]" : ""}`}
+          >
             {task.activity}
-            {hasDetails && !isDone && <span className="ml-1 text-[var(--text-muted)]">{expanded ? "▾" : "▸"}</span>}
+            {hasDetails && !isDone && <span className="ml-1 text-[var(--text-muted)]" aria-hidden="true">{expanded ? "▾" : "▸"}</span>}
           </button>
         </div>
         {actionLink && !isDone && (
-          <a href={actionLink} className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--border)] px-2.5 py-1 text-[10px] font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary-soft)]">
-            Start
-          </a>
+          <Link href={actionLink} className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--border)] px-2.5 py-1 text-[10px] font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary-soft)]">
+            {t("ielts.studyPlan.task.start")}
+          </Link>
         )}
       </div>
 
@@ -1214,19 +1320,19 @@ function TaskRow({ task, isDone, onToggle, actionLink }: {
           )}
           {task.howTo && (
             <div className="rounded-[var(--radius-sm)] border border-blue-500/20 bg-blue-500/5 px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">How to do it</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{t("ielts.studyPlan.task.howTo")}</p>
               <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{task.howTo}</p>
             </div>
           )}
           {task.whatToAvoid && (
             <div className="rounded-[var(--radius-sm)] border border-amber-500/20 bg-amber-500/5 px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">What to avoid</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">{t("ielts.studyPlan.task.whatToAvoid")}</p>
               <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{task.whatToAvoid}</p>
             </div>
           )}
           {task.whyItMatters && (
             <div className="rounded-[var(--radius-sm)] border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Why it matters</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">{t("ielts.studyPlan.task.whyItMatters")}</p>
               <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{task.whyItMatters}</p>
             </div>
           )}
