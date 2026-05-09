@@ -60,6 +60,12 @@ export function NUETSimulatorClient({
   const [violationBanner, setViolationBanner] = useState<string | null>(null);
   const [expandedReview, setExpandedReview] = useState<Record<number, boolean>>({});
   const [reviewFilter, setReviewFilter] = useState<"all" | "wrong" | "flagged">("all");
+  // Re-drill: walks the user through their wrong questions one at a time on
+  // the results screen. State scoped to results stage; reset when leaving.
+  const [redrillOpen, setRedrillOpen] = useState(false);
+  const [redrillIdx, setRedrillIdx] = useState(0);
+  const [redrillPicks, setRedrillPicks] = useState<Record<string, string>>({});
+  const [redrillRevealed, setRedrillRevealed] = useState<Set<string>>(new Set());
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Autosave UX: lastSavedAt is the wall-clock ms of the most recent successful
   // save, lastSaveFailed surfaces a warning, savedTick forces a re-render every
@@ -472,6 +478,10 @@ export function NUETSimulatorClient({
     setTerminatedModal(false);
     setIsPaused(false);
     setReviewFilter("all");
+    setRedrillOpen(false);
+    setRedrillIdx(0);
+    setRedrillPicks({});
+    setRedrillRevealed(new Set());
     setViolationBanner(null);
     setStage("configure");
   }
@@ -721,6 +731,50 @@ export function NUETSimulatorClient({
           ctLabel={t("nuet.sectionCT")}
           headingLabel={t("nuet.simulator.sectionBreakdown")}
           correctLabel={t("nuet.history.correct")}
+        />
+
+        <RedrillPanel
+          open={redrillOpen}
+          questions={questions}
+          evaluations={result.evaluations ?? []}
+          idx={redrillIdx}
+          picks={redrillPicks}
+          revealed={redrillRevealed}
+          onOpen={() => {
+            setRedrillOpen(true);
+            setRedrillIdx(0);
+            setRedrillPicks({});
+            setRedrillRevealed(new Set());
+          }}
+          onClose={() => setRedrillOpen(false)}
+          onPick={(qid, letter) =>
+            setRedrillPicks((current) => ({ ...current, [qid]: letter }))
+          }
+          onReveal={(qid) =>
+            setRedrillRevealed((current) => {
+              const next = new Set(current);
+              next.add(qid);
+              return next;
+            })
+          }
+          onNext={() => setRedrillIdx((i) => i + 1)}
+          onPrev={() => setRedrillIdx((i) => Math.max(0, i - 1))}
+          labels={{
+            cta: t("nuet.simulator.redrillCta"),
+            empty: t("nuet.simulator.redrillEmpty"),
+            title: t("nuet.simulator.redrillTitle"),
+            close: t("nuet.simulator.redrillClose"),
+            check: t("nuet.simulator.redrillCheck"),
+            next: t("nuet.simulator.next"),
+            prev: t("nuet.simulator.prev"),
+            done: t("nuet.simulator.redrillDone"),
+            correct: t("nuet.simulator.correct"),
+            incorrect: t("nuet.simulator.incorrect"),
+            yourAnswer: t("nuet.simulator.yourAnswer"),
+            correctAnswer: t("nuet.simulator.correctAnswer"),
+            explanation: t("nuet.review.solutionTitle"),
+            noExplanation: t("nuet.review.noExplanation"),
+          }}
         />
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
@@ -1332,6 +1386,205 @@ function ResultTile({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
       <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
       <p className="mt-1 text-xl font-bold text-[var(--text-primary)]">{value}</p>
+    </div>
+  );
+}
+
+function RedrillPanel({
+  open,
+  questions,
+  evaluations,
+  idx,
+  picks,
+  revealed,
+  onOpen,
+  onClose,
+  onPick,
+  onReveal,
+  onNext,
+  onPrev,
+  labels,
+}: {
+  open: boolean;
+  questions: NUETSimulatorQuestion[];
+  evaluations: NonNullable<NUETAttemptActionResult["evaluations"]>;
+  idx: number;
+  picks: Record<string, string>;
+  revealed: Set<string>;
+  onOpen: () => void;
+  onClose: () => void;
+  onPick: (questionId: string, letter: string) => void;
+  onReveal: (questionId: string) => void;
+  onNext: () => void;
+  onPrev: () => void;
+  labels: {
+    cta: string;
+    empty: string;
+    title: string;
+    close: string;
+    check: string;
+    next: string;
+    prev: string;
+    done: string;
+    correct: string;
+    incorrect: string;
+    yourAnswer: string;
+    correctAnswer: string;
+    explanation: string;
+    noExplanation: string;
+  };
+}) {
+  // Pair each wrong evaluation with its original question (we need options
+  // to re-render the prompt). Drop any wrong eval whose questionId isn't in
+  // the questions array — without options we can't re-attempt it.
+  const items = (() => {
+    const byId = new Map(questions.map((q) => [q.id, q]));
+    const out: Array<{
+      question: NUETSimulatorQuestion;
+      expected: string;
+      explanation?: string;
+      received: string;
+    }> = [];
+    for (const ev of evaluations) {
+      if (ev.correct || !ev.questionId) continue;
+      const original = byId.get(ev.questionId);
+      if (!original) continue;
+      out.push({
+        question: original,
+        expected: ev.expected,
+        explanation: ev.explanation,
+        received: ev.received,
+      });
+    }
+    return out;
+  })();
+
+  if (items.length === 0) return null;
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-left transition hover:border-amber-300 hover:bg-amber-100"
+      >
+        <div>
+          <p className="text-base font-semibold text-amber-900">
+            {labels.cta.replace("{n}", String(items.length))}
+          </p>
+          <p className="mt-1 text-sm text-amber-800">{labels.empty}</p>
+        </div>
+        <ArrowRight className="h-5 w-5 text-amber-700" />
+      </button>
+    );
+  }
+
+  const safeIdx = Math.max(0, Math.min(items.length - 1, idx));
+  const current = items[safeIdx];
+  const pickedLetter = picks[current.question.id] ?? null;
+  const isRevealed = revealed.has(current.question.id);
+  const isCorrect = pickedLetter === current.expected;
+  const onLast = safeIdx === items.length - 1;
+  const opts = visibleOptions(current.question.options);
+
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+            {labels.title}
+          </p>
+          <p className="mt-1 text-lg font-semibold text-[var(--text-primary)]">
+            {safeIdx + 1} / {items.length}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+          aria-label={labels.close}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4 text-base leading-7 text-[var(--text-primary)]">
+        <MathText text={current.question.prompt} />
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {opts.map((option, optionIndex) => {
+          const letter = ANSWER_LETTERS[optionIndex];
+          const active = pickedLetter === letter;
+          const showCorrect = isRevealed && letter === current.expected;
+          const showWrong = isRevealed && active && letter !== current.expected;
+          return (
+            <button
+              key={letter}
+              type="button"
+              disabled={isRevealed}
+              onClick={() => onPick(current.question.id, letter)}
+              className={`flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left transition ${
+                showCorrect
+                  ? "border-emerald-500 bg-emerald-50"
+                  : showWrong
+                    ? "border-rose-500 bg-rose-50"
+                    : active
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
+                      : "border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--primary)]"
+              } ${isRevealed ? "cursor-default" : ""}`}
+            >
+              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-xs font-semibold">
+                {letter}
+              </span>
+              <span className="text-sm text-[var(--text-primary)]">
+                <MathText text={option} />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {isRevealed ? (
+        <div
+          className={`mt-4 rounded-xl border p-4 ${
+            isCorrect ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"
+          }`}
+        >
+          <p className="text-sm font-semibold text-[var(--text-primary)]">
+            {isCorrect ? labels.correct : labels.incorrect}
+          </p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            {labels.yourAnswer} {pickedLetter ?? "—"} · {labels.correctAnswer} {current.expected}
+          </p>
+          {current.explanation && current.explanation.trim() ? (
+            <div className="mt-2 text-sm text-[var(--text-secondary)]">
+              <MathText text={current.explanation} as="div" />
+            </div>
+          ) : (
+            <p className="mt-2 text-sm italic text-[var(--text-muted)]">{labels.noExplanation}</p>
+          )}
+        </div>
+      ) : null}
+
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <Button variant="ghost" onClick={onPrev} disabled={safeIdx === 0}>
+          <ArrowLeft className="h-4 w-4" />
+          {labels.prev}
+        </Button>
+        {!isRevealed ? (
+          <Button onClick={() => onReveal(current.question.id)} disabled={!pickedLetter}>
+            {labels.check}
+          </Button>
+        ) : onLast ? (
+          <Button onClick={onClose}>{labels.done}</Button>
+        ) : (
+          <Button onClick={onNext}>
+            {labels.next}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

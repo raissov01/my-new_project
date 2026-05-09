@@ -1,12 +1,40 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Brain, FileText, Globe2, GraduationCap, Library, Map, ScrollText, Trophy } from "lucide-react";
+import { BookOpen, Brain, FileText, Flame, Globe2, GraduationCap, Library, Map, ScrollText, Trophy } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { listNUETTopics, getNUETDashboard, getNUETDailyChallenge, listNUETAttempts } from "@/server/integrations/go-backend/nuet";
 import { NUETDailyChallengeWidget } from "./daily-challenge";
 import { NUETInProgressCard } from "./in-progress-card";
+
+// Walks completed mock attempts back from today, counting consecutive UTC
+// days with at least one finish. Today not yet attempted is allowed (the
+// streak is "still alive" until midnight) — we anchor on yesterday in that
+// case so the user has the full day to keep it going.
+function computeMockStreak(completedAtList: string[]): number {
+  if (completedAtList.length === 0) return 0;
+  const days = new Set<string>();
+  for (const iso of completedAtList) {
+    if (!iso) continue;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) continue;
+    days.add(d.toISOString().slice(0, 10));
+  }
+  if (days.size === 0) return 0;
+  const today = new Date();
+  const cursor = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  const todayKey = cursor.toISOString().slice(0, 10);
+  if (!days.has(todayKey)) {
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  let streak = 0;
+  while (days.has(cursor.toISOString().slice(0, 10))) {
+    streak += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return streak;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -23,7 +51,7 @@ export default async function NUETHubPage() {
   const t = createTranslator(locale);
   const user = await getCurrentUser();
 
-  const [mathTopics, ctTopics, dashboard, daily, inProgress] = await Promise.all([
+  const [mathTopics, ctTopics, dashboard, daily, inProgress, mockHistory] = await Promise.all([
     listNUETTopics(user?.id ?? "", "math").catch(() => ({ items: [] })),
     listNUETTopics(user?.id ?? "", "critical_thinking").catch(() => ({ items: [] })),
     user ? getNUETDashboard(user.id).catch(() => null) : null,
@@ -33,7 +61,18 @@ export default async function NUETHubPage() {
           () => ({ attempts: [], total: 0, limit: 0, offset: 0 })
         )
       : null,
+    user
+      ? listNUETAttempts(user.id, {
+          status: "completed",
+          attemptType: "full_mock",
+          limit: 50,
+        }).catch(() => ({ attempts: [], total: 0, limit: 0, offset: 0 }))
+      : null,
   ]);
+  const mockStreak = mockHistory
+    ? computeMockStreak(mockHistory.attempts.map((a) => a.completedAt ?? ""))
+    : 0;
+  const completedMockCount = mockHistory?.total ?? 0;
 
   const modules = [
     {
@@ -124,6 +163,20 @@ export default async function NUETHubPage() {
             {t("nuet.viewProgress")}
           </Link>
         </div>
+
+        {mockStreak > 0 || completedMockCount > 0 ? (
+          <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm text-orange-800">
+            <Flame className="h-4 w-4 text-orange-600" />
+            <span className="font-semibold">
+              {mockStreak > 0
+                ? t("nuet.mockStreak.active").replace("{n}", String(mockStreak))
+                : t("nuet.mockStreak.dormant")}
+            </span>
+            <span className="text-xs text-orange-700">
+              · {t("nuet.mockStreak.totalCompleted").replace("{n}", String(completedMockCount))}
+            </span>
+          </div>
+        ) : null}
 
         {/* Quick stats — exam structure */}
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
