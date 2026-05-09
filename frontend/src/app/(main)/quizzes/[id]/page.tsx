@@ -29,9 +29,12 @@ export async function generateMetadata({ params }: QuizDetailPageProps) {
   const { id } = await params;
   const quiz = await getQuizById(id);
   if (!quiz) return {};
-  const description =
-    quiz.description ??
-    `${quiz.questionCount} questions · ${quiz.subject ?? "Quiz"}`;
+  const locale = await getServerLocale();
+  const t = createTranslator(locale);
+  const fallbackDescription = `${quiz.questionCount} ${
+    quiz.questionCount === 1 ? t("quiz.question") : t("quiz.questions")
+  } · ${quiz.subject ?? t("quiz.quiz")}`;
+  const description = quiz.description ?? fallbackDescription;
   return {
     title: quiz.title,
     description,
@@ -109,17 +112,17 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
         </div>
         <div className="nd-kpi">
           <span className="nd-kpi-lbl">
-            <Clock3 style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} />
-            {t("quiz.secondsShort")}
+            <Clock3 style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} aria-hidden />
+            {t("quiz.timePerQuestionLabel")}
           </span>
-          <strong className="nd-kpi-num">{quiz.timePerQuestion}s</strong>
+          <strong className="nd-kpi-num">{quiz.timePerQuestion}{t("quiz.secondsShort")}</strong>
         </div>
         <div className="nd-kpi">
           <span className="nd-kpi-lbl">
             {quiz.isPublic ? (
-              <Globe2 style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} />
+              <Globe2 style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} aria-hidden />
             ) : (
-              <Lock style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} />
+              <Lock style={{ display: "inline", width: 12, height: 12, marginRight: 4 }} aria-hidden />
             )}
             {t("quiz.visibility")}
           </span>
@@ -168,7 +171,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                 {t("quiz.edit")}
               </Link>
               <Link href={`/quizzes/${quiz.id}/host`} className="nd-btn-soft">
-                <Radio style={{ width: 15, height: 15 }} />
+                <Radio style={{ width: 15, height: 15 }} aria-hidden />
                 {t("quiz.hostLive")}
               </Link>
             </>
@@ -209,7 +212,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                 </h5>
                 {quiz.isAuthor && question.correctOption ? (
                   <span className="nd-tag nd-tag-green" style={{ fontSize: 10.5, whiteSpace: "nowrap" }}>
-                    <Target style={{ width: 11, height: 11 }} />
+                    <Target style={{ width: 11, height: 11 }} aria-hidden />
                     {question.correctOption.toUpperCase()}
                   </span>
                 ) : null}
@@ -244,7 +247,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
       {quiz.isAuthor && stats ? (
         <section className="mt-8">
           <div className="flex items-center gap-3">
-            <BarChart2 className="h-5 w-5 text-[var(--text-muted)]" />
+            <BarChart2 className="h-5 w-5 text-[var(--text-muted)]" aria-hidden />
             <div>
               <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                 {t("quiz.stats.title")}
