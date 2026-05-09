@@ -459,6 +459,8 @@ func RegisterRoutes(router *gin.Engine) {
 		guestOK.GET("/nuet/pdf-tests", wrapHTTP(deps.NUET.ListPDFTests))
 		guestOK.GET("/nuet/pdf-tests/:id", wrapHTTP(deps.NUET.GetPDFTest))
 		guestOK.GET("/nuet/materials", wrapHTTP(deps.NUET.ListMaterials))
+		guestOK.GET("/nuet/lessons", wrapHTTP(deps.NUET.ListLessons))
+		guestOK.GET("/nuet/lessons/:slug", wrapHTTP(deps.NUET.GetLesson))
 	}
 
 	// Public read routes are registered above in the internal group.

@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen, Brain, FileText, Flame, Globe2, GraduationCap, Li
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { listNUETTopics, getNUETDashboard, getNUETDailyChallenge, listNUETAttempts } from "@/server/integrations/go-backend/nuet";
+import { listNUETTopics, getNUETDashboard, getNUETDailyChallenge, listNUETAttempts, listNUETLessons } from "@/server/integrations/go-backend/nuet";
 import { NUETDailyChallengeWidget } from "./daily-challenge";
 import { NUETInProgressCard } from "./in-progress-card";
 
@@ -51,7 +51,7 @@ export default async function NUETHubPage() {
   const t = createTranslator(locale);
   const user = await getCurrentUser();
 
-  const [mathTopics, ctTopics, dashboard, daily, inProgress, mockHistory] = await Promise.all([
+  const [mathTopics, ctTopics, dashboard, daily, inProgress, mockHistory, lessons] = await Promise.all([
     listNUETTopics(user?.id ?? "", "math").catch(() => ({ items: [] })),
     listNUETTopics(user?.id ?? "", "critical_thinking").catch(() => ({ items: [] })),
     user ? getNUETDashboard(user.id).catch(() => null) : null,
@@ -68,6 +68,7 @@ export default async function NUETHubPage() {
           limit: 50,
         }).catch(() => ({ attempts: [], total: 0, limit: 0, offset: 0 }))
       : null,
+    listNUETLessons(user?.id ?? "").catch(() => ({ items: [], total: 0 })),
   ]);
   const mockStreak = mockHistory
     ? computeMockStreak(mockHistory.attempts.map((a) => a.completedAt ?? ""))
@@ -111,7 +112,7 @@ export default async function NUETHubPage() {
       icon: Library,
       titleKey: "nuet.mod.materials",
       descKey: "nuet.mod.materialsDesc",
-      meta: dashboard ? `${dashboard.materialCount} ${t("nuet.files")}` : "",
+      meta: `${lessons.total} ${t("nuet.lesson.bookCount")}`,
       href: "/nuet/materials",
       tone: "purple" as const,
     },

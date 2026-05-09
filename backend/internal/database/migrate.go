@@ -117,6 +117,7 @@ func AutoMigrate(db *gorm.DB) (err error) {
 		&models.NUETAttempt{},
 		&models.NUETQuestionDismissal{},
 		&models.NUETRoadmapProgress{},
+		&models.NUETLesson{},
 		&models.TelegramPost{},
 		&models.ChatMessage{},
 		&models.MaterialNote{},

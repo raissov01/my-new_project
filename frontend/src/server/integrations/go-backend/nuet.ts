@@ -188,6 +188,46 @@ export async function listNUETPDFTests(userId: string): Promise<{ items: NUETPDF
   });
 }
 
+export type NUETLessonSummary = {
+  id: string;
+  topicId?: string | null;
+  slug: string;
+  section: NUETSection;
+  title: string;
+  summary: string;
+  minutes: number;
+  orderIndex: number;
+  status: string;
+  updatedAt: string;
+};
+
+export type NUETLessonFull = NUETLessonSummary & {
+  // jsonb arrives as a parsed object (gorm json codec) — typed as unknown
+  // because the schema is enforced by the renderer, not the network layer.
+  content: unknown;
+};
+
+export async function listNUETLessons(
+  userId: string,
+  section?: NUETSection
+): Promise<{ items: NUETLessonSummary[]; total: number }> {
+  const qs = section ? `?section=${section}` : "";
+  return fetchBackendJson<{ items: NUETLessonSummary[]; total: number }>({
+    path: `/api/v1/nuet/lessons${qs}`,
+    userId,
+  });
+}
+
+export async function getNUETLesson(
+  userId: string,
+  slug: string
+): Promise<NUETLessonFull> {
+  return fetchBackendJson<NUETLessonFull>({
+    path: `/api/v1/nuet/lessons/${encodeURIComponent(slug)}`,
+    userId,
+  });
+}
+
 export async function getNUETPDFTest(userId: string, id: string): Promise<NUETPDFTest> {
   return fetchBackendJson<NUETPDFTest>({
     path: `/api/v1/nuet/pdf-tests/${encodeURIComponent(id)}`,

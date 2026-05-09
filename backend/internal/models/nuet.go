@@ -19,6 +19,29 @@ type NUETTopic struct {
 
 func (NUETTopic) TableName() string { return "nuet_topics" }
 
+// NUETLesson is a structured "book" — a chaptered walkthrough of a topic
+// authored as JSON so the reader can render it like a textbook (formulas,
+// worked examples, callouts, exercises). One lesson per topic; Content is
+// the raw JSON document — see frontend/src/lib/shared/nuet/lesson-schema.ts
+// for the block schema. Stored as *string so we can detect "not yet
+// authored" cleanly and avoid pulling in gorm/datatypes.
+type NUETLesson struct {
+	ID         string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	TopicID    *string   `gorm:"type:uuid;index"                                json:"topicId,omitempty"`
+	Slug       string    `gorm:"type:varchar(120);not null;uniqueIndex"         json:"slug"`
+	Section    string    `gorm:"type:varchar(32);not null"                      json:"section"`
+	Title      string    `gorm:"not null"                                       json:"title"`
+	Summary    string    `gorm:"type:text;not null;default:''"                  json:"summary"`
+	Minutes    int       `gorm:"not null;default:0"                             json:"minutes"`
+	OrderIndex int       `gorm:"not null;default:0"                             json:"orderIndex"`
+	Status     string    `gorm:"type:varchar(16);not null;default:'published'"  json:"status"`
+	Content    *string   `gorm:"type:jsonb"                                     json:"content,omitempty"`
+	CreatedAt  time.Time `gorm:"autoCreateTime"                                 json:"createdAt"`
+	UpdatedAt  time.Time `gorm:"autoUpdateTime"                                 json:"updatedAt"`
+}
+
+func (NUETLesson) TableName() string { return "nuet_lessons" }
+
 // NUETQuestion is a single multiple-choice question in the practice bank.
 // Options is JSON-encoded ["London","Paris","Berlin","Madrid"]. Answer is
 // the letter key ("A".."E"). Stored as *string for jsonb fields to match

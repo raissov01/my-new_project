@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, FileText, Download } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, Clock } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { listNUETMaterials, type NUETMaterial } from "@/server/integrations/go-backend/nuet";
+import {
+  listNUETLessons,
+  type NUETLessonSummary,
+} from "@/server/integrations/go-backend/nuet";
 import { RetryButton } from "@/components/nuet/retry-button";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,7 +22,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type SearchParams = {
   section?: "math" | "critical_thinking";
-  type?: "mock_test" | "trial_test" | "book" | "notes" | "formulas" | "solutions";
 };
 
 export default async function NUETMaterialsPage({
@@ -32,28 +34,21 @@ export default async function NUETMaterialsPage({
   const t = createTranslator(locale);
   const user = await getCurrentUser();
 
-  const data = await listNUETMaterials(user?.id ?? "", {
-    section: params.section,
-    type: params.type,
-    withFile: true,
-    limit: 100,
-  }).catch(() => ({ items: [], total: 0 }));
+  const data = await listNUETLessons(user?.id ?? "", params.section).catch(
+    () => ({ items: [] as NUETLessonSummary[], total: 0 })
+  );
 
   const sectionFilters = [
-    { key: undefined, label: t("nuet.filterAll") },
+    { key: undefined as undefined | "math" | "critical_thinking", label: t("nuet.filterAll") },
     { key: "math" as const, label: t("nuet.sectionMath") },
     { key: "critical_thinking" as const, label: t("nuet.sectionCT") },
   ];
 
-  const typeFilters = [
-    { key: undefined, label: t("nuet.typeAll") },
-    { key: "mock_test" as const, label: t("nuet.typeMock") },
-    { key: "trial_test" as const, label: t("nuet.typeTrial") },
-    { key: "book" as const, label: t("nuet.typeBook") },
-    { key: "notes" as const, label: t("nuet.typeNotes") },
-    { key: "formulas" as const, label: t("nuet.typeFormulas") },
-    { key: "solutions" as const, label: t("nuet.typeSolutions") },
-  ];
+  // Group lessons by section so each band has its own header. Backend
+  // returns them already sorted by (section, orderIndex) so we can take
+  // them in order as we iterate.
+  const mathLessons = data.items.filter((l) => l.section === "math");
+  const ctLessons = data.items.filter((l) => l.section === "critical_thinking");
 
   return (
     <div className="page-shell py-6 sm:py-10">
@@ -68,168 +63,121 @@ export default async function NUETMaterialsPage({
       <h1 className="mt-3 text-2xl font-bold text-[var(--text-primary)] sm:text-3xl">
         {t("nuet.materialsTitle")}
       </h1>
-      <p className="mt-2 text-sm text-[var(--text-secondary)]">
-        {t("nuet.materialsSubtitle").replace("{count}", String(data.total))}
+      <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">
+        {t("nuet.materialsLibrarySubtitle").replace("{count}", String(data.total))}
       </p>
 
-      {/* Filters */}
-      <div className="mt-6 space-y-3">
-        <FilterRow label={t("nuet.filterSection")} active={params.section}>
-          {sectionFilters.map((f) => (
-            <FilterChip
-              key={f.key ?? "all"}
-              label={f.label}
-              active={params.section === f.key}
-              href={buildHref(params, { section: f.key })}
-            />
-          ))}
-        </FilterRow>
-        <FilterRow label={t("nuet.filterType")} active={params.type}>
-          {typeFilters.map((f) => (
-            <FilterChip
-              key={f.key ?? "all"}
-              label={f.label}
-              active={params.type === f.key}
-              href={buildHref(params, { type: f.key })}
-            />
-          ))}
-        </FilterRow>
-        {params.section || params.type ? (
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+          {t("nuet.filterSection")}
+        </span>
+        {sectionFilters.map((f) => (
           <Link
-            href="/nuet/materials"
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:border-rose-300 hover:text-rose-600"
+            key={f.key ?? "all"}
+            href={f.key ? `/nuet/materials?section=${f.key}` : "/nuet/materials"}
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition ${
+              params.section === f.key
+                ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-soft)]"
+            }`}
           >
-            ✕ {t("nuet.materialsClearFilters")}
+            {f.label}
           </Link>
-        ) : null}
+        ))}
       </div>
 
-      {/* Grid */}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {data.items.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-center sm:col-span-2 lg:col-span-3">
-            <p className="text-sm text-[var(--text-muted)]">{t("nuet.noMaterials")}</p>
-            <div className="mt-3 flex justify-center">
-              <RetryButton label={t("nuet.materialsRetry")} />
-            </div>
+      {data.items.length === 0 ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-8 text-center">
+          <p className="text-sm text-[var(--text-muted)]">{t("nuet.noMaterials")}</p>
+          <div className="mt-3 flex justify-center">
+            <RetryButton label={t("nuet.materialsRetry")} />
           </div>
-        ) : (
-          data.items.map((m) => <MaterialCard key={m.id} material={m} t={t} />)
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="mt-8 space-y-10">
+          {(!params.section || params.section === "math") && mathLessons.length > 0 ? (
+            <LessonBand
+              icon={BookOpen}
+              label={t("nuet.sectionMath")}
+              lessons={mathLessons}
+              t={t}
+            />
+          ) : null}
+          {(!params.section || params.section === "critical_thinking") &&
+          ctLessons.length > 0 ? (
+            <LessonBand
+              icon={Brain}
+              label={t("nuet.sectionCT")}
+              lessons={ctLessons}
+              t={t}
+            />
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
 
-function FilterRow({
+function LessonBand({
+  icon: Icon,
   label,
-  children,
+  lessons,
+  t,
 }: {
+  icon: typeof BookOpen;
   label: string;
-  active?: string;
-  children: React.ReactNode;
+  lessons: NUETLessonSummary[];
+  t: (key: string) => string;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
-        {label}
-      </span>
-      {children}
-    </div>
+    <section>
+      <div className="mb-3 flex items-center gap-2">
+        <Icon className="h-4 w-4 text-[var(--primary)]" />
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)]">
+          {label}
+        </h2>
+        <span className="font-mono text-xs text-[var(--text-muted)]">
+          · {lessons.length}
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {lessons.map((l) => (
+          <LessonCard key={l.id} lesson={l} t={t} />
+        ))}
+      </div>
+    </section>
   );
 }
 
-function FilterChip({
-  label,
-  active,
-  href,
+function LessonCard({
+  lesson,
+  t,
 }: {
-  label: string;
-  active: boolean;
-  href: string;
+  lesson: NUETLessonSummary;
+  t: (key: string) => string;
 }) {
   return (
     <Link
-      href={href}
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition ${
-        active
-          ? "border-[var(--primary)] bg-[var(--primary)] text-white"
-          : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-soft)]"
-      }`}
+      href={`/nuet/materials/${lesson.slug}`}
+      className="group flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 transition hover:border-[var(--primary)]"
     >
-      {label}
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--primary)]">
+          {lesson.title}
+        </h3>
+        {lesson.minutes ? (
+          <span className="inline-flex shrink-0 items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+            <Clock className="h-3 w-3" />
+            {`${lesson.minutes} ${t("nuet.lesson.min")}`}
+          </span>
+        ) : null}
+      </div>
+      <p className="line-clamp-3 text-xs leading-5 text-[var(--text-secondary)]">
+        {lesson.summary}
+      </p>
+      <span className="mt-auto inline-flex items-center text-xs font-semibold text-[var(--primary)]">
+        {t("nuet.lesson.openBook")} →
+      </span>
     </Link>
   );
-}
-
-function MaterialCard({
-  material,
-  t,
-}: {
-  material: NUETMaterial;
-  t: (key: string) => string;
-}) {
-  const fileLabel = material.fileName || t("nuet.untitledFile");
-  // The backend serves files via /api/v1/files/<filepath>; the proxy passes
-  // through to the Go backend's public files endpoint.
-  const downloadUrl = `/api/v1/files/${encodeURI(material.filePath)}`;
-  const caption = (material.caption || material.text || "").trim();
-  const preview = caption.length > 140 ? caption.slice(0, 140) + "…" : caption;
-  const visibleTags = material.tags
-    .filter((t) => t.startsWith("type_") || t.startsWith("topic_") || t === "nuet_math" || t === "nuet_critical_thinking")
-    .slice(0, 3);
-
-  return (
-    <article className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 transition hover:border-[var(--primary)]">
-      <div className="flex items-start gap-3">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--bg-soft)] text-[var(--text-muted)]">
-          <FileText className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-[var(--text-primary)]">
-            {fileLabel}
-          </h3>
-          {preview ? (
-            <p className="mt-1 line-clamp-2 text-xs text-[var(--text-secondary)]">
-              {preview}
-            </p>
-          ) : null}
-        </div>
-      </div>
-      {visibleTags.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
-          {visibleTags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-2 py-0.5 font-mono text-[9px] uppercase tracking-wide text-[var(--text-muted)]"
-            >
-              {tag.replace(/^(type_|topic_|nuet_)/, "")}
-            </span>
-          ))}
-        </div>
-      ) : null}
-      <a
-        href={downloadUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex w-fit items-center gap-1 text-xs font-semibold text-[var(--primary)] hover:underline"
-      >
-        <Download className="h-3 w-3" />
-        {t("nuet.download")}
-      </a>
-    </article>
-  );
-}
-
-function buildHref(
-  current: SearchParams,
-  patch: Partial<SearchParams>
-): string {
-  const next: SearchParams = { ...current, ...patch };
-  // Strip undefined keys.
-  const qs = new URLSearchParams();
-  if (next.section) qs.set("section", next.section);
-  if (next.type) qs.set("type", next.type);
-  const tail = qs.toString();
-  return tail ? `/nuet/materials?${tail}` : "/nuet/materials";
 }

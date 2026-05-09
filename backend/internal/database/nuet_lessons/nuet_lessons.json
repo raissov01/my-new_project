@@ -1,0 +1,1675 @@
+[
+  {
+    "slug": "standard-and-compound-units",
+    "topicSlug": "standard-and-compound-units",
+    "section": "math",
+    "title": "Standard and Compound Units",
+    "summary": "Convert between SI units and reason about compound rates (speed, density, pressure) without losing track of the units.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "si-units",
+        "title": "SI prefixes and conversions",
+        "blocks": [
+          { "type": "paragraph", "text": "All SI prefixes are powers of 10. Memorise the ladder once and conversions become arithmetic." },
+          { "type": "table", "headers": ["Prefix", "Symbol", "Power of 10"], "rows": [
+            ["kilo", "k", "10³"], ["hecto", "h", "10²"], ["deca", "da", "10¹"],
+            ["base", "—", "10⁰"], ["deci", "d", "10⁻¹"], ["centi", "c", "10⁻²"], ["milli", "m", "10⁻³"]
+          ]},
+          { "type": "callout", "tone": "tip", "text": "Going up the ladder (smaller → larger) the number gets smaller. Going down, bigger. Check direction before multiplying." }
+        ]
+      },
+      {
+        "id": "compound",
+        "title": "Compound rates",
+        "blocks": [
+          { "type": "definition", "term": "Compound unit", "text": "A rate built from two base units (m/s, kg/m³, N/m² = Pa). Convert each part separately." },
+          { "type": "formula", "tex": "1\\,\\text{m/s} = 3.6\\,\\text{km/h}", "caption": "Multiply by 3600 (s→h) and divide by 1000 (m→km)." },
+          { "type": "formula", "tex": "\\rho = \\dfrac{m}{V}", "caption": "Density: mass per unit volume." },
+          { "type": "example", "title": "Speed conversion", "prompt": "A car travels at 90 km/h. Convert to m/s.", "steps": [
+            "Divide by 3.6: $90 \\div 3.6 = 25$.",
+            "Or expand: $90\\,\\text{km/h} \\cdot \\dfrac{1000\\,\\text{m}}{1\\,\\text{km}} \\cdot \\dfrac{1\\,\\text{h}}{3600\\,\\text{s}}$."
+          ], "answer": "25 m/s" }
+        ]
+      },
+      {
+        "id": "common-mistakes",
+        "title": "Area, volume and pitfalls",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Area scales by the **square** of the linear factor: 1 m² = 10000 cm².",
+            "Volume by the **cube**: 1 m³ = 10⁶ cm³.",
+            "Don't multiply when you should divide: 30 km at 60 km/h takes ½ h, not 60·30."
+          ]},
+          { "type": "exercise", "prompt": "A block has mass 240 g and volume 60 cm³. What is its density in g/cm³?", "answer": "4 g/cm³", "explanation": "$\\rho = m/V = 240/60 = 4$ g/cm³." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "algebraic-expressions",
+    "topicSlug": "algebraic-expressions",
+    "section": "math",
+    "title": "Algebraic Expressions",
+    "summary": "Collect like terms, expand brackets, factorise, and simplify algebraic fractions — the building block under almost every later math topic.",
+    "minutes": 25,
+    "chapters": [
+      {
+        "id": "intro",
+        "title": "What is an algebraic expression?",
+        "blocks": [
+          { "type": "paragraph", "text": "An algebraic expression is a combination of numbers, variables, and operations. Unlike an equation it has no equals sign — you can simplify it, but not solve it." },
+          { "type": "definition", "term": "Term", "text": "A single product of numbers and variables, separated by + or − in the larger expression. In $3x^2 - 5xy + 7$, the terms are $3x^2$, $-5xy$, and $7$." },
+          { "type": "definition", "term": "Like terms", "text": "Terms that share the exact same variable part (same letters, same exponents). $4x^2$ and $-x^2$ are like; $4x^2$ and $4x$ are not." },
+          { "type": "callout", "tone": "tip", "text": "Reorder in standard form (highest power first, alphabetical inside) before simplifying — pairing like terms becomes automatic." }
+        ]
+      },
+      {
+        "id": "expand",
+        "title": "Expanding brackets",
+        "blocks": [
+          { "type": "paragraph", "text": "The distributive property is the engine: $a(b+c) = ab + ac$. Apply it twice for two binomials." },
+          { "type": "formula", "tex": "(a+b)(c+d) = ac + ad + bc + bd", "caption": "FOIL — First, Outer, Inner, Last." },
+          { "type": "formula", "tex": "(a+b)^2 = a^2 + 2ab + b^2" },
+          { "type": "formula", "tex": "(a-b)^2 = a^2 - 2ab + b^2" },
+          { "type": "formula", "tex": "(a+b)(a-b) = a^2 - b^2", "caption": "Difference of squares." },
+          { "type": "example", "title": "Expand and simplify", "prompt": "Expand $(2x-3)(x+4)$.", "steps": [
+            "FOIL: $2x \\cdot x + 2x \\cdot 4 + (-3) \\cdot x + (-3) \\cdot 4$.",
+            "Multiply: $2x^2 + 8x - 3x - 12$.",
+            "Collect: $2x^2 + 5x - 12$."
+          ], "answer": "$2x^2 + 5x - 12$" }
+        ]
+      },
+      {
+        "id": "factorise",
+        "title": "Factorising",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Pull out highest common factor: $6x^2 - 9x = 3x(2x - 3)$.",
+            "Quadratic $x^2 + bx + c$: find two numbers that multiply to $c$ and add to $b$.",
+            "Difference of squares: $a^2 - b^2 = (a-b)(a+b)$."
+          ]},
+          { "type": "example", "title": "Factor a quadratic", "prompt": "Factor $x^2 + 7x + 12$.", "steps": [
+            "Need two numbers with product 12 and sum 7.",
+            "Try (3, 4): $3 \\cdot 4 = 12$, $3 + 4 = 7$. ✓",
+            "$x^2 + 7x + 12 = (x+3)(x+4)$."
+          ], "answer": "$(x+3)(x+4)$" },
+          { "type": "callout", "tone": "warning", "text": "When the leading coefficient is not 1 (e.g. $2x^2 + 5x - 3$), use the AC-method or grouping. Don't guess." }
+        ]
+      },
+      {
+        "id": "fractions",
+        "title": "Simplifying algebraic fractions",
+        "blocks": [
+          { "type": "paragraph", "text": "Treat algebraic fractions like numeric ones: factor numerator and denominator, then cancel common **factors** — never terms across a + or − sign." },
+          { "type": "example", "title": "Simplify", "prompt": "Simplify $\\dfrac{x^2 - 9}{x^2 - x - 6}$.", "steps": [
+            "Factor numerator: $(x-3)(x+3)$.",
+            "Factor denominator: $(x-3)(x+2)$.",
+            "Cancel $(x-3)$: $\\dfrac{x+3}{x+2}$."
+          ], "answer": "$\\dfrac{x+3}{x+2}$, valid when $x \\neq 3, -2$" },
+          { "type": "exercise", "prompt": "Simplify $(3a - 2b)(3a + 2b)$.", "answer": "$9a^2 - 4b^2$", "explanation": "Difference of squares with $a' = 3a$, $b' = 2b$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "exponents",
+    "topicSlug": "exponents",
+    "section": "math",
+    "title": "Exponents",
+    "summary": "Index laws, fractional and negative powers, and how to manipulate expressions like $a^{m/n}$ confidently.",
+    "minutes": 20,
+    "chapters": [
+      {
+        "id": "laws",
+        "title": "The index laws",
+        "blocks": [
+          { "type": "paragraph", "text": "Every exponent problem reduces to four core laws. Memorise them once and they apply to every base." },
+          { "type": "formula", "tex": "a^m \\cdot a^n = a^{m+n}" },
+          { "type": "formula", "tex": "\\dfrac{a^m}{a^n} = a^{m-n}" },
+          { "type": "formula", "tex": "(a^m)^n = a^{mn}" },
+          { "type": "formula", "tex": "(ab)^n = a^n b^n,\\quad \\left(\\dfrac{a}{b}\\right)^n = \\dfrac{a^n}{b^n}" },
+          { "type": "callout", "tone": "warning", "text": "Laws only combine **same** bases. $2^3 \\cdot 3^2$ does not simplify by adding exponents." }
+        ]
+      },
+      {
+        "id": "negatives-and-fractions",
+        "title": "Negative and fractional exponents",
+        "blocks": [
+          { "type": "formula", "tex": "a^0 = 1\\quad (a \\neq 0)" },
+          { "type": "formula", "tex": "a^{-n} = \\dfrac{1}{a^n}" },
+          { "type": "formula", "tex": "a^{1/n} = \\sqrt[n]{a}" },
+          { "type": "formula", "tex": "a^{m/n} = \\sqrt[n]{a^m} = (\\sqrt[n]{a})^m" },
+          { "type": "example", "title": "Evaluate", "prompt": "Compute $27^{2/3}$.", "steps": [
+            "Rewrite: $(\\sqrt[3]{27})^2$.",
+            "$\\sqrt[3]{27} = 3$, square: $9$."
+          ], "answer": "9" }
+        ]
+      },
+      {
+        "id": "equations",
+        "title": "Solving exponential equations",
+        "blocks": [
+          { "type": "paragraph", "text": "Strategy: rewrite both sides with the same base, then equate exponents. If bases don't match, take logarithms." },
+          { "type": "example", "title": "Match the base", "prompt": "Solve $4^{x+1} = 32$.", "steps": [
+            "Rewrite as powers of 2: $4 = 2^2$, $32 = 2^5$.",
+            "Left: $(2^2)^{x+1} = 2^{2x+2}$.",
+            "Equate exponents: $2x + 2 = 5$, $x = 3/2$."
+          ], "answer": "$x = 3/2$" },
+          { "type": "exercise", "prompt": "Simplify $\\dfrac{x^5 \\cdot x^{-2}}{x^4}$.", "answer": "$x^{-1} = 1/x$", "explanation": "Numerator: $x^{5-2} = x^3$. Then $x^3/x^4 = x^{-1}$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "ratio-and-proportion",
+    "topicSlug": "ratio-and-proportion",
+    "section": "math",
+    "title": "Ratio and Proportion",
+    "summary": "Split quantities by ratio, scale recipes, and recognise direct vs inverse proportion in disguise.",
+    "minutes": 15,
+    "chapters": [
+      {
+        "id": "ratios",
+        "title": "Ratios and parts",
+        "blocks": [
+          { "type": "paragraph", "text": "A ratio $a:b$ tells you how a whole is divided into parts. To split a total $T$ in ratio $a:b$, give one share $\\dfrac{a}{a+b}\\,T$ and the other $\\dfrac{b}{a+b}\\,T$." },
+          { "type": "example", "title": "Splitting money", "prompt": "Split $4500 in the ratio 4:5.", "steps": [
+            "Total parts: $4 + 5 = 9$.",
+            "Each part: $4500 / 9 = 500$.",
+            "Shares: $4 \\times 500 = 2000$ and $5 \\times 500 = 2500$."
+          ], "answer": "$2000 and $2500" }
+        ]
+      },
+      {
+        "id": "proportion",
+        "title": "Direct and inverse proportion",
+        "blocks": [
+          { "type": "definition", "term": "Direct proportion", "text": "$y = kx$. Doubling $x$ doubles $y$." },
+          { "type": "definition", "term": "Inverse proportion", "text": "$y = k/x$. Doubling $x$ halves $y$." },
+          { "type": "callout", "tone": "tip", "text": "Read the story: more workers → less time = inverse. More litres → more cost = direct." },
+          { "type": "exercise", "prompt": "If 6 workers paint a wall in 8 hours, how long for 4 workers?", "answer": "12 hours", "explanation": "Inverse: workers × hours = constant. $6 \\cdot 8 = 48$, so $48 / 4 = 12$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "two-types-of-variations",
+    "topicSlug": "two-types-of-variations",
+    "section": "math",
+    "title": "Two Types of Variations",
+    "summary": "Direct, inverse, joint, and combined variation — set up the constant from one data point, then answer any question.",
+    "minutes": 15,
+    "chapters": [
+      {
+        "id": "core",
+        "title": "Direct vs inverse",
+        "blocks": [
+          { "type": "formula", "tex": "y = kx \\quad (\\text{direct})" },
+          { "type": "formula", "tex": "y = \\dfrac{k}{x} \\quad (\\text{inverse})" },
+          { "type": "formula", "tex": "y = kxz \\quad (\\text{joint})" },
+          { "type": "paragraph", "text": "Step 1: substitute the given values to find $k$. Step 2: use $k$ with the new values." },
+          { "type": "example", "title": "Inverse variation", "prompt": "$y$ varies inversely as $x$. When $x = 4$, $y = 9$. Find $y$ when $x = 6$.", "steps": [
+            "$y = k/x \\Rightarrow 9 = k/4 \\Rightarrow k = 36$.",
+            "$y = 36/6 = 6$."
+          ], "answer": "$y = 6$" }
+        ]
+      },
+      {
+        "id": "graphs",
+        "title": "Graph shapes",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Direct: straight line through origin, slope $k$.",
+            "Inverse: hyperbola in 1st & 3rd quadrants (for $k > 0$).",
+            "Joint: surface in 3D — but on NUET you'll use the formula directly."
+          ]},
+          { "type": "exercise", "prompt": "$y$ varies directly with $x^2$. If $y = 12$ when $x = 2$, find $y$ when $x = 5$.", "answer": "75", "explanation": "$y = kx^2 \\Rightarrow 12 = 4k \\Rightarrow k = 3$. Then $y = 3 \\cdot 25 = 75$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "percents",
+    "topicSlug": "percents",
+    "section": "math",
+    "title": "Percents",
+    "summary": "Increase, decrease, reverse, and compound percentages without falling into the most common traps.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "basics",
+        "title": "The percentage multiplier",
+        "blocks": [
+          { "type": "paragraph", "text": "Treat $p\\%$ as the multiplier $1 + p/100$ (increase) or $1 - p/100$ (decrease). This converts every percent problem into multiplication." },
+          { "type": "formula", "tex": "\\text{New} = \\text{Old} \\times \\left(1 \\pm \\dfrac{p}{100}\\right)" },
+          { "type": "example", "title": "Increase", "prompt": "A laptop costs $800. Price rises 15%. New price?", "steps": [
+            "Multiplier: $1 + 0.15 = 1.15$.",
+            "$800 \\times 1.15 = 920$."
+          ], "answer": "$920" }
+        ]
+      },
+      {
+        "id": "reverse",
+        "title": "Reverse percentages",
+        "blocks": [
+          { "type": "paragraph", "text": "If a sale price is given after a discount, divide by the multiplier — don't add the percent back." },
+          { "type": "example", "title": "Reverse", "prompt": "After a 20% discount, a coat costs $96. Original price?", "steps": [
+            "Multiplier: $1 - 0.20 = 0.80$.",
+            "Original: $96 / 0.80 = 120$."
+          ], "answer": "$120" },
+          { "type": "callout", "tone": "warning", "text": "$96 + 20\\% = 115.20$ is wrong — that adds 20% of the discounted price, not the original." }
+        ]
+      },
+      {
+        "id": "compound",
+        "title": "Successive changes",
+        "blocks": [
+          { "type": "formula", "tex": "\\text{Final} = \\text{Initial} \\times m_1 \\times m_2 \\times \\cdots \\times m_n" },
+          { "type": "example", "title": "Compound", "prompt": "A stock rises 10%, then falls 10%. Net change?", "steps": [
+            "Multipliers: $1.10 \\times 0.90 = 0.99$.",
+            "Net: $-1\\%$."
+          ], "answer": "Down 1%" },
+          { "type": "exercise", "prompt": "What single multiplier equals two successive 25% increases?", "answer": "1.5625", "explanation": "$1.25 \\times 1.25 = 1.5625$ — a single 56.25% increase." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "word-problems",
+    "topicSlug": "word-problems",
+    "section": "math",
+    "title": "Word Problems",
+    "summary": "A reliable 4-step framework for translating English into algebra without missing details.",
+    "minutes": 20,
+    "chapters": [
+      {
+        "id": "framework",
+        "title": "The 4-step framework",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "**Define variables** explicitly: ‘let $x$ = number of adults’.",
+            "**Translate** every sentence into an equation or inequality.",
+            "**Solve** the system — substitution, elimination, or single equation.",
+            "**Check the units and the question**: did they ask for $x$ or $2x + 5$?"
+          ]},
+          { "type": "callout", "tone": "tip", "text": "The last step catches half of all mistakes. Re-read the question after solving." }
+        ]
+      },
+      {
+        "id": "patterns",
+        "title": "Common patterns",
+        "blocks": [
+          { "type": "table", "headers": ["Pattern", "Setup"], "rows": [
+            ["Distance / speed / time", "$d = v \\cdot t$, separate row per leg"],
+            ["Mixture / concentration", "Total amount = sum of parts; concentration = amount / volume"],
+            ["Work rate", "Rate = 1 / time; rates add when working together"],
+            ["Age", "Express both ages in same year, build equation across years"]
+          ]},
+          { "type": "example", "title": "Speed/distance", "prompt": "A train leaves at 60 km/h. Two hours later, a car leaves on the same route at 90 km/h. When does the car catch up?", "steps": [
+            "Let $t$ = hours after the car leaves. Train has been going $t + 2$ hours.",
+            "Distances equal: $60(t+2) = 90t$.",
+            "$60t + 120 = 90t \\Rightarrow 30t = 120 \\Rightarrow t = 4$.",
+            "Car catches up 4 h after it leaves, i.e. 6 h after the train."
+          ], "answer": "After 4 hours of driving" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "linear-inequalities",
+    "topicSlug": "linear-inequalities",
+    "section": "math",
+    "title": "Linear Inequalities",
+    "summary": "Solve linear inequalities and compound systems, and remember the rule about flipping the sign.",
+    "minutes": 15,
+    "chapters": [
+      {
+        "id": "rules",
+        "title": "Solving rules",
+        "blocks": [
+          { "type": "paragraph", "text": "Treat an inequality like an equation, with one twist: when you multiply or divide both sides by a **negative number**, flip the inequality sign." },
+          { "type": "example", "title": "Flip the sign", "prompt": "Solve $-2x + 5 > 11$.", "steps": [
+            "Subtract 5: $-2x > 6$.",
+            "Divide by $-2$ (flip): $x < -3$."
+          ], "answer": "$x < -3$" },
+          { "type": "callout", "tone": "warning", "text": "The most common mistake is forgetting to flip when dividing by a negative." }
+        ]
+      },
+      {
+        "id": "compound",
+        "title": "Compound and absolute-value inequalities",
+        "blocks": [
+          { "type": "formula", "tex": "|x| < a \\iff -a < x < a" },
+          { "type": "formula", "tex": "|x| > a \\iff x < -a \\text{ or } x > a" },
+          { "type": "example", "title": "Compound", "prompt": "Solve $-3 < 2x + 1 \\le 7$.", "steps": [
+            "Subtract 1 throughout: $-4 < 2x \\le 6$.",
+            "Divide by 2: $-2 < x \\le 3$."
+          ], "answer": "$x \\in (-2, 3]$" },
+          { "type": "exercise", "prompt": "Solve $|x - 2| \\le 5$.", "answer": "$-3 \\le x \\le 7$", "explanation": "$-5 \\le x - 2 \\le 5 \\Rightarrow -3 \\le x \\le 7$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "slope-of-the-line",
+    "topicSlug": "slope-of-the-line",
+    "section": "math",
+    "title": "Slope of the Line",
+    "summary": "Compute slopes, write line equations in three forms, and recognise parallel and perpendicular lines instantly.",
+    "minutes": 15,
+    "chapters": [
+      {
+        "id": "slope",
+        "title": "Slope from two points",
+        "blocks": [
+          { "type": "formula", "tex": "m = \\dfrac{y_2 - y_1}{x_2 - x_1}", "caption": "Rise over run." },
+          { "type": "list", "ordered": false, "items": [
+            "Horizontal line: $m = 0$.",
+            "Vertical line: $m$ undefined.",
+            "Positive $m$: line rises left → right.",
+            "Negative $m$: line falls left → right."
+          ]}
+        ]
+      },
+      {
+        "id": "forms",
+        "title": "Line equations",
+        "blocks": [
+          { "type": "formula", "tex": "y - y_1 = m(x - x_1) \\quad (\\text{point–slope})" },
+          { "type": "formula", "tex": "y = mx + b \\quad (\\text{slope–intercept})" },
+          { "type": "formula", "tex": "Ax + By = C \\quad (\\text{standard})" },
+          { "type": "callout", "tone": "tip", "text": "Parallel lines: same $m$. Perpendicular lines: $m_1 \\cdot m_2 = -1$." },
+          { "type": "example", "title": "Find a perpendicular", "prompt": "Find the line through $(2, 5)$ perpendicular to $y = -\\tfrac{1}{2}x + 3$.", "steps": [
+            "Original slope $-1/2 \\Rightarrow$ perpendicular slope $2$.",
+            "Point–slope: $y - 5 = 2(x - 2)$.",
+            "Simplify: $y = 2x + 1$."
+          ], "answer": "$y = 2x + 1$" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "transformations",
+    "topicSlug": "transformations",
+    "section": "math",
+    "title": "Transformations",
+    "summary": "How translation, reflection, stretch, and rotation act on graphs $y = f(x)$.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "translations",
+        "title": "Shifts",
+        "blocks": [
+          { "type": "table", "headers": ["Transformation", "Effect"], "rows": [
+            ["$y = f(x) + c$", "shift up by $c$"],
+            ["$y = f(x) - c$", "shift down by $c$"],
+            ["$y = f(x - h)$", "shift right by $h$"],
+            ["$y = f(x + h)$", "shift left by $h$"]
+          ]},
+          { "type": "callout", "tone": "warning", "text": "Inside the bracket, signs are reversed: $f(x-3)$ shifts **right** 3, not left." }
+        ]
+      },
+      {
+        "id": "reflections-stretches",
+        "title": "Reflections and stretches",
+        "blocks": [
+          { "type": "table", "headers": ["Form", "Effect"], "rows": [
+            ["$y = -f(x)$", "reflect across x-axis"],
+            ["$y = f(-x)$", "reflect across y-axis"],
+            ["$y = af(x)$ ($a > 1$)", "vertical stretch by $a$"],
+            ["$y = f(bx)$ ($b > 1$)", "horizontal compression by $b$"]
+          ]},
+          { "type": "exercise", "prompt": "Describe $y = -2f(x + 1)$ relative to $y = f(x)$.", "answer": "Shift left 1, vertical stretch by 2, reflect across x-axis.", "explanation": "Inside-out order: bracket first ($x+1 \\Rightarrow$ left 1), then scale ($\\times 2$), then sign flip." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "quadratic-functions",
+    "topicSlug": "quadratic-functions",
+    "section": "math",
+    "title": "Quadratic Functions",
+    "summary": "Three forms of a quadratic, the discriminant, and the quadratic formula — when to use which.",
+    "minutes": 25,
+    "chapters": [
+      {
+        "id": "forms",
+        "title": "Three forms",
+        "blocks": [
+          { "type": "table", "headers": ["Form", "Formula", "Tells you"], "rows": [
+            ["Standard", "$ax^2 + bx + c$", "y-intercept = $c$"],
+            ["Vertex", "$a(x-h)^2 + k$", "vertex $(h, k)$"],
+            ["Factored", "$a(x-r_1)(x-r_2)$", "roots $r_1, r_2$"]
+          ]},
+          { "type": "paragraph", "text": "Convert between forms by completing the square or expanding. Each form makes a different question easy." }
+        ]
+      },
+      {
+        "id": "formula",
+        "title": "The quadratic formula",
+        "blocks": [
+          { "type": "formula", "tex": "x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}" },
+          { "type": "formula", "tex": "\\Delta = b^2 - 4ac", "caption": "The discriminant." },
+          { "type": "list", "ordered": false, "items": [
+            "$\\Delta > 0$: two distinct real roots.",
+            "$\\Delta = 0$: one repeated real root.",
+            "$\\Delta < 0$: no real roots."
+          ]},
+          { "type": "example", "title": "Solve", "prompt": "Solve $2x^2 - 5x + 3 = 0$.", "steps": [
+            "$a = 2$, $b = -5$, $c = 3$.",
+            "$\\Delta = 25 - 24 = 1$.",
+            "$x = (5 \\pm 1)/4 = 3/2$ or $1$."
+          ], "answer": "$x = 1$ or $x = 3/2$" }
+        ]
+      },
+      {
+        "id": "vertex",
+        "title": "Vertex by completing the square",
+        "blocks": [
+          { "type": "formula", "tex": "x_{vertex} = -\\dfrac{b}{2a},\\quad y_{vertex} = c - \\dfrac{b^2}{4a}" },
+          { "type": "exercise", "prompt": "Find the vertex of $y = x^2 - 6x + 5$.", "answer": "$(3, -4)$", "explanation": "$x = 6/2 = 3$, $y = 9 - 18 + 5 = -4$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "examples-of-quadratic-functions",
+    "topicSlug": "examples-of-quadratic-functions",
+    "section": "math",
+    "title": "Examples of Quadratic Functions",
+    "summary": "Worked NUET-style problems applying the three forms — projectile, area, and pricing scenarios.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "projectile",
+        "title": "Projectile motion",
+        "blocks": [
+          { "type": "paragraph", "text": "Height-vs-time problems are quadratics in disguise. The vertex tells you maximum height; roots tell you when the object lands." },
+          { "type": "example", "title": "Maximum height", "prompt": "Height $h(t) = -5t^2 + 20t + 1$ (m, seconds). Maximum height?", "steps": [
+            "Vertex time: $t = 20/(2 \\cdot 5) = 2$.",
+            "$h(2) = -20 + 40 + 1 = 21$."
+          ], "answer": "21 m at $t = 2$ s" }
+        ]
+      },
+      {
+        "id": "area",
+        "title": "Area maximisation",
+        "blocks": [
+          { "type": "example", "title": "Fenced rectangle", "prompt": "A farmer has 40 m of fencing for three sides of a rectangular pen against a wall. Maximum area?", "steps": [
+            "Sides: width $w$, length $40 - 2w$.",
+            "Area $A(w) = w(40 - 2w) = 40w - 2w^2$.",
+            "Vertex: $w = 40/4 = 10$, length $20$.",
+            "Max area: $200$ m²."
+          ], "answer": "200 m² when $w = 10$, $\\ell = 20$" }
+        ]
+      },
+      {
+        "id": "pricing",
+        "title": "Revenue and pricing",
+        "blocks": [
+          { "type": "exercise", "prompt": "Demand: each $1 price increase loses 10 sales. Current sales 200 at $5. What price maximises revenue?", "answer": "$12.50 (or $12 if integer)", "explanation": "Sales = $200 - 10x$, price = $5 + x$. Revenue = $(5+x)(200-10x) = -10x^2 + 150x + 1000$. Vertex at $x = 7.5$, so price $\\$12.50$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "graphs-of-quadratic-functions",
+    "topicSlug": "graphs-of-quadratic-functions",
+    "section": "math",
+    "title": "Graphs of Quadratic Functions",
+    "summary": "Read everything you need from a parabola: vertex, axis of symmetry, intercepts, direction, width.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "anatomy",
+        "title": "Parabola anatomy",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Direction: $a > 0$ opens up; $a < 0$ opens down.",
+            "Width: $|a|$ large = narrow; $|a|$ small = wide.",
+            "Axis of symmetry: $x = -b/(2a)$.",
+            "Vertex: $(-b/(2a),\\ c - b^2/(4a))$.",
+            "y-intercept: $c$. x-intercepts: from quadratic formula."
+          ]}
+        ]
+      },
+      {
+        "id": "from-graph",
+        "title": "Reading the equation off a graph",
+        "blocks": [
+          { "type": "paragraph", "text": "Given the vertex $(h, k)$ and one other point, use vertex form $y = a(x-h)^2 + k$ and solve for $a$." },
+          { "type": "example", "title": "Build the equation", "prompt": "Parabola has vertex $(1, -4)$ and passes through $(3, 0)$.", "steps": [
+            "Vertex form: $y = a(x-1)^2 - 4$.",
+            "Sub $(3, 0)$: $0 = a(4) - 4 \\Rightarrow a = 1$.",
+            "Equation: $y = (x-1)^2 - 4$."
+          ], "answer": "$y = (x-1)^2 - 4$" },
+          { "type": "exercise", "prompt": "What is the y-intercept of $y = -2(x-3)^2 + 5$?", "answer": "$-13$", "explanation": "Set $x = 0$: $y = -2 \\cdot 9 + 5 = -13$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "quadratic-inequalities",
+    "topicSlug": "quadratic-inequalities",
+    "section": "math",
+    "title": "Quadratic Inequalities",
+    "summary": "Sign analysis on a parabola — find roots, then test intervals.",
+    "minutes": 15,
+    "chapters": [
+      {
+        "id": "method",
+        "title": "Three-step method",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Move everything to one side: $ax^2 + bx + c \\lessgtr 0$.",
+            "Find roots (factor or quadratic formula).",
+            "Sketch the parabola and pick the intervals where the sign matches."
+          ]},
+          { "type": "callout", "tone": "tip", "text": "Open-up parabolas are negative **between** their roots and positive **outside**. Open-down is the reverse." }
+        ]
+      },
+      {
+        "id": "examples",
+        "title": "Worked example",
+        "blocks": [
+          { "type": "example", "title": "Solve", "prompt": "Solve $x^2 - 5x + 6 < 0$.", "steps": [
+            "Factor: $(x-2)(x-3) < 0$.",
+            "Roots at 2 and 3, parabola opens up.",
+            "Negative between roots."
+          ], "answer": "$2 < x < 3$" },
+          { "type": "exercise", "prompt": "Solve $x^2 - 9 \\ge 0$.", "answer": "$x \\le -3$ or $x \\ge 3$", "explanation": "$(x-3)(x+3) \\ge 0$. Roots at $\\pm 3$, parabola up. Non-negative outside." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "rational-expressions",
+    "topicSlug": "rational-expressions",
+    "section": "math",
+    "title": "Rational Expressions",
+    "summary": "Add, subtract, multiply, and divide expressions of the form $\\dfrac{p(x)}{q(x)}$ — and watch the domain.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "operations",
+        "title": "Four operations",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Multiply: $\\dfrac{a}{b} \\cdot \\dfrac{c}{d} = \\dfrac{ac}{bd}$ — factor first, cancel.",
+            "Divide: flip second and multiply.",
+            "Add/subtract: common denominator first.",
+            "Always state restricted values where the denominator is zero."
+          ]}
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Adding fractions",
+        "blocks": [
+          { "type": "example", "title": "Add", "prompt": "Simplify $\\dfrac{1}{x} + \\dfrac{2}{x+1}$.", "steps": [
+            "Common denominator $x(x+1)$.",
+            "$\\dfrac{x+1}{x(x+1)} + \\dfrac{2x}{x(x+1)} = \\dfrac{3x+1}{x(x+1)}$."
+          ], "answer": "$\\dfrac{3x+1}{x(x+1)},\\ x \\neq 0, -1$" },
+          { "type": "callout", "tone": "warning", "text": "Cancel only after factoring. $\\dfrac{x+2}{x}$ does NOT simplify to $\\dfrac{2}{1}$ — that's cancelling across a sum." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "sequences",
+    "topicSlug": "sequences",
+    "section": "math",
+    "title": "Sequences",
+    "summary": "Arithmetic and geometric sequences — general term, sum formulas, and how to spot the pattern.",
+    "minutes": 22,
+    "chapters": [
+      {
+        "id": "arithmetic",
+        "title": "Arithmetic sequences",
+        "blocks": [
+          { "type": "definition", "term": "Arithmetic sequence", "text": "Constant difference $d$ between consecutive terms." },
+          { "type": "formula", "tex": "a_n = a_1 + (n-1)d" },
+          { "type": "formula", "tex": "S_n = \\dfrac{n}{2}(a_1 + a_n) = \\dfrac{n}{2}\\bigl(2a_1 + (n-1)d\\bigr)" },
+          { "type": "example", "title": "Find a term", "prompt": "Sequence: 4, 7, 10, … Find the 20th term.", "steps": [
+            "$d = 3$, $a_1 = 4$.",
+            "$a_{20} = 4 + 19 \\cdot 3 = 61$."
+          ], "answer": "61" }
+        ]
+      },
+      {
+        "id": "geometric",
+        "title": "Geometric sequences",
+        "blocks": [
+          { "type": "definition", "term": "Geometric sequence", "text": "Constant ratio $r$ between consecutive terms." },
+          { "type": "formula", "tex": "a_n = a_1 \\cdot r^{\\,n-1}" },
+          { "type": "formula", "tex": "S_n = a_1 \\cdot \\dfrac{1 - r^n}{1 - r}\\quad (r \\neq 1)" },
+          { "type": "formula", "tex": "S_\\infty = \\dfrac{a_1}{1 - r}\\quad (|r| < 1)", "caption": "Sum to infinity, only when $|r| < 1$." },
+          { "type": "exercise", "prompt": "Find the sum to infinity of $1 + 1/2 + 1/4 + \\dots$", "answer": "2", "explanation": "$a_1 = 1$, $r = 1/2$. $S_\\infty = 1/(1-1/2) = 2$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "nonlinear-equations",
+    "topicSlug": "nonlinear-equations",
+    "section": "math",
+    "title": "Nonlinear Equations",
+    "summary": "Equations with squares, square roots, or absolute values — substitution and squaring tactics.",
+    "minutes": 20,
+    "chapters": [
+      {
+        "id": "tactics",
+        "title": "Three core tactics",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "**Isolate the radical or square**, then square both sides — and check for extraneous roots.",
+            "**u-substitution** for hidden quadratics: $u = x^2$ turns $x^4 - 5x^2 + 4 = 0$ into $u^2 - 5u + 4 = 0$.",
+            "**Casework on absolute values**: split into two equations."
+          ]},
+          { "type": "callout", "tone": "warning", "text": "Squaring can introduce false solutions. Always plug back into the original." }
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Worked example",
+        "blocks": [
+          { "type": "example", "title": "Square root", "prompt": "Solve $\\sqrt{x + 7} = x - 1$.", "steps": [
+            "Square: $x + 7 = (x-1)^2 = x^2 - 2x + 1$.",
+            "$0 = x^2 - 3x - 6$. (or rearrange to $x^2 - 3x - 6 = 0$)",
+            "Quadratic formula: $x = (3 \\pm \\sqrt{33})/2$.",
+            "Reject negative root since $x - 1 \\ge 0$ required: $x = (3 + \\sqrt{33})/2 \\approx 4.37$."
+          ], "answer": "$x = \\dfrac{3 + \\sqrt{33}}{2}$" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "geometry",
+    "topicSlug": "geometry",
+    "section": "math",
+    "title": "Geometry",
+    "summary": "Core geometry: angle facts, parallel-line theorems, similarity, and the area/volume zoo.",
+    "minutes": 28,
+    "chapters": [
+      {
+        "id": "angles",
+        "title": "Angle facts",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Angles on a straight line sum to 180°.",
+            "Angles around a point sum to 360°.",
+            "Vertically opposite angles are equal.",
+            "Parallel lines: corresponding equal, alternate equal, co-interior sum to 180°."
+          ]}
+        ]
+      },
+      {
+        "id": "areas",
+        "title": "Area cheatsheet",
+        "blocks": [
+          { "type": "table", "headers": ["Shape", "Area"], "rows": [
+            ["Triangle", "$\\tfrac{1}{2}bh$"],
+            ["Parallelogram", "$bh$"],
+            ["Trapezium", "$\\tfrac{1}{2}(a+b)h$"],
+            ["Circle", "$\\pi r^2$"],
+            ["Sector ($\\theta$ rad)", "$\\tfrac{1}{2}r^2\\theta$"]
+          ]}
+        ]
+      },
+      {
+        "id": "similarity",
+        "title": "Similarity and scale",
+        "blocks": [
+          { "type": "paragraph", "text": "Similar figures have equal angles and proportional sides. If linear scale is $k$, areas scale by $k^2$ and volumes by $k^3$." },
+          { "type": "exercise", "prompt": "A triangle with sides 3, 4, 5 is similar to one with sides 9, 12, 15. Ratio of areas?", "answer": "1 : 9", "explanation": "Linear scale 3, area scale $3^2 = 9$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "exponential-functions",
+    "topicSlug": "exponential-functions",
+    "section": "math",
+    "title": "Exponential Functions",
+    "summary": "Growth and decay, the natural exponential, and basic logarithms.",
+    "minutes": 22,
+    "chapters": [
+      {
+        "id": "shape",
+        "title": "Shape and behaviour",
+        "blocks": [
+          { "type": "formula", "tex": "y = a \\cdot b^x", "caption": "$b > 0$, $b \\neq 1$." },
+          { "type": "list", "ordered": false, "items": [
+            "$b > 1$: growth, increasing.",
+            "$0 < b < 1$: decay, decreasing.",
+            "Always passes through $(0, a)$.",
+            "Horizontal asymptote at $y = 0$."
+          ]}
+        ]
+      },
+      {
+        "id": "logs",
+        "title": "Logarithms",
+        "blocks": [
+          { "type": "definition", "term": "Logarithm", "text": "$\\log_b a$ is the power to which $b$ must be raised to give $a$. So $\\log_b a = c \\iff b^c = a$." },
+          { "type": "formula", "tex": "\\log(xy) = \\log x + \\log y" },
+          { "type": "formula", "tex": "\\log(x/y) = \\log x - \\log y" },
+          { "type": "formula", "tex": "\\log(x^n) = n \\log x" },
+          { "type": "example", "title": "Solve", "prompt": "Solve $3^x = 50$.", "steps": [
+            "Take logs: $x \\log 3 = \\log 50$.",
+            "$x = \\log 50 / \\log 3 \\approx 3.56$."
+          ], "answer": "$x \\approx 3.56$" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "symbol-functions",
+    "topicSlug": "symbol-functions",
+    "section": "math",
+    "title": "Symbol Functions",
+    "summary": "NUET's defined-symbol problems: a custom operator like $a \\diamond b = 2a - b$. Treat symbols as plug-in instructions.",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "approach",
+        "title": "Read the definition, plug in",
+        "blocks": [
+          { "type": "paragraph", "text": "A symbol function defines a new operator by its rule. Read the rule, then substitute the inputs. Don't try to derive properties — just compute." },
+          { "type": "example", "title": "Compute", "prompt": "Define $a \\star b = a^2 - 2b$. Find $3 \\star 5$.", "steps": [
+            "Substitute $a = 3$, $b = 5$.",
+            "$3^2 - 2 \\cdot 5 = 9 - 10 = -1$."
+          ], "answer": "$-1$" }
+        ]
+      },
+      {
+        "id": "nested",
+        "title": "Nested operators",
+        "blocks": [
+          { "type": "exercise", "prompt": "With $a \\star b = a + 2b$, compute $(1 \\star 2) \\star 3$.", "answer": "$11$", "explanation": "Inner: $1 + 4 = 5$. Outer: $5 + 6 = 11$." },
+          { "type": "callout", "tone": "tip", "text": "Inner brackets first, just like normal. Don't be intimidated by unfamiliar symbols." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "triangles",
+    "topicSlug": "triangles",
+    "section": "math",
+    "title": "Triangles",
+    "summary": "Pythagoras, congruence/similarity rules, special right triangles, and triangle inequality.",
+    "minutes": 22,
+    "chapters": [
+      {
+        "id": "pythagoras",
+        "title": "Pythagoras and special triangles",
+        "blocks": [
+          { "type": "formula", "tex": "a^2 + b^2 = c^2", "caption": "$c$ is the hypotenuse (right triangles only)." },
+          { "type": "table", "headers": ["Triangle", "Side ratios"], "rows": [
+            ["45-45-90", "$1 : 1 : \\sqrt{2}$"],
+            ["30-60-90", "$1 : \\sqrt{3} : 2$"],
+            ["3-4-5", "$3 : 4 : 5$ (Pythagorean triple)"],
+            ["5-12-13", "$5 : 12 : 13$"]
+          ]},
+          { "type": "callout", "tone": "tip", "text": "Memorise both special-angle ratios. They unlock most NUET trig problems without a calculator." }
+        ]
+      },
+      {
+        "id": "congruence",
+        "title": "Congruence and similarity rules",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "**Congruent**: SSS, SAS, ASA, RHS (right-angle, hypotenuse, side).",
+            "**Similar**: AA (two angles equal), SSS proportional, SAS proportional.",
+            "Triangle inequality: each side < sum of the other two."
+          ]},
+          { "type": "exercise", "prompt": "A triangle has sides 5, 12, $x$. What integer values of $x$ are possible?", "answer": "$8 \\le x \\le 16$ (integers)", "explanation": "$|12-5| < x < 12+5$, so $7 < x < 17$. Integers: 8 to 16." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "vectors",
+    "topicSlug": "vectors",
+    "section": "math",
+    "title": "Vectors",
+    "summary": "2D vector arithmetic, magnitude, and the dot product — geometry without diagrams.",
+    "minutes": 22,
+    "chapters": [
+      {
+        "id": "basics",
+        "title": "Components and magnitude",
+        "blocks": [
+          { "type": "formula", "tex": "\\vec{v} = (v_x, v_y)", "caption": "Component form." },
+          { "type": "formula", "tex": "|\\vec{v}| = \\sqrt{v_x^2 + v_y^2}" },
+          { "type": "formula", "tex": "\\vec{u} + \\vec{v} = (u_x + v_x,\\ u_y + v_y)" },
+          { "type": "formula", "tex": "k\\vec{v} = (kv_x,\\ kv_y)", "caption": "Scalar multiplication scales each component." }
+        ]
+      },
+      {
+        "id": "dot",
+        "title": "Dot product and angles",
+        "blocks": [
+          { "type": "formula", "tex": "\\vec{u} \\cdot \\vec{v} = u_x v_x + u_y v_y = |\\vec{u}||\\vec{v}| \\cos\\theta" },
+          { "type": "callout", "tone": "tip", "text": "Perpendicular vectors: dot product is 0. Parallel vectors: components are proportional." },
+          { "type": "example", "title": "Find the angle", "prompt": "Angle between $\\vec{u} = (1, 0)$ and $\\vec{v} = (1, 1)$?", "steps": [
+            "$\\vec{u} \\cdot \\vec{v} = 1$.",
+            "$|\\vec{u}| = 1$, $|\\vec{v}| = \\sqrt{2}$.",
+            "$\\cos\\theta = 1/\\sqrt{2} \\Rightarrow \\theta = 45°$."
+          ], "answer": "45°" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "bearings",
+    "topicSlug": "bearings",
+    "section": "math",
+    "title": "Bearings",
+    "summary": "Three-digit compass bearings: always clockwise from north. Combine with trig and Pythagoras for navigation problems.",
+    "minutes": 15,
+    "chapters": [
+      {
+        "id": "rules",
+        "title": "Bearing rules",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Bearings are measured **clockwise** from **north**.",
+            "Always written as 3 digits: 045°, 230°, 005°.",
+            "Back-bearing rule: opposite direction = bearing ± 180° (modulo 360°)."
+          ]},
+          { "type": "callout", "tone": "tip", "text": "Always sketch! North line at every reference point keeps signs straight." }
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Triangulating a position",
+        "blocks": [
+          { "type": "example", "title": "Find distance", "prompt": "From port A, a ship sails 30 km on bearing 060° to point B. Find how far north of A the ship is.", "steps": [
+            "Bearing 060° is 60° east of north.",
+            "North component: $30 \\cos 60° = 15$ km."
+          ], "answer": "15 km north" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "polygons",
+    "topicSlug": "polygons",
+    "section": "math",
+    "title": "Polygons",
+    "summary": "Interior/exterior angle formulas, regular vs irregular, and the angle sum trap.",
+    "minutes": 15,
+    "chapters": [
+      {
+        "id": "angles",
+        "title": "Angle formulas",
+        "blocks": [
+          { "type": "formula", "tex": "\\text{Sum of interior angles} = (n-2) \\cdot 180°" },
+          { "type": "formula", "tex": "\\text{Each interior angle (regular)} = \\dfrac{(n-2) \\cdot 180°}{n}" },
+          { "type": "formula", "tex": "\\text{Each exterior angle (regular)} = \\dfrac{360°}{n}" },
+          { "type": "callout", "tone": "tip", "text": "Exterior angles always sum to 360° regardless of the polygon — useful for finding $n$ quickly." }
+        ]
+      },
+      {
+        "id": "examples",
+        "title": "Find the polygon",
+        "blocks": [
+          { "type": "exercise", "prompt": "A regular polygon has each exterior angle 24°. How many sides?", "answer": "15", "explanation": "$n = 360/24 = 15$." },
+          { "type": "exercise", "prompt": "Sum of interior angles of a hexagon?", "answer": "720°", "explanation": "$(6-2) \\cdot 180° = 720°$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "circles",
+    "topicSlug": "circles",
+    "section": "math",
+    "title": "Circles",
+    "summary": "Circumference, area, sector and arc length, plus the must-know circle theorems.",
+    "minutes": 22,
+    "chapters": [
+      {
+        "id": "formulas",
+        "title": "Core formulas",
+        "blocks": [
+          { "type": "formula", "tex": "C = 2\\pi r,\\quad A = \\pi r^2" },
+          { "type": "formula", "tex": "\\text{Arc length} = r\\theta,\\quad \\text{Sector area} = \\tfrac{1}{2}r^2\\theta", "caption": "$\\theta$ in radians." },
+          { "type": "formula", "tex": "\\text{Arc} = \\dfrac{\\theta°}{360°} \\cdot 2\\pi r,\\quad \\text{Sector} = \\dfrac{\\theta°}{360°} \\cdot \\pi r^2", "caption": "Same in degrees." }
+        ]
+      },
+      {
+        "id": "theorems",
+        "title": "Circle theorems",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Angle at the centre = 2 × angle at the circumference (same arc).",
+            "Angles in the same segment are equal.",
+            "Angle in a semicircle = 90°.",
+            "Tangent ⟂ radius at the point of contact.",
+            "Two tangents from an external point are equal in length."
+          ]},
+          { "type": "exercise", "prompt": "A sector has radius 10 cm and angle 36°. Arc length?", "answer": "$2\\pi$ cm $\\approx 6.28$ cm", "explanation": "Arc = $(36/360) \\cdot 2\\pi \\cdot 10 = 2\\pi$ cm." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "3d-figures",
+    "topicSlug": "3d-figures",
+    "section": "math",
+    "title": "3D Figures",
+    "summary": "Surface area and volume of prisms, pyramids, cylinders, cones, and spheres — plus the diagonals.",
+    "minutes": 22,
+    "chapters": [
+      {
+        "id": "volumes",
+        "title": "Volume cheatsheet",
+        "blocks": [
+          { "type": "table", "headers": ["Solid", "Volume"], "rows": [
+            ["Prism", "$\\text{base area} \\times h$"],
+            ["Pyramid", "$\\tfrac{1}{3} \\times \\text{base area} \\times h$"],
+            ["Cylinder", "$\\pi r^2 h$"],
+            ["Cone", "$\\tfrac{1}{3}\\pi r^2 h$"],
+            ["Sphere", "$\\tfrac{4}{3}\\pi r^3$"]
+          ]}
+        ]
+      },
+      {
+        "id": "surface-area",
+        "title": "Surface area",
+        "blocks": [
+          { "type": "table", "headers": ["Solid", "Surface area"], "rows": [
+            ["Cylinder (closed)", "$2\\pi r^2 + 2\\pi r h$"],
+            ["Cone (closed)", "$\\pi r^2 + \\pi r \\ell$ (slant height $\\ell$)"],
+            ["Sphere", "$4\\pi r^2$"]
+          ]},
+          { "type": "exercise", "prompt": "Volume of a cone with radius 3 and height 4?", "answer": "$12\\pi$", "explanation": "$V = \\tfrac{1}{3}\\pi \\cdot 9 \\cdot 4 = 12\\pi$." }
+        ]
+      },
+      {
+        "id": "diagonals",
+        "title": "Diagonal of a box",
+        "blocks": [
+          { "type": "formula", "tex": "d = \\sqrt{a^2 + b^2 + c^2}", "caption": "Space diagonal of an $a \\times b \\times c$ rectangular box." },
+          { "type": "callout", "tone": "tip", "text": "Apply Pythagoras twice — once on the base, again with the height." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "trigonometry",
+    "topicSlug": "trigonometry",
+    "section": "math",
+    "title": "Trigonometry",
+    "summary": "Sin, cos, tan ratios, the special angles, sine/cosine rules, and the identities you actually need.",
+    "minutes": 28,
+    "chapters": [
+      {
+        "id": "ratios",
+        "title": "SOHCAHTOA",
+        "blocks": [
+          { "type": "formula", "tex": "\\sin\\theta = \\dfrac{\\text{opp}}{\\text{hyp}},\\quad \\cos\\theta = \\dfrac{\\text{adj}}{\\text{hyp}},\\quad \\tan\\theta = \\dfrac{\\text{opp}}{\\text{adj}}" },
+          { "type": "table", "headers": ["θ", "sin", "cos", "tan"], "rows": [
+            ["0°", "0", "1", "0"],
+            ["30°", "$\\tfrac{1}{2}$", "$\\tfrac{\\sqrt{3}}{2}$", "$\\tfrac{1}{\\sqrt{3}}$"],
+            ["45°", "$\\tfrac{\\sqrt{2}}{2}$", "$\\tfrac{\\sqrt{2}}{2}$", "1"],
+            ["60°", "$\\tfrac{\\sqrt{3}}{2}$", "$\\tfrac{1}{2}$", "$\\sqrt{3}$"],
+            ["90°", "1", "0", "undef"]
+          ]}
+        ]
+      },
+      {
+        "id": "rules",
+        "title": "Sine and cosine rules",
+        "blocks": [
+          { "type": "formula", "tex": "\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B} = \\dfrac{c}{\\sin C}", "caption": "Sine rule." },
+          { "type": "formula", "tex": "c^2 = a^2 + b^2 - 2ab\\cos C", "caption": "Cosine rule — generalised Pythagoras." },
+          { "type": "callout", "tone": "tip", "text": "Use sine rule when you have an angle paired with its opposite side. Use cosine rule for SAS or SSS." }
+        ]
+      },
+      {
+        "id": "identities",
+        "title": "Identities",
+        "blocks": [
+          { "type": "formula", "tex": "\\sin^2\\theta + \\cos^2\\theta = 1" },
+          { "type": "formula", "tex": "\\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}" },
+          { "type": "exercise", "prompt": "If $\\sin\\theta = 3/5$ and $\\theta$ is acute, find $\\cos\\theta$.", "answer": "$4/5$", "explanation": "$\\cos^2\\theta = 1 - 9/25 = 16/25 \\Rightarrow \\cos\\theta = 4/5$ (positive in Q1)." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "verbal-reasoning-argument",
+    "topicSlug": "verbal-reasoning-argument",
+    "section": "critical_thinking",
+    "title": "Verbal Reasoning / Argument",
+    "summary": "Read an argument like an examiner: separate premises from conclusions, then judge the logic.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "anatomy",
+        "title": "Anatomy of an argument",
+        "blocks": [
+          { "type": "definition", "term": "Premise", "text": "A stated reason — supports the conclusion." },
+          { "type": "definition", "term": "Conclusion", "text": "The claim the author wants you to accept." },
+          { "type": "definition", "term": "Inference", "text": "An unstated step needed for the premises to lead to the conclusion." },
+          { "type": "callout", "tone": "tip", "text": "Indicator words: ‘therefore’, ‘so’, ‘thus’ → conclusion. ‘Because’, ‘since’, ‘given that’ → premise." }
+        ]
+      },
+      {
+        "id": "tactics",
+        "title": "Reading tactics",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Find the conclusion first — it's often the strong claim.",
+            "Underline or list the premises in order.",
+            "Ask: do the premises actually force the conclusion, or is there a gap?",
+            "If a gap, name the missing assumption."
+          ]},
+          { "type": "exercise", "prompt": "Argument: ‘The road is wet, so it must have rained.’ Identify the conclusion and missing assumption.", "answer": "Conclusion: it rained. Assumption: rain is the only thing that makes the road wet (ignoring sprinklers, spills).", "explanation": "Spotting the alternative cause is the standard CT move." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "expression-of-conclusion",
+    "topicSlug": "expression-of-conclusion",
+    "section": "critical_thinking",
+    "title": "Expression of Conclusion",
+    "summary": "Match the wording of the right answer to what the passage actually concluded — no more, no less.",
+    "minutes": 14,
+    "chapters": [
+      {
+        "id": "scope",
+        "title": "Scope discipline",
+        "blocks": [
+          { "type": "paragraph", "text": "The correct conclusion paraphrases the passage at the same strength. Watch for answers that overstate (‘always’, ‘must’) or understate (‘sometimes’, ‘may’) compared to the original." },
+          { "type": "list", "ordered": false, "items": [
+            "If the text says ‘most studies suggest’, the conclusion can't say ‘proves’.",
+            "If the text talks about ‘this town’, the conclusion can't generalise to ‘all towns’.",
+            "Tense and modality must match: ‘will’ ≠ ‘should’."
+          ]}
+        ]
+      },
+      {
+        "id": "tactics",
+        "title": "Eliminate then choose",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Strike answers that are out-of-scope (different topic).",
+            "Strike answers stronger than the text.",
+            "Strike answers weaker than the text.",
+            "What remains is your match."
+          ]},
+          { "type": "exercise", "prompt": "Passage concludes: ‘In our city, recycling rates rose 12% after curbside pickup began.’ Which is correct? (a) Curbside pickup raises recycling globally. (b) Curbside pickup raised recycling in our city.", "answer": "(b)", "explanation": "(a) over-generalises. (b) matches scope and tense." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "drawing-conclusion",
+    "topicSlug": "drawing-conclusion",
+    "section": "critical_thinking",
+    "title": "Drawing Conclusion",
+    "summary": "Pick what MUST follow from the premises — not what's likely or popular, only what's forced.",
+    "minutes": 14,
+    "chapters": [
+      {
+        "id": "rule",
+        "title": "Must vs might",
+        "blocks": [
+          { "type": "callout", "tone": "warning", "text": "‘Drawing a conclusion’ on NUET means deductive — the answer must follow with 100% certainty given the premises. Plausible-but-not-forced answers are wrong." },
+          { "type": "list", "ordered": false, "items": [
+            "Trace the chain: each step must use only the given premises.",
+            "If you have to import outside knowledge, the answer isn't forced.",
+            "Beware reversal of conditionals: ‘if A then B’ does NOT mean ‘if B then A’."
+          ]}
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Worked example",
+        "blocks": [
+          { "type": "example", "title": "Forced or not?", "prompt": "Premises: All sparrows are birds. Some birds can swim. What follows?", "steps": [
+            "Cannot conclude that some sparrows swim — ‘some birds can swim’ is consistent with no sparrows swimming.",
+            "Forced conclusion: All sparrows are birds (restating a premise) is the only safe option."
+          ], "answer": "Only restating known premises is safe." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "assumptions",
+    "topicSlug": "assumptions",
+    "section": "critical_thinking",
+    "title": "Assumptions",
+    "summary": "Find the unstated step the argument needs to work — apply the negation test for certainty.",
+    "minutes": 16,
+    "chapters": [
+      {
+        "id": "what-is",
+        "title": "What is an assumption?",
+        "blocks": [
+          { "type": "definition", "term": "Assumption", "text": "An unstated premise required for the conclusion to follow. Not the conclusion, not a restatement." },
+          { "type": "callout", "tone": "tip", "text": "Negation test: negate the candidate. If the argument falls apart, it's a real assumption. If the argument still holds, it isn't." }
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Apply the negation test",
+        "blocks": [
+          { "type": "example", "title": "Find the assumption", "prompt": "Argument: ‘The new traffic camera has cut accidents by 30%, so the city should install one in every district.’", "steps": [
+            "Candidate A: ‘The cause of the drop was the camera (not seasonal traffic).’",
+            "Negate: ‘The drop was NOT caused by the camera.’ Argument collapses.",
+            "Candidate A is an assumption."
+          ], "answer": "‘The camera caused the drop’ is the assumption." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "flaws-and-logical-fallacies",
+    "topicSlug": "flaws-and-logical-fallacies",
+    "section": "critical_thinking",
+    "title": "Flaws and Logical Fallacies",
+    "summary": "Catalogue of standard reasoning errors NUET tests — name the flaw and you've half-answered the question.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "catalogue",
+        "title": "Top flaws to recognise",
+        "blocks": [
+          { "type": "table", "headers": ["Flaw", "Pattern"], "rows": [
+            ["Correlation ≠ causation", "X and Y co-occur, so X causes Y"],
+            ["Hasty generalisation", "From a small/biased sample to ‘all’"],
+            ["Ad hominem", "Attacking the speaker, not the argument"],
+            ["Straw man", "Misrepresenting the opposing view"],
+            ["False dichotomy", "Treating two options as exhaustive"],
+            ["Circular reasoning", "Using the conclusion as a premise"],
+            ["Appeal to authority", "X is true because expert says so"]
+          ]}
+        ]
+      },
+      {
+        "id": "method",
+        "title": "How to find the flaw",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "State the conclusion in one sentence.",
+            "List premises.",
+            "Ask: is there an obvious gap, or a step that doesn't follow?",
+            "Match the gap to the catalogue."
+          ]},
+          { "type": "exercise", "prompt": "‘My grandfather smoked all his life and lived to 95, so smoking is harmless.’ What flaw?", "answer": "Hasty generalisation (single anecdote vs population statistics).", "explanation": "One case isn't a sample; the population data still shows smoking is harmful." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "assessing-impact-of-additional-evidence",
+    "topicSlug": "assessing-impact-of-additional-evidence",
+    "section": "critical_thinking",
+    "title": "Assessing the Impact of Additional Evidence",
+    "summary": "Decide whether new info strengthens, weakens, or has no effect on the original argument.",
+    "minutes": 14,
+    "chapters": [
+      {
+        "id": "framework",
+        "title": "Three-bucket framework",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "**Strengthens**: closes a gap, supports the assumption, eliminates an alternative explanation.",
+            "**Weakens**: opens a gap, contradicts a premise, supports an alternative explanation.",
+            "**No effect**: about a different population, time, or scope; or restates known info."
+          ]},
+          { "type": "callout", "tone": "tip", "text": "Always ask: does this new fact actually touch the **link** between premises and conclusion? Decoration doesn't count." }
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Map onto the original",
+        "blocks": [
+          { "type": "exercise", "prompt": "Original: ‘New stadium will boost local economy.’ New evidence: ‘Stadium imports all workers from out of town.’ Effect?", "answer": "Weakens — the local boost depends on local employment.", "explanation": "Imported workers spend their wages elsewhere, breaking the chain to the conclusion." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "weakening-and-strengthening",
+    "topicSlug": "weakening-and-strengthening",
+    "section": "critical_thinking",
+    "title": "Weakening and Strengthening",
+    "summary": "Pick the choice that most directly attacks (or supports) the inference, not the topic at large.",
+    "minutes": 14,
+    "chapters": [
+      {
+        "id": "principles",
+        "title": "Target the inference",
+        "blocks": [
+          { "type": "paragraph", "text": "A weakener doesn't disprove the topic — it shows the **specific** inference is unsafe. A strengthener seals a gap." },
+          { "type": "list", "ordered": false, "items": [
+            "Look for alternative explanations for the same data.",
+            "Check whether the sample is representative.",
+            "Watch for hidden assumptions that the answer attacks/supports."
+          ]}
+        ]
+      },
+      {
+        "id": "ranking",
+        "title": "Ranking candidate answers",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Strikes a key assumption directly → strongest weakener.",
+            "Provides an alternative cause → strong weakener.",
+            "Adds a new but unrelated fact → no effect.",
+            "Strengthens? Reverse the same scale."
+          ]},
+          { "type": "exercise", "prompt": "Argument: ‘City’s health programme cut obesity by 5%.’ Which weakens most? (a) Programme is expensive. (b) Obesity rates fell similarly in cities without the programme.", "answer": "(b) — provides an alternative cause for the drop.", "explanation": "(a) is irrelevant to the causal claim." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "mock-test-review",
+    "topicSlug": "mock-test-review",
+    "section": "critical_thinking",
+    "title": "Mock Test Review",
+    "summary": "Turn every mock into a feedback loop: identify error patterns, time leaks, and the question types you skip.",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "review-loop",
+        "title": "The 4-pass review",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "**Score** the test cold — no notes.",
+            "**Re-attempt wrong questions** without time pressure.",
+            "**Read the explanation** for each miss; categorise the error (knowledge gap, careless, time pressure, misread).",
+            "**Pick 1–2 themes** to drill before the next mock."
+          ]},
+          { "type": "callout", "tone": "tip", "text": "Track time-per-question. Anything over 90 s on CT is a candidate to skip-and-return on the real test." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "applying-principle",
+    "topicSlug": "applying-principle",
+    "section": "critical_thinking",
+    "title": "Applying Principle",
+    "summary": "Given a rule, pick the case that satisfies (or violates) it. Read the rule literally.",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "rule-reading",
+        "title": "Read the rule precisely",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Identify all conditions joined by AND vs OR.",
+            "Note exceptions and qualifiers (‘unless’, ‘except’).",
+            "Apply to each option literally — don't import common sense."
+          ]},
+          { "type": "exercise", "prompt": "Rule: ‘A free coffee is given to any customer who buys a pastry AND arrives before 10am.’ Mira buys a pastry at 11am. Free coffee?", "answer": "No — she fails the time condition.", "explanation": "AND requires both conditions; missing one defeats it." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "parallel-reasoning",
+    "topicSlug": "parallel-reasoning",
+    "section": "critical_thinking",
+    "title": "Parallel Reasoning",
+    "summary": "Find the answer whose **structure** mirrors the original — same logical shape, different content.",
+    "minutes": 14,
+    "chapters": [
+      {
+        "id": "abstract",
+        "title": "Strip to the skeleton",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Replace concrete nouns with letters: ‘all A are B; some B are C; therefore some A are C’.",
+            "Match the candidate that has the same skeleton.",
+            "Ignore topic — only structure matters."
+          ]},
+          { "type": "callout", "tone": "warning", "text": "Don't be lured by similar **subject matter**. The question rewards same logic, not same topic." }
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Worked example",
+        "blocks": [
+          { "type": "example", "title": "Find the parallel", "prompt": "‘All cats are mammals. No mammals are insects. Therefore no cats are insects.’ Pick the parallel.", "steps": [
+            "Skeleton: All A are B; no B are C; therefore no A are C.",
+            "Look for: All X are Y; no Y are Z; therefore no X are Z."
+          ], "answer": "Anything fitting that exact pattern, e.g. ‘All triangles are polygons; no polygons are circles; therefore no triangles are circles.’" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "parallels-and-principles",
+    "topicSlug": "parallels-and-principles",
+    "section": "critical_thinking",
+    "title": "Parallels and Principles",
+    "summary": "Bridge between the principle behind an example and another situation that shares it.",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "method",
+        "title": "Two-step method",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Identify the underlying principle of the given example (the rule it illustrates).",
+            "Pick the answer where the same principle decides the outcome — even if the surface details differ."
+          ]},
+          { "type": "exercise", "prompt": "Principle: rules should not penalise people for actions they couldn't have known were forbidden. Which case applies it? (a) Driver fined for speeding past a clearly-posted sign. (b) Tourist fined under a regulation enacted that morning, not yet posted.", "answer": "(b)", "explanation": "(b) penalises someone for an unknowable rule — exactly what the principle forbids." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "problem-solving",
+    "topicSlug": "problem-solving",
+    "section": "critical_thinking",
+    "title": "Problem Solving",
+    "summary": "Mixed numerical CT puzzles. Set up clearly, sketch when useful, watch the units.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "framework",
+        "title": "Setup discipline",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Read twice. Note the **target** value before computing anything.",
+            "Translate the conditions into equations or a table.",
+            "Estimate the order of magnitude — catches plug-in errors.",
+            "Re-check that the answer matches the target."
+          ]}
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Worked example",
+        "blocks": [
+          { "type": "example", "title": "Tickets", "prompt": "A school sells 200 tickets at $5 each, then 300 more at $4. Total revenue?", "steps": [
+            "Revenue = $5 \\cdot 200 + 4 \\cdot 300$.",
+            "= $1000 + 1200 = 2200$."
+          ], "answer": "$2200" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "relevant-selection",
+    "topicSlug": "relevant-selection",
+    "section": "critical_thinking",
+    "title": "Relevant Selection",
+    "summary": "Extract only the information that actually matters for the question — discard distractors.",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "discipline",
+        "title": "Filter ruthlessly",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Read the question first, the data second.",
+            "Mark the variables you need; cross out the rest.",
+            "Be willing to ignore sentences entirely if they don't move you toward the answer."
+          ]},
+          { "type": "callout", "tone": "tip", "text": "NUET often drops a colourful but irrelevant detail to slow you down. Don't reward the bait." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "finding-procedures",
+    "topicSlug": "finding-procedures",
+    "section": "critical_thinking",
+    "title": "Finding Procedures",
+    "summary": "Spot the rule that turned input into output, then apply it to a new input.",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "spot-the-rule",
+        "title": "Spotting the operation",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Compare adjacent in/out pairs.",
+            "Try simple rules: +k, ×k, square, alternate ops, swap digits.",
+            "Verify on every example before trusting."
+          ]},
+          { "type": "exercise", "prompt": "Inputs → outputs: 2→5, 3→10, 4→17. What is 5→ ?", "answer": "26", "explanation": "Pattern: $n^2 + 1$. So $25 + 1 = 26$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "identifying-similarities",
+    "topicSlug": "identifying-similarities",
+    "section": "critical_thinking",
+    "title": "Identifying Similarities",
+    "summary": "Compare two arguments or scenarios at the **structural** level — what makes them analogous?",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "structure-match",
+        "title": "Match shapes, not topics",
+        "blocks": [
+          { "type": "paragraph", "text": "Two arguments are similar when they share a logical pattern: same kind of premise, same conclusion form, same flaw or strength. Topic is irrelevant." },
+          { "type": "exercise", "prompt": "Argument 1: ‘Ice cream sales correlate with drownings, so ice cream causes drownings.’ Pick the similar argument.", "answer": "Anything matching ‘correlation → causation’ — e.g. ‘More umbrellas correlate with more rain, so umbrellas cause rain.’", "explanation": "Same flaw: ignoring the lurking variable (heat, weather)." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "complex-calculations",
+    "topicSlug": "complex-calculations",
+    "section": "critical_thinking",
+    "title": "Complex Calculations",
+    "summary": "Multi-step arithmetic under time pressure: chain operations safely and use estimation to guard against slips.",
+    "minutes": 15,
+    "chapters": [
+      {
+        "id": "discipline",
+        "title": "Calculation hygiene",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Write intermediate results — don't keep multi-digit products in your head.",
+            "Estimate first (round to 1 sig fig), compute exactly, then sanity-check.",
+            "Watch for unit conversions hidden mid-calculation."
+          ]},
+          { "type": "callout", "tone": "tip", "text": "If your computed answer is wildly off the estimate, you have a slip — recompute, don't second-guess." }
+        ]
+      },
+      {
+        "id": "example",
+        "title": "Estimate first",
+        "blocks": [
+          { "type": "example", "title": "Sanity-check", "prompt": "$487 \\times 19$.", "steps": [
+            "Estimate: $500 \\times 20 = 10\\,000$.",
+            "Exact: $487 \\times 20 - 487 = 9740 - 487 = 9253$.",
+            "Within range of estimate. ✓"
+          ], "answer": "9253" }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "ct-equations",
+    "topicSlug": "ct-equations",
+    "section": "critical_thinking",
+    "title": "Equations",
+    "summary": "CT equations: simple linear setups dressed in words. Define the unknown, write one equation, solve.",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "method",
+        "title": "Set up cleanly",
+        "blocks": [
+          { "type": "list", "ordered": true, "items": [
+            "Name the unknown clearly.",
+            "Translate each phrase to an algebraic statement.",
+            "Solve, then re-read to confirm you answered the actual question."
+          ]},
+          { "type": "exercise", "prompt": "‘Three more than twice a number is 17. Find the number.’", "answer": "7", "explanation": "$2x + 3 = 17 \\Rightarrow x = 7$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "lateral-logic",
+    "topicSlug": "lateral-logic",
+    "section": "critical_thinking",
+    "title": "Lateral Logic",
+    "summary": "Step out of the obvious frame — the answer often violates an assumption you didn't notice you were making.",
+    "minutes": 12,
+    "chapters": [
+      {
+        "id": "mindset",
+        "title": "Question your assumptions",
+        "blocks": [
+          { "type": "paragraph", "text": "Lateral problems hide because of a default assumption you imported. List your assumptions — and try removing one at a time." },
+          { "type": "exercise", "prompt": "‘A man pushes his car to a hotel and loses his fortune.’ How?", "answer": "He's playing Monopoly.", "explanation": "Default assumption: the car and hotel are real. Removing it solves it." },
+          { "type": "callout", "tone": "tip", "text": "If the obvious reading leads nowhere, the trick is in the framing, not the math." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "spatial-measurements",
+    "topicSlug": "spatial-measurements",
+    "section": "critical_thinking",
+    "title": "Spatial Measurements",
+    "summary": "Maps, scales, and area/volume reasoning under time pressure. Sketch first.",
+    "minutes": 14,
+    "chapters": [
+      {
+        "id": "scale",
+        "title": "Scale problems",
+        "blocks": [
+          { "type": "paragraph", "text": "If a map scale is $1 : k$, then 1 cm on the map = $k$ cm in reality. Areas scale by $k^2$, volumes by $k^3$." },
+          { "type": "exercise", "prompt": "On a 1:50000 map, 4 cm represents how many km in reality?", "answer": "2 km", "explanation": "$4 \\cdot 50000 = 200000$ cm = 2 km." }
+        ]
+      },
+      {
+        "id": "shapes",
+        "title": "Visualise the shape",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Re-draw irregular shapes as combinations of rectangles, triangles, semicircles.",
+            "Label every length you know.",
+            "Compute piece by piece."
+          ]}
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "visual-reasoning",
+    "topicSlug": "visual-reasoning",
+    "section": "critical_thinking",
+    "title": "Visual Reasoning",
+    "summary": "Pattern, sequence, and odd-one-out questions on shapes — count features systematically.",
+    "minutes": 14,
+    "chapters": [
+      {
+        "id": "features",
+        "title": "Feature checklist",
+        "blocks": [
+          { "type": "list", "ordered": false, "items": [
+            "Number of shapes / dots / lines.",
+            "Rotation: 90°, 180°, mirroring.",
+            "Colour or shading pattern.",
+            "Size relationships."
+          ]},
+          { "type": "callout", "tone": "tip", "text": "Track ONE feature at a time. Spotting two changes simultaneously is what makes these feel hard." }
+        ]
+      },
+      {
+        "id": "odd-one-out",
+        "title": "Odd-one-out",
+        "blocks": [
+          { "type": "paragraph", "text": "Find the rule that 4 of 5 satisfy. The exception is your answer. Don't reverse it." },
+          { "type": "exercise", "prompt": "Shapes: triangle, square, pentagon, hexagon, circle. Odd one out?", "answer": "Circle — the only one without straight sides.", "explanation": "Rule the others share: polygons with straight sides." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "probabilities",
+    "topicSlug": "probabilities",
+    "section": "critical_thinking",
+    "title": "Probabilities",
+    "summary": "P, AND, OR, NOT, conditional — the tools that cover almost every NUET probability item.",
+    "minutes": 22,
+    "chapters": [
+      {
+        "id": "core",
+        "title": "Core formulas",
+        "blocks": [
+          { "type": "formula", "tex": "P(A) = \\dfrac{\\text{favourable}}{\\text{total}}" },
+          { "type": "formula", "tex": "P(\\overline{A}) = 1 - P(A)" },
+          { "type": "formula", "tex": "P(A \\text{ and } B) = P(A) \\cdot P(B)\\quad (\\text{independent})" },
+          { "type": "formula", "tex": "P(A \\text{ or } B) = P(A) + P(B) - P(A \\text{ and } B)" },
+          { "type": "formula", "tex": "P(A \\mid B) = \\dfrac{P(A \\text{ and } B)}{P(B)}" }
+        ]
+      },
+      {
+        "id": "complement",
+        "title": "When to use the complement",
+        "blocks": [
+          { "type": "callout", "tone": "tip", "text": "‘At least one’ problems are almost always easier via the complement: $1 - P(\\text{none})$." },
+          { "type": "example", "title": "At least one head", "prompt": "Toss 3 fair coins. Probability of at least one head?", "steps": [
+            "$P(\\text{no heads}) = (1/2)^3 = 1/8$.",
+            "$P(\\text{at least one}) = 1 - 1/8 = 7/8$."
+          ], "answer": "$7/8$" }
+        ]
+      },
+      {
+        "id": "conditional",
+        "title": "Conditional probability",
+        "blocks": [
+          { "type": "exercise", "prompt": "A class is 60% female. Of females, 50% study CS. What % of the class is female AND studies CS?", "answer": "30%", "explanation": "$0.6 \\cdot 0.5 = 0.3$." }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "combinations",
+    "topicSlug": "combinations",
+    "section": "critical_thinking",
+    "title": "Combinations",
+    "summary": "Permutations vs combinations — does order matter? Then choose your formula.",
+    "minutes": 18,
+    "chapters": [
+      {
+        "id": "definitions",
+        "title": "Definitions",
+        "blocks": [
+          { "type": "definition", "term": "Permutation $P(n,k)$", "text": "Number of ordered arrangements of $k$ items from $n$." },
+          { "type": "definition", "term": "Combination $C(n,k)$", "text": "Number of unordered selections of $k$ items from $n$." },
+          { "type": "formula", "tex": "P(n,k) = \\dfrac{n!}{(n-k)!}" },
+          { "type": "formula", "tex": "C(n,k) = \\binom{n}{k} = \\dfrac{n!}{k!(n-k)!}" }
+        ]
+      },
+      {
+        "id": "decision",
+        "title": "Decision rule",
+        "blocks": [
+          { "type": "paragraph", "text": "Ask one question: would swapping two of the chosen items count as a different outcome?" },
+          { "type": "list", "ordered": false, "items": [
+            "Yes (different) → permutation.",
+            "No (same group) → combination."
+          ]},
+          { "type": "example", "title": "Combination", "prompt": "How many ways to choose a 3-person committee from 10 people?", "steps": [
+            "Order doesn't matter — combination.",
+            "$C(10, 3) = 10!/(3! \\cdot 7!) = 120$."
+          ], "answer": "120" },
+          { "type": "exercise", "prompt": "How many ways to seat 4 people in a row?", "answer": "24", "explanation": "Order matters — permutation $4! = 24$." }
+        ]
+      }
+    ]
+  }
+]

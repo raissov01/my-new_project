@@ -228,6 +228,64 @@ func (h *NUETHandler) GetTopic(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, topic)
 }
 
+// GET /nuet/lessons[?section=math|critical_thinking]
+//
+// Lists published lessons (the "book" content) without the body. The list
+// page only needs metadata (title, summary, minutes, slug, section) so we
+// drop the heavy `content` field server-side. Order: section, then the
+// topic's order_index when available, else the lesson's own.
+func (h *NUETHandler) ListLessons(w http.ResponseWriter, r *http.Request) {
+	q := h.db.
+		Table("nuet_lessons AS l").
+		Select(`l.id, l.topic_id, l.slug, l.section, l.title, l.summary,
+			l.minutes, COALESCE(t.order_index, l.order_index) AS order_index,
+			l.status, l.updated_at`).
+		Joins("LEFT JOIN nuet_topics t ON t.id = l.topic_id").
+		Where("l.status = ?", "published").
+		Order("l.section ASC, COALESCE(t.order_index, l.order_index) ASC")
+	if section := strings.TrimSpace(r.URL.Query().Get("section")); section != "" {
+		q = q.Where("l.section = ?", section)
+	}
+	type row struct {
+		ID         string    `json:"id"`
+		TopicID    *string   `json:"topicId,omitempty"`
+		Slug       string    `json:"slug"`
+		Section    string    `json:"section"`
+		Title      string    `json:"title"`
+		Summary    string    `json:"summary"`
+		Minutes    int       `json:"minutes"`
+		OrderIndex int       `json:"orderIndex"`
+		Status     string    `json:"status"`
+		UpdatedAt  time.Time `json:"updatedAt"`
+	}
+	items := []row{}
+	if err := q.Scan(&items).Error; err != nil {
+		jsonErr(w, "failed to load lessons", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]any{"items": items, "total": len(items)})
+}
+
+// GET /nuet/lessons/:slug
+//
+// Returns the full lesson including the JSONB content body. Lessons are
+// addressed by slug (matches the topic slug 1:1); 404 if not published.
+func (h *NUETHandler) GetLesson(w http.ResponseWriter, r *http.Request) {
+	slug := strings.TrimSpace(r.PathValue("slug"))
+	if slug == "" {
+		jsonErr(w, "missing slug", http.StatusBadRequest)
+		return
+	}
+	var lesson models.NUETLesson
+	if err := h.db.
+		Where("slug = ? AND status = ?", slug, "published").
+		First(&lesson).Error; err != nil {
+		jsonErr(w, "lesson not found", http.StatusNotFound)
+		return
+	}
+	jsonOK(w, lesson)
+}
+
 // GET /nuet/questions?topicSlug=...&limit=20[&includeDismissed=1]
 func (h *NUETHandler) ListQuestions(w http.ResponseWriter, r *http.Request) {
 	q := h.db.Model(&models.NUETQuestion{}).Order("created_at ASC")
