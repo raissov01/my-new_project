@@ -260,6 +260,25 @@ export async function getNUETAttempt(userId: string, id: string): Promise<NUETAt
   });
 }
 
+export type NUETDismissedQuestion = {
+  questionId: string;
+  section: "math" | "critical_thinking";
+  topicId?: string;
+  topicTitle?: string;
+  topicSlug?: string;
+  prompt: string;
+  dismissedAt: string;
+};
+
+export async function listDismissedNUETQuestions(
+  userId: string
+): Promise<{ items: NUETDismissedQuestion[]; total: number }> {
+  return fetchBackendJson<{ items: NUETDismissedQuestion[]; total: number }>({
+    path: "/api/v1/nuet/questions/dismissed",
+    userId,
+  });
+}
+
 export type NUETRoadmapProgress = {
   userId: string;
   planKey: "intensive" | "steady";

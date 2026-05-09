@@ -359,6 +359,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/nuet/attempts/:attemptID", wrapHTTP(deps.NUET.GetAttempt))
 		internal.GET("/nuet/attempts", wrapHTTP(deps.NUET.ListAttempts))
 		internal.GET("/nuet/dashboard", wrapHTTP(deps.NUET.GetDashboard))
+		internal.GET("/nuet/questions/dismissed", wrapHTTP(deps.NUET.ListDismissedQuestions))
 		internal.POST("/nuet/questions/:questionID/dismiss", wrapHTTP(deps.NUET.DismissQuestion))
 		internal.DELETE("/nuet/questions/:questionID/dismiss", wrapHTTP(deps.NUET.UndismissQuestion))
 		internal.GET("/nuet/roadmap", wrapHTTP(deps.NUET.GetRoadmap))

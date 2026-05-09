@@ -5,6 +5,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { listNUETTopics, type NUETSection, type NUETTopic } from "@/server/integrations/go-backend/nuet";
+import { RetryButton } from "@/components/nuet/retry-button";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -81,6 +82,15 @@ export default async function NUETTopicsPage({
           {t("nuet.sectionCT")}
         </Link>
       </div>
+
+      {data.items.length === 0 ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-center">
+          <p className="text-sm text-[var(--text-muted)]">{t("nuet.topicsEmpty")}</p>
+          <div className="mt-3 flex justify-center">
+            <RetryButton label={t("nuet.materialsRetry")} />
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-6 space-y-8">
         {Object.entries(sections).map(([sectionKey, items]) => (

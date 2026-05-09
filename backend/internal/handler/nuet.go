@@ -386,6 +386,48 @@ func (h *NUETHandler) ResetRoadmap(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"progress": nil})
 }
 
+// GET /nuet/questions/dismissed — list the questions the current user has
+// marked as "I know this", joined with their topic + section so the manage
+// page can group them. Newest dismissals first so the user can spot a
+// recent mis-click and undo it.
+func (h *NUETHandler) ListDismissedQuestions(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	type row struct {
+		QuestionID  string    `json:"questionId"`
+		Section     string    `json:"section"`
+		TopicID     *string   `json:"topicId,omitempty"`
+		TopicTitle  *string   `json:"topicTitle,omitempty"`
+		TopicSlug   *string   `json:"topicSlug,omitempty"`
+		Prompt      string    `json:"prompt"`
+		DismissedAt time.Time `json:"dismissedAt"`
+	}
+	var items []row
+	if err := h.db.Raw(`
+		SELECT
+			d.question_id,
+			q.section,
+			q.topic_id,
+			t.title AS topic_title,
+			t.slug  AS topic_slug,
+			q.prompt,
+			d.dismissed_at
+		FROM nuet_question_dismissals d
+		JOIN nuet_questions q ON q.id = d.question_id
+		LEFT JOIN nuet_topics t ON t.id = q.topic_id
+		WHERE d.user_id = ?
+		ORDER BY d.dismissed_at DESC
+		LIMIT 500
+	`, userID).Scan(&items).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load dismissed questions", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})
+}
+
 // DELETE /nuet/questions/:questionID/dismiss — undo a dismissal so the
 // question reappears in drills. No-op if there's nothing to undo.
 func (h *NUETHandler) UndismissQuestion(w http.ResponseWriter, r *http.Request) {

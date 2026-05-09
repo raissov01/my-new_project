@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Brain, FileText, Flame, Globe2, GraduationCap, Library, Map, Play, ScrollText, Trophy } from "lucide-react";
+import { ArrowRight, BookOpen, Brain, FileText, Flame, Globe2, GraduationCap, Library, Map, Play, ScrollText, ThumbsUp, Trophy } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
@@ -131,6 +131,14 @@ export default async function NUETHubPage() {
       href: "/nuet/resources",
       tone: "green" as const,
     },
+    {
+      icon: ThumbsUp,
+      titleKey: "nuet.mod.dismissed",
+      descKey: "nuet.mod.dismissedDesc",
+      meta: t("nuet.mod.dismissedMeta"),
+      href: "/nuet/dismissed",
+      tone: "purple" as const,
+    },
   ];
 
   return (
@@ -235,6 +243,36 @@ export default async function NUETHubPage() {
         <div className="mt-8">
           <NUETDailyChallengeWidget date={daily.date} questions={daily.questions} />
         </div>
+      ) : null}
+
+      {/* First-time tips: shown when the user has no in-progress and no
+          completed mocks. Three bullet points covering the basics — start
+          with a diagnostic, use practice + I-know-this for weak areas,
+          come back daily. Server-rendered (no dismiss persistence) since
+          the gate already disappears once the user finishes anything. */}
+      {user && completedMockCount === 0 && (!inProgress || inProgress.attempts.length === 0) ? (
+        <section className="mt-8 rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--primary-soft)] to-[var(--bg-surface)] p-5 sm:p-6">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+            {t("nuet.onboarding.eyebrow")}
+          </p>
+          <h2 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">
+            {t("nuet.onboarding.title")}
+          </h2>
+          <ul className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
+            <li className="flex items-start gap-2">
+              <GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+              {t("nuet.onboarding.tip1")}
+            </li>
+            <li className="flex items-start gap-2">
+              <Brain className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+              {t("nuet.onboarding.tip2")}
+            </li>
+            <li className="flex items-start gap-2">
+              <Flame className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+              {t("nuet.onboarding.tip3")}
+            </li>
+          </ul>
+        </section>
       ) : null}
 
       {/* Module grid */}
