@@ -155,10 +155,13 @@ export function StudyClient({
               />
 
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <div className="flex w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-1 sm:w-auto sm:p-1.5">
+                <div role="tablist" aria-label={t("study.flashcards")} className="flex w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-1 sm:w-auto sm:p-1.5">
                   {modes.map(({ key, label, icon: Icon }) => (
                     <button
                       key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={mode === key}
                       onClick={() => handleModeChange(key)}
                       className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors duration-150 sm:flex-none sm:gap-2 sm:px-3 ${
                         mode === key
@@ -166,16 +169,17 @@ export function StudyClient({
                           : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4" aria-hidden />
                       <span className="text-xs sm:text-sm">{label}</span>
                     </button>
                   ))}
                 </div>
 
                 {smartToggleEnabled && (
-                  <div className="flex w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-1 sm:w-auto">
+                  <div role="group" aria-label={t("study.smartMode")} className="flex w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-1 sm:w-auto">
                     <button
                       type="button"
+                      aria-pressed={!smartEnabled}
                       onClick={handleDisableSmart}
                       className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors sm:flex-none ${
                         !smartEnabled
@@ -187,6 +191,7 @@ export function StudyClient({
                     </button>
                     <button
                       type="button"
+                      aria-pressed={smartEnabled}
                       onClick={handleEnableSmart}
                       disabled={smartFlashcards.length === 0}
                       className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors sm:flex-none ${
@@ -237,18 +242,20 @@ export function StudyClient({
           <>
             {session.studyingDifficult ? (
               <button
+                type="button"
                 onClick={session.studyAll}
                 className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors"
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
                 {t("study.backToAllCards")}
               </button>
             ) : (
               <button
+                type="button"
                 onClick={session.studyDifficultOnly}
                 className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-500/15"
               >
-                <Flag className="h-3.5 w-3.5" />
+                <Flag className="h-3.5 w-3.5" aria-hidden />
                 {t("study.studyDifficult")} {session.difficult.size}
               </button>
             )}
@@ -264,8 +271,8 @@ export function StudyClient({
 
       {/* Active mode or minimum-cards notice */}
       {!hasEnoughCards ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-yellow-200 bg-yellow-50 px-6 py-8 text-center">
-          <AlertCircle className="h-8 w-8 text-yellow-500" />
+        <div role="status" className="flex flex-col items-center gap-3 rounded-xl border border-yellow-200 bg-yellow-50 px-6 py-8 text-center">
+          <AlertCircle className="h-8 w-8 text-yellow-500" aria-hidden />
           <p className="text-sm text-yellow-800">
             {t("study.quizNeedsCards", { count: effectiveMinCards })}
           </p>
@@ -279,7 +286,7 @@ export function StudyClient({
               onClick={session.studyAll}
               className="mt-2"
             >
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" aria-hidden />
               {t("study.backToAllCards")}
             </Button>
           )}

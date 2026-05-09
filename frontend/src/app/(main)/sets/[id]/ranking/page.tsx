@@ -25,7 +25,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Link href={`/sets/${id}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
-            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} />
+            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} aria-hidden />
             {t("challenge.backToSet")}
           </Link>
           <h3>{t("challenge.titleRanking")}</h3>
@@ -57,9 +57,9 @@ export default async function RankingPage({ params }: RankingPageProps) {
             }}
           >
             {ranking.set.is_public ? (
-              <Globe2 className="h-3.5 w-3.5" />
+              <Globe2 className="h-3.5 w-3.5" aria-hidden />
             ) : (
-              <Lock className="h-3.5 w-3.5" />
+              <Lock className="h-3.5 w-3.5" aria-hidden />
             )}
             {ranking.set.is_public ? t("challenge.publicRanking") : t("challenge.privateRanking")}
           </span>

@@ -37,7 +37,7 @@ export default async function EditSetPage({ params }: EditSetPageProps) {
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Link href={`/sets/${id}`} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
-            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} />
+            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} aria-hidden />
             {t("set.backToSet")}
           </Link>
           <h3>{t("set.editSet")}</h3>

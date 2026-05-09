@@ -76,14 +76,14 @@ export function ChallengeClient({
               href={`/sets/${setId}`}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-elevated)]"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" aria-hidden />
               {t("challenge.backToSet")}
             </Link>
             <Link
               href={rankingHref}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
             >
-              <Trophy className="h-4 w-4" />
+              <Trophy className="h-4 w-4" aria-hidden />
               {t("challenge.viewRanking")}
             </Link>
           </div>

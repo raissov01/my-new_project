@@ -98,7 +98,7 @@ export default async function SetDetailPage({
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Link href={backHref} className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
-            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} />
+            <ArrowLeft className="h-4 w-4" style={{ display: "inline", marginRight: 6 }} aria-hidden />
             {t("set.backToDashboard")}
           </Link>
           <h3>{set.title}</h3>
@@ -128,9 +128,9 @@ export default async function SetDetailPage({
           <span className="nd-kpi-sub">{t("set.cardsToReview")}</span>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-lbl">ACCURACY</span>
+          <span className="nd-kpi-lbl">{t("profile.accuracy").toUpperCase()}</span>
           <strong className="nd-kpi-val">{accuracyPct}%</strong>
-          <span className="nd-kpi-sub">mastered</span>
+          <span className="nd-kpi-sub">{t("stats.mastered")}</span>
         </div>
       </div>
 
@@ -145,18 +145,18 @@ export default async function SetDetailPage({
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
           {dueCount > 0 && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, padding: "4px 12px", borderRadius: 999, background: "color-mix(in srgb, var(--terra) 12%, transparent)", color: "var(--terra)", border: "1px solid color-mix(in srgb, var(--terra) 20%, transparent)" }}>
-              <Zap className="h-3.5 w-3.5" />
+              <Zap className="h-3.5 w-3.5" aria-hidden />
               {dueCount} {t("set.dueToday")}
             </span>
           )}
           {weakCount > 0 && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, padding: "4px 12px", borderRadius: 999, background: "color-mix(in srgb, orange 10%, transparent)", color: "orange", border: "1px solid color-mix(in srgb, orange 20%, transparent)" }}>
-              <Flag className="h-3.5 w-3.5" />
+              <Flag className="h-3.5 w-3.5" aria-hidden />
               {weakCount} {t("set.difficult")}
             </span>
           )}
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, padding: "4px 12px", borderRadius: 999, background: "var(--paper-2)", color: "var(--ink-mute)", border: "1px solid var(--line)" }}>
-            <Clock3 className="h-3.5 w-3.5" />
+            <Clock3 className="h-3.5 w-3.5" aria-hidden />
             {t("set.created")} {formatDate(set.created_at, locale)}
           </span>
         </div>
@@ -254,7 +254,7 @@ export default async function SetDetailPage({
               href={`/sets/${id}/edit`}
               style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--ink-mute)" }}
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-4 w-4" aria-hidden />
               {t("set.edit")}
             </Link>
           )}
@@ -263,7 +263,7 @@ export default async function SetDetailPage({
               href={`/classes/challenges?setId=${id}`}
               style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--ink-mute)" }}
             >
-              <Trophy className="h-4 w-4" />
+              <Trophy className="h-4 w-4" aria-hidden />
               {t("challenge.createClassChallenge")}
             </Link>
           )}
@@ -301,7 +301,7 @@ export default async function SetDetailPage({
         {/* Stats section */}
         <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px 24px", marginBottom: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <BarChart3 className="h-5 w-5" style={{ color: "var(--terra)" }} />
+            <BarChart3 className="h-5 w-5" style={{ color: "var(--terra)" }} aria-hidden />
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)", margin: 0 }}>{t("sets.stats")}</h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
@@ -314,7 +314,7 @@ export default async function SetDetailPage({
           {reviewCount > 0 && (
             <div style={{ marginTop: 16, padding: "14px 18px", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--terra)", marginBottom: 6 }}>
-                <Zap className="h-4 w-4" />
+                <Zap className="h-4 w-4" aria-hidden />
                 {t("set.reviewToday")}
               </div>
               <p style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 10 }}>
@@ -428,7 +428,7 @@ function StudyModeButton({
         border: tone === "primary" ? "none" : "1px solid var(--line)",
       }}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-4 w-4" aria-hidden />
       {label}
     </Link>
   );
