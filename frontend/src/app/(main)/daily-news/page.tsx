@@ -22,6 +22,7 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
   const text = level === "A2" ? news.versionA2 : level === "B1" ? news.versionB1 : news.versionC1;
   const vocab = level === "A2" ? parseJSON<VocabWord>(news.vocabA2) : level === "B1" ? parseJSON<VocabWord>(news.vocabB1) : parseJSON<VocabWord>(news.vocabC1);
   const audioUrl = level === "A2" ? news.audioA2Url : level === "B1" ? news.audioB1Url : news.audioC1Url;
+  const audioLabel = `${t("news.audioLabel")} (${level})`;
   const allQ = parseJSON<NewsQuestion>(news.questions);
   const questions = allQ.filter((q) => q.level === level);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -37,8 +38,8 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {audioUrl && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "var(--paper-2)", borderRadius: 12, border: "1px solid var(--line)" }}>
-          <Volume2 style={{ width: 16, height: 16, color: "var(--terra)", flexShrink: 0 }} />
-          <audio controls src={audioUrl} style={{ flex: 1, height: 32 }} />
+          <Volume2 style={{ width: 16, height: 16, color: "var(--terra)", flexShrink: 0 }} aria-hidden />
+          <audio controls src={audioUrl} aria-label={audioLabel} preload="metadata" style={{ flex: 1, height: 32 }} />
         </div>
       )}
 
@@ -103,8 +104,13 @@ function NewsContent({ news, level }: { news: DailyNews; level: Level }) {
   );
 }
 
+// Browser-side locale tag for toLocaleDateString. Our app uses "kk", "ru",
+// "en"; map them to BCP-47 tags so the dates show up in the user's language.
+const DATE_LOCALES: Record<string, string> = { kk: "kk-KZ", ru: "ru-RU", en: "en-US" };
+
 export default function DailyNewsPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const dateLocale = DATE_LOCALES[locale] ?? "en-US";
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [news, setNews] = useState<DailyNews | null>(null);
@@ -130,7 +136,7 @@ export default function DailyNewsPage() {
   }, [user, authLoading]);
 
   const date = news
-    ? new Date(news.newsDate).toLocaleDateString("kk-KZ", { weekday: "long", month: "long", day: "numeric" })
+    ? new Date(news.newsDate).toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })
     : "";
 
   if (loading) {
@@ -144,7 +150,7 @@ export default function DailyNewsPage() {
   if (!news) {
     return (
       <div className="page-shell py-16" style={{ textAlign: "center" }}>
-        <Newspaper style={{ width: 48, height: 48, margin: "0 auto 12px", opacity: .25, color: "var(--ink-mute)" }} />
+        <Newspaper style={{ width: 48, height: 48, margin: "0 auto 12px", opacity: .25, color: "var(--ink-mute)" }} aria-hidden />
         <p style={{ color: "var(--ink-mute)", fontSize: 14 }}>{t("news.noNews")}</p>
       </div>
     );
@@ -155,7 +161,7 @@ export default function DailyNewsPage() {
       {/* Header bar */}
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
-          <Newspaper style={{ width: 18, height: 18, color: "var(--terra)" }} />
+          <Newspaper style={{ width: 18, height: 18, color: "var(--terra)" }} aria-hidden />
           <h3>{t("news.dailyNews")}</h3>
           <span style={{ fontSize: 12, color: "var(--ink-mute)", fontFamily: "'JetBrains Mono',monospace", textTransform: "capitalize" }}>
             {date} · {news.topic}
@@ -180,10 +186,15 @@ export default function DailyNewsPage() {
       )}
 
       {/* Level pills */}
-      <div className="nd-lib-filters" style={{ marginBottom: 20 }}>
+      <div className="nd-lib-filters" role="group" aria-label="CEFR level" style={{ marginBottom: 20 }}>
         {(["A2", "B1", "C1"] as Level[]).map((lv) => (
-          <button key={lv} onClick={() => setLevel(lv)}
-            className={`nd-lib-pill${level === lv ? " on" : ""}`}>
+          <button
+            key={lv}
+            type="button"
+            onClick={() => setLevel(lv)}
+            aria-pressed={level === lv}
+            className={`nd-lib-pill${level === lv ? " on" : ""}`}
+          >
             {lv}
           </button>
         ))}
@@ -215,7 +226,7 @@ export default function DailyNewsPage() {
               <button key={r.id} onClick={() => setNews(r)}
                 style={{ borderRadius: 14, border: `1.5px solid ${news?.id === r.id ? "var(--terra)" : "var(--line)"}`, background: "var(--paper)", padding: "12px 14px", textAlign: "left", cursor: "pointer", transition: "border-color .12s" }}>
                 <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, color: "var(--ink-mute)", marginBottom: 4 }}>
-                  {new Date(r.newsDate).toLocaleDateString("kk-KZ", { weekday: "short", month: "short", day: "numeric" })}
+                  {new Date(r.newsDate).toLocaleDateString(dateLocale, { weekday: "short", month: "short", day: "numeric" })}
                 </p>
                 <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)", textTransform: "capitalize" }}>{r.topic}</p>
               </button>

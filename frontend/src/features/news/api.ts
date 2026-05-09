@@ -33,7 +33,8 @@ export async function getTodayNews(): Promise<DailyNews | null> {
       userId: user?.id ?? "",
     });
     return data.news;
-  } catch {
+  } catch (err) {
+    console.error("[news] getTodayNews failed:", err);
     return null;
   }
 }
@@ -46,7 +47,8 @@ export async function getRecentNews(): Promise<DailyNews[]> {
       userId: user?.id ?? "",
     });
     return data.news ?? [];
-  } catch {
+  } catch (err) {
+    console.error("[news] getRecentNews failed:", err);
     return [];
   }
 }
