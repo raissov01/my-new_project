@@ -42,7 +42,7 @@ export function NUETSimulatorClient({
 }: {
   initialResume?: NUETSimulatorResume | null;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [stage, setStage] = useState<Stage>(
     initialResume ? "resume_prompt" : "configure"
   );
@@ -598,7 +598,7 @@ export function NUETSimulatorClient({
               {t("nuet.simulator.resumeStarted")}
             </dt>
             <dd className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
-              {startedAt.toLocaleString()}
+              {startedAt.toLocaleString(locale)}
             </dd>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
@@ -787,6 +787,13 @@ export function NUETSimulatorClient({
           ctLabel={t("nuet.sectionCT")}
           headingLabel={t("nuet.simulator.sectionBreakdown")}
           correctLabel={t("nuet.history.correct")}
+        />
+
+        <TopicBreakdownCard
+          evaluations={result.evaluations ?? []}
+          headingLabel={t("nuet.simulator.topicBreakdown")}
+          subtitleLabel={t("nuet.simulator.topicBreakdownSub")}
+          untitledLabel={t("nuet.simulator.topicUntitled")}
         />
 
         <TimeHeatmap
@@ -1039,7 +1046,7 @@ export function NUETSimulatorClient({
           </div>
         ) : null}
 
-        <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-5">
+        <div className="grid grid-cols-5 gap-2 sm:grid-cols-8 lg:grid-cols-5">
           {questions.map((question, index) => {
             const answered = Boolean(answers[question.id]);
             const flagged = marked.has(question.id);
@@ -1051,7 +1058,7 @@ export function NUETSimulatorClient({
                   jumpTo(index);
                   setMobileNavOpen(false);
                 }}
-                className={`aspect-square rounded-lg border text-xs font-semibold transition ${
+                className={`flex aspect-square min-h-[44px] items-center justify-center rounded-lg border text-xs font-semibold transition ${
                   currentIndex === index
                     ? "border-[var(--primary)] ring-2 ring-[var(--primary-soft)]"
                     : flagged
@@ -1750,6 +1757,74 @@ function TimeHeatmap({
             >
               {secs > 0 ? secs : "·"}
             </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TopicBreakdownCard({
+  evaluations,
+  headingLabel,
+  subtitleLabel,
+  untitledLabel,
+}: {
+  evaluations: NonNullable<NUETAttemptActionResult["evaluations"]>;
+  headingLabel: string;
+  subtitleLabel: string;
+  untitledLabel: string;
+}) {
+  // Bucket evaluations by topicId. Questions with no topic get an
+  // "uncategorized" row only when there are enough of them to be
+  // meaningful — under 2 we'd just be cluttering the breakdown.
+  const buckets = new Map<string, { title: string; correct: number; total: number }>();
+  for (const ev of evaluations) {
+    const id = ev.topicId || "__none__";
+    const title = ev.topicTitle || (id === "__none__" ? untitledLabel : id);
+    const bucket = buckets.get(id) ?? { title, correct: 0, total: 0 };
+    bucket.total += 1;
+    if (ev.correct) bucket.correct += 1;
+    buckets.set(id, bucket);
+  }
+  // Hide the card when nothing has a topic mapping (legacy attempts).
+  const titledRows = Array.from(buckets.entries()).filter(([id, b]) => id !== "__none__" || b.total >= 2);
+  if (titledRows.length === 0) return null;
+  // Worst-first so the user's eye lands on the topic that needs the most
+  // attention. Within the same accuracy we tiebreak on bucket size so a
+  // topic the user actually saw a lot of is shown above an outlier.
+  titledRows.sort(([, a], [, b]) => {
+    const aPct = a.total === 0 ? 1 : a.correct / a.total;
+    const bPct = b.total === 0 ? 1 : b.correct / b.total;
+    if (aPct !== bPct) return aPct - bPct;
+    return b.total - a.total;
+  });
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+      <div>
+        <h3 className="text-lg font-semibold text-[var(--text-primary)]">{headingLabel}</h3>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">{subtitleLabel}</p>
+      </div>
+      <div className="mt-4 space-y-2">
+        {titledRows.map(([id, row]) => {
+          const pct = row.total > 0 ? Math.round((row.correct / row.total) * 100) : 0;
+          const tone =
+            pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-rose-500";
+          return (
+            <div
+              key={id}
+              className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <span className="text-sm font-semibold text-[var(--text-primary)]">{row.title}</span>
+                <span className="font-mono text-xs text-[var(--text-secondary)]">
+                  {row.correct}/{row.total} · {pct}%
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
+                <div className={`h-full rounded-full ${tone}`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
           );
         })}
       </div>

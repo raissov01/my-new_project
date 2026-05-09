@@ -43,6 +43,11 @@ type nuetAnswerEvaluation struct {
 	Question    int    `json:"question"`
 	QuestionID  string `json:"questionId,omitempty"`
 	Section     string `json:"section"`
+	// TopicID + TopicTitle drive the per-topic breakdown card on the
+	// results screen. Both stay omitempty for legacy attempts whose
+	// stored Results JSONB never carried topic info.
+	TopicID     string `json:"topicId,omitempty"`
+	TopicTitle  string `json:"topicTitle,omitempty"`
 	Prompt      string `json:"prompt,omitempty"`
 	Explanation string `json:"explanation,omitempty"`
 	Expected    string `json:"expected"`
@@ -122,9 +127,26 @@ type nuetSimulatorQuestion struct {
 	ID         string   `json:"id"`
 	Number     int      `json:"number"`
 	Section    string   `json:"section"`
+	TopicID    string   `json:"topicId,omitempty"`
 	Difficulty string   `json:"difficulty"`
 	Prompt     string   `json:"prompt"`
 	Options    []string `json:"options"`
+}
+
+func nuetSimulatorQuestionFrom(q models.NUETQuestion, number int) nuetSimulatorQuestion {
+	topicID := ""
+	if q.TopicID != nil {
+		topicID = *q.TopicID
+	}
+	return nuetSimulatorQuestion{
+		ID:         q.ID,
+		Number:     number,
+		Section:    q.Section,
+		TopicID:    topicID,
+		Difficulty: q.Difficulty,
+		Prompt:     q.Prompt,
+		Options:    parseNUETStringArray(q.Options),
+	}
 }
 
 type nuetMockResultItem struct {
@@ -695,14 +717,7 @@ func (h *NUETHandler) StartMockAttempt(w http.ResponseWriter, r *http.Request) {
 			number = question.Position
 		}
 		questionIDs = append(questionIDs, question.ID)
-		items = append(items, nuetSimulatorQuestion{
-			ID:         question.ID,
-			Number:     number,
-			Section:    question.Section,
-			Difficulty: question.Difficulty,
-			Prompt:     question.Prompt,
-			Options:    parseNUETStringArray(question.Options),
-		})
+		items = append(items, nuetSimulatorQuestionFrom(question, number))
 	}
 
 	stateJSON := marshalNUETJSON(map[string]string{})
@@ -948,14 +963,7 @@ func (h *NUETHandler) StartSimulator(w http.ResponseWriter, r *http.Request) {
 	simulatorQuestions := make([]nuetSimulatorQuestion, 0, len(questions))
 	for index, question := range questions {
 		questionIDs = append(questionIDs, question.ID)
-		simulatorQuestions = append(simulatorQuestions, nuetSimulatorQuestion{
-			ID:         question.ID,
-			Number:     index + 1,
-			Section:    question.Section,
-			Difficulty: question.Difficulty,
-			Prompt:     question.Prompt,
-			Options:    parseNUETStringArray(question.Options),
-		})
+		simulatorQuestions = append(simulatorQuestions, nuetSimulatorQuestionFrom(question, index+1))
 	}
 
 	stateJSON := marshalNUETJSON(nuetSimulatorState{
@@ -1045,14 +1053,7 @@ func (h *NUETHandler) ResumeSimulator(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			continue
 		}
-		simulatorQuestions = append(simulatorQuestions, nuetSimulatorQuestion{
-			ID:         question.ID,
-			Number:     index + 1,
-			Section:    question.Section,
-			Difficulty: question.Difficulty,
-			Prompt:     question.Prompt,
-			Options:    parseNUETStringArray(question.Options),
-		})
+		simulatorQuestions = append(simulatorQuestions, nuetSimulatorQuestionFrom(question, index+1))
 	}
 
 	state := parseNUETSimulatorState(attempt.Answers)
@@ -1187,6 +1188,7 @@ func (h *NUETHandler) CompleteSimulator(w http.ResponseWriter, r *http.Request) 
 			result.Evaluations[i].TimeSpent = t
 		}
 	}
+	h.enrichEvaluationsWithTopics(result.Evaluations)
 
 	stateJSON := marshalNUETJSON(state)
 	resultsJSON := marshalNUETJSON(map[string]any{
@@ -1891,10 +1893,10 @@ func (h *NUETHandler) GetAttempt(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, buildNUETAttemptResponse(attempt, evaluations, meta, names))
 }
 
-// enrichNUETEvaluations fills missing Prompt/Section fields on evaluations
-// by looking up the underlying question. This matters for legacy PDF-test
-// attempts whose stored shape (nuetMockResultItem) did not include prompt
-// or section. Mutates the slice in place.
+// enrichNUETEvaluations fills missing Prompt/Section/TopicID fields on
+// evaluations by looking up the underlying question. This matters for
+// legacy attempts whose stored shape predated those fields. Mutates the
+// slice in place. Topic titles are then resolved in a second pass.
 func (h *NUETHandler) enrichNUETEvaluations(evaluations []nuetAnswerEvaluation) {
 	if len(evaluations) == 0 {
 		return
@@ -1904,41 +1906,44 @@ func (h *NUETHandler) enrichNUETEvaluations(evaluations []nuetAnswerEvaluation) 
 		if ev.QuestionID == "" {
 			continue
 		}
-		if ev.Prompt == "" || ev.Section == "" {
+		if ev.Prompt == "" || ev.Section == "" || ev.TopicID == "" {
 			missing = append(missing, ev.QuestionID)
 		}
 	}
-	if len(missing) == 0 {
-		return
-	}
-	type qrow struct {
-		ID      string
-		Prompt  string
-		Section string
-	}
-	var rows []qrow
-	if err := h.db.Table("nuet_questions").
-		Select("id, prompt, section").
-		Where("id IN ?", missing).
-		Scan(&rows).Error; err != nil {
-		return
-	}
-	byID := make(map[string]qrow, len(rows))
-	for _, row := range rows {
-		byID[row.ID] = row
-	}
-	for i := range evaluations {
-		row, ok := byID[evaluations[i].QuestionID]
-		if !ok {
-			continue
+	if len(missing) > 0 {
+		type qrow struct {
+			ID      string
+			Prompt  string
+			Section string
+			TopicID *string
 		}
-		if evaluations[i].Prompt == "" {
-			evaluations[i].Prompt = row.Prompt
-		}
-		if evaluations[i].Section == "" {
-			evaluations[i].Section = row.Section
+		var rows []qrow
+		if err := h.db.Table("nuet_questions").
+			Select("id, prompt, section, topic_id").
+			Where("id IN ?", missing).
+			Scan(&rows).Error; err == nil {
+			byID := make(map[string]qrow, len(rows))
+			for _, row := range rows {
+				byID[row.ID] = row
+			}
+			for i := range evaluations {
+				row, ok := byID[evaluations[i].QuestionID]
+				if !ok {
+					continue
+				}
+				if evaluations[i].Prompt == "" {
+					evaluations[i].Prompt = row.Prompt
+				}
+				if evaluations[i].Section == "" {
+					evaluations[i].Section = row.Section
+				}
+				if evaluations[i].TopicID == "" && row.TopicID != nil {
+					evaluations[i].TopicID = *row.TopicID
+				}
+			}
 		}
 	}
+	h.enrichEvaluationsWithTopics(evaluations)
 }
 
 // GET /nuet/attempts?status=in_progress|completed|abandoned
@@ -2473,10 +2478,15 @@ func scoreNUETSimulatorQuestions(
 				result.CorrectCT++
 			}
 		}
+		topicID := ""
+		if question.TopicID != nil {
+			topicID = *question.TopicID
+		}
 		result.Evaluations = append(result.Evaluations, nuetAnswerEvaluation{
 			Question:    index + 1,
 			QuestionID:  question.ID,
 			Section:     question.Section,
+			TopicID:     topicID,
 			Prompt:      question.Prompt,
 			Explanation: question.Explanation,
 			Expected:    expected,
@@ -2489,6 +2499,39 @@ func scoreNUETSimulatorQuestions(
 	result.ScoreCT = result.CorrectCT * 4
 	result.ScoreTotal = result.ScoreMath + result.ScoreCT
 	return result
+}
+
+// enrichEvaluationsWithTopics fills TopicTitle on each evaluation by
+// loading the matching topics in a single bulk query. Skips evaluations
+// without a topic (e.g. legacy questions seeded before topic_id was
+// populated). Mutates the slice in place.
+func (h *NUETHandler) enrichEvaluationsWithTopics(evaluations []nuetAnswerEvaluation) {
+	idSet := make(map[string]struct{})
+	for _, ev := range evaluations {
+		if ev.TopicID != "" {
+			idSet[ev.TopicID] = struct{}{}
+		}
+	}
+	if len(idSet) == 0 {
+		return
+	}
+	ids := make([]string, 0, len(idSet))
+	for id := range idSet {
+		ids = append(ids, id)
+	}
+	var topics []models.NUETTopic
+	if err := h.db.Where("id IN ?", ids).Find(&topics).Error; err != nil {
+		return
+	}
+	titles := make(map[string]string, len(topics))
+	for _, t := range topics {
+		titles[t.ID] = t.Title
+	}
+	for i := range evaluations {
+		if title, ok := titles[evaluations[i].TopicID]; ok {
+			evaluations[i].TopicTitle = title
+		}
+	}
 }
 
 func parseNUETAnswers(raw *string) map[string]string {

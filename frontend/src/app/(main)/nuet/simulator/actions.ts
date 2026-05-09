@@ -58,6 +58,8 @@ export type NUETAttemptActionResult = {
     question: number;
     questionId?: string;
     section: "math" | "critical_thinking";
+    topicId?: string;
+    topicTitle?: string;
     prompt?: string;
     explanation?: string;
     expected: string;
