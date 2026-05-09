@@ -40,8 +40,20 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
       try {
         const result = await login(formData);
         if (result?.error) setError(result.error);
-      } catch {
-        // redirect() throws NEXT_REDIRECT on success — expected
+      } catch (err) {
+        // Next.js redirect() throws an error tagged with digest "NEXT_REDIRECT"
+        // — that's the success path, rethrow so Next handles the navigation.
+        // Anything else is a real failure and must be shown to the user.
+        if (
+          err &&
+          typeof err === "object" &&
+          "digest" in err &&
+          typeof (err as { digest?: unknown }).digest === "string" &&
+          (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+        ) {
+          throw err;
+        }
+        setError(t("action.genericError"));
       } finally {
         setSocialPending(null);
       }
@@ -59,10 +71,10 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
   return (
     <div>
       <div className="mb-6">
-        <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em", margin: "0 0 6px", color: "var(--ink)" }}>
+        <h2 className="mb-1.5 text-[26px] font-extrabold tracking-[-0.02em] text-[var(--ink)]">
           {t("auth.welcomeBack")}
         </h2>
-        <p style={{ fontSize: 14.5, color: "var(--ink-mute)", margin: 0 }}>
+        <p className="text-[14.5px] text-[var(--ink-mute)]">
           {t("auth.logInContinue")}
         </p>
       </div>
@@ -75,7 +87,7 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
           className="flex h-11 w-full items-center justify-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-semibold text-[var(--text-primary)] shadow-[var(--shadow-xs)] transition-all hover:bg-[var(--bg-soft)] hover:shadow-[var(--shadow-sm)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-12"
         >
           <GoogleIcon className="h-5 w-5" />
-          {socialPending === "google" ? "..." : t("auth.continueWithGoogle")}
+          {socialPending === "google" ? t("auth.connectingGoogle") : t("auth.continueWithGoogle")}
         </button>
       </div>
 
@@ -90,7 +102,7 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4" aria-busy={isDisabled}>
         <Input
           id="email"
           name="email"
@@ -99,6 +111,7 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
           placeholder={t("auth.emailPlaceholder")}
           required
           autoComplete="email"
+          autoFocus
           disabled={isDisabled}
         />
         <PasswordInput
@@ -118,7 +131,6 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
             <input
               type="checkbox"
               name="rememberMe"
-              defaultChecked
               className="h-4 w-4 rounded border border-[var(--border)] accent-[var(--primary)]"
               disabled={isDisabled}
             />
@@ -126,14 +138,17 @@ export function LoginForm({ initialError = null }: LoginFormProps) {
           </label>
           <Link
             href="/forgot-password"
-            className="text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)]"
+            className="rounded-sm text-sm font-medium text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2"
           >
             {t("auth.forgotPassword")}
           </Link>
         </div>
 
         {error && (
-          <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-200 bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)] dark:border-red-500/20 dark:text-red-300">
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-200 bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)] dark:border-red-500/20 dark:text-red-300"
+          >
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>

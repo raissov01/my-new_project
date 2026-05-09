@@ -58,7 +58,9 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             type="button"
             onClick={() => setVisible((current) => !current)}
             disabled={disabled}
+            tabIndex={-1}
             aria-label={visible ? hideLabel : showLabel}
+            aria-pressed={visible}
             className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center rounded-r-xl text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-12 sm:rounded-r-2xl"
           >
             {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

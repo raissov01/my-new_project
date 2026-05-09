@@ -145,7 +145,7 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     return { error: t("action.allFieldsRequired") };
   }
   if (role !== "student" && role !== "teacher") return { error: t("action.invalidRole") };
-  if (password.length < 6) return { error: t("action.passwordMin") };
+  if (password.length < 8) return { error: t("action.passwordMin") };
 
   try {
     const resp = await fetchPublicAuthJson<PublicAuthResponse>("/auth/register", {

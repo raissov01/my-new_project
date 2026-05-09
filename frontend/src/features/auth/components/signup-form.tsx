@@ -200,9 +200,20 @@ export function SignupForm() {
           router.push(`/verify-email?email=${encodeURIComponent(submittedEmail)}`);
         }
       } catch (submitError) {
+        // Re-throw Next.js redirect signals; surface anything else to the user.
+        if (
+          submitError &&
+          typeof submitError === "object" &&
+          "digest" in submitError &&
+          typeof (submitError as { digest?: unknown }).digest === "string" &&
+          (submitError as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+        ) {
+          throw submitError;
+        }
         if (process.env.NODE_ENV !== "production") {
           console.error("[signup-form] submit threw:", submitError);
         }
+        setError(t("action.genericError"));
       } finally {
         submitLockRef.current = false;
         setEmailPending(false);
@@ -224,10 +235,10 @@ export function SignupForm() {
   return (
     <div>
       <div className="mb-6">
-        <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em", margin: "0 0 6px", color: "var(--ink)" }}>
+        <h2 className="mb-1.5 text-[26px] font-extrabold tracking-[-0.02em] text-[var(--ink)]">
           {t("auth.createAccount")}
         </h2>
-        <p style={{ fontSize: 14.5, color: "var(--ink-mute)", margin: 0 }}>
+        <p className="text-[14.5px] text-[var(--ink-mute)]">
           {t("auth.startStudying")}
         </p>
       </div>
@@ -238,7 +249,7 @@ export function SignupForm() {
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-lg)] border p-3.5 transition-all sm:p-4 ${
+            className={`group relative flex cursor-pointer items-start gap-3 rounded-[var(--radius-lg)] border p-3.5 transition-all focus-within:ring-2 focus-within:ring-[var(--primary)] focus-within:ring-offset-2 sm:p-4 ${
               selectedRole === "student"
                 ? "border-[var(--primary)] bg-[var(--primary-soft)]"
                 : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
@@ -263,7 +274,7 @@ export function SignupForm() {
             </div>
           </label>
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-lg)] border p-3.5 transition-all sm:p-4 ${
+            className={`group relative flex cursor-pointer items-start gap-3 rounded-[var(--radius-lg)] border p-3.5 transition-all focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2 sm:p-4 ${
               selectedRole === "teacher"
                 ? "border-emerald-500/30 bg-emerald-500/8"
                 : "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
@@ -298,7 +309,7 @@ export function SignupForm() {
           className="flex min-h-11 w-full items-center justify-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] shadow-[var(--shadow-xs)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12"
         >
           <GoogleIcon className="h-5 w-5" />
-          {socialPending === "google" ? "..." : t("auth.continueWithGoogle")}
+          {socialPending === "google" ? t("auth.connectingGoogle") : t("auth.continueWithGoogle")}
         </button>
       </div>
 
@@ -317,19 +328,24 @@ export function SignupForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
-        <Input id="full_name" name="full_name" type="text" label={t("auth.fullName")} placeholder={t("auth.fullNamePlaceholder")} required autoComplete="name" disabled={isDisabled} />
+      <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4" aria-busy={isDisabled}>
+        <Input id="full_name" name="full_name" type="text" label={t("auth.fullName")} placeholder={t("auth.fullNamePlaceholder")} required autoComplete="name" autoFocus disabled={isDisabled} />
         <Input id="username" name="username" type="text" label={t("auth.username")} placeholder={t("auth.usernamePlaceholder")} required autoComplete="username" disabled={isDisabled} />
         <div className="space-y-1.5">
           <label htmlFor="phone-local" className="block text-sm font-medium text-[var(--text-primary)]">
-            {t("auth.phone")}
+            {t("auth.phone")}{" "}
+            <span className="font-normal text-[var(--text-muted)]">({t("auth.optional")})</span>
           </label>
           <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+            <label htmlFor="phone-country" className="sr-only">
+              {t("auth.phoneCountryLabel")}
+            </label>
             <select
               id="phone-country"
               value={phoneCountry}
               onChange={(event) => setPhoneCountry(event.target.value)}
               disabled={isDisabled}
+              aria-label={t("auth.phoneCountryLabel")}
               className="block h-10 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 text-sm text-[var(--text-primary)] transition-all duration-150 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:px-3.5"
             >
               {PHONE_COUNTRIES.map(([country, code]) => (
@@ -373,7 +389,7 @@ export function SignupForm() {
           label={t("auth.password")}
           placeholder={t("auth.passwordNewPlaceholder")}
           required
-          minLength={6}
+          minLength={8}
           autoComplete="new-password"
           disabled={isDisabled}
           showLabel={t("auth.showPassword")}
@@ -384,7 +400,10 @@ export function SignupForm() {
         <input type="hidden" name="role" value={selectedRole} />
 
         {error && (
-          <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-600 dark:text-red-400"
+          >
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
