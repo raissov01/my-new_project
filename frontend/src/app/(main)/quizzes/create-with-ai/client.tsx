@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -148,7 +148,10 @@ function GenerateForm({
       </div>
 
       {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400">
+        <p
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400"
+        >
           {error}
         </p>
       )}
@@ -200,7 +203,7 @@ function QuestionCard({
           aria-label={t("quiz.ai.deleteQuestion")}
           className="shrink-0 text-[var(--text-muted)] transition-colors hover:text-red-500"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-4 w-4" aria-hidden />
         </button>
       </div>
 
@@ -285,10 +288,29 @@ function SaveModal({
   const [title, setTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !saving) onCancel();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel, saving]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-xl">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={() => {
+        if (!saving) onCancel();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ai-save-modal-title"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-xl"
+      >
+        <h2 id="ai-save-modal-title" className="text-lg font-semibold text-[var(--text-primary)]">
           {t("quiz.ai.saveModalTitle")}
         </h2>
         <input
@@ -456,7 +478,10 @@ function PreviewStep({
       </div>
 
       {saveError && (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400">
+        <p
+          role="alert"
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400"
+        >
           {saveError}
         </p>
       )}
