@@ -16,20 +16,38 @@ export async function generateMetadata() {
   };
 }
 
+type QuizzesSearchParams = {
+  q?: string;
+  subject?: string;
+  tag?: string;
+  sort?: "newest" | "played" | "rated";
+};
+
 interface QuizzesPageProps {
-  searchParams: Promise<{
-    q?: string;
-    subject?: string;
-    tag?: string;
-    sort?: "newest" | "played" | "rated";
-  }>;
+  searchParams: Promise<QuizzesSearchParams>;
+}
+
+function buildQuizzesHref(
+  current: QuizzesSearchParams,
+  overrides: Partial<QuizzesSearchParams> & { sort?: QuizzesSearchParams["sort"] | "" } = {}
+) {
+  const merged: QuizzesSearchParams = { ...current, ...overrides };
+  const params = new URLSearchParams();
+  if (merged.q?.trim()) params.set("q", merged.q.trim());
+  if (merged.subject?.trim()) params.set("subject", merged.subject.trim());
+  if (merged.tag?.trim()) params.set("tag", merged.tag.trim());
+  // Default sort is "newest" — leave it out of the URL to keep links clean.
+  if (merged.sort && merged.sort !== "newest") params.set("sort", merged.sort);
+  const qs = params.toString();
+  return qs ? `/quizzes?${qs}` : "/quizzes";
 }
 
 export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
   const user = await getCurrentUser();
   const locale = await getServerLocale();
   const t = createTranslator(locale);
-  const { q = "", subject = "", tag = "", sort = "newest" } = await searchParams;
+  const sp = await searchParams;
+  const { q = "", subject = "", tag = "", sort = "newest" } = sp;
 
   const filters: QuizListFilters = {
     q: q.trim() || undefined,
@@ -44,6 +62,10 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
     ? quizzes.filter((quiz) => quiz.userId === user.id).length
     : 0;
   const publicCount = quizzes.filter((quiz) => quiz.isPublic).length;
+
+  const hrefForSort = (target: NonNullable<QuizzesSearchParams["sort"]>) =>
+    buildQuizzesHref(sp, { sort: target });
+  const hrefWithoutTag = buildQuizzesHref(sp, { tag: "" });
 
   return (
     <div className="page-shell py-6 sm:py-10 lg:py-14">
@@ -119,19 +141,22 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
         {/* Sort pills */}
         <div className="nd-lib-filters" style={{ marginBottom: 0 }}>
           <Link
-            href="/quizzes"
-            className={`nd-lib-pill${sort === "newest" && !q && !subject && !tag ? " on" : ""}`}
+            href={hrefForSort("newest")}
+            aria-current={sort === "newest" ? "page" : undefined}
+            className={`nd-lib-pill${sort === "newest" ? " on" : ""}`}
           >
             {t("quiz.sortNewest")}
           </Link>
           <Link
-            href="/quizzes?sort=played"
+            href={hrefForSort("played")}
+            aria-current={sort === "played" ? "page" : undefined}
             className={`nd-lib-pill${sort === "played" ? " on" : ""}`}
           >
             {t("quiz.sortPlayed")}
           </Link>
           <Link
-            href="/quizzes?sort=rated"
+            href={hrefForSort("rated")}
+            aria-current={sort === "rated" ? "page" : undefined}
             className={`nd-lib-pill${sort === "rated" ? " on" : ""}`}
           >
             {t("quiz.sortRated")}
@@ -140,6 +165,9 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
 
         {/* Search */}
         <form
+          action="/quizzes"
+          method="get"
+          role="search"
           style={{
             display: "flex",
             alignItems: "center",
@@ -148,12 +176,36 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
             border: "1.5px solid var(--line)",
             borderRadius: 99,
             padding: "7px 16px",
+            flex: "1 1 200px",
+            maxWidth: 360,
+            minWidth: 0,
           }}
         >
-          <Search style={{ width: 15, height: 15, color: "var(--ink-mute)", flexShrink: 0 }} />
+          <label htmlFor="quizzes-search" className="sr-only">
+            {t("quiz.searchLabel")}
+          </label>
+          <button
+            type="submit"
+            aria-label={t("quiz.searchLabel")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "none",
+              background: "transparent",
+              padding: 0,
+              cursor: "pointer",
+              color: "var(--ink-mute)",
+              flexShrink: 0,
+            }}
+          >
+            <Search style={{ width: 15, height: 15 }} />
+          </button>
           {subject ? <input type="hidden" name="subject" value={subject} /> : null}
           {tag ? <input type="hidden" name="tag" value={tag} /> : null}
+          {sort && sort !== "newest" ? <input type="hidden" name="sort" value={sort} /> : null}
           <input
+            id="quizzes-search"
             type="search"
             name="q"
             defaultValue={q}
@@ -164,7 +216,8 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
               background: "transparent",
               fontSize: 13,
               color: "var(--ink)",
-              width: 200,
+              flex: 1,
+              minWidth: 0,
             }}
           />
         </form>
@@ -189,7 +242,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
           >
             #{tag}
             <Link
-              href="/quizzes"
+              href={hrefWithoutTag}
               style={{ marginLeft: 4, color: "var(--ink-mute)", textDecoration: "none", fontWeight: 700 }}
               aria-label={t("quiz.tagClear")}
             >
@@ -223,6 +276,7 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
               background: "var(--paper-2)",
               color: "var(--ink-mute)",
             }}
+            aria-hidden
           >
             <Target style={{ width: 20, height: 20 }} />
           </div>
@@ -235,13 +289,12 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
         </div>
       ) : quizzes.length > 0 ? (
         <div className="nd-lib-grid nd-reveal nd-d4">
-          {quizzes.map((quiz, i) => (
+          {quizzes.map((quiz) => (
             <QuizCard
               key={quiz.id}
               quiz={quiz}
               locale={locale}
               isOwner={quiz.userId === user.id}
-              index={i}
             />
           ))}
         </div>
@@ -268,15 +321,20 @@ export default async function QuizzesPage({ searchParams }: QuizzesPageProps) {
               background: "var(--paper-2)",
               color: "var(--ink-mute)",
             }}
+            aria-hidden
           >
             <Target style={{ width: 20, height: 20 }} />
           </div>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--ink)", marginBottom: 10, letterSpacing: "-.02em" }}>
             {t("quiz.emptyTitle")}
           </h2>
-          <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
+          <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto 20px", lineHeight: 1.7 }}>
             {t("quiz.emptyBody")}
           </p>
+          <Link href="/quizzes/create" className="nd-btn-primary" style={{ display: "inline-flex" }}>
+            <Plus style={{ width: 16, height: 16 }} />
+            {t("quiz.createNew")}
+          </Link>
         </div>
       )}
     </div>
