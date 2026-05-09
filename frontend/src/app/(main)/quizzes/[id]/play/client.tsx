@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowDown,
@@ -1085,7 +1086,7 @@ export function PlayQuizClient({
             textAlign: "center",
           }}
         >
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }} aria-hidden>🎓</div>
           <h1
             style={{
               fontSize: 22,
@@ -1095,26 +1096,26 @@ export function PlayQuizClient({
               letterSpacing: "-0.03em",
             }}
           >
-            Тегін квиздер аяқталды
+            {t("quiz.play.guestLimitTitle")}
           </h1>
           <p style={{ fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.6, marginBottom: 28 }}>
-            {GUEST_ATTEMPT_LIMIT} квизді тіркелмей өттіңіз. Нәтижелеріңізді сақтау және шексіз квиздер үшін тіркеліңіз — тегін!
+            {t("quiz.play.guestLimitBody").replace("{count}", String(GUEST_ATTEMPT_LIMIT))}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <a
+            <Link
               href={`/signup?redirect=${encodeURIComponent(`/quizzes/${quiz.id}/play`)}`}
               className="nd-btn-primary"
               style={{ justifyContent: "center" }}
             >
-              Тіркелу — тегін
-            </a>
-            <a
+              {t("quiz.play.guestLimitSignup")}
+            </Link>
+            <Link
               href={`/login?redirect=${encodeURIComponent(`/quizzes/${quiz.id}/play`)}`}
               className="nd-btn-soft"
               style={{ justifyContent: "center" }}
             >
-              Кіру
-            </a>
+              {t("quiz.play.guestLimitLogin")}
+            </Link>
           </div>
         </div>
       </div>
@@ -1477,7 +1478,7 @@ export function PlayQuizClient({
           ) : null}
 
           {submitError ? (
-            <div style={{ marginTop: 16, borderRadius: 12, border: "1.5px solid #f87171", background: "#fff1f2", padding: 16, fontSize: 13 }}>
+            <div role="alert" style={{ marginTop: 16, borderRadius: 12, border: "1.5px solid #f87171", background: "#fff1f2", padding: 16, fontSize: 13 }}>
               <p style={{ fontWeight: 600, color: "#be123c", margin: "0 0 8px" }}>{submitError}</p>
               <button
                 type="button"
@@ -1525,7 +1526,7 @@ export function PlayQuizClient({
                   isExitingRef.current = true;
                   trackAbandoned("exit_confirmed");
                   clearAdvanceTimer();
-                  clearProgress(quiz.id);
+                  clearProgress(progressScope);
                   router.push(`/quizzes/${encodeURIComponent(quiz.id)}`);
                 }}
               >
