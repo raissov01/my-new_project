@@ -10,15 +10,14 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { getApiBaseUrl } from "@/lib/client/api";
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 function VerifyEmailContent() {
   const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefilledEmail = searchParams.get("email") ?? "";
 
-  // `currentEmail` is the address the backend is actively holding a pending
-  // verification for. `email` is what's in the input — they diverge while the
-  // user is editing, then snap back together after a successful save.
   const [currentEmail, setCurrentEmail] = useState(prefilledEmail);
   const [email, setEmail] = useState(prefilledEmail);
   const [code, setCode] = useState("");
@@ -26,27 +25,37 @@ function VerifyEmailContent() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Resend state — separate so resend feedback doesn't stomp on verify errors.
   const [resendPending, setResendPending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendError, setResendError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Inline change-email state. Shown only when the user edits the email field
-  // away from `currentEmail` — we ask for password so an attacker can't hijack
-  // the unverified account by guessing the email alone.
   const [changePassword, setChangePassword] = useState("");
   const [changePending, setChangePending] = useState(false);
   const [changeError, setChangeError] = useState<string | null>(null);
+  const [changeSuccess, setChangeSuccess] = useState<string | null>(null);
 
   const codeInputRef = useRef<HTMLInputElement | null>(null);
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (prefilledEmail && codeInputRef.current) {
       codeInputRef.current.focus();
+    } else if (!prefilledEmail && emailInputRef.current) {
+      emailInputRef.current.focus();
     }
   }, [prefilledEmail]);
 
-  const emailDirty = email.trim().toLowerCase() !== currentEmail.trim().toLowerCase() && email.trim().length > 0;
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = window.setInterval(() => {
+      setResendCooldown((s) => (s <= 1 ? 0 : s - 1));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [resendCooldown]);
+
+  const emailDirty =
+    email.trim().toLowerCase() !== currentEmail.trim().toLowerCase() && email.trim().length > 0;
 
   function handleCodeChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
@@ -73,6 +82,7 @@ function VerifyEmailContent() {
     setSuccessMessage(null);
     setResendMessage(null);
     setResendError(null);
+    setChangeSuccess(null);
 
     try {
       const resp = await fetch(`${getApiBaseUrl()}/auth/verify-email`, {
@@ -84,7 +94,6 @@ function VerifyEmailContent() {
 
       if (resp.ok) {
         setSuccessMessage(data?.message ?? t("verify.successBody"));
-        setTimeout(() => router.push("/login"), 1500);
       } else {
         setErrorMessage(data?.error ?? t("verify.genericError"));
       }
@@ -97,11 +106,12 @@ function VerifyEmailContent() {
 
   async function handleResend() {
     const trimmedEmail = currentEmail.trim();
-    if (!trimmedEmail || resendPending) return;
+    if (!trimmedEmail || resendPending || resendCooldown > 0) return;
 
     setResendPending(true);
     setResendMessage(null);
     setResendError(null);
+    setChangeSuccess(null);
 
     try {
       const resp = await fetch(`${getApiBaseUrl()}/auth/resend-verification`, {
@@ -114,6 +124,7 @@ function VerifyEmailContent() {
       if (resp.ok) {
         setResendMessage(data?.message ?? t("verify.resendSuccess"));
         setCode("");
+        setResendCooldown(RESEND_COOLDOWN_SECONDS);
         codeInputRef.current?.focus();
       } else {
         setResendError(data?.error ?? t("verify.genericError"));
@@ -143,6 +154,7 @@ function VerifyEmailContent() {
     setChangeError(null);
     setErrorMessage(null);
     setResendError(null);
+    setResendMessage(null);
 
     try {
       const resp = await fetch(`${getApiBaseUrl()}/auth/change-verification-email`, {
@@ -157,7 +169,11 @@ function VerifyEmailContent() {
         setEmail(trimmedNew);
         setCode("");
         setChangePassword("");
-        setResendMessage(data?.message ?? t("verify.changeEmailSuccess"));
+        setChangeSuccess(data?.message ?? t("verify.changeEmailSuccess"));
+        setResendCooldown(RESEND_COOLDOWN_SECONDS);
+        // Keep URL in sync so reload doesn't snap currentEmail back to the old
+        // address while the backend now expects the new one.
+        router.replace(`/verify-email?email=${encodeURIComponent(trimmedNew)}`);
         codeInputRef.current?.focus();
       } else {
         setChangeError(data?.error ?? t("verify.genericError"));
@@ -209,9 +225,10 @@ function VerifyEmailContent() {
         </p>
       </div>
 
-      <form onSubmit={handleVerify} className="mt-6 space-y-3.5 sm:mt-7 sm:space-y-4">
+      <form onSubmit={handleVerify} className="mt-6 space-y-3.5 sm:mt-7 sm:space-y-4" aria-busy={submitting}>
         <div>
           <Input
+            ref={emailInputRef}
             id="verify-email"
             name="email"
             type="email"
@@ -251,7 +268,10 @@ function VerifyEmailContent() {
             />
 
             {changeError && (
-              <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+              <div
+                role="alert"
+                className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300"
+              >
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{changeError}</span>
               </div>
@@ -282,6 +302,16 @@ function VerifyEmailContent() {
           </div>
         )}
 
+        {changeSuccess && (
+          <div
+            role="status"
+            className="flex items-start gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-300"
+          >
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{changeSuccess}</span>
+          </div>
+        )}
+
         <Input
           ref={codeInputRef}
           id="verify-code"
@@ -299,9 +329,17 @@ function VerifyEmailContent() {
           onChange={handleCodeChange}
           className="text-center text-2xl font-semibold tracking-[0.5em]"
         />
+        {emailDirty && (
+          <p className="px-1 text-xs leading-5 text-[var(--text-muted)]">
+            {t("verify.saveEmailFirst")}
+          </p>
+        )}
 
         {errorMessage && (
-          <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300"
+          >
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -312,7 +350,7 @@ function VerifyEmailContent() {
           className="w-full"
           size="lg"
           isLoading={submitting}
-          disabled={submitting || code.length !== 6 || emailDirty}
+          disabled={submitting || code.length !== 6 || emailDirty || !currentEmail.trim()}
         >
           {t("verify.verifyBtn")}
         </Button>
@@ -330,14 +368,20 @@ function VerifyEmailContent() {
       </div>
 
       {resendError && (
-        <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+        <div
+          role="alert"
+          className="mb-3 flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300"
+        >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{resendError}</span>
         </div>
       )}
 
       {resendMessage && (
-        <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-300">
+        <div
+          role="status"
+          className="mb-3 flex items-start gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-300"
+        >
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{resendMessage}</span>
         </div>
@@ -349,15 +393,20 @@ function VerifyEmailContent() {
         className="w-full"
         size="lg"
         isLoading={resendPending}
-        disabled={resendPending || !currentEmail.trim() || emailDirty}
+        disabled={resendPending || resendCooldown > 0 || !currentEmail.trim() || emailDirty}
         onClick={handleResend}
       >
-        {t("verify.resendBtn")}
+        {resendCooldown > 0
+          ? t("auth.resendIn").replace("{seconds}", String(resendCooldown))
+          : t("verify.resendBtn")}
       </Button>
 
       <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("verify.alreadyVerified")}{" "}
-        <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--primary)]">
+        <Link
+          href="/login"
+          className="rounded-sm font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2"
+        >
           {t("auth.logIn")}
         </Link>
       </p>
