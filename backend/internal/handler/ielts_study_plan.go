@@ -42,6 +42,133 @@ func NewIELTSStudyPlan(db *gorm.DB, openAIKey, openAIModel, claudeKey, claudeMod
 	}
 }
 
+// buildHistoryBlock returns a human-readable summary of the user's actual
+// performance on the platform — recent writing criteria, speaking criteria,
+// completed mock attempts. Returned text is embedded in the LLM prompt so
+// the plan reacts to the measured gap rather than the self-reported band.
+// Returns an empty string when the user has no history.
+func (h *IELTSStudyPlanHandler) buildHistoryBlock(userID string) string {
+	var b strings.Builder
+
+	// Recent writing submissions (with criterion breakdown).
+	var writing []models.IELTSWritingSubmission
+	h.db.Where("user_id = ?", userID).Order("created_at DESC").Limit(5).Find(&writing)
+	if len(writing) > 0 {
+		var sumOverall, sumTA, sumCC, sumLR, sumGR float64
+		for _, w := range writing {
+			sumOverall += w.OverallBand
+			sumTA += w.TaskAchievement
+			sumCC += w.Coherence
+			sumLR += w.LexicalResource
+			sumGR += w.Grammar
+		}
+		n := float64(len(writing))
+		fmt.Fprintf(&b, "WRITING — %d recent submissions, avg overall band %.1f\n", len(writing), sumOverall/n)
+		fmt.Fprintf(&b, "  avg criteria: TaskAchievement %.1f · CoherenceCohesion %.1f · LexicalResource %.1f · GrammarRange %.1f\n",
+			sumTA/n, sumCC/n, sumLR/n, sumGR/n)
+		// Show the lowest 1-2 individual attempts so the LLM sees variance.
+		for i, w := range writing {
+			if i >= 3 {
+				break
+			}
+			fmt.Fprintf(&b, "  · %s overall %.1f (TA %.1f, CC %.1f, LR %.1f, GR %.1f)\n",
+				w.TaskType, w.OverallBand, w.TaskAchievement, w.Coherence, w.LexicalResource, w.Grammar)
+		}
+	}
+
+	// Recent speaking sessions.
+	var speaking []models.IELTSSpeakingSession
+	h.db.Where("user_id = ?", userID).Order("created_at DESC").Limit(5).Find(&speaking)
+	if len(speaking) > 0 {
+		var sumOverall, sumFC, sumLR, sumGR, sumPR float64
+		for _, s := range speaking {
+			sumOverall += s.OverallBand
+			sumFC += s.FluencyCoherence
+			sumLR += s.LexicalResource
+			sumGR += s.Grammar
+			sumPR += s.Pronunciation
+		}
+		n := float64(len(speaking))
+		fmt.Fprintf(&b, "SPEAKING — %d recent sessions, avg overall band %.1f\n", len(speaking), sumOverall/n)
+		fmt.Fprintf(&b, "  avg criteria: FluencyCoherence %.1f · LexicalResource %.1f · GrammarRange %.1f · Pronunciation %.1f\n",
+			sumFC/n, sumLR/n, sumGR/n, sumPR/n)
+		for i, s := range speaking {
+			if i >= 3 {
+				break
+			}
+			fmt.Fprintf(&b, "  · %s overall %.1f (FC %.1f, LR %.1f, GR %.1f, PR %.1f)\n",
+				s.Part, s.OverallBand, s.FluencyCoherence, s.LexicalResource, s.Grammar, s.Pronunciation)
+		}
+	}
+
+	// Completed mock attempts — pull section bands out of the Results JSONB.
+	var attempts []models.IELTSAttempt
+	h.db.Where("user_id = ? AND status = 'completed'", userID).
+		Order("completed_at DESC").Limit(5).Find(&attempts)
+	mockLines := 0
+	for _, a := range attempts {
+		if a.AttemptType != "full_mock" || a.Results == nil {
+			continue
+		}
+		var parsed map[string]any
+		if err := json.Unmarshal([]byte(*a.Results), &parsed); err != nil {
+			continue
+		}
+		// Section bands are stored under various keys depending on the mock
+		// pipeline; pick whichever map exists.
+		bands, _ := parsed["bandScores"].(map[string]any)
+		if bands == nil {
+			bands, _ = parsed["sectionBands"].(map[string]any)
+		}
+		if bands == nil {
+			continue
+		}
+		if mockLines == 0 {
+			b.WriteString("MOCK EXAMS — completed full mocks\n")
+		}
+		parts := []string{}
+		for _, section := range []string{"reading", "listening", "writing", "speaking", "overall"} {
+			if v, ok := bands[section]; ok {
+				if f, ok := v.(float64); ok {
+					parts = append(parts, fmt.Sprintf("%s %.1f", section, f))
+				}
+			}
+		}
+		if len(parts) > 0 {
+			date := ""
+			if a.CompletedAt != nil {
+				date = a.CompletedAt.Format("2006-01-02")
+			}
+			fmt.Fprintf(&b, "  · %s — %s\n", date, strings.Join(parts, ", "))
+			mockLines++
+		}
+		if mockLines >= 3 {
+			break
+		}
+	}
+
+	if b.Len() == 0 {
+		return "No recorded attempts yet on the platform — base the plan on the self-reported levels but flag that the first week should include a baseline mock test to verify the starting band."
+	}
+	return b.String()
+}
+
+// platformContentBlock describes the StudyWithRaissov platform features the
+// student already has access to. The LLM is told to embed direct platform
+// references in tasks ("Open the Reading simulator and complete one Cambridge
+// 18 passage") instead of pointing students at outside resources.
+func platformContentBlock() string {
+	return `Available platform features (use these by name in task instructions — never recommend external books or paid services):
+- /ielts/simulator — full Cambridge-style mocks (reading, listening, writing, speaking) with strict timing. Tasks like "Complete one full simulator reading section (60 min)" map here.
+- /ielts/listening — individual listening clips with scripts and questions for short focused practice.
+- /ielts/writing — guided Task 1 + Task 2 with AI feedback; criteria breakdown (TA, CC, LR, GR) on submit.
+- /ielts/speaking — individual Part 1 / Part 2 / Part 3 prompts with AI feedback (FC, LR, GR, Pronunciation).
+- /ielts/dashboard — live progress, weakness analysis, band trend.
+- /ielts/study-plan — this roadmap with weekly check-ins and reflections.
+- /flashcards — vocabulary and grammar sets the student can study (use for "vocabulary" and "grammar" tasks).
+When you write task.activity or task.howTo, mention the specific platform area and what the student should do there (e.g. "Open /ielts/writing and submit one Task 2 essay on the assigned topic; review the AI Coherence feedback").`
+}
+
 // ── LLM call ────────────────────────────────────────────────────────────────
 
 func (h *IELTSStudyPlanHandler) callLLM(prompt string) (string, string, error) {
@@ -279,10 +406,18 @@ func (h *IELTSStudyPlanHandler) runPlanGeneration(jobID, userID string, req gene
 	}
 	questionnaireJSON, _ := json.Marshal(questionnaire)
 
+	// Ground the plan in the student's actual platform performance instead of
+	// relying solely on self-reported `currentBand`. The LLM gets a structured
+	// "Recent performance" block — averages, last few writing/speaking criterion
+	// scores, last completed mock band scores. Tasks and tone should react to
+	// the gap between the self-reported band and the measured one.
+	historyBlock := h.buildHistoryBlock(userID)
+	platformBlock := platformContentBlock()
+
 	// Build LLM prompt — dynamic weeks, milestones, gamification, detailed daily plan
 	prompt := fmt.Sprintf(`You are a premium IELTS preparation coach with 15+ years of experience. Create a comprehensive, personalized study roadmap.
 
-Student profile:
+Student profile (self-reported):
 - Current Band: %s
 - Target Band: %s
 - Exam Type: %s
@@ -292,6 +427,10 @@ Student profile:
 - Weak Sections: %s
 - Strengths: %s
 - Struggles: %s
+
+Recent measured performance on this platform (ground every recommendation in these numbers — they override the self-reported band when they disagree):
+%s
+%s
 
 IMPORTANT: Generate a plan for exactly %d weeks (the full preparation period). Each week MUST have tasks for Monday through Sunday. Distribute %d hours/week across tasks.
 
@@ -384,7 +523,9 @@ IMPORTANT RULES:
 - Final 1-2 weeks should focus on full mock exams and review
 - The motivationalNote for each week should be unique and encouraging
 - Skills: reading, writing, listening, speaking, vocabulary, grammar
-- Make everything personal and specific to THIS student's profile, not generic`,
+- Make everything personal and specific to THIS student's profile and the measured performance above, not generic
+- When the student's recent writing or speaking criteria show a specific weakness (e.g. Grammar 4.5, Task Achievement 5.0), every relevant task must explicitly target that criterion — name it in task.howTo and task.whyItMatters
+- Tasks must reference platform routes from the "Available platform features" list — do NOT recommend external books, YouTube channels, paid courses, or third-party apps`,
 		req.CurrentBand,
 		req.TargetBand,
 		req.ExamType,
@@ -394,6 +535,8 @@ IMPORTANT RULES:
 		strings.Join(req.WeakSections, ", "),
 		strings.Join(req.Strengths, ", "),
 		strings.Join(req.Struggles, ", "),
+		historyBlock,
+		platformBlock,
 		totalWeeks,
 		req.WeeklyHours,
 		totalWeeks,
