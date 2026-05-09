@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, GitCompare, Search, X } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   CartesianGrid,
@@ -34,6 +34,20 @@ export function NUETHistoryClient({
   const [filter, setFilter] = useState<ChartFilter>("all");
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"date_desc" | "score_desc" | "score_asc">("date_desc");
+  // Compare-mode picks up to 2 attempt IDs. Once the user selects two, a
+  // side-by-side card renders above the list. Click the X on either to
+  // unselect; "Reset" clears both.
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  function toggleCompare(id: string) {
+    setCompareIds((current) => {
+      if (current.includes(id)) return current.filter((c) => c !== id);
+      if (current.length >= 2) return [current[1], id];
+      return [...current, id];
+    });
+  }
+  const compareAttempts = compareIds
+    .map((id) => attempts.find((a) => a.id === id))
+    .filter((a): a is NUETAttempt => Boolean(a));
 
   // List-section filtering — independent from the chart filter so the user
   // can keep their chart view while narrowing the list. Matches against the
@@ -256,6 +270,30 @@ export function NUETHistoryClient({
         </section>
       )}
 
+      {compareAttempts.length === 2 ? (
+        <CompareCard
+          a={compareAttempts[0]}
+          b={compareAttempts[1]}
+          locale={locale}
+          onClear={() => setCompareIds([])}
+          labels={{
+            heading: t("nuet.history.compareHeading"),
+            sub: t("nuet.history.compareSub"),
+            clear: t("nuet.history.compareClear"),
+            total: t("nuet.history.totalScore"),
+            math: t("nuet.sectionMath"),
+            ct: t("nuet.sectionCT"),
+            correct: t("nuet.history.correct"),
+            time: t("nuet.history.timeTaken"),
+            improvement: t("nuet.history.improvement"),
+          }}
+        />
+      ) : compareAttempts.length === 1 ? (
+        <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-base)] p-3 text-center text-xs text-[var(--text-muted)]">
+          {t("nuet.history.compareHint")}
+        </div>
+      ) : null}
+
       {attempts.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-3">
           <label className="flex flex-1 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-sm">
@@ -289,20 +327,33 @@ export function NUETHistoryClient({
             {t("nuet.history.searchEmpty")}
           </p>
         ) : null}
-        {visibleAttempts.map((attempt) => (
-          <article key={attempt.id} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+        {visibleAttempts.map((attempt) => {
+          const isPicked = compareIds.includes(attempt.id);
+          return (
+          <article key={attempt.id} className={`rounded-2xl border bg-[var(--bg-surface)] p-5 transition ${isPicked ? "border-[var(--primary)] ring-2 ring-[var(--primary-soft)]" : "border-[var(--border)]"}`}>
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-base font-semibold text-[var(--text-primary)]">
-                  {attempt.attemptType === "pdf_test"
-                    ? attempt.pdfTestName || t("nuet.pdfTest.title")
-                    : attempt.attemptType === "full_mock"
-                      ? t("nuet.simulator.title")
-                      : attempt.topicTitle || t("nuet.mod.practice")}
-                </p>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                  {attempt.attemptType} · {new Date(attempt.createdAt).toLocaleString(locale)}
-                </p>
+              <div className="flex items-start gap-3">
+                <label className="mt-1 inline-flex cursor-pointer items-center" title={t("nuet.history.compareCheckTooltip")}>
+                  <input
+                    type="checkbox"
+                    checked={isPicked}
+                    onChange={() => toggleCompare(attempt.id)}
+                    aria-label={t("nuet.history.compareCheckTooltip")}
+                    className="h-4 w-4 cursor-pointer accent-[var(--primary)]"
+                  />
+                </label>
+                <div>
+                  <p className="text-base font-semibold text-[var(--text-primary)]">
+                    {attempt.attemptType === "pdf_test"
+                      ? attempt.pdfTestName || t("nuet.pdfTest.title")
+                      : attempt.attemptType === "full_mock"
+                        ? t("nuet.simulator.title")
+                        : attempt.topicTitle || t("nuet.mod.practice")}
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                    {attempt.attemptType} · {new Date(attempt.createdAt).toLocaleString(locale)}
+                  </p>
+                </div>
               </div>
               <span className="rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1 text-sm font-semibold text-[var(--text-primary)]">
                 {attempt.scoreTotal}
@@ -331,8 +382,137 @@ export function NUETHistoryClient({
               </Link>
             </div>
           </article>
-        ))}
+          );
+        })}
       </div>
+    </div>
+  );
+}
+
+function CompareCard({
+  a,
+  b,
+  locale,
+  onClear,
+  labels,
+}: {
+  a: NUETAttempt;
+  b: NUETAttempt;
+  locale: string;
+  onClear: () => void;
+  labels: {
+    heading: string;
+    sub: string;
+    clear: string;
+    total: string;
+    math: string;
+    ct: string;
+    correct: string;
+    time: string;
+    improvement: string;
+  };
+}) {
+  // Order chronologically so the "improvement" delta is always
+  // newer-minus-older, regardless of which checkbox the user clicked first.
+  const [older, newer] =
+    new Date(a.createdAt) <= new Date(b.createdAt) ? [a, b] : [b, a];
+  const totalDelta = newer.scoreTotal - older.scoreTotal;
+  const mathDelta = newer.scoreMath - older.scoreMath;
+  const ctDelta = newer.scoreCt - older.scoreCt;
+  const correctDelta =
+    newer.correctMath + newer.correctCt - (older.correctMath + older.correctCt);
+  return (
+    <section className="rounded-2xl border-2 border-[var(--primary)] bg-[var(--bg-surface)] p-5">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <GitCompare className="mt-1 h-5 w-5 text-[var(--primary)]" />
+          <div>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{labels.heading}</h3>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">{labels.sub}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClear}
+          className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:border-rose-300 hover:text-rose-600"
+        >
+          <X className="h-3.5 w-3.5" />
+          {labels.clear}
+        </button>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr]">
+        <CompareCol attempt={older} locale={locale} olderLabel={labels.improvement} isOlder={true} />
+        <div className="hidden lg:block lg:border-l lg:border-[var(--border)]" />
+        <CompareCol attempt={newer} locale={locale} olderLabel={labels.improvement} isOlder={false} />
+      </div>
+      <div className="mt-4 grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4 sm:grid-cols-4">
+        <DeltaPill label={labels.total} value={totalDelta} />
+        <DeltaPill label={labels.math} value={mathDelta} />
+        <DeltaPill label={labels.ct} value={ctDelta} />
+        <DeltaPill label={labels.correct} value={correctDelta} />
+      </div>
+    </section>
+  );
+}
+
+function CompareCol({
+  attempt,
+  locale,
+  isOlder,
+}: {
+  attempt: NUETAttempt;
+  locale: string;
+  olderLabel: string;
+  isOlder: boolean;
+}) {
+  return (
+    <div className={`rounded-xl border p-4 ${isOlder ? "border-[var(--border)] bg-[var(--bg-base)]" : "border-emerald-200 bg-emerald-50/30"}`}>
+      <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+        {new Date(attempt.createdAt).toLocaleString(locale, {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </p>
+      <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{attempt.scoreTotal}</p>
+      <p className="text-xs text-[var(--text-secondary)]">/240</p>
+      <dl className="mt-3 space-y-1 text-sm">
+        <div className="flex justify-between">
+          <dt className="text-[var(--text-secondary)]">Math</dt>
+          <dd className="font-mono font-semibold text-[var(--text-primary)]">{attempt.scoreMath}/120</dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-[var(--text-secondary)]">CT</dt>
+          <dd className="font-mono font-semibold text-[var(--text-primary)]">{attempt.scoreCt}/120</dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-[var(--text-secondary)]">Correct</dt>
+          <dd className="font-mono font-semibold text-[var(--text-primary)]">
+            {attempt.correctMath + attempt.correctCt}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
+function DeltaPill({ label, value }: { label: string; value: number }) {
+  const tone =
+    value > 0
+      ? "text-emerald-600"
+      : value < 0
+        ? "text-rose-600"
+        : "text-[var(--text-secondary)]";
+  const sign = value > 0 ? "+" : "";
+  return (
+    <div className="flex flex-col items-center">
+      <span className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{label}</span>
+      <span className={`font-mono text-sm font-semibold ${tone}`}>
+        {sign}
+        {value}
+      </span>
     </div>
   );
 }

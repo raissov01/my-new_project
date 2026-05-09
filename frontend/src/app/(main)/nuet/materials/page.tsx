@@ -93,6 +93,14 @@ export default async function NUETMaterialsPage({
             />
           ))}
         </FilterRow>
+        {params.section || params.type ? (
+          <Link
+            href="/nuet/materials"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:border-rose-300 hover:text-rose-600"
+          >
+            ✕ {t("nuet.materialsClearFilters")}
+          </Link>
+        ) : null}
       </div>
 
       {/* Grid */}

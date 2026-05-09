@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Flame, X } from "lucide-react";
+import { Check, Flame, Sparkles, X } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { MathText } from "@/components/nuet/math-text";
 import type { NUETQuestion } from "@/server/integrations/go-backend/nuet";
@@ -30,6 +30,9 @@ export function NUETDailyChallengeWidget({
   // before the real value lands. Server-side this is always false so SSR
   // markup matches the first client render.
   const [hydrated, setHydrated] = useState(false);
+  // Crossing one of these streak counts pops a celebratory banner. We
+  // don't celebrate every day (would get noisy) — only round milestones.
+  const [milestone, setMilestone] = useState<number | null>(null);
   const completionRef = useRef(false);
 
   useEffect(() => {
@@ -74,7 +77,23 @@ export function NUETDailyChallengeWidget({
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     setStreak(nextStreak);
     setCompletedToday(true);
+
+    // Celebrate at round-number milestones. Skips when the streak didn't
+    // actually advance (same-day repeat) by comparing against the previous
+    // value rather than just hitting a milestone count.
+    const milestones = [3, 7, 14, 30, 60, 100];
+    const advanced = previous == null || previous.lastCompletedDate !== date;
+    if (advanced && milestones.includes(nextStreak)) {
+      setMilestone(nextStreak);
+    }
   }
+
+  // Auto-dismiss the milestone banner so it doesn't sit on the page forever.
+  useEffect(() => {
+    if (milestone == null) return;
+    const id = window.setTimeout(() => setMilestone(null), 4500);
+    return () => window.clearTimeout(id);
+  }, [milestone]);
 
   if (questions.length === 0) {
     return (
@@ -102,6 +121,20 @@ export function NUETDailyChallengeWidget({
           <StreakPill streak={streak} completedToday={completedToday} t={t} />
         ) : null}
       </header>
+
+      {milestone != null ? (
+        <div className="mt-4 flex items-start gap-3 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-100 to-orange-100 p-4 text-amber-900 animate-fade-in-up">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <div>
+            <p className="text-base font-bold">
+              {t("nuet.daily.milestoneTitle", { n: milestone })}
+            </p>
+            <p className="mt-1 text-sm text-amber-800">
+              {t("nuet.daily.milestoneBody")}
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <ol className="mt-5 space-y-4">
         {questions.map((q, index) => (
