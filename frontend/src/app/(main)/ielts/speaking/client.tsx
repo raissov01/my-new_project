@@ -213,7 +213,7 @@ export function SpeakingPracticeClient() {
 
   async function handleSubmit() {
     if (!activeQuestion) {
-      setError("Choose a speaking prompt first.");
+      setError(t("ielts.speaking.errChoosePrompt"));
       return;
     }
 

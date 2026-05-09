@@ -409,7 +409,7 @@ export function SimulatorClient() {
   async function handleEvaluateWriting(question: IELTSQuestion) {
     const essay = (writingResponses[question.id] ?? "").trim();
     if (!essay) {
-      setError("Write an answer before requesting AI examiner feedback.");
+      setError(t("ielts.simulator.errWriteAnswer"));
       return;
     }
 
@@ -437,7 +437,7 @@ export function SimulatorClient() {
   async function handleEvaluateSpeaking(question: IELTSQuestion) {
     const transcript = (speakingResponses[question.id] ?? "").trim();
     if (!transcript) {
-      setError("Write or paste your spoken answer first.");
+      setError(t("ielts.simulator.errWriteSpokenAnswer"));
       return;
     }
 

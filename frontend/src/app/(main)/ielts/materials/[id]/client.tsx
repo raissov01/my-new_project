@@ -7,6 +7,7 @@ import {
   Maximize, Minimize, FileText, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/components/providers/locale-provider";
 
 type Material = {
   id: string;
@@ -39,6 +40,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 };
 
 export function ReaderClient({ material, userId }: { material: Material; userId: string }) {
+  const { t } = useLocale();
   const [activeTab, setActiveTab] = useState<"pdf" | "notes" | "exercises">("pdf");
   const [notes, setNotes] = useState("");
   const [exercises, setExercises] = useState<Record<string, string>>({});
@@ -189,8 +191,8 @@ export function ReaderClient({ material, userId }: { material: Material; userId:
           ) : (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
-                <FileText className="mx-auto h-12 w-12 text-[var(--text-muted)]" />
-                <p className="mt-3 text-sm text-[var(--text-secondary)]">No content available</p>
+                <FileText className="mx-auto h-12 w-12 text-[var(--text-muted)]" aria-hidden />
+                <p className="mt-3 text-sm text-[var(--text-secondary)]">{t("ielts.materials.noContent")}</p>
               </div>
             </div>
           )}

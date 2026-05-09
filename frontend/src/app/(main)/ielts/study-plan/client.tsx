@@ -203,10 +203,10 @@ export function IELTSStudyPlanClient({
       } else if (finalError) {
         setError(finalError);
       } else {
-        setError("Generation timed out. Please try again.");
+        setError(t("ielts.studyPlan.errTimeout"));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate plan.");
+      setError(err instanceof Error ? err.message : t("ielts.studyPlan.errTimeout"));
     } finally {
       setSubmitting(false);
     }
@@ -266,7 +266,7 @@ export function IELTSStudyPlanClient({
       {/* Priority skills */}
       {plan.planData?.prioritySkills && plan.planData.prioritySkills.length > 0 && (
         <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Priority Focus Areas</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.priorityFocusAreas")}</h3>
           <div className="mt-3 flex flex-wrap gap-2">
             {plan.planData.prioritySkills.map((skill) => {
               const Icon = SKILL_ICONS[skill] ?? Zap;
@@ -320,7 +320,7 @@ export function IELTSStudyPlanClient({
           {/* Overview below roadmap */}
           {plan.planData?.overview && (
             <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Strategy Overview</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.strategyOverview")}</h3>
               <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.overview}</p>
             </div>
           )}
@@ -351,7 +351,7 @@ export function IELTSStudyPlanClient({
           {/* Strategy overview */}
           {plan.planData?.overview && (
             <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
-              <h3 className="text-base font-bold text-[var(--text-primary)]">Strategy Overview</h3>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.strategyOverview")}</h3>
               <div className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
                 {plan.planData.overview.split("\n").map((p, i) => <p key={i} className="mb-3 last:mb-0">{p}</p>)}
               </div>
@@ -361,7 +361,7 @@ export function IELTSStudyPlanClient({
           {/* Strategy details */}
           {plan.planData?.strategy && (
             <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
-              <h3 className="text-base font-bold text-[var(--text-primary)]">Your Personalized Strategy</h3>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.personalizedStrategy")}</h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {plan.planData.strategy.whatToFocusFirst && (
                   <StrategyCard title="What to focus on first" icon="🎯" text={plan.planData.strategy.whatToFocusFirst} />
@@ -388,7 +388,7 @@ export function IELTSStudyPlanClient({
           {/* Phases */}
           {plan.planData?.phases && plan.planData.phases.length > 0 && (
             <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
-              <h3 className="text-base font-bold text-[var(--text-primary)]">Preparation Phases</h3>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.preparationPhases")}</h3>
               <div className="mt-4 space-y-4">
                 {plan.planData.phases.map((phase, i) => (
                   <div key={i} className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
@@ -441,7 +441,7 @@ export function IELTSStudyPlanClient({
           {/* Exam countdown */}
           {plan.planData?.examCountdown && (
             <div className="rounded-[var(--radius-xl)] border border-orange-500/20 bg-orange-500/5 p-5 sm:p-6">
-              <h3 className="text-base font-bold text-orange-400">Final Exam Countdown Strategy</h3>
+              <h3 className="text-base font-bold text-orange-400">{t("ielts.studyPlan.finalCountdown")}</h3>
               <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.examCountdown}</p>
             </div>
           )}
@@ -449,7 +449,7 @@ export function IELTSStudyPlanClient({
           {/* Tips */}
           {plan.planData?.tips && plan.planData.tips.length > 0 && (
             <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Personalized Tips</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.personalizedTips")}</h3>
               <ul className="mt-3 space-y-2">
                 {plan.planData.tips.map((tip, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
@@ -469,7 +469,7 @@ export function IELTSStudyPlanClient({
           {/* Overview (compact in checklist mode) */}
           {plan.planData?.overview && (
             <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Strategy Overview</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.strategyOverview")}</h3>
               <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">{plan.planData.overview}</p>
             </div>
           )}
@@ -487,7 +487,7 @@ export function IELTSStudyPlanClient({
           {/* Tips */}
           {plan.planData?.tips && plan.planData.tips.length > 0 && (
             <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Personalized Tips</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("ielts.studyPlan.personalizedTips")}</h3>
               <ul className="mt-3 space-y-2">
                 {plan.planData.tips.map((tip, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
