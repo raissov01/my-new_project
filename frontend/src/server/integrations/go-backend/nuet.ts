@@ -268,6 +268,7 @@ export type NUETSimulatorResume = {
   responses: Record<string, string>;
   marked: string[];
   timeTakenSecs: number;
+  timePerAnswer?: Record<string, number>;
 };
 
 export async function getNUETSimulatorResume(

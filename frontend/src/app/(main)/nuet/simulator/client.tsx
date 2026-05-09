@@ -98,6 +98,13 @@ export function NUETSimulatorClient({
   const markedRef = useRef<Set<string>>(new Set());
   const timeLeftRef = useRef(0);
   const submittingRef = useRef(false);
+  // Per-question elapsed seconds. We accumulate while the user is on a
+  // question and flush whenever they navigate away or pause; the running
+  // anchor is questionStartedAtRef. Stays in refs so we don't trigger a
+  // re-render every second.
+  const timePerAnswerRef = useRef<Record<string, number>>({});
+  const questionStartedAtRef = useRef<number | null>(null);
+  const activeQuestionIdRef = useRef<string | null>(null);
 
   const activeQuestion = questions[currentIndex] ?? null;
   const answeredCount = useMemo(() => Object.values(answers).filter(Boolean).length, [answers]);
@@ -114,6 +121,39 @@ export function NUETSimulatorClient({
   useEffect(() => {
     timeLeftRef.current = timeLeft;
   }, [timeLeft]);
+
+  // Flush the accumulated seconds onto the previously-active question when
+  // the active question changes (or the user pauses / submits). Anchored on
+  // performance.now() so a sleeping tab can't credit the user with hours.
+  function flushQuestionTime(now: number = performance.now()) {
+    const startedAt = questionStartedAtRef.current;
+    const qid = activeQuestionIdRef.current;
+    if (qid && startedAt != null) {
+      const elapsedSecs = Math.max(0, Math.floor((now - startedAt) / 1000));
+      if (elapsedSecs > 0) {
+        timePerAnswerRef.current[qid] = (timePerAnswerRef.current[qid] ?? 0) + elapsedSecs;
+      }
+    }
+    questionStartedAtRef.current = null;
+  }
+
+  useEffect(() => {
+    if (stage !== "exam" || isPaused) {
+      flushQuestionTime();
+      activeQuestionIdRef.current = null;
+      return;
+    }
+    const q = questions[currentIndex];
+    if (!q) return;
+    flushQuestionTime();
+    activeQuestionIdRef.current = q.id;
+    questionStartedAtRef.current = performance.now();
+    return () => {
+      // On stage change / unmount, capture the in-flight question's time so
+      // it makes it into the next save call.
+      flushQuestionTime();
+    };
+  }, [stage, isPaused, currentIndex, questions]);
 
   const clearIntervals = useCallback(() => {
     if (timerRef.current) {
@@ -136,10 +176,12 @@ export function NUETSimulatorClient({
       setSubmitFailed(false);
 
       try {
+        flushQuestionTime();
         const completed = await completeNUETSimulator(attemptId, {
           answers: answersRef.current,
           marked: Array.from(markedRef.current),
           timeTakenSecs: durationMinutes * 60 - timeLeft,
+          timePerAnswer: { ...timePerAnswerRef.current },
         });
         setResult(completed);
         setStage("results");
@@ -231,10 +273,15 @@ export function NUETSimulatorClient({
     }
 
     autosaveRef.current = setInterval(() => {
+      // Snapshot the in-flight question's elapsed seconds before sending so
+      // a long-running save doesn't lose it on crash/refresh.
+      flushQuestionTime();
+      questionStartedAtRef.current = performance.now();
       void autosaveNUETSimulator(attemptId, {
         answers: answersRef.current,
         marked: Array.from(markedRef.current),
         timeTakenSecs: durationMinutes * 60 - timeLeftRef.current,
+        timePerAnswer: { ...timePerAnswerRef.current },
       })
         .then(() => {
           setLastSavedAt(Date.now());
@@ -400,6 +447,9 @@ export function NUETSimulatorClient({
       setDurationMinutes(response.data.durationMinutes);
       setTimeLeft(response.data.durationMinutes * 60);
       setResult(null);
+      timePerAnswerRef.current = {};
+      questionStartedAtRef.current = null;
+      activeQuestionIdRef.current = null;
       if (strictMode) {
         await examMode.requestFullscreen();
       }
@@ -430,6 +480,9 @@ export function NUETSimulatorClient({
     setTimeLeft(remaining);
     setResult(null);
     setStrictMode(initialResume.strictMode);
+    timePerAnswerRef.current = { ...(initialResume.timePerAnswer ?? {}) };
+    questionStartedAtRef.current = null;
+    activeQuestionIdRef.current = null;
 
     if (initialResume.strictMode) {
       try {
@@ -482,6 +535,9 @@ export function NUETSimulatorClient({
     setRedrillIdx(0);
     setRedrillPicks({});
     setRedrillRevealed(new Set());
+    timePerAnswerRef.current = {};
+    questionStartedAtRef.current = null;
+    activeQuestionIdRef.current = null;
     setViolationBanner(null);
     setStage("configure");
   }
@@ -733,6 +789,17 @@ export function NUETSimulatorClient({
           correctLabel={t("nuet.history.correct")}
         />
 
+        <TimeHeatmap
+          evaluations={result.evaluations ?? []}
+          headingLabel={t("nuet.simulator.timeHeatmapTitle")}
+          subtitleLabel={t("nuet.simulator.timeHeatmapSubtitle")}
+          onJump={(idx) => {
+            setExpandedReview((current) => ({ ...current, [idx + 1]: true }));
+            const el = document.getElementById(`nuet-review-${idx + 1}`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
+
         <RedrillPanel
           open={redrillOpen}
           questions={questions}
@@ -825,7 +892,7 @@ export function NUETSimulatorClient({
               .map((item) => {
               const open = expandedReview[item.question] ?? false;
               return (
-                <div key={item.question} className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4">
+                <div id={`nuet-review-${item.question}`} key={item.question} className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4">
                   <button
                     type="button"
                     onClick={() => setExpandedReview((current) => ({ ...current, [item.question]: !open }))}
@@ -1614,6 +1681,80 @@ function AutosaveBadge({
   const label =
     seconds < 5 ? savedJustNow : savedAgo.replace("{n}", String(seconds));
   return <p className="text-xs text-[var(--text-muted)]">{label}</p>;
+}
+
+function TimeHeatmap({
+  evaluations,
+  headingLabel,
+  subtitleLabel,
+  onJump,
+}: {
+  evaluations: NonNullable<NUETAttemptActionResult["evaluations"]>;
+  headingLabel: string;
+  subtitleLabel: string;
+  onJump: (index: number) => void;
+}) {
+  // Only attempts that actually carried per-question time will populate
+  // anything here. Hide the card entirely on legacy attempts so we don't
+  // render a wall of zeros.
+  const cells = evaluations.filter((ev) => (ev.timeSpent ?? 0) > 0);
+  if (cells.length === 0) return null;
+  const max = cells.reduce((acc, ev) => Math.max(acc, ev.timeSpent ?? 0), 0);
+  const median = (() => {
+    const arr = cells.map((ev) => ev.timeSpent ?? 0).sort((a, b) => a - b);
+    const mid = Math.floor(arr.length / 2);
+    return arr.length % 2 === 0 ? Math.round((arr[mid - 1] + arr[mid]) / 2) : arr[mid];
+  })();
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{headingLabel}</h3>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">{subtitleLabel}</p>
+        </div>
+        <p className="font-mono text-xs text-[var(--text-secondary)]">
+          max {max}s · median {median}s
+        </p>
+      </div>
+      <div className="mt-4 grid grid-cols-10 gap-1.5 sm:grid-cols-12 lg:grid-cols-15">
+        {evaluations.map((ev, idx) => {
+          const secs = ev.timeSpent ?? 0;
+          const ratio = max > 0 ? secs / max : 0;
+          // 5 buckets — empty (no time recorded), then 4 saturation steps.
+          // Correct cells are shaded green, wrong/unanswered shaded amber/red.
+          const intensityClass =
+            secs === 0
+              ? "bg-[var(--bg-base)] border-[var(--border)] text-[var(--text-muted)]"
+              : ev.correct
+                ? ratio < 0.25
+                  ? "bg-emerald-100 border-emerald-200 text-emerald-700"
+                  : ratio < 0.5
+                    ? "bg-emerald-200 border-emerald-300 text-emerald-800"
+                    : ratio < 0.75
+                      ? "bg-emerald-400 border-emerald-500 text-white"
+                      : "bg-emerald-600 border-emerald-700 text-white"
+                : ratio < 0.25
+                  ? "bg-rose-100 border-rose-200 text-rose-700"
+                  : ratio < 0.5
+                    ? "bg-rose-200 border-rose-300 text-rose-800"
+                    : ratio < 0.75
+                      ? "bg-rose-400 border-rose-500 text-white"
+                      : "bg-rose-600 border-rose-700 text-white";
+          return (
+            <button
+              key={ev.question}
+              type="button"
+              onClick={() => onJump(idx)}
+              title={`#${ev.question} · ${secs}s · ${ev.correct ? "correct" : "wrong"}`}
+              className={`flex h-9 items-center justify-center rounded border text-[10px] font-mono font-semibold transition hover:scale-110 ${intensityClass}`}
+            >
+              {secs > 0 ? secs : "·"}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function SectionBreakdownCard({

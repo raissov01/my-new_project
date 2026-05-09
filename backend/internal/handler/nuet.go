@@ -48,6 +48,10 @@ type nuetAnswerEvaluation struct {
 	Expected    string `json:"expected"`
 	Received    string `json:"received"`
 	Correct     bool   `json:"correct"`
+	// TimeSpent is the seconds the user spent on this question during the
+	// simulator run. Zero means the question was never visited or the run
+	// predates per-question time tracking. Only populated for full_mock.
+	TimeSpent int `json:"timeSpent,omitempty"`
 }
 
 type nuetAttemptResponse struct {
@@ -101,12 +105,17 @@ type nuetSimulatorSaveRequest struct {
 	Answers       map[string]string `json:"answers"`
 	Marked        []string          `json:"marked"`
 	TimeTakenSecs int               `json:"timeTakenSecs"`
+	// TimePerAnswer maps questionID → seconds spent on that question. The
+	// frontend accumulates this client-side; we just persist it. Optional —
+	// older clients may omit the field entirely.
+	TimePerAnswer map[string]int `json:"timePerAnswer,omitempty"`
 }
 
 type nuetSimulatorCompleteRequest struct {
 	Answers       map[string]string `json:"answers"`
 	Marked        []string          `json:"marked"`
 	TimeTakenSecs int               `json:"timeTakenSecs"`
+	TimePerAnswer map[string]int    `json:"timePerAnswer,omitempty"`
 }
 
 type nuetSimulatorQuestion struct {
@@ -156,8 +165,9 @@ type nuetSimulatorStartResponse struct {
 }
 
 type nuetSimulatorState struct {
-	Responses map[string]string `json:"responses"`
-	Marked    []string          `json:"marked,omitempty"`
+	Responses     map[string]string `json:"responses"`
+	Marked        []string          `json:"marked,omitempty"`
+	TimePerAnswer map[string]int    `json:"timePerAnswer,omitempty"`
 }
 
 type nuetLogViolationRequest struct {
@@ -862,6 +872,7 @@ func (h *NUETHandler) ResumeSimulator(w http.ResponseWriter, r *http.Request) {
 		"strictMode":      attempt.StrictMode,
 		"responses":       state.Responses,
 		"marked":          state.Marked,
+		"timePerAnswer":   state.TimePerAnswer,
 		"timeTakenSecs":   attempt.TimeTakenSecs,
 	})
 }
@@ -901,8 +912,9 @@ func (h *NUETHandler) SaveSimulator(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stateJSON := marshalNUETJSON(nuetSimulatorState{
-		Responses: normalizeNUETResponseMap(req.Answers),
-		Marked:    req.Marked,
+		Responses:     normalizeNUETResponseMap(req.Answers),
+		Marked:        req.Marked,
+		TimePerAnswer: sanitizeTimePerAnswer(req.TimePerAnswer),
 	})
 	now := time.Now()
 	if err := h.db.Model(&attempt).Updates(map[string]any{
@@ -967,6 +979,9 @@ func (h *NUETHandler) CompleteSimulator(w http.ResponseWriter, r *http.Request) 
 	if req.Marked != nil {
 		state.Marked = req.Marked
 	}
+	if req.TimePerAnswer != nil {
+		state.TimePerAnswer = sanitizeTimePerAnswer(req.TimePerAnswer)
+	}
 
 	questions, err := h.loadNUETQuestionsByIDs(questionIDs)
 	if err != nil {
@@ -974,6 +989,11 @@ func (h *NUETHandler) CompleteSimulator(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	result := scoreNUETSimulatorQuestions(questions, questionIDs, state.Responses)
+	for i := range result.Evaluations {
+		if t, ok := state.TimePerAnswer[result.Evaluations[i].QuestionID]; ok {
+			result.Evaluations[i].TimeSpent = t
+		}
+	}
 
 	stateJSON := marshalNUETJSON(state)
 	resultsJSON := marshalNUETJSON(map[string]any{
@@ -2287,6 +2307,32 @@ func parseNUETAnswers(raw *string) map[string]string {
 		return nil
 	}
 	return answers
+}
+
+// sanitizeTimePerAnswer drops bogus entries (negative values, zeros, empty
+// keys) and caps each per-question time at the simulator's full duration so
+// a client clock skew can't poison analytics. Returns nil when nothing
+// useful survives — JSON marshaling will then omit the field entirely.
+func sanitizeTimePerAnswer(in map[string]int) map[string]int {
+	if len(in) == 0 {
+		return nil
+	}
+	const maxPerQuestion = 120 * 60 // 120 minutes — the longest possible mock
+	out := make(map[string]int, len(in))
+	for qid, secs := range in {
+		qid = strings.TrimSpace(qid)
+		if qid == "" || secs <= 0 {
+			continue
+		}
+		if secs > maxPerQuestion {
+			secs = maxPerQuestion
+		}
+		out[qid] = secs
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func parseNUETSimulatorState(raw *string) nuetSimulatorState {

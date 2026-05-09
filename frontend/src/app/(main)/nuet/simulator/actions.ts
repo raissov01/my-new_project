@@ -63,6 +63,7 @@ export type NUETAttemptActionResult = {
     expected: string;
     received: string;
     correct: boolean;
+    timeSpent?: number;
   }>;
 };
 
@@ -95,6 +96,9 @@ type SimulatorSavePayload = {
   answers: Record<string, string>;
   marked: string[];
   timeTakenSecs: number;
+  // Optional questionID → seconds map. Backend ignores it on legacy clients
+  // that don't send the field (omitted via Object.keys check on the caller).
+  timePerAnswer?: Record<string, number>;
 };
 
 type SimulatorCompletePayload = SimulatorSavePayload;
