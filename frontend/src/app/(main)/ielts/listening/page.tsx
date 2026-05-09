@@ -4,8 +4,6 @@ import { Headphones, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
-
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
@@ -47,15 +45,15 @@ export default async function IELTSListeningPage() {
           </Link>
           <h3>{t("ielts.listeningTitle")}</h3>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            <Clock size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
-            10 мин
+            <Clock size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} aria-hidden />
+            {t("ielts.listening.tenMin")}
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            <Headphones size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+            <Headphones size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} aria-hidden />
             10 {t("ielts.questions")}
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            <CheckCircle2 size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+            <CheckCircle2 size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} aria-hidden />
             {t("ielts.listening.autoBadge")}
           </span>
         </div>
@@ -71,27 +69,23 @@ export default async function IELTSListeningPage() {
             <Link
               key={sec.key}
               href={`/ielts/simulator?section=listening&focus=${sec.key}`}
-              style={{ textDecoration: "none" }}
+              className="block rounded-[14px] border-[1.5px] border-[var(--line)] p-0 no-underline transition-colors hover:border-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
             >
               <div
                 style={{
                   background: "var(--paper)",
-                  border: "1.5px solid var(--line)",
                   borderRadius: 14,
                   padding: "18px 20px",
                   display: "flex",
                   flexDirection: "column",
                   gap: 8,
                   cursor: "pointer",
-                  transition: "border-color .15s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = INDIGO)}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
               >
                 <p style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)" }}>{sec.label}</p>
                 <p style={{ fontSize: 13, color: "var(--ink-mute)", flex: 1 }}>{t(sec.descKey)}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: INDIGO, fontWeight: 600, marginTop: 4 }}>
-                  {t("ielts.listening.start")} <ArrowRight size={12} />
+                  {t("ielts.listening.start")} <ArrowRight size={12} aria-hidden />
                 </div>
               </div>
             </Link>
@@ -126,7 +120,7 @@ export default async function IELTSListeningPage() {
               flexShrink: 0,
             }}
           >
-            <Headphones size={15} />
+            <Headphones size={15} aria-hidden />
             {t("ielts.listening.fullPractice")}
           </Link>
         </div>
