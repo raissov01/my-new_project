@@ -230,6 +230,41 @@ export async function completeNUETSimulator(attemptId: string, payload: Simulato
   });
 }
 
+// Roadmap sync — server actions called from the roadmap client when the
+// user picks a plan or resets it. Both round-trip through the backend so
+// progress survives across devices for logged-in users.
+type NUETRoadmapProgressActionResult = {
+  userId: string;
+  planKey: "intensive" | "steady";
+  startedAt: string;
+  updatedAt: string;
+} | null;
+
+export async function startNUETRoadmap(
+  planKey: "intensive" | "steady"
+): Promise<NUETRoadmapProgressActionResult> {
+  const user = await requireUser();
+  const data = await fetchBackendJson<{ progress: NUETRoadmapProgressActionResult }>({
+    path: "/api/v1/nuet/roadmap",
+    userId: user.id,
+    method: "POST",
+    body: JSON.stringify({ planKey }),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 10_000,
+  });
+  return data.progress;
+}
+
+export async function resetNUETRoadmap(): Promise<void> {
+  const user = await requireUser();
+  await fetchBackendJson<{ progress: null }>({
+    path: "/api/v1/nuet/roadmap",
+    userId: user.id,
+    method: "DELETE",
+    timeoutMs: 10_000,
+  });
+}
+
 // "I know this" — server actions for marking and unmarking a question as
 // dismissed. Used from practice; the backend filters dismissed questions
 // out of /nuet/questions by default.

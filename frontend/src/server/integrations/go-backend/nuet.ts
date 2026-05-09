@@ -260,6 +260,23 @@ export async function getNUETAttempt(userId: string, id: string): Promise<NUETAt
   });
 }
 
+export type NUETRoadmapProgress = {
+  userId: string;
+  planKey: "intensive" | "steady";
+  startedAt: string;
+  updatedAt: string;
+};
+
+export async function getNUETRoadmapProgress(
+  userId: string
+): Promise<NUETRoadmapProgress | null> {
+  const data = await fetchBackendJson<{ progress: NUETRoadmapProgress | null }>({
+    path: "/api/v1/nuet/roadmap",
+    userId,
+  });
+  return data.progress ?? null;
+}
+
 export type NUETSimulatorResume = {
   attempt: NUETAttempt;
   questions: NUETSimulatorQuestion[];

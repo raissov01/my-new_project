@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Calendar, CheckCircle2, Flag, Play, RotateCcw } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
+import { resetNUETRoadmap, startNUETRoadmap } from "../simulator/actions";
 
 const STORAGE_KEY = "nuet_roadmap_tracker_v1";
 
@@ -206,13 +207,27 @@ const STEADY_PLAN: Plan = {
   ],
 };
 
-export function RoadmapPlanTabs() {
+export function RoadmapPlanTabs({
+  loggedIn = false,
+  initialTracker = null,
+}: {
+  // When the user is logged in we round-trip through the backend so plan
+  // progress carries across devices. Guests fall back to localStorage so
+  // the tracker still works offline.
+  loggedIn?: boolean;
+  initialTracker?: TrackerState | null;
+} = {}) {
   const { t, locale } = useLocale();
-  const [active, setActive] = useState<Plan["key"]>("intensive");
-  const [tracker, setTracker] = useState<TrackerState | null>(null);
-  const [hydrated, setHydrated] = useState(false);
+  const [active, setActive] = useState<Plan["key"]>(
+    initialTracker?.planKey ?? "intensive"
+  );
+  const [tracker, setTracker] = useState<TrackerState | null>(initialTracker);
+  // Logged-in users skip localStorage entirely — the server is the source
+  // of truth and we already have the initialTracker prop.
+  const [hydrated, setHydrated] = useState(loggedIn);
 
   useEffect(() => {
+    if (loggedIn) return; // server-rendered initialTracker is canonical
     let parsed: TrackerState | null = null;
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -231,7 +246,7 @@ export function RoadmapPlanTabs() {
       setActive(parsed.planKey);
     }
     setHydrated(true);
-  }, []);
+  }, [loggedIn]);
 
   const plan = active === "intensive" ? INTENSIVE_PLAN : STEADY_PLAN;
   const labelByKey = {
@@ -246,6 +261,22 @@ export function RoadmapPlanTabs() {
   function startPlan() {
     const next: TrackerState = { planKey: active, startedAt: new Date().toISOString() };
     setTracker(next);
+    if (loggedIn) {
+      // Optimistic — already in state. Reconcile with server-confirmed
+      // startedAt when the response lands so a small clock skew doesn't
+      // shift the week counter unexpectedly.
+      void startNUETRoadmap(active)
+        .then((row) => {
+          if (row) {
+            setTracker({ planKey: row.planKey, startedAt: row.startedAt });
+          }
+        })
+        .catch(() => {
+          // leave the optimistic state — the user will see the same plan
+          // on next reload (server returns null, falls back here).
+        });
+      return;
+    }
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
@@ -255,6 +286,13 @@ export function RoadmapPlanTabs() {
 
   function resetPlan() {
     setTracker(null);
+    if (loggedIn) {
+      void resetNUETRoadmap().catch(() => {
+        // Optimistic clear stays in UI; server may still hold the row but
+        // we don't block the user on a transient failure.
+      });
+      return;
+    }
     try {
       window.localStorage.removeItem(STORAGE_KEY);
     } catch {

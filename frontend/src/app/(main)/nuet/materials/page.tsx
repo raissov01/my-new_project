@@ -5,6 +5,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
 import { listNUETMaterials, type NUETMaterial } from "@/server/integrations/go-backend/nuet";
+import { RetryButton } from "@/components/nuet/retry-button";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -106,9 +107,12 @@ export default async function NUETMaterialsPage({
       {/* Grid */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {data.items.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)] sm:col-span-2 lg:col-span-3">
-            {t("nuet.noMaterials")}
-          </p>
+          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-center sm:col-span-2 lg:col-span-3">
+            <p className="text-sm text-[var(--text-muted)]">{t("nuet.noMaterials")}</p>
+            <div className="mt-3 flex justify-center">
+              <RetryButton label={t("nuet.materialsRetry")} />
+            </div>
+          </div>
         ) : (
           data.items.map((m) => <MaterialCard key={m.id} material={m} t={t} />)
         )}

@@ -112,3 +112,15 @@ type NUETQuestionDismissal struct {
 }
 
 func (NUETQuestionDismissal) TableName() string { return "nuet_question_dismissals" }
+
+// NUETRoadmapProgress tracks which study plan ("intensive" / "steady") the
+// user has chosen and when they started it. Used by the roadmap tracker to
+// compute the current week. One row per user; upserted on plan change.
+type NUETRoadmapProgress struct {
+	UserID    string    `gorm:"type:uuid;primaryKey" json:"userId"`
+	PlanKey   string    `gorm:"type:varchar(16);not null" json:"planKey"`
+	StartedAt time.Time `gorm:"not null;default:now()" json:"startedAt"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updatedAt"`
+}
+
+func (NUETRoadmapProgress) TableName() string { return "nuet_roadmap_progress" }

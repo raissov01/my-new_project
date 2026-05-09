@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Brain, FileText, Flame, Globe2, GraduationCap, Library, Map, ScrollText, Trophy } from "lucide-react";
+import { ArrowRight, BookOpen, Brain, FileText, Flame, Globe2, GraduationCap, Library, Map, Play, ScrollText, Trophy } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
@@ -146,6 +146,24 @@ export default async function NUETHubPage() {
         <p className="mt-3 max-w-2xl text-sm text-[var(--text-secondary)] sm:text-base">
           {t("nuet.heroSubtitle")}
         </p>
+
+        {inProgress && inProgress.attempts.length > 0 ? (
+          <Link
+            href="/nuet/simulator"
+            className="mt-6 flex items-start gap-3 rounded-xl border-2 border-[var(--primary)] bg-[var(--primary-soft)] p-4 transition hover:bg-[var(--primary)] hover:text-white"
+          >
+            <Play className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)] group-hover:text-white" />
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-bold text-[var(--text-primary)]">
+                {t("nuet.heroResumeTitle")}
+              </p>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                {t("nuet.heroResumeSub")}
+              </p>
+            </div>
+            <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-[var(--primary)]" />
+          </Link>
+        ) : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link

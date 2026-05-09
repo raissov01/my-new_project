@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen, Brain, CheckCircle2, GraduationCap, Target } from
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 import { getCurrentUser } from "@/server/auth";
-import { listNUETTopics } from "@/server/integrations/go-backend/nuet";
+import { getNUETRoadmapProgress, listNUETTopics } from "@/server/integrations/go-backend/nuet";
 import { RoadmapPlanTabs } from "./client";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,10 +22,15 @@ export default async function NUETRoadmapPage() {
   const t = createTranslator(locale);
   const user = await getCurrentUser();
 
-  const [mathTopics, ctTopics] = await Promise.all([
+  const [mathTopics, ctTopics, roadmap] = await Promise.all([
     listNUETTopics(user?.id ?? "", "math").catch(() => ({ items: [] })),
     listNUETTopics(user?.id ?? "", "critical_thinking").catch(() => ({ items: [] })),
+    user ? getNUETRoadmapProgress(user.id).catch(() => null) : null,
   ]);
+  const initialTracker =
+    roadmap && (roadmap.planKey === "intensive" || roadmap.planKey === "steady")
+      ? { planKey: roadmap.planKey, startedAt: roadmap.startedAt }
+      : null;
 
   return (
     <article className="page-shell py-6 sm:py-10">
@@ -63,7 +68,7 @@ export default async function NUETRoadmapPage() {
         </div>
       </header>
 
-      <RoadmapPlanTabs />
+      <RoadmapPlanTabs loggedIn={Boolean(user)} initialTracker={initialTracker} />
 
       <section className="mt-8">
         <div className="flex items-center justify-between gap-3">

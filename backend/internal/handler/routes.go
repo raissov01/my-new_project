@@ -361,6 +361,9 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/nuet/dashboard", wrapHTTP(deps.NUET.GetDashboard))
 		internal.POST("/nuet/questions/:questionID/dismiss", wrapHTTP(deps.NUET.DismissQuestion))
 		internal.DELETE("/nuet/questions/:questionID/dismiss", wrapHTTP(deps.NUET.UndismissQuestion))
+		internal.GET("/nuet/roadmap", wrapHTTP(deps.NUET.GetRoadmap))
+		internal.POST("/nuet/roadmap", wrapHTTP(deps.NUET.StartRoadmap))
+		internal.DELETE("/nuet/roadmap", wrapHTTP(deps.NUET.ResetRoadmap))
 
 		// Sentence Mining
 		miningLimiter := middleware.NewRateLimiter(20, 1*time.Minute).LimitByUser()

@@ -303,6 +303,89 @@ func (h *NUETHandler) DismissQuestion(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"dismissed": true})
 }
 
+// GET /nuet/roadmap — read the current user's roadmap progress (plan key +
+// startedAt). Returns 200 with the row, or 200 + null if the user hasn't
+// picked a plan yet. Authenticated only.
+func (h *NUETHandler) GetRoadmap(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	var row models.NUETRoadmapProgress
+	if err := h.db.Where("user_id = ?", userID).First(&row).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			writeJSON(w, http.StatusOK, map[string]any{"progress": nil})
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "failed to load roadmap", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"progress": row})
+}
+
+type nuetRoadmapStartRequest struct {
+	PlanKey string `json:"planKey"`
+}
+
+// POST /nuet/roadmap — start (or restart) a plan. Idempotent on planKey:
+// if the user already has the same plan running we leave startedAt alone
+// so the week counter doesn't reset; switching plans resets the start.
+func (h *NUETHandler) StartRoadmap(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	var req nuetRoadmapStartRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+	planKey := strings.TrimSpace(req.PlanKey)
+	if planKey != "intensive" && planKey != "steady" {
+		writeError(w, http.StatusBadRequest, "planKey must be \"intensive\" or \"steady\"", nil)
+		return
+	}
+	var existing models.NUETRoadmapProgress
+	err := h.db.Where("user_id = ?", userID).First(&existing).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		writeError(w, http.StatusInternalServerError, "failed to load roadmap", err)
+		return
+	}
+	if err == nil && existing.PlanKey == planKey {
+		writeJSON(w, http.StatusOK, map[string]any{"progress": existing})
+		return
+	}
+	row := models.NUETRoadmapProgress{
+		UserID:    userID,
+		PlanKey:   planKey,
+		StartedAt: time.Now(),
+	}
+	if err := h.db.Save(&row).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to save roadmap", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"progress": row})
+}
+
+// DELETE /nuet/roadmap — clear the user's plan tracker so they can pick a
+// new plan from scratch.
+func (h *NUETHandler) ResetRoadmap(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	if err := h.db.
+		Where("user_id = ?", userID).
+		Delete(&models.NUETRoadmapProgress{}).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to clear roadmap", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"progress": nil})
+}
+
 // DELETE /nuet/questions/:questionID/dismiss — undo a dismissal so the
 // question reappears in drills. No-op if there's nothing to undo.
 func (h *NUETHandler) UndismissQuestion(w http.ResponseWriter, r *http.Request) {
