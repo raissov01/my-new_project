@@ -27,9 +27,12 @@ import {
   checkAdaptive,
   completeStudyTask,
   getPlanHistory,
+  getStudyPlanPlacement,
   pollStudyPlanJob,
+  scoreStudyPlanPlacement,
   startStudyPlanGeneration,
   submitReflection,
+  type PlacementQuestion,
 } from "../simulator/attempt-actions";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -164,6 +167,7 @@ export function IELTSStudyPlanClient({
   const [selectedPhase, setSelectedPhase] = useState<number | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
+  const [placementStage, setPlacementStage] = useState<"prompt" | "skipped" | "done">("prompt");
   const [wizardData, setWizardData] = useState<WizardData>({
     targetBand: "6.5",
     currentBand: "5.5",
@@ -177,6 +181,12 @@ export function IELTSStudyPlanClient({
 
   // taskKey → status (pre-populated from server-side load)
   const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>(initialTaskStatuses);
+
+  function startWizardFlow() {
+    setShowWizard(true);
+    setWizardStep(0);
+    setPlacementStage("prompt");
+  }
 
   async function handleTaskToggle(week: number, day: string, skill: string, activity: string) {
     if (!plan) return;
@@ -241,6 +251,19 @@ export function IELTSStudyPlanClient({
   }
 
   if (showWizard || !plan) {
+    if (placementStage === "prompt" && Boolean(user)) {
+      return (
+        <div className="space-y-6">
+          <PlacementCheck
+            onAccept={(band) => {
+              setWizardData((prev) => ({ ...prev, currentBand: band }));
+              setPlacementStage("done");
+            }}
+            onSkip={() => setPlacementStage("skipped")}
+          />
+        </div>
+      );
+    }
     return (
       <div className="space-y-6">
         <WizardFlow
@@ -281,7 +304,7 @@ export function IELTSStudyPlanClient({
               </button>
             ))}
           </div>
-          <Button variant="secondary" onClick={() => { setShowWizard(true); setWizardStep(0); }}>
+          <Button variant="secondary" onClick={startWizardFlow}>
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             {t("ielts.studyPlan.regenerate")}
           </Button>
@@ -543,7 +566,7 @@ export function IELTSStudyPlanClient({
       )}
 
       {/* Adaptive banner */}
-      <AdaptiveBanner planId={plan.id} onRegenerate={() => { setShowWizard(true); setWizardStep(0); }} />
+      <AdaptiveBanner planId={plan.id} onRegenerate={startWizardFlow} />
 
       {/* Weekly reflection */}
       <WeeklyReflectionForm planId={plan.id} currentWeek={Math.max(1, Math.floor((Date.now() - new Date(plan.createdAt).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1)} />
@@ -1385,6 +1408,225 @@ function ErrorBanner({ message }: { message: string }) {
   return (
     <div className="rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
       {message}
+    </div>
+  );
+}
+
+// ── Placement Check ─────────────────────────────────────────────────────────
+//
+// Eight-question diagnostic (4 reading + 4 listening MCQ from existing
+// IELTSQuestion pool) that runs once at the start of the wizard. The result
+// pre-fills wizardData.currentBand so plan generation works from a measured
+// estimate instead of pure self-report. Skippable for users who'd rather not
+// take it.
+
+function PlacementCheck({ onAccept, onSkip }: { onAccept: (band: string) => void; onSkip: () => void }) {
+  const { t } = useLocale();
+  const [stage, setStage] = useState<"intro" | "loading" | "questions" | "scoring" | "result" | "error">("intro");
+  const [questions, setQuestions] = useState<PlacementQuestion[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [index, setIndex] = useState(0);
+  const [result, setResult] = useState<{
+    readingCorrect: number;
+    readingTotal: number;
+    listeningCorrect: number;
+    listeningTotal: number;
+    estimatedBand: string;
+  } | null>(null);
+
+  async function startTest() {
+    setStage("loading");
+    try {
+      const data = await getStudyPlanPlacement();
+      if (!data.questions || data.questions.length === 0) {
+        setStage("error");
+        return;
+      }
+      setQuestions(data.questions);
+      setAnswers({});
+      setIndex(0);
+      setStage("questions");
+    } catch {
+      setStage("error");
+    }
+  }
+
+  async function finishTest() {
+    setStage("scoring");
+    try {
+      const data = await scoreStudyPlanPlacement(answers);
+      setResult(data);
+      setStage("result");
+    } catch {
+      setStage("error");
+    }
+  }
+
+  if (stage === "intro") {
+    return (
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-soft)]">
+            <Target className="h-5 w-5 text-[var(--primary)]" aria-hidden="true" />
+          </div>
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.placement.title")}</h2>
+        </div>
+        <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{t("ielts.studyPlan.placement.intro")}</p>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Button onClick={startTest}>
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            {t("ielts.studyPlan.placement.startButton")}
+          </Button>
+          <Button variant="ghost" onClick={onSkip}>
+            {t("ielts.studyPlan.placement.skipButton")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (stage === "loading") {
+    return (
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-8 text-center text-sm text-[var(--text-secondary)]">
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--primary)]" aria-hidden="true" />
+        <p className="mt-3">{t("ielts.studyPlan.placement.loading")}</p>
+      </div>
+    );
+  }
+
+  if (stage === "error") {
+    return (
+      <div className="space-y-3">
+        <ErrorBanner message={t("ielts.studyPlan.placement.loadError")} />
+        <div className="flex gap-2">
+          <Button onClick={startTest}>{t("ielts.studyPlan.placement.retakeButton")}</Button>
+          <Button variant="ghost" onClick={onSkip}>{t("ielts.studyPlan.placement.skipButton")}</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (stage === "scoring") {
+    return (
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-8 text-center text-sm text-[var(--text-secondary)]">
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--primary)]" aria-hidden="true" />
+        <p className="mt-3">{t("ielts.studyPlan.placement.scoring")}</p>
+      </div>
+    );
+  }
+
+  if (stage === "result" && result) {
+    return (
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
+            <CheckCircle2 className="h-5 w-5 text-emerald-400" aria-hidden="true" />
+          </div>
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.placement.resultTitle")}</h2>
+        </div>
+        <p className="mt-4 text-2xl font-bold text-[var(--primary)]">
+          {t("ielts.studyPlan.placement.resultBand", { band: result.estimatedBand })}
+        </p>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          {t("ielts.studyPlan.placement.resultBreakdown", {
+            rc: result.readingCorrect,
+            rt: result.readingTotal,
+            lc: result.listeningCorrect,
+            lt: result.listeningTotal,
+          })}
+        </p>
+        <p className="mt-3 text-xs text-[var(--text-muted)]">{t("ielts.studyPlan.placement.note")}</p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button onClick={() => onAccept(result.estimatedBand)}>
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            {t("ielts.studyPlan.placement.acceptButton")}
+          </Button>
+          <Button variant="ghost" onClick={startTest}>{t("ielts.studyPlan.placement.retakeButton")}</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // stage === "questions"
+  const q = questions[index];
+  if (!q) return null;
+  const isLast = index === questions.length - 1;
+  const sectionPill = q.section === "reading"
+    ? t("ielts.studyPlan.placement.readingPill")
+    : t("ielts.studyPlan.placement.listeningPill");
+
+  return (
+    <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="rounded-full bg-[var(--primary-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">
+          {sectionPill}
+        </span>
+        <span className="text-xs text-[var(--text-muted)]">
+          {t("ielts.studyPlan.placement.questionN", { i: index + 1, total: questions.length })}
+        </span>
+      </div>
+
+      {q.section === "listening" && q.content && (
+        <p className="mt-3 text-[10px] uppercase tracking-wider text-amber-400">{t("ielts.studyPlan.placement.audioWarn")}</p>
+      )}
+
+      {q.content && (
+        <div className="mt-4 max-h-64 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 text-xs leading-6 text-[var(--text-secondary)] whitespace-pre-wrap">
+          {q.content}
+        </div>
+      )}
+
+      <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)]">{q.title}</h3>
+      <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">{q.prompt}</p>
+
+      <div className="mt-4 space-y-2" role="radiogroup" aria-label={q.title}>
+        {q.options.map((opt, i) => {
+          const value = String.fromCharCode(65 + i); // A, B, C, ...
+          const checked = answers[q.id] === value;
+          return (
+            <label
+              key={value}
+              className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border p-3 text-sm transition-all ${
+                checked ? "border-[var(--primary)] bg-[var(--primary-soft)]" : "border-[var(--border)] hover:border-[var(--border-strong)]"
+              }`}
+            >
+              <input
+                type="radio"
+                name={q.id}
+                value={value}
+                checked={checked}
+                onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: value }))}
+                className="mt-0.5 accent-[var(--primary)]"
+              />
+              <span className="flex-1 text-[var(--text-primary)]">
+                <span className="font-semibold">{value}.</span> {opt}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <Button
+          variant="ghost"
+          onClick={() => setIndex((i) => Math.max(0, i - 1))}
+          disabled={index === 0}
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> {t("ielts.studyPlan.placement.previous")}
+        </Button>
+        {isLast ? (
+          <Button onClick={finishTest} disabled={!answers[q.id]}>
+            {t("ielts.studyPlan.placement.finish")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        ) : (
+          <Button
+            onClick={() => setIndex((i) => Math.min(questions.length - 1, i + 1))}
+            disabled={!answers[q.id]}
+          >
+            {t("ielts.studyPlan.placement.next")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

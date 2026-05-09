@@ -345,3 +345,39 @@ export async function checkAdaptive() {
     timeoutMs: 15_000,
   });
 }
+
+export type PlacementQuestion = {
+  id: string;
+  section: "reading" | "listening";
+  title: string;
+  prompt: string;
+  content?: string;
+  options: string[];
+};
+
+export async function getStudyPlanPlacement() {
+  const user = await requireUser();
+  return fetchBackendJson<{ questions: PlacementQuestion[] }>({
+    path: "/api/v1/ielts/study-plan/placement",
+    userId: user.id,
+    timeoutMs: 15_000,
+  });
+}
+
+export async function scoreStudyPlanPlacement(answers: Record<string, string>) {
+  const user = await requireUser();
+  return fetchBackendJson<{
+    readingCorrect: number;
+    readingTotal: number;
+    listeningCorrect: number;
+    listeningTotal: number;
+    estimatedBand: string;
+  }>({
+    path: "/api/v1/ielts/study-plan/placement/score",
+    userId: user.id,
+    method: "POST",
+    body: JSON.stringify({ answers }),
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 15_000,
+  });
+}

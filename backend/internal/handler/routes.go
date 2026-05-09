@@ -275,6 +275,8 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/ielts/study-plan/reflection", wrapHTTP(deps.IELTSStudyPlan.SubmitReflection))
 		internal.GET("/ielts/study-plan/reflections", wrapHTTP(deps.IELTSStudyPlan.GetReflections))
 		internal.GET("/ielts/study-plan/adaptive", wrapHTTP(deps.IELTSStudyPlan.CheckAdaptive))
+		internal.GET("/ielts/study-plan/placement", wrapHTTP(deps.IELTSStudyPlan.GetPlacement))
+		internal.POST("/ielts/study-plan/placement/score", wrapHTTP(deps.IELTSStudyPlan.ScorePlacement))
 
 		// English Learning Simulator
 		internal.GET("/engsim/placement", wrapHTTP(deps.EngSim.GetPlacement))

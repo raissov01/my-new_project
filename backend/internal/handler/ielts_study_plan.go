@@ -1415,3 +1415,157 @@ func (h *IELTSStudyPlanHandler) CheckAdaptive(w http.ResponseWriter, r *http.Req
 		},
 	})
 }
+
+// ── Placement diagnostic ───────────────────────────────────────────────────
+//
+// Eight-question reading + listening MCQ that runs before plan generation so
+// the wizard's `currentBand` is grounded in measured performance instead of
+// pure self-report. Two endpoints:
+//   GET  /api/v1/ielts/study-plan/placement       — fetch questions
+//   POST /api/v1/ielts/study-plan/placement/score — submit answers, get band
+
+type placementQuestion struct {
+	ID       string   `json:"id"`
+	Section  string   `json:"section"`
+	Title    string   `json:"title"`
+	Prompt   string   `json:"prompt"`
+	Content  string   `json:"content,omitempty"`
+	Options  []string `json:"options"`
+}
+
+func (h *IELTSStudyPlanHandler) GetPlacement(w http.ResponseWriter, r *http.Request) {
+	if _, ok := middleware.UserIDFromContext(r.Context()); !ok {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	pick := func(section string, n int) []models.IELTSQuestion {
+		var rows []models.IELTSQuestion
+		// RANDOM() is fine here — the question pool is small (a few hundred
+		// rows per section) and this endpoint is only hit once per user per
+		// plan generation.
+		h.db.Where("section = ? AND question_type = 'multiple_choice' AND options IS NOT NULL AND answer IS NOT NULL", section).
+			Order("RANDOM()").Limit(n).Find(&rows)
+		return rows
+	}
+
+	reading := pick("reading", 4)
+	listening := pick("listening", 4)
+	if len(reading)+len(listening) == 0 {
+		writeError(w, http.StatusServiceUnavailable, "placement question pool empty", nil)
+		return
+	}
+
+	out := make([]placementQuestion, 0, len(reading)+len(listening))
+	for _, q := range append(reading, listening...) {
+		options := []string{}
+		if q.Options != nil {
+			_ = json.Unmarshal([]byte(*q.Options), &options)
+		}
+		content := ""
+		if q.Content != nil {
+			content = *q.Content
+		}
+		out = append(out, placementQuestion{
+			ID:      q.ID,
+			Section: q.Section,
+			Title:   q.Title,
+			Prompt:  q.Prompt,
+			Content: content,
+			Options: options,
+		})
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"questions": out})
+}
+
+type placementScoreRequest struct {
+	Answers map[string]string `json:"answers"`
+}
+
+func (h *IELTSStudyPlanHandler) ScorePlacement(w http.ResponseWriter, r *http.Request) {
+	if _, ok := middleware.UserIDFromContext(r.Context()); !ok {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var req placementScoreRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+	if len(req.Answers) == 0 {
+		writeError(w, http.StatusBadRequest, "answers required", nil)
+		return
+	}
+
+	ids := make([]string, 0, len(req.Answers))
+	for id := range req.Answers {
+		ids = append(ids, id)
+	}
+
+	var rows []models.IELTSQuestion
+	if err := h.db.Where("id IN ?", ids).Find(&rows).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load questions", err)
+		return
+	}
+
+	var readingTotal, readingCorrect, listeningTotal, listeningCorrect int
+	for _, q := range rows {
+		if q.Answer == nil {
+			continue
+		}
+		given := strings.TrimSpace(strings.ToLower(req.Answers[q.ID]))
+		correct := strings.TrimSpace(strings.ToLower(*q.Answer))
+		switch q.Section {
+		case "reading":
+			readingTotal++
+			if given != "" && given == correct {
+				readingCorrect++
+			}
+		case "listening":
+			listeningTotal++
+			if given != "" && given == correct {
+				listeningCorrect++
+			}
+		}
+	}
+
+	band := estimatePlacementBand(readingCorrect+listeningCorrect, readingTotal+listeningTotal)
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"readingCorrect":   readingCorrect,
+		"readingTotal":     readingTotal,
+		"listeningCorrect": listeningCorrect,
+		"listeningTotal":   listeningTotal,
+		"estimatedBand":    band,
+	})
+}
+
+// estimatePlacementBand returns a coarse band estimate from a raw 8-question
+// MCQ score. The mapping is intentionally conservative — placement is only a
+// starting point and the LLM is told it can override with measured perf.
+func estimatePlacementBand(correct, total int) string {
+	if total == 0 {
+		return "5.5"
+	}
+	pct := float64(correct) / float64(total) * 100
+	switch {
+	case pct >= 95:
+		return "7.5"
+	case pct >= 85:
+		return "7.0"
+	case pct >= 75:
+		return "6.5"
+	case pct >= 62:
+		return "6.0"
+	case pct >= 50:
+		return "5.5"
+	case pct >= 37:
+		return "5.0"
+	case pct >= 25:
+		return "4.5"
+	default:
+		return "4.0"
+	}
+}
