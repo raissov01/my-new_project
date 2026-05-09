@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { BlockMath, InlineMath } from "react-katex";
 import "katex/dist/katex.min.css";
 
@@ -19,7 +20,7 @@ export function MathText({
   as?: "span" | "div";
   className?: string;
 }) {
-  const parts = text.split(SPLIT_REGEX).filter(Boolean);
+  const parts = useMemo(() => text.split(SPLIT_REGEX).filter(Boolean), [text]);
   const Wrapper = as;
   return (
     <Wrapper className={className}>

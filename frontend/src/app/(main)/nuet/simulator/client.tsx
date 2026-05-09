@@ -57,10 +57,28 @@ export function NUETSimulatorClient({
   const [durationMinutes, setDurationMinutes] = useState(120);
   const [result, setResult] = useState<NUETAttemptActionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [autosaveLabel, setAutosaveLabel] = useState("");
   const [violationBanner, setViolationBanner] = useState<string | null>(null);
   const [expandedReview, setExpandedReview] = useState<Record<number, boolean>>({});
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // Autosave UX: lastSavedAt is the wall-clock ms of the most recent successful
+  // save, lastSaveFailed surfaces a warning, savedTick forces a re-render every
+  // second so the relative "Xs ago" label stays current.
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [lastSaveFailed, setLastSaveFailed] = useState(false);
+  // nowMs ticks once per second while the exam is live so the autosave label
+  // recomputes its "Xs ago" relative time without us calling Date.now() in
+  // render (which the React purity rule flags).
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
+  // Submit guard modal (manual finish path only — auto-submit on timer expiry
+  // bypasses the prompt).
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
+  // When the network call to complete the attempt fails, the timer is dead but
+  // the user still has their answers in memory. We surface a retry banner
+  // inside the exam view instead of silently dropping back to configure.
+  const [submitFailed, setSubmitFailed] = useState(false);
+  // Strict-mode auto-termination should not throw the user back to the empty
+  // configure screen — show a modal that points to the saved attempt instead.
+  const [terminatedModal, setTerminatedModal] = useState(false);
   useScreenWakeLock(stage === "exam");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autosaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -103,6 +121,7 @@ export function NUETSimulatorClient({
       clearIntervals();
       setStage("submitting");
       setError(reason ?? null);
+      setSubmitFailed(false);
 
       try {
         const completed = await completeNUETSimulator(attemptId, {
@@ -113,7 +132,11 @@ export function NUETSimulatorClient({
         setResult(completed);
         setStage("results");
       } catch (err) {
+        // Stay on the exam view but surface the error inline so the user can
+        // retry without losing their answers. The timer interval restarts
+        // automatically when stage flips back to "exam".
         setError(err instanceof Error ? err.message : "Failed to complete simulator");
+        setSubmitFailed(true);
         setStage("exam");
       } finally {
         submittingRef.current = false;
@@ -143,7 +166,7 @@ export function NUETSimulatorClient({
       }).then((response) => {
         if (response.status === "abandoned") {
           setError(t("nuet.simulator.terminated"));
-          setStage("configure");
+          setTerminatedModal(true);
           clearIntervals();
         }
       }).catch(() => {
@@ -152,7 +175,7 @@ export function NUETSimulatorClient({
     },
     onTerminate: () => {
       setError(t("nuet.simulator.terminated"));
-      setStage("configure");
+      setTerminatedModal(true);
       clearIntervals();
     },
   });
@@ -202,11 +225,11 @@ export function NUETSimulatorClient({
         timeTakenSecs: durationMinutes * 60 - timeLeftRef.current,
       })
         .then(() => {
-          setAutosaveLabel(t("nuet.simulator.saved"));
-          window.setTimeout(() => setAutosaveLabel(""), 1500);
+          setLastSavedAt(Date.now());
+          setLastSaveFailed(false);
         })
         .catch(() => {
-          setAutosaveLabel(t("nuet.simulator.saveFailed"));
+          setLastSaveFailed(true);
         });
     }, 30_000);
 
@@ -216,7 +239,59 @@ export function NUETSimulatorClient({
         autosaveRef.current = null;
       }
     };
-  }, [attemptId, durationMinutes, stage, t]);
+  }, [attemptId, durationMinutes, stage]);
+
+  // Tick once per second so the "saved Xs ago" label stays current. Captures
+  // the wall clock here (in an effect) instead of inside render.
+  useEffect(() => {
+    if (stage !== "exam") return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [stage]);
+
+  // Audio warning at 5 minutes and 1 minute remaining. Uses the Web Audio API
+  // directly so we don't ship an extra audio asset for a single beep. Two
+  // refs guard against re-firing if the timer crosses the threshold twice
+  // (e.g. after a submit retry that re-mounts the timer effect).
+  const warned5MinRef = useRef(false);
+  const warned1MinRef = useRef(false);
+  useEffect(() => {
+    if (stage !== "exam") {
+      warned5MinRef.current = false;
+      warned1MinRef.current = false;
+      return;
+    }
+    const playBeep = (frequency: number, duration: number) => {
+      try {
+        const AudioCtx =
+          window.AudioContext ??
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = frequency;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+        osc.onended = () => void ctx.close();
+      } catch {
+        // AudioContext can be blocked by autoplay policy; silently ignore.
+      }
+    };
+    if (!warned5MinRef.current && timeLeft <= 300 && timeLeft > 60) {
+      warned5MinRef.current = true;
+      playBeep(880, 0.4);
+    }
+    if (!warned1MinRef.current && timeLeft <= 60 && timeLeft > 0) {
+      warned1MinRef.current = true;
+      playBeep(1320, 0.6);
+    }
+  }, [stage, timeLeft]);
 
   async function handleStart() {
     setStage("starting");
@@ -310,7 +385,11 @@ export function NUETSimulatorClient({
     setCurrentIndex(0);
     setTimeLeft(0);
     setResult(null);
-    setAutosaveLabel("");
+    setLastSavedAt(null);
+    setLastSaveFailed(false);
+    setSubmitFailed(false);
+    setSubmitConfirmOpen(false);
+    setTerminatedModal(false);
     setViolationBanner(null);
     setStage("configure");
   }
@@ -327,6 +406,22 @@ export function NUETSimulatorClient({
   function jumpTo(index: number) {
     setCurrentIndex(index);
   }
+
+  // Manual submit path: open the confirm modal so the user sees how many
+  // questions are unanswered. Auto-submit on time-expiry calls finishAttempt
+  // directly and bypasses this prompt — they're out of time anyway.
+  function requestFinish() {
+    setSubmitConfirmOpen(true);
+  }
+
+  // Indices of questions that don't have an answer letter set.
+  const unansweredIndices = useMemo(
+    () =>
+      questions
+        .map((q, idx) => (answers[q.id] ? null : idx))
+        .filter((v): v is number => v !== null),
+    [questions, answers]
+  );
 
   if (stage === "resume_prompt" && initialResume) {
     const elapsed = Math.max(0, initialResume.timeTakenSecs);
@@ -538,6 +633,14 @@ export function NUETSimulatorClient({
           </div>
         </div>
 
+        <SectionBreakdownCard
+          evaluations={result.evaluations ?? []}
+          mathLabel={t("nuet.sectionMath")}
+          ctLabel={t("nuet.sectionCT")}
+          headingLabel={t("nuet.simulator.sectionBreakdown")}
+          correctLabel={t("nuet.history.correct")}
+        />
+
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
           <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("nuet.simulator.reviewTitle")}</h3>
           <div className="mt-4 space-y-3">
@@ -655,7 +758,27 @@ export function NUETSimulatorClient({
             {violationBanner}
           </div>
         ) : null}
-        {autosaveLabel ? <p className="text-xs text-[var(--text-muted)]">{autosaveLabel}</p> : null}
+        <AutosaveBadge
+          lastSavedAt={lastSavedAt}
+          failed={lastSaveFailed}
+          nowMs={nowMs}
+          savedJustNow={t("nuet.simulator.savedJustNow")}
+          savedAgo={t("nuet.simulator.savedAgo")}
+          saveFailed={t("nuet.simulator.saveFailed")}
+        />
+        {submitFailed && error ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+            <p className="font-semibold">{t("nuet.simulator.submitErrorTitle")}</p>
+            <p className="mt-1">{error}</p>
+            <button
+              type="button"
+              onClick={() => void finishAttempt()}
+              className="mt-2 inline-flex items-center gap-1 rounded-full border border-rose-300 bg-white px-3 py-1 font-semibold text-rose-700 hover:bg-rose-100"
+            >
+              {t("nuet.simulator.retrySubmit")}
+            </button>
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-5">
           {questions.map((question, index) => {
@@ -756,7 +879,7 @@ export function NUETSimulatorClient({
                   {marked.has(activeQuestion.id) ? t("nuet.simulator.unmark") : t("nuet.simulator.mark")}
                 </Button>
                 {currentIndex === questions.length - 1 ? (
-                  <Button onClick={() => void finishAttempt()} isLoading={stage === "submitting"}>
+                  <Button onClick={requestFinish} isLoading={stage === "submitting"}>
                     {t("nuet.simulator.submit")}
                   </Button>
                 ) : (
@@ -785,6 +908,94 @@ export function NUETSimulatorClient({
               <button type="button" onClick={examMode.clearWarning} className="mt-2 text-xs underline">
                 {t("nuet.simulator.dismiss")}
               </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {submitConfirmOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+              {t("nuet.simulator.submitConfirmTitle")}
+            </h3>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              {t("nuet.simulator.submitConfirmBody")}
+            </p>
+            {unansweredIndices.length > 0 ? (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                <p className="font-semibold">
+                  {t("nuet.simulator.submitUnanswered").replace(
+                    "{n}",
+                    String(unansweredIndices.length)
+                  )}
+                </p>
+                <p className="mt-1 break-words">
+                  {unansweredIndices.slice(0, 25).map((i) => `#${i + 1}`).join(", ")}
+                  {unansweredIndices.length > 25 ? "…" : ""}
+                </p>
+              </div>
+            ) : null}
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <Button variant="ghost" onClick={() => setSubmitConfirmOpen(false)}>
+                {t("nuet.simulator.cancel")}
+              </Button>
+              {unansweredIndices.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = unansweredIndices[0];
+                    if (next != null) jumpTo(next);
+                    setSubmitConfirmOpen(false);
+                  }}
+                  className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-soft)]"
+                >
+                  {t("nuet.simulator.goToFirstUnanswered")}
+                </button>
+              ) : null}
+              <Button
+                onClick={() => {
+                  setSubmitConfirmOpen(false);
+                  void finishAttempt();
+                }}
+              >
+                {t("nuet.simulator.submitAnyway")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {terminatedModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-[var(--bg-surface)] p-6">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="mt-1 h-6 w-6 shrink-0 text-rose-600" />
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                  {t("nuet.simulator.terminatedTitle")}
+                </h3>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                  {t("nuet.simulator.terminatedBody")}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setTerminatedModal(false);
+                  void handleBack();
+                }}
+              >
+                {t("nuet.simulator.terminatedStay")}
+              </Button>
+              <Link
+                href="/nuet/history"
+                className="inline-flex items-center rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+              >
+                {t("nuet.simulator.terminatedAction")}
+              </Link>
             </div>
           </div>
         </div>
@@ -844,7 +1055,7 @@ export function NUETSimulatorClient({
           {currentIndex === questions.length - 1 ? (
             <button
               type="button"
-              onClick={() => void finishAttempt()}
+              onClick={requestFinish}
               disabled={stage === "submitting"}
               className="inline-flex items-center justify-center gap-1 rounded-lg bg-[var(--primary)] px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
@@ -969,6 +1180,99 @@ function ResultTile({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-4 py-3">
       <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
       <p className="mt-1 text-xl font-bold text-[var(--text-primary)]">{value}</p>
+    </div>
+  );
+}
+
+function AutosaveBadge({
+  lastSavedAt,
+  failed,
+  nowMs,
+  savedJustNow,
+  savedAgo,
+  saveFailed,
+}: {
+  lastSavedAt: number | null;
+  failed: boolean;
+  nowMs: number;
+  savedJustNow: string;
+  savedAgo: string;
+  saveFailed: string;
+}) {
+  if (failed) {
+    return <p className="text-xs font-medium text-amber-600">{saveFailed}</p>;
+  }
+  if (lastSavedAt == null) {
+    return null;
+  }
+  const seconds = Math.max(0, Math.floor((nowMs - lastSavedAt) / 1000));
+  const label =
+    seconds < 5 ? savedJustNow : savedAgo.replace("{n}", String(seconds));
+  return <p className="text-xs text-[var(--text-muted)]">{label}</p>;
+}
+
+function SectionBreakdownCard({
+  evaluations,
+  mathLabel,
+  ctLabel,
+  headingLabel,
+  correctLabel,
+}: {
+  evaluations: Array<{ section: "math" | "critical_thinking"; correct: boolean }>;
+  mathLabel: string;
+  ctLabel: string;
+  headingLabel: string;
+  correctLabel: string;
+}) {
+  if (evaluations.length === 0) return null;
+  const counts = {
+    math: { total: 0, correct: 0 },
+    critical_thinking: { total: 0, correct: 0 },
+  };
+  for (const ev of evaluations) {
+    const bucket = counts[ev.section];
+    if (!bucket) continue;
+    bucket.total += 1;
+    if (ev.correct) bucket.correct += 1;
+  }
+  const rows: Array<{ label: string; total: number; correct: number }> = [];
+  if (counts.math.total > 0) {
+    rows.push({ label: mathLabel, total: counts.math.total, correct: counts.math.correct });
+  }
+  if (counts.critical_thinking.total > 0) {
+    rows.push({
+      label: ctLabel,
+      total: counts.critical_thinking.total,
+      correct: counts.critical_thinking.correct,
+    });
+  }
+  if (rows.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
+      <h3 className="text-lg font-semibold text-[var(--text-primary)]">{headingLabel}</h3>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {rows.map((row) => {
+          const pct = row.total > 0 ? Math.round((row.correct / row.total) * 100) : 0;
+          const tone =
+            pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-rose-500";
+          return (
+            <div
+              key={row.label}
+              className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4"
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-sm font-semibold text-[var(--text-primary)]">{row.label}</span>
+                <span className="font-mono text-xs text-[var(--text-secondary)]">
+                  {row.correct}/{row.total} {correctLabel} · {pct}%
+                </span>
+              </div>
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[var(--bg-soft)]">
+                <div className={`h-full rounded-full ${tone}`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
