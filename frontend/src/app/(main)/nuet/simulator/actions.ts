@@ -230,6 +230,29 @@ export async function completeNUETSimulator(attemptId: string, payload: Simulato
   });
 }
 
+// "I know this" — server actions for marking and unmarking a question as
+// dismissed. Used from practice; the backend filters dismissed questions
+// out of /nuet/questions by default.
+export async function dismissNUETQuestion(questionId: string) {
+  const user = await requireUser();
+  return fetchBackendJson<{ dismissed: boolean }>({
+    path: `/api/v1/nuet/questions/${encodeURIComponent(questionId)}/dismiss`,
+    userId: user.id,
+    method: "POST",
+    timeoutMs: 10_000,
+  });
+}
+
+export async function undismissNUETQuestion(questionId: string) {
+  const user = await requireUser();
+  return fetchBackendJson<{ dismissed: boolean }>({
+    path: `/api/v1/nuet/questions/${encodeURIComponent(questionId)}/dismiss`,
+    userId: user.id,
+    method: "DELETE",
+    timeoutMs: 10_000,
+  });
+}
+
 export async function logNUETSimulatorViolation(
   attemptId: string,
   payload: { type: "tab_switch" | "fullscreen_exit" | "copy" | "paste" | "right_click" | "dev_tools" | "blur"; details?: string }

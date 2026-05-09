@@ -25,14 +25,20 @@ export function NUETDailyChallengeWidget({
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [streak, setStreak] = useState<number>(0);
   const [completedToday, setCompletedToday] = useState<boolean>(false);
+  // Hide streak-dependent UI until the localStorage hydration effect has
+  // run, otherwise the pill briefly flashes "0 day streak" on first paint
+  // before the real value lands. Server-side this is always false so SSR
+  // markup matches the first client render.
+  const [hydrated, setHydrated] = useState(false);
   const completionRef = useRef(false);
 
   useEffect(() => {
     // Hydrate the streak from localStorage only on the client to avoid SSR
     // mismatch — the server cannot know the user's stored streak.
     const stored = readStoredStreak();
-    if (!stored) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHydrated(true);
+    if (!stored) return;
     setStreak(stored.streak);
     if (stored.lastCompletedDate === date) {
       setCompletedToday(true);
@@ -92,11 +98,9 @@ export function NUETDailyChallengeWidget({
             {t("nuet.daily.subtitle")}
           </p>
         </div>
-        <StreakPill
-          streak={streak}
-          completedToday={completedToday}
-          t={t}
-        />
+        {hydrated ? (
+          <StreakPill streak={streak} completedToday={completedToday} t={t} />
+        ) : null}
       </header>
 
       <ol className="mt-5 space-y-4">

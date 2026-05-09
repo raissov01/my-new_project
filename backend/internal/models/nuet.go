@@ -98,3 +98,17 @@ type NUETViolation struct {
 }
 
 func (NUETViolation) TableName() string { return "nuet_simulator_violations" }
+
+// NUETQuestionDismissal records a user marking a question as "I know this"
+// so it's excluded from future practice drills. Compound unique on
+// (user_id, question_id) means re-dismissing the same question is a no-op
+// rather than an error. Dropping the row (via DELETE endpoint) re-enables
+// the question.
+type NUETQuestionDismissal struct {
+	ID           string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	UserID       string    `gorm:"type:uuid;not null;uniqueIndex:uni_nuet_dismissal_user_question,priority:1" json:"userId"`
+	QuestionID   string    `gorm:"type:uuid;not null;uniqueIndex:uni_nuet_dismissal_user_question,priority:2" json:"questionId"`
+	DismissedAt  time.Time `gorm:"autoCreateTime" json:"dismissedAt"`
+}
+
+func (NUETQuestionDismissal) TableName() string { return "nuet_question_dismissals" }

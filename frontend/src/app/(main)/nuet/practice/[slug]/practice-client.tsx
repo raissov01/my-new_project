@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, ChevronRight, Eraser, PenLine, RotateCcw, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronRight, Eraser, PenLine, RotateCcw, ThumbsUp, XCircle } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { MathText } from "@/components/nuet/math-text";
 import { Button } from "@/components/ui/button";
 import type { NUETQuestion, NUETTopic } from "@/server/integrations/go-backend/nuet";
-import { submitNUETPracticeAttempt } from "../../simulator/actions";
+import { dismissNUETQuestion, submitNUETPracticeAttempt } from "../../simulator/actions";
 
 type Stage = "ready" | "submitting" | "results";
 
@@ -26,6 +26,10 @@ export function NUETPracticeClient({
   const [error, setError] = useState<string | null>(null);
   const [stage, setStage] = useState<Stage>("ready");
   const [scratchpadOpen, setScratchpadOpen] = useState(false);
+  // Question IDs the user has dismissed during this run. They stay visible
+  // for the duration of the run (so the click feedback isn't disorienting),
+  // but the backend already excludes them from future drill fetches.
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
   const currentQuestion = questions[currentIndex];
   const selectedChoice = currentQuestion ? answers[currentQuestion.id] ?? "" : "";
@@ -68,6 +72,25 @@ export function NUETPracticeClient({
       return;
     }
     setChecked((current) => ({ ...current, [currentQuestion.id]: true }));
+  }
+
+  function handleDismiss() {
+    if (!currentQuestion) return;
+    if (dismissedIds.has(currentQuestion.id)) return;
+    setDismissedIds((current) => {
+      const next = new Set(current);
+      next.add(currentQuestion.id);
+      return next;
+    });
+    void dismissNUETQuestion(currentQuestion.id).catch(() => {
+      // Roll the local state back if the call failed so the user can try
+      // again — toast omitted to keep the runner uninterrupted.
+      setDismissedIds((current) => {
+        const next = new Set(current);
+        next.delete(currentQuestion.id);
+        return next;
+      });
+    });
   }
 
   function handleNext() {
@@ -341,16 +364,34 @@ export function NUETPracticeClient({
         <p className="text-sm text-[var(--text-secondary)]">
           {isChecked ? t("nuet.practice.readyForNext") : t("nuet.practice.pickOne")}
         </p>
-        {isChecked ? (
-          <Button onClick={handleNext} isLoading={stage === "submitting"}>
-            {lastQuestion ? t("nuet.practice.finish") : t("nuet.practice.next")}
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button onClick={handleCheck} disabled={!selectedChoice}>
-            {t("nuet.practice.check")}
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {currentQuestion && !dismissedIds.has(currentQuestion.id) ? (
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:border-emerald-300 hover:text-emerald-700"
+              title={t("nuet.practice.dismissTooltip")}
+            >
+              <ThumbsUp className="h-3.5 w-3.5" />
+              {t("nuet.practice.dismiss")}
+            </button>
+          ) : currentQuestion && dismissedIds.has(currentQuestion.id) ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {t("nuet.practice.dismissed")}
+            </span>
+          ) : null}
+          {isChecked ? (
+            <Button onClick={handleNext} isLoading={stage === "submitting"}>
+              {lastQuestion ? t("nuet.practice.finish") : t("nuet.practice.next")}
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button onClick={handleCheck} disabled={!selectedChoice}>
+              {t("nuet.practice.check")}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

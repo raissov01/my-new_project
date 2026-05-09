@@ -206,7 +206,7 @@ func (h *NUETHandler) GetTopic(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, topic)
 }
 
-// GET /nuet/questions?topicSlug=...&limit=20
+// GET /nuet/questions?topicSlug=...&limit=20[&includeDismissed=1]
 func (h *NUETHandler) ListQuestions(w http.ResponseWriter, r *http.Request) {
 	q := h.db.Model(&models.NUETQuestion{}).Order("created_at ASC")
 	var topic models.NUETTopic
@@ -227,6 +227,19 @@ func (h *NUETHandler) ListQuestions(w http.ResponseWriter, r *http.Request) {
 
 	if section := strings.TrimSpace(r.URL.Query().Get("section")); section != "" {
 		q = q.Where("section = ?", section)
+	}
+
+	// Hide questions the user has marked as "I know this" unless they
+	// explicitly asked to see them all (e.g. for a manage-dismissed view).
+	// Guests have no dismissals so the subquery is a no-op for them.
+	includeDismissed := r.URL.Query().Get("includeDismissed") == "1"
+	if !includeDismissed {
+		if userID, ok := middleware.UserIDFromContext(r.Context()); ok && userID != "" {
+			q = q.Where(
+				"id NOT IN (SELECT question_id FROM nuet_question_dismissals WHERE user_id = ?)",
+				userID,
+			)
+		}
 	}
 
 	limit := parseIntDefault(r.URL.Query().Get("limit"), 20, 1, 100)
@@ -255,6 +268,61 @@ func (h *NUETHandler) ListQuestions(w http.ResponseWriter, r *http.Request) {
 		resp["topic"] = topic
 	}
 	jsonOK(w, resp)
+}
+
+// POST /nuet/questions/:questionID/dismiss — user marks a question as "I
+// know this", excluding it from future practice drills. Idempotent: a
+// duplicate dismiss is a no-op (compound unique on user_id + question_id).
+func (h *NUETHandler) DismissQuestion(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	questionID := strings.TrimSpace(r.PathValue("questionID"))
+	if questionID == "" {
+		writeError(w, http.StatusBadRequest, "questionID required", nil)
+		return
+	}
+	// Verify the question exists so a malformed UUID doesn't get persisted.
+	var exists int64
+	if err := h.db.Model(&models.NUETQuestion{}).Where("id = ?", questionID).Count(&exists).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to verify question", err)
+		return
+	}
+	if exists == 0 {
+		writeError(w, http.StatusNotFound, "question not found", nil)
+		return
+	}
+	row := models.NUETQuestionDismissal{UserID: userID, QuestionID: questionID}
+	if err := h.db.Where("user_id = ? AND question_id = ?", userID, questionID).
+		FirstOrCreate(&row).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to dismiss question", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"dismissed": true})
+}
+
+// DELETE /nuet/questions/:questionID/dismiss — undo a dismissal so the
+// question reappears in drills. No-op if there's nothing to undo.
+func (h *NUETHandler) UndismissQuestion(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+	questionID := strings.TrimSpace(r.PathValue("questionID"))
+	if questionID == "" {
+		writeError(w, http.StatusBadRequest, "questionID required", nil)
+		return
+	}
+	if err := h.db.
+		Where("user_id = ? AND question_id = ?", userID, questionID).
+		Delete(&models.NUETQuestionDismissal{}).Error; err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to undismiss question", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"dismissed": false})
 }
 
 // GET /nuet/daily-challenge[?date=YYYY-MM-DD]
