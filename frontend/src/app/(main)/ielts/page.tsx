@@ -74,7 +74,7 @@ export default async function IELTSHubPage() {
                 {t("ielts.simulatorStart")}
               </Link>
               <Link href="/ielts/study-plan" className="nd-btn-ghost">
-                Study Plan
+                {t("ielts.studyPlanLabel")}
               </Link>
             </div>
           </div>
@@ -133,28 +133,36 @@ export default async function IELTSHubPage() {
       {/* ── Test card grid ────────────────────────────────────────────────── */}
       <div className="nd-test-grid nd-reveal nd-d3">
         {IELTS_MODULES.map((mod) => (
-          <article key={mod.href + mod.nameKey} className="nd-test-card">
-            <div className="nd-test-band">
-              <span className="nd-test-target">{mod.target}</span>
-              <span className={tagClass(mod.tag)}>{mod.tag}</span>
-            </div>
-            <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>
-              {t(mod.nameKey)}
-            </h4>
-            <div className="nd-test-meta">
-              <span>{t(mod.durKey)}</span>
-              <span>·</span>
-              <span>{mod.q} {t("ielts.questions")}</span>
-            </div>
-            <p style={{ margin: 0, fontSize: "12px", fontWeight: 600, color: "var(--ink-mute)", fontFamily: "var(--font-mono,monospace)", letterSpacing: ".06em", textTransform: "uppercase" }}>
-              {mod.parts.startsWith("ielts.") ? t(mod.parts) : mod.parts}
-            </p>
-            <div style={{ marginTop: "auto", paddingTop: "6px" }}>
-              <Link href={mod.href} className="nd-btn-primary" style={{ width: "100%", justifyContent: "center" }}>
-                {t("ielts.cardStart")}
-              </Link>
-            </div>
-          </article>
+          <Link
+            key={mod.href + mod.nameKey}
+            href={mod.href}
+            className="nd-test-card group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2"
+            style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column" }}
+            aria-label={`${t(mod.nameKey)} — ${t("ielts.cardStart")}`}
+          >
+            <article style={{ display: "contents" }}>
+              <div className="nd-test-band">
+                <span className="nd-test-target">{mod.target}</span>
+                <span className={tagClass(mod.tag)}>{mod.tag}</span>
+              </div>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 800, letterSpacing: "-.02em", color: "var(--ink)" }}>
+                {t(mod.nameKey)}
+              </h4>
+              <div className="nd-test-meta">
+                <span>{t(mod.durKey)}</span>
+                <span aria-hidden>·</span>
+                <span>{mod.q} {t("ielts.questions")}</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", fontWeight: 600, color: "var(--ink-mute)", fontFamily: "var(--font-mono,monospace)", letterSpacing: ".06em", textTransform: "uppercase" }}>
+                {mod.parts.startsWith("ielts.") ? t(mod.parts) : mod.parts}
+              </p>
+              <div style={{ marginTop: "auto", paddingTop: "6px" }}>
+                <span className="nd-btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+                  {t("ielts.cardStart")}
+                </span>
+              </div>
+            </article>
+          </Link>
         ))}
       </div>
 
