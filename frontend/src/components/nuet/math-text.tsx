@@ -3,8 +3,12 @@
 import { BlockMath, InlineMath } from "react-katex";
 import "katex/dist/katex.min.css";
 
+// Order matters: $$...$$ must come before $...$ so block math wins over the
+// inline pattern. The inline branch deliberately allows digits to follow the
+// opening $ — most NUET options look like $2^{-14}$, so we cannot bail out
+// just because the next char is a digit (the previous "currency protection"
+// pre-pass did exactly that and broke every $$N...$$ option).
 const SPLIT_REGEX = /(\$\$[\s\S]+?\$\$|\$[^$\n]+\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\])/g;
-const DOLLAR_PLACEHOLDER = "__NUET_DOLLAR__";
 
 export function MathText({
   text,
@@ -15,8 +19,7 @@ export function MathText({
   as?: "span" | "div";
   className?: string;
 }) {
-  const safeText = protectCurrencyDollars(text);
-  const parts = safeText.split(SPLIT_REGEX).filter(Boolean);
+  const parts = text.split(SPLIT_REGEX).filter(Boolean);
   const Wrapper = as;
   return (
     <Wrapper className={className}>
@@ -57,18 +60,17 @@ export function MathText({
             />
           );
         }
-        const restored = restoreCurrencyDollars(part);
-        const looseMath = normalizeLooseMath(restored);
+        const looseMath = normalizeLooseMath(part);
         if (looseMath) {
           return (
             <InlineMath
               key={`loose-inline-${index}`}
               math={looseMath}
-              renderError={() => <span className="whitespace-pre-wrap">{restored}</span>}
+              renderError={() => <span className="whitespace-pre-wrap">{part}</span>}
             />
           );
         }
-        return <span key={`text-${index}`}>{restored}</span>;
+        return <span key={`text-${index}`}>{part}</span>;
       })}
     </Wrapper>
   );
@@ -94,10 +96,3 @@ function normalizeLooseMath(text: string) {
     .replaceAll("÷", "\\div");
 }
 
-function protectCurrencyDollars(text: string) {
-  return text.replace(/\$(?=\d)/g, DOLLAR_PLACEHOLDER);
-}
-
-function restoreCurrencyDollars(text: string) {
-  return text.replaceAll(DOLLAR_PLACEHOLDER, "$");
-}
