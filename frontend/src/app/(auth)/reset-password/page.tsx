@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { AlertCircle, CheckCircle2, LockKeyhole } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,14 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { getApiBaseUrl } from "@/lib/client/api";
 
+const PASSWORD_MIN = 8;
+const RESEND_COOLDOWN_SECONDS = 60;
+
 function ResetPasswordContent() {
   const { t } = useLocale();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const prefilledEmail = searchParams.get("email") ?? "";
+  const emailLockedFromUrl = prefilledEmail.length > 0;
 
   const [email, setEmail] = useState(prefilledEmail);
   const [code, setCode] = useState("");
@@ -27,6 +30,7 @@ function ResetPasswordContent() {
   const [resendPending, setResendPending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendError, setResendError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const codeInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -35,6 +39,14 @@ function ResetPasswordContent() {
       codeInputRef.current.focus();
     }
   }, [prefilledEmail]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = window.setInterval(() => {
+      setResendCooldown((s) => (s <= 1 ? 0 : s - 1));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [resendCooldown]);
 
   function handleCodeChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
@@ -51,7 +63,7 @@ function ResetPasswordContent() {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < PASSWORD_MIN) {
       setErrorMessage(t("reset.passwordTooShort"));
       return;
     }
@@ -77,7 +89,6 @@ function ResetPasswordContent() {
 
       if (resp.ok) {
         setSuccessMessage(data?.message ?? t("reset.successBody"));
-        setTimeout(() => router.push("/login"), 1500);
       } else {
         setErrorMessage(data?.error ?? t("reset.genericError"));
       }
@@ -90,7 +101,7 @@ function ResetPasswordContent() {
 
   async function handleResend() {
     const trimmedEmail = email.trim();
-    if (!trimmedEmail || resendPending) return;
+    if (!trimmedEmail || resendPending || resendCooldown > 0) return;
 
     setResendPending(true);
     setResendMessage(null);
@@ -107,6 +118,7 @@ function ResetPasswordContent() {
       if (resp.ok) {
         setResendMessage(data?.message ?? t("reset.resendSuccess"));
         setCode("");
+        setResendCooldown(RESEND_COOLDOWN_SECONDS);
         codeInputRef.current?.focus();
       } else {
         setResendError(data?.error ?? t("reset.genericError"));
@@ -117,6 +129,11 @@ function ResetPasswordContent() {
       setResendPending(false);
     }
   }
+
+  const passwordsMatch =
+    password.length >= PASSWORD_MIN && confirmPassword.length > 0 && password === confirmPassword;
+  const passwordsMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword;
 
   if (successMessage) {
     return (
@@ -132,7 +149,7 @@ function ResetPasswordContent() {
           href="/login"
           className="mt-6 inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 px-8 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] sm:min-h-12"
         >
-          {t("verify.goToLogin")}
+          {t("reset.continueToLogin")}
         </Link>
       </div>
     );
@@ -152,7 +169,7 @@ function ResetPasswordContent() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-3.5 sm:mt-7 sm:space-y-4">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-3.5 sm:mt-7 sm:space-y-4" aria-busy={submitting}>
         <Input
           id="reset-email"
           name="email"
@@ -161,7 +178,8 @@ function ResetPasswordContent() {
           placeholder={t("auth.emailPlaceholder")}
           required
           autoComplete="email"
-          disabled={submitting}
+          disabled={submitting || emailLockedFromUrl}
+          readOnly={emailLockedFromUrl}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -190,6 +208,7 @@ function ResetPasswordContent() {
           label={t("reset.newPasswordLabel")}
           placeholder={t("auth.passwordPlaceholder")}
           required
+          minLength={PASSWORD_MIN}
           autoComplete="new-password"
           disabled={submitting}
           value={password}
@@ -204,6 +223,7 @@ function ResetPasswordContent() {
           label={t("reset.confirmPasswordLabel")}
           placeholder={t("auth.passwordPlaceholder")}
           required
+          minLength={PASSWORD_MIN}
           autoComplete="new-password"
           disabled={submitting}
           value={confirmPassword}
@@ -212,8 +232,24 @@ function ResetPasswordContent() {
           hideLabel={t("auth.hidePassword")}
         />
 
+        {passwordsMatch && (
+          <p className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+            {t("reset.passwordMatchOk")}
+          </p>
+        )}
+        {passwordsMismatch && (
+          <p className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400">
+            <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+            {t("reset.passwordMismatch")}
+          </p>
+        )}
+
         {errorMessage && (
-          <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300"
+          >
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -224,7 +260,7 @@ function ResetPasswordContent() {
           className="w-full"
           size="lg"
           isLoading={submitting}
-          disabled={submitting || code.length !== 6 || password.length < 6}
+          disabled={submitting || code.length !== 6 || password.length < PASSWORD_MIN || password !== confirmPassword}
         >
           {t("reset.submitBtn")}
         </Button>
@@ -242,14 +278,20 @@ function ResetPasswordContent() {
       </div>
 
       {resendError && (
-        <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300">
+        <div
+          role="alert"
+          className="mb-3 flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500 dark:text-red-300"
+        >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{resendError}</span>
         </div>
       )}
 
       {resendMessage && (
-        <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-300">
+        <div
+          role="status"
+          className="mb-3 flex items-start gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-300"
+        >
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{resendMessage}</span>
         </div>
@@ -261,15 +303,20 @@ function ResetPasswordContent() {
         className="w-full"
         size="lg"
         isLoading={resendPending}
-        disabled={resendPending || !email.trim()}
+        disabled={resendPending || resendCooldown > 0 || !email.trim()}
         onClick={handleResend}
       >
-        {t("reset.resendBtn")}
+        {resendCooldown > 0
+          ? t("auth.resendIn").replace("{seconds}", String(resendCooldown))
+          : t("reset.resendBtn")}
       </Button>
 
       <p className="mt-6 text-center text-sm leading-6 text-[var(--text-muted)] sm:mt-7">
         {t("forgot.rememberPassword")}{" "}
-        <Link href="/login" className="font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--primary)]">
+        <Link
+          href="/login"
+          className="rounded-sm font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2"
+        >
           {t("auth.logIn")}
         </Link>
       </p>
