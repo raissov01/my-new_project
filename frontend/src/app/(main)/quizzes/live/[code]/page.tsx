@@ -407,8 +407,8 @@ function LiveGameInner() {
   if (!pid) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
-        <p className="text-[var(--text-secondary)]">Invalid session link. Please join via the code page.</p>
-        <Link href="/quizzes/join"><Button variant="outline">Join a game</Button></Link>
+        <p className="text-[var(--text-secondary)]">{t("quiz.live.errInvalidSession")}</p>
+        <Link href="/quizzes/join"><Button variant="outline">{t("quiz.live.joinGameBtn")}</Button></Link>
       </div>
     );
   }
@@ -1508,7 +1508,7 @@ function AnsweredScreen({ result, t }: { result: AnswerResult; t: (k: string) =>
           {result.streak}x streak
         </p>
       ) : null}
-      <p className="text-sm text-[var(--text-muted)]">Waiting for next question…</p>
+      <p className="text-sm text-[var(--text-muted)]">{t("quiz.live.waitingNext")}</p>
     </div>
   );
 }
@@ -1589,16 +1589,16 @@ function RevealedScreen({
             </p>
             {isHotspot && hotspotCorrectLabel ? (
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                Answer: <span className="font-semibold">{hotspotCorrectLabel}</span>
+                {t("quiz.live.answerLabel")}: <span className="font-semibold">{hotspotCorrectLabel}</span>
               </p>
             ) : ended.correctOption ? (
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                Answer: {ended.correctOption.toUpperCase()}
+                {t("quiz.live.answerLabel")}: {ended.correctOption.toUpperCase()}
               </p>
             ) : null}
             {ended.blankAnswer ? (
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                Answer: <span className="font-semibold">{ended.blankAnswer}</span>
+                {t("quiz.live.answerLabel")}: <span className="font-semibold">{ended.blankAnswer}</span>
               </p>
             ) : null}
           </div>
@@ -1611,12 +1611,12 @@ function RevealedScreen({
         <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
           <p className="text-sm text-[var(--text-muted)]">{t("quiz.live.tooSlow")}</p>
           {isHotspot && hotspotCorrectLabel ? (
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">Answer: <span className="font-semibold">{hotspotCorrectLabel}</span></p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("quiz.live.answerLabel")}: <span className="font-semibold">{hotspotCorrectLabel}</span></p>
           ) : ended.correctOption ? (
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">Answer: {ended.correctOption.toUpperCase()}</p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("quiz.live.answerLabel")}: {ended.correctOption.toUpperCase()}</p>
           ) : null}
           {ended.blankAnswer ? (
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">Answer: <span className="font-semibold">{ended.blankAnswer}</span></p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("quiz.live.answerLabel")}: <span className="font-semibold">{ended.blankAnswer}</span></p>
           ) : null}
         </div>
       )}
@@ -1661,7 +1661,7 @@ function RevealedScreen({
       {ended.correctOrder && ended.correctOrder.length > 0 ? (
         <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
-            Correct order
+            {t("quiz.live.correctOrder")}
           </p>
           <ol className="space-y-1.5">
             {ended.correctOrder.map((item, i) => (
@@ -1697,7 +1697,7 @@ function RevealedScreen({
         </div>
       ) : null}
 
-      <p className="text-center text-sm text-[var(--text-muted)]">Waiting for next question…</p>
+      <p className="text-center text-sm text-[var(--text-muted)]">{t("quiz.live.waitingNext")}</p>
     </div>
   );
 }

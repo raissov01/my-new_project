@@ -26,7 +26,7 @@ function JoinForm() {
     const trimmedName = name.trim();
 
     if (trimmedCode.length < 4) {
-      setError("Please enter a valid code");
+      setError(t("quiz.join.errInvalidCode"));
       setLoading(false);
       return;
     }
@@ -39,7 +39,7 @@ function JoinForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to join session");
+        setError(data.error ?? t("quiz.errNetwork"));
         setLoading(false);
         return;
       }
@@ -49,7 +49,7 @@ function JoinForm() {
       const role = data.role === "spectator" ? "&role=spectator" : "";
       router.push(`/quizzes/live/${trimmedCode}?pid=${data.participantId}${tid}${role}`);
     } catch {
-      setError("Network error, please try again");
+      setError(t("quiz.errNetwork"));
       setLoading(false);
     }
   };
@@ -59,7 +59,7 @@ function JoinForm() {
       <div className="nd-mock-shell" style={{ marginBottom: 24 }}>
         <div className="nd-mock-bar">
           <Link href="/quizzes" className="nd-btn-soft" style={{ fontSize: 13, padding: "8px 14px" }}>
-            ← Back
+            ← {t("quiz.backToLibrary")}
           </Link>
           <h3 style={{ flex: 1 }}>{t("quiz.live.joinTitle")}</h3>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "var(--ink-mute)" }}>
@@ -114,7 +114,10 @@ function JoinForm() {
           </button>
 
           {error ? (
-            <p className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-3 py-2 text-sm text-red-400">
+            <p
+              role="alert"
+              className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-3 py-2 text-sm text-red-400"
+            >
               {error}
             </p>
           ) : null}

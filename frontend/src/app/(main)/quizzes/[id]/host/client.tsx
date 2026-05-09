@@ -299,7 +299,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to create session");
+        setError(data.error ?? t("quiz.errNetwork"));
         return;
       }
       setSessionId(data.id);
@@ -307,7 +307,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
       setPhase("lobby");
       connectWS(data.joinCode, data.id);
     } catch {
-      setError("Network error");
+      setError(t("quiz.errNetwork"));
     } finally {
       setCreating(false);
     }
