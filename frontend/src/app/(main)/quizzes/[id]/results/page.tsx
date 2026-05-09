@@ -113,11 +113,11 @@ export default async function QuizResultsPage({
       {/* KPI grid */}
       <div className="nd-kpi-grid nd-reveal nd-d2">
         <div className="nd-kpi">
-          <span className="nd-kpi-lbl">Score</span>
+          <span className="nd-kpi-lbl">{t("quiz.results.scoreLabel")}</span>
           <strong className="nd-kpi-num">{attempt.score}/{attempt.totalQuestions}</strong>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-lbl">Percentage</span>
+          <span className="nd-kpi-lbl">{t("quiz.results.percentageLabel")}</span>
           <strong className="nd-kpi-num">{percentage}%</strong>
         </div>
         <div className="nd-kpi">
@@ -132,8 +132,12 @@ export default async function QuizResultsPage({
 
       <section className="nd-mock-shell nd-reveal nd-d3" style={{ marginBottom: 32, overflow: "hidden" }}>
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-[auto_1fr] lg:items-center" style={{ padding: "28px 32px" }}>
-          <div className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56">
-            <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
+          <div
+            className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56"
+            role="img"
+            aria-label={`${attempt.score}/${attempt.totalQuestions} (${percentage}%)`}
+          >
+            <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90" aria-hidden>
               <circle
                 cx="100"
                 cy="100"
@@ -437,9 +441,9 @@ function AnswerRow({
           style={answer.isCorrect ? {} : { background: "#fff1f2", borderColor: "#f87171", color: "#be123c" }}
         >
           {answer.isCorrect ? (
-            <Check style={{ width: 11, height: 11 }} />
+            <Check style={{ width: 11, height: 11 }} aria-hidden />
           ) : (
-            <X style={{ width: 11, height: 11 }} />
+            <X style={{ width: 11, height: 11 }} aria-hidden />
           )}
           {answer.isCorrect ? correctText : wrongText}
         </span>

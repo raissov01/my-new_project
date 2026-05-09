@@ -72,8 +72,11 @@ export function GuestResultsPage({
   const [missing, setMissing] = useState(false);
 
   useEffect(() => {
+    // Hydration-safe sessionStorage read: must run after mount (server can't
+    // see sessionStorage), so the synchronous setState is intentional.
     try {
       const raw = sessionStorage.getItem(`guest_quiz_result_${resultKey ?? quizId}`);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (!raw) { setMissing(true); return; }
       setResult(JSON.parse(raw) as GuestResult);
     } catch {
@@ -84,9 +87,9 @@ export function GuestResultsPage({
   if (missing) {
     return (
       <div className="page-shell py-10" style={{ textAlign: "center" }}>
-        <p style={{ color: "var(--ink-soft)", marginBottom: 16 }}>Нәтиже табылмады.</p>
+        <p role="alert" style={{ color: "var(--ink-soft)", marginBottom: 16 }}>{t("quiz.results.notFound")}</p>
         <Link href={`/quizzes/${quizId}/play`} className="nd-btn-primary">
-          Қайта өту
+          {t("quiz.results.tryAgain")}
         </Link>
       </div>
     );
@@ -121,10 +124,10 @@ export function GuestResultsPage({
       >
         <div>
           <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
-            🎓 Нәтижелеріңізді сақтаңыз
+            <span aria-hidden>🎓</span> {t("quiz.results.guestSaveCtaTitle")}
           </p>
           <p style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
-            Тіркелу тегін — тарихыңыз, прогресіңіз және шексіз квиздер сізді күтеді.
+            {t("quiz.results.guestSaveCtaBody")}
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
@@ -141,7 +144,7 @@ export function GuestResultsPage({
               whiteSpace: "nowrap",
             }}
           >
-            Тіркелу
+            {t("quiz.results.guestSignup")}
           </Link>
           <Link
             href={`/login?redirect=${encodeURIComponent(`/quizzes/${quizId}/play`)}`}
@@ -156,7 +159,7 @@ export function GuestResultsPage({
               whiteSpace: "nowrap",
             }}
           >
-            Кіру
+            {t("quiz.results.guestLogin")}
           </Link>
         </div>
       </div>
@@ -175,11 +178,11 @@ export function GuestResultsPage({
       {/* KPI grid */}
       <div className="nd-kpi-grid nd-reveal nd-d2">
         <div className="nd-kpi">
-          <span className="nd-kpi-lbl">Score</span>
+          <span className="nd-kpi-lbl">{t("quiz.results.scoreLabel")}</span>
           <strong className="nd-kpi-num">{score}/{totalQuestions}</strong>
         </div>
         <div className="nd-kpi">
-          <span className="nd-kpi-lbl">Percentage</span>
+          <span className="nd-kpi-lbl">{t("quiz.results.percentageLabel")}</span>
           <strong className="nd-kpi-num">{percentage}%</strong>
         </div>
         <div className="nd-kpi">
@@ -194,8 +197,12 @@ export function GuestResultsPage({
 
       <section className="nd-mock-shell nd-reveal nd-d3" style={{ marginBottom: 32, overflow: "hidden" }}>
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-[auto_1fr] lg:items-center" style={{ padding: "28px 32px" }}>
-          <div className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56">
-            <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
+          <div
+            className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56"
+            role="img"
+            aria-label={`${score}/${totalQuestions} (${percentage}%)`}
+          >
+            <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90" aria-hidden>
               <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" strokeWidth="14" />
               <circle
                 cx="100" cy="100" r="88" fill="none"
@@ -269,7 +276,7 @@ export function GuestResultsPage({
                   href={`/signup?redirect=${encodeURIComponent(`/quizzes/${quizId}/play`)}`}
                   className="nd-btn-soft"
                 >
-                  {t("quiz.results.practiceMistakes").replace("{n}", String(wrongCount))}
+                  {t("quiz.results.signupToPracticeMistakes").replace("{n}", String(wrongCount))}
                 </Link>
               ) : null}
             </div>
@@ -287,7 +294,16 @@ export function GuestResultsPage({
 
         <div className="mt-5 space-y-3">
           {answers.map((answer, idx) => (
-            <GuestAnswerRow key={`${answer.questionId}-${idx}`} index={idx} answer={answer} />
+            <GuestAnswerRow
+              key={`${answer.questionId}-${idx}`}
+              index={idx}
+              answer={answer}
+              correctText={t("quiz.play.correct")}
+              wrongText={t("quiz.play.wrong")}
+              yourLabel={t("quiz.results.yourAnswer")}
+              correctLabel={t("quiz.results.correctAnswer")}
+              skippedLabel={t("quiz.results.skipped")}
+            />
           ))}
         </div>
       </section>
@@ -295,7 +311,23 @@ export function GuestResultsPage({
   );
 }
 
-function GuestAnswerRow({ index, answer }: { index: number; answer: GuestAnswer }) {
+function GuestAnswerRow({
+  index,
+  answer,
+  correctText,
+  wrongText,
+  yourLabel,
+  correctLabel,
+  skippedLabel,
+}: {
+  index: number;
+  answer: GuestAnswer;
+  correctText: string;
+  wrongText: string;
+  yourLabel: string;
+  correctLabel: string;
+  skippedLabel: string;
+}) {
   const letterToText: Record<string, string> = {
     a: answer.optionA ?? "",
     b: answer.optionB ?? "",
@@ -305,7 +337,7 @@ function GuestAnswerRow({ index, answer }: { index: number; answer: GuestAnswer 
   };
 
   const selectedText = answer.selectedOption ? (letterToText[answer.selectedOption] ?? answer.textAnswer ?? "") : "";
-  const correctText = letterToText[answer.correctOption] ?? answer.correctOption;
+  const correctOptionText = letterToText[answer.correctOption] ?? answer.correctOption;
 
   return (
     <div
@@ -330,15 +362,15 @@ function GuestAnswerRow({ index, answer }: { index: number; answer: GuestAnswer 
           className={answer.isCorrect ? "nd-tag nd-tag-green" : "nd-tag"}
           style={answer.isCorrect ? {} : { background: "#fff1f2", borderColor: "#f87171", color: "#be123c" }}
         >
-          {answer.isCorrect ? <Check style={{ width: 11, height: 11 }} /> : <X style={{ width: 11, height: 11 }} />}
-          {answer.isCorrect ? "Дұрыс" : "Қате"}
+          {answer.isCorrect ? <Check style={{ width: 11, height: 11 }} aria-hidden /> : <X style={{ width: 11, height: 11 }} aria-hidden />}
+          {answer.isCorrect ? correctText : wrongText}
         </span>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <div style={{ borderRadius: 10, border: "1px solid var(--line)", background: "#fff", padding: "10px 14px", fontSize: 13, color: "var(--ink)" }}>
           <p style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink-mute)", fontWeight: 700, marginBottom: 6 }}>
-            Сіздің жауабыңыз
+            {yourLabel}
           </p>
           {answer.selectedOption ? (
             <>
@@ -348,15 +380,15 @@ function GuestAnswerRow({ index, answer }: { index: number; answer: GuestAnswer 
           ) : answer.textAnswer ? (
             <span style={{ fontWeight: 500 }}>{answer.textAnswer}</span>
           ) : (
-            <span style={{ fontStyle: "italic", color: "var(--ink-mute)" }}>Өткізілді</span>
+            <span style={{ fontStyle: "italic", color: "var(--ink-mute)" }}>{skippedLabel}</span>
           )}
         </div>
         <div style={{ borderRadius: 10, border: "1.5px solid var(--green)", background: "var(--green-soft)", padding: "10px 14px", fontSize: 13, color: "var(--ink)" }}>
           <p style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--green)", fontWeight: 700, marginBottom: 6 }}>
-            Дұрыс жауап
+            {correctLabel}
           </p>
           <span style={{ fontWeight: 700, textTransform: "uppercase" }}>{answer.correctOption}</span>
-          {correctText ? ` · ${correctText}` : ""}
+          {correctOptionText ? ` · ${correctOptionText}` : ""}
         </div>
       </div>
     </div>
