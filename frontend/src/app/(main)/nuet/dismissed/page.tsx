@@ -54,7 +54,7 @@ export default async function NUETDismissedPage() {
         {t("nuet.dismissed.subtitle").replace("{n}", String(data.total))}
       </p>
 
-      <DismissedListClient initialItems={data.items} />
+      <DismissedListClient initialItems={data.items ?? []} />
     </div>
   );
 }

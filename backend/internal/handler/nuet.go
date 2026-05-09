@@ -472,7 +472,7 @@ func (h *NUETHandler) ListDismissedQuestions(w http.ResponseWriter, r *http.Requ
 		DismissedAt time.Time  `json:"dismissedAt"`
 		ReviewAt    *time.Time `json:"reviewAt,omitempty"`
 	}
-	var items []row
+	items := []row{}
 	if err := h.db.Raw(`
 		SELECT
 			d.question_id,
