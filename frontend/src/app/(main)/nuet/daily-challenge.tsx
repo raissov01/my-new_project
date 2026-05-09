@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Flame, Sparkles, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Flame, Sparkles, X } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { MathText } from "@/components/nuet/math-text";
 import type { NUETQuestion } from "@/server/integrations/go-backend/nuet";
@@ -33,6 +33,11 @@ export function NUETDailyChallengeWidget({
   // Crossing one of these streak counts pops a celebratory banner. We
   // don't celebrate every day (would get noisy) — only round milestones.
   const [milestone, setMilestone] = useState<number | null>(null);
+  // Collapse the question list by default — three full questions inline
+  // made the hub page very tall and looked like the whole page was the
+  // daily challenge. Click the card header to expand. Auto-expands once
+  // the user has interacted with at least one question.
+  const [expanded, setExpanded] = useState(false);
   const completionRef = useRef(false);
 
   useEffect(() => {
@@ -103,10 +108,17 @@ export function NUETDailyChallengeWidget({
     );
   }
 
+  const revealedCount = Object.values(revealed).filter(Boolean).length;
+  const isOpen = expanded || revealedCount > 0;
   return (
     <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={isOpen}
+        className="flex w-full flex-wrap items-start justify-between gap-3 text-left"
+      >
+        <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
             {date}
           </p>
@@ -114,13 +126,24 @@ export function NUETDailyChallengeWidget({
             {t("nuet.daily.title")}
           </h2>
           <p className="mt-1 max-w-xl text-sm text-[var(--text-secondary)]">
-            {t("nuet.daily.subtitle")}
+            {isOpen
+              ? t("nuet.daily.subtitle")
+              : t("nuet.daily.collapsedSubtitle")
+                  .replace("{done}", String(revealedCount))
+                  .replace("{total}", String(questions.length))}
           </p>
         </div>
-        {hydrated ? (
-          <StreakPill streak={streak} completedToday={completedToday} t={t} />
-        ) : null}
-      </header>
+        <div className="flex items-center gap-3">
+          {hydrated ? (
+            <StreakPill streak={streak} completedToday={completedToday} t={t} />
+          ) : null}
+          {isOpen ? (
+            <ChevronUp className="h-5 w-5 text-[var(--text-muted)]" aria-hidden />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-[var(--text-muted)]" aria-hidden />
+          )}
+        </div>
+      </button>
 
       {milestone != null ? (
         <div className="mt-4 flex items-start gap-3 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-100 to-orange-100 p-4 text-amber-900 animate-fade-in-up">
@@ -136,21 +159,23 @@ export function NUETDailyChallengeWidget({
         </div>
       ) : null}
 
-      <ol className="mt-5 space-y-4">
-        {questions.map((q, index) => (
-          <DailyQuestionCard
-            key={q.id}
-            question={q}
-            index={index}
-            pick={picks[q.id] ?? ""}
-            isRevealed={Boolean(revealed[q.id])}
-            onPick={(choice) =>
-              setPicks((prev) => ({ ...prev, [q.id]: choice }))
-            }
-            onReveal={() => handleReveal(q.id)}
-          />
-        ))}
-      </ol>
+      {isOpen ? (
+        <ol className="mt-5 space-y-4">
+          {questions.map((q, index) => (
+            <DailyQuestionCard
+              key={q.id}
+              question={q}
+              index={index}
+              pick={picks[q.id] ?? ""}
+              isRevealed={Boolean(revealed[q.id])}
+              onPick={(choice) =>
+                setPicks((prev) => ({ ...prev, [q.id]: choice }))
+              }
+              onReveal={() => handleReveal(q.id)}
+            />
+          ))}
+        </ol>
+      ) : null}
     </section>
   );
 }
