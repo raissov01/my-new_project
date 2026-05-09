@@ -249,6 +249,15 @@ func AutoMigrate(db *gorm.DB) (err error) {
 	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS match_pairs_snapshot JSONB`)
 	db.Exec(`ALTER TABLE quiz_attempt_answers ADD COLUMN IF NOT EXISTS order_index_snapshot INT NOT NULL DEFAULT 0`)
 
+	// Power-ups list: persisted as JSONB for analytics, never affects grading.
+	// Repository inserts assume the column exists.
+	db.Exec(`ALTER TABLE quiz_attempts ADD COLUMN IF NOT EXISTS power_ups_used JSONB`)
+
+	// telegram_posts.tags: text[] used by NUET dashboard to filter materials by tag.
+	// Default '{}' so existing rows satisfy the array operations safely.
+	db.Exec(`ALTER TABLE telegram_posts ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}'`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_telegram_posts_tags ON telegram_posts USING GIN (tags)`)
+
 	// ── Billing column additions (idempotent) ───────────────────────────────
 	db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(32)`)
 	db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone) WHERE phone IS NOT NULL`)

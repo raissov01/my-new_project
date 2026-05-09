@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/model"
 	"github.com/midoriya/flashlearn-backend/internal/repository"
@@ -81,6 +82,13 @@ func (h *QuizHandler) GetMine(w http.ResponseWriter, r *http.Request) {
 // GetQuiz handles GET /api/v1/quizzes/{quizID}
 func (h *QuizHandler) GetQuiz(w http.ResponseWriter, r *http.Request) {
 	quizID := r.PathValue("quizID")
+	// Reject non-UUID path values up front. Postgres rejects malformed UUIDs
+	// with SQLSTATE 22P02, which surfaces as a noisy ERROR log entry; bots
+	// scanning the URL space (e.g. /quizzes/5e/...) trigger this constantly.
+	if _, err := uuid.Parse(quizID); err != nil {
+		writeError(w, http.StatusNotFound, "quiz not found", nil)
+		return
+	}
 	userID, _ := middleware.UserIDFromContext(r.Context())
 	inviteToken := r.Header.Get("X-Invite-Token")
 

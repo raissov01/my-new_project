@@ -95,10 +95,17 @@ func (s *GamificationService) RecordDailyActivity(userID string, xpEarned, lesso
 		return err
 	}
 
-	// Sync streak to EngSimUserProgress as well
+	// Sync streak to EngSimUserProgress as well. The branches above only set
+	// streak_days when it actually changes; on a same-day repeat, or a gap
+	// covered by a freeze, the map entry is missing — we must fall back to
+	// the user's current value or we'd write NULL into a NOT NULL column.
+	syncedStreak, ok := updates["streak_days"].(int)
+	if !ok {
+		syncedStreak = user.StreakDays
+	}
 	s.db.Model(&models.EngSimUserProgress{}).
 		Where("user_id = ?", userID).
-		Updates(map[string]any{"current_streak": updates["streak_days"], "last_practice_date": today.Format("2006-01-02")})
+		Updates(map[string]any{"current_streak": syncedStreak, "last_practice_date": today.Format("2006-01-02")})
 
 	// Best-effort achievement unlock pass. Errors are swallowed because the
 	// daily activity write is the load-bearing operation; achievements are a
