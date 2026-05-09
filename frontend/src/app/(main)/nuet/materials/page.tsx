@@ -158,7 +158,7 @@ function LessonCard({
 }) {
   return (
     <Link
-      href={`/nuet/materials/${lesson.slug}`}
+      href={`/nuet/topics/${lesson.slug}`}
       className="group flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 transition hover:border-[var(--primary)]"
     >
       <div className="flex items-start justify-between gap-2">
