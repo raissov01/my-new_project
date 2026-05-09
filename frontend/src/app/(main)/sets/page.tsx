@@ -172,7 +172,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
         )}
       </div>
 
-      <form>
+      <form role="search">
         <div
           style={{
             background: "var(--paper)",
@@ -187,6 +187,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
           }}
         >
           <label
+            htmlFor="sets-search"
             style={{
               flex: 1,
               display: "flex",
@@ -199,8 +200,10 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
               minWidth: 200,
             }}
           >
-            <Search style={{ width: 16, height: 16, color: "var(--ink-mute)", flexShrink: 0 }} />
+            <span className="sr-only">{t("sets.searchPlaceholder")}</span>
+            <Search style={{ width: 16, height: 16, color: "var(--ink-mute)", flexShrink: 0 }} aria-hidden />
             <input
+              id="sets-search"
               type="search"
               name="q"
               defaultValue={q}
@@ -218,6 +221,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
           </label>
 
           <label
+            htmlFor="sets-filter"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -240,6 +244,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
               {t("sets.filter")}
             </span>
             <select
+              id="sets-filter"
               name="filter"
               defaultValue={filter}
               style={{
@@ -251,13 +256,14 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
               }}
             >
               <option value="all">{t("sets.filterAll")}</option>
-              <option value="review">{t("sets.filterNeedsReview")}</option>
-              <option value="recent">{t("sets.filterRecent")}</option>
-              <option value="mastered">{t("sets.filterMastered")}</option>
+              <option value="review" disabled={!user}>{t("sets.filterNeedsReview")}</option>
+              <option value="recent" disabled={!user}>{t("sets.filterRecent")}</option>
+              <option value="mastered" disabled={!user}>{t("sets.filterMastered")}</option>
             </select>
           </label>
 
           <label
+            htmlFor="sets-sort"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -280,6 +286,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
               {t("sets.sort")}
             </span>
             <select
+              id="sets-sort"
               name="sort"
               defaultValue={sort}
               style={{
@@ -298,7 +305,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
           </label>
 
           <Button type="submit" variant="outline" style={{ height: 44 }}>
-            <SlidersHorizontal className="h-4 w-4" />
+            <SlidersHorizontal className="h-4 w-4" aria-hidden />
             {t("sets.apply")}
           </Button>
         </div>
@@ -338,6 +345,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
                 showManageActions={isOwner}
                 showSaveAction={Boolean(user) && !isOwner}
                 requireAuthForStudy={!user}
+                hideStudyStats={!user}
               />
             );
           })}
@@ -352,6 +360,7 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
           }}
         >
           <div
+            aria-hidden
             style={{
               margin: "0 auto 20px",
               width: 56,
@@ -370,9 +379,17 @@ export default async function SetsPage({ searchParams }: SetsPageProps) {
           <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 12 }}>
             {t("sets.emptyTitle")}
           </h2>
-          <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto", lineHeight: 1.7 }}>
+          <p style={{ fontSize: 14, color: "var(--ink-mute)", maxWidth: 480, margin: "0 auto 20px", lineHeight: 1.7 }}>
             {t("sets.emptyBody")}
           </p>
+          {user ? (
+            <Link href="/sets/new">
+              <Button size="lg">
+                <Plus className="h-4 w-4" aria-hidden />
+                {t("dashboard.createNewSet")}
+              </Button>
+            </Link>
+          ) : null}
         </div>
       )}
     </div>
