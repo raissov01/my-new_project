@@ -244,7 +244,11 @@ function TopicAccuracyPanel({
             return (
               <li key={entry.slug}>
                 <Link
-                  href={`/nuet/topics/${entry.slug}`}
+                  href={
+                    tone === "weak"
+                      ? `/nuet/practice/${entry.slug}`
+                      : `/nuet/topics/${entry.slug}`
+                  }
                   className="group block rounded-lg border border-[var(--border)] bg-[var(--bg-base)] p-3 transition hover:border-[var(--primary)]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, ChevronRight, RotateCcw, XCircle } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -85,6 +85,46 @@ export function NUETPracticeClient({
     setError(null);
     setStage("ready");
   }
+
+  // Keyboard shortcuts during the practice run:
+  //   A-E    select that option (disabled once Check is pressed)
+  //   Enter  Check (when an option is picked) / Next (when already checked)
+  // Skip when focus is in a text input — the practice run currently has none,
+  // but this makes the handler future-proof.
+  useEffect(() => {
+    if (stage !== "ready" || !currentQuestion) return;
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (isChecked) {
+          handleNext();
+        } else if (selectedChoice) {
+          handleCheck();
+        }
+        return;
+      }
+      if (isChecked) return;
+      const upper = event.key.toUpperCase();
+      const index = upper.charCodeAt(0) - 65;
+      if (index >= 0 && index < currentQuestion.options.length) {
+        event.preventDefault();
+        const letter = String.fromCharCode(65 + index);
+        setAnswers((current) => ({ ...current, [currentQuestion.id]: letter }));
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // handleCheck/handleNext are stable enough for this scope; we re-bind on
+    // state changes that affect their behavior (currentQuestion, isChecked,
+    // selectedChoice).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, currentQuestion, isChecked, selectedChoice, lastQuestion]);
 
   if (questions.length === 0) {
     return (

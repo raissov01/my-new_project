@@ -59,6 +59,7 @@ export function NUETSimulatorClient({
   const [error, setError] = useState<string | null>(null);
   const [violationBanner, setViolationBanner] = useState<string | null>(null);
   const [expandedReview, setExpandedReview] = useState<Record<number, boolean>>({});
+  const [reviewFilter, setReviewFilter] = useState<"all" | "wrong" | "flagged">("all");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Autosave UX: lastSavedAt is the wall-clock ms of the most recent successful
   // save, lastSaveFailed surfaces a warning, savedTick forces a re-render every
@@ -79,6 +80,11 @@ export function NUETSimulatorClient({
   // Strict-mode auto-termination should not throw the user back to the empty
   // configure screen — show a modal that points to the saved attempt instead.
   const [terminatedModal, setTerminatedModal] = useState(false);
+  // Pause is only allowed when strictMode is off — pausing during a strict
+  // attempt would defeat the purpose of timed-exam practice. The timer
+  // effect gates on this; the autosave loop keeps running so a paused
+  // attempt that's left open still gets persisted periodically.
+  const [isPaused, setIsPaused] = useState(false);
   useScreenWakeLock(stage === "exam");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autosaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -181,7 +187,7 @@ export function NUETSimulatorClient({
   });
 
   useEffect(() => {
-    if (stage !== "exam") {
+    if (stage !== "exam" || isPaused) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -207,7 +213,7 @@ export function NUETSimulatorClient({
         timerRef.current = null;
       }
     };
-  }, [finishAttempt, stage, t]);
+  }, [finishAttempt, stage, t, isPaused]);
 
   useEffect(() => {
     if (stage !== "exam" || !attemptId) {
@@ -248,6 +254,80 @@ export function NUETSimulatorClient({
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [stage]);
+
+  // Keyboard shortcuts during the exam:
+  //   A-H        select that option (whichever options the question exposes)
+  //   ←  →       prev / next question
+  //   F          toggle flag on the active question
+  //   Cmd/Ctrl+Enter   open the submit confirm modal
+  //   Space      pause/resume (non-strict only)
+  // We bail out when the focus is in a text input so we don't intercept
+  // typing, and when any modal is open so dialog buttons stay reachable.
+  useEffect(() => {
+    if (stage !== "exam" || isPaused) return;
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) return;
+      }
+      if (
+        submitConfirmOpen ||
+        terminatedModal ||
+        examMode.showExitConfirm ||
+        mobileNavOpen
+      ) {
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
+        requestFinish();
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setCurrentIndex((i) => Math.max(0, i - 1));
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setCurrentIndex((i) => Math.min(questions.length - 1, i + 1));
+        return;
+      }
+      if (event.key === " " && !strictMode) {
+        event.preventDefault();
+        setIsPaused((p) => !p);
+        return;
+      }
+      if (!activeQuestion) return;
+      const upper = event.key.toUpperCase();
+      if (upper === "F") {
+        event.preventDefault();
+        toggleMarked(activeQuestion.id);
+        return;
+      }
+      const optionCount = visibleOptions(activeQuestion.options).length;
+      const letterIndex = ANSWER_LETTERS.indexOf(upper as (typeof ANSWER_LETTERS)[number]);
+      if (letterIndex >= 0 && letterIndex < optionCount) {
+        event.preventDefault();
+        const letter = ANSWER_LETTERS[letterIndex];
+        setAnswers((current) => ({ ...current, [activeQuestion.id]: letter }));
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [
+    stage,
+    isPaused,
+    submitConfirmOpen,
+    terminatedModal,
+    mobileNavOpen,
+    examMode.showExitConfirm,
+    strictMode,
+    activeQuestion,
+    questions.length,
+  ]);
 
   // Audio warning at 5 minutes and 1 minute remaining. Uses the Web Audio API
   // directly so we don't ship an extra audio asset for a single beep. Two
@@ -390,6 +470,8 @@ export function NUETSimulatorClient({
     setSubmitFailed(false);
     setSubmitConfirmOpen(false);
     setTerminatedModal(false);
+    setIsPaused(false);
+    setReviewFilter("all");
     setViolationBanner(null);
     setStage("configure");
   }
@@ -642,9 +724,51 @@ export function NUETSimulatorClient({
         />
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("nuet.simulator.reviewTitle")}</h3>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("nuet.simulator.reviewTitle")}</h3>
+            <div className="flex flex-wrap gap-1.5 text-xs">
+              {([
+                { key: "all", label: t("nuet.simulator.reviewFilterAll") },
+                { key: "wrong", label: t("nuet.simulator.reviewFilterWrong") },
+                { key: "flagged", label: t("nuet.simulator.reviewFilterFlagged") },
+              ] as const).map((f) => {
+                const count =
+                  f.key === "all"
+                    ? result.evaluations?.length ?? 0
+                    : f.key === "wrong"
+                      ? (result.evaluations ?? []).filter((e) => !e.correct).length
+                      : (result.evaluations ?? []).filter(
+                          (e) => e.questionId && marked.has(e.questionId)
+                        ).length;
+                const active = reviewFilter === f.key;
+                return (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setReviewFilter(f.key)}
+                    className={`rounded-full border px-3 py-1 font-medium transition ${
+                      active
+                        ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                        : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-secondary)] hover:border-[var(--primary)]"
+                    }`}
+                  >
+                    {f.label}
+                    <span className="ml-1.5 font-mono text-[10px] text-[var(--text-muted)]">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="mt-4 space-y-3">
-            {result.evaluations?.map((item) => {
+            {(result.evaluations ?? [])
+              .filter((item) => {
+                if (reviewFilter === "wrong") return !item.correct;
+                if (reviewFilter === "flagged") {
+                  return item.questionId ? marked.has(item.questionId) : false;
+                }
+                return true;
+              })
+              .map((item) => {
               const open = expandedReview[item.question] ?? false;
               return (
                 <div key={item.question} className="rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-4">
@@ -753,6 +877,20 @@ export function NUETSimulatorClient({
           <MetricPill label={t("ielts.dashboard.violations")} value={String(examMode.violationCount)} />
         </div>
 
+        {!strictMode ? (
+          <button
+            type="button"
+            onClick={() => setIsPaused((p) => !p)}
+            className={`flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+              isPaused
+                ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-primary)] hover:border-[var(--primary)]"
+            }`}
+          >
+            {isPaused ? t("nuet.simulator.resume") : t("nuet.simulator.pause")}
+          </button>
+        ) : null}
+
         {violationBanner ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
             {violationBanner}
@@ -809,7 +947,21 @@ export function NUETSimulatorClient({
         </div>
       </aside>
 
-      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 pb-24 sm:p-6 sm:pb-24 lg:mt-0 lg:pb-6">
+      <section className="relative mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 pb-24 sm:p-6 sm:pb-24 lg:mt-0 lg:pb-6">
+        {isPaused ? (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-[var(--bg-surface)]/95 backdrop-blur-sm">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+              {t("nuet.simulator.pausedLabel")}
+            </p>
+            <p className="text-2xl font-bold text-[var(--text-primary)]">
+              {t("nuet.simulator.pausedTitle")}
+            </p>
+            <p className="max-w-md text-center text-sm text-[var(--text-secondary)]">
+              {t("nuet.simulator.pausedBody")}
+            </p>
+            <Button onClick={() => setIsPaused(false)}>{t("nuet.simulator.resume")}</Button>
+          </div>
+        ) : null}
         {activeQuestion ? (
           <>
             <div className="flex flex-wrap items-center justify-between gap-3">
