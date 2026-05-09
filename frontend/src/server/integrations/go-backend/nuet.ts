@@ -268,6 +268,7 @@ export type NUETDismissedQuestion = {
   topicSlug?: string;
   prompt: string;
   dismissedAt: string;
+  reviewAt?: string | null;
 };
 
 export async function listDismissedNUETQuestions(

@@ -270,12 +270,17 @@ export async function resetNUETRoadmap(): Promise<void> {
 // "I know this" — server actions for marking and unmarking a question as
 // dismissed. Used from practice; the backend filters dismissed questions
 // out of /nuet/questions by default.
-export async function dismissNUETQuestion(questionId: string) {
+export async function dismissNUETQuestion(
+  questionId: string,
+  options: { repeatInDays?: number } = {}
+) {
   const user = await requireUser();
-  return fetchBackendJson<{ dismissed: boolean }>({
+  return fetchBackendJson<{ dismissed: boolean; reviewAt?: string | null }>({
     path: `/api/v1/nuet/questions/${encodeURIComponent(questionId)}/dismiss`,
     userId: user.id,
     method: "POST",
+    body: JSON.stringify({ repeatInDays: options.repeatInDays ?? 0 }),
+    headers: { "Content-Type": "application/json" },
     timeoutMs: 10_000,
   });
 }

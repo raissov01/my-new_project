@@ -67,6 +67,14 @@ export function DismissedListClient({
             <div className="mt-1 text-sm text-[var(--text-primary)] line-clamp-2">
               <MathText text={item.prompt} />
             </div>
+            {item.reviewAt ? (
+              <p className="mt-1 text-[11px] text-[var(--primary)]">
+                {t("nuet.dismissed.reviewAt").replace(
+                  "{date}",
+                  new Date(item.reviewAt).toLocaleDateString(locale)
+                )}
+              </p>
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             {item.topicSlug ? (

@@ -86,6 +86,9 @@ export function NUETSimulatorClient({
   // Strict-mode auto-termination should not throw the user back to the empty
   // configure screen — show a modal that points to the saved attempt instead.
   const [terminatedModal, setTerminatedModal] = useState(false);
+  // Keyboard help overlay — toggled by `?`. Lists every shortcut the user
+  // can use during the exam so the features we added aren't hidden.
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   // Pause is only allowed when strictMode is off — pausing during a strict
   // attempt would defeat the purpose of timed-exam practice. The timer
   // effect gates on this; the autosave loop keeps running so a paused
@@ -105,6 +108,10 @@ export function NUETSimulatorClient({
   const timePerAnswerRef = useRef<Record<string, number>>({});
   const questionStartedAtRef = useRef<number | null>(null);
   const activeQuestionIdRef = useRef<string | null>(null);
+  // currentQuestionStartedAt mirrors questionStartedAtRef as React state so
+  // the inline "this question: Xs" badge re-renders on the nowMs tick.
+  // Refs alone would render once and stay frozen.
+  const [currentQuestionStartedAt, setCurrentQuestionStartedAt] = useState<number | null>(null);
 
   const activeQuestion = questions[currentIndex] ?? null;
   const answeredCount = useMemo(() => Object.values(answers).filter(Boolean).length, [answers]);
@@ -141,6 +148,7 @@ export function NUETSimulatorClient({
     if (stage !== "exam" || isPaused) {
       flushQuestionTime();
       activeQuestionIdRef.current = null;
+      setCurrentQuestionStartedAt(null);
       return;
     }
     const q = questions[currentIndex];
@@ -148,6 +156,10 @@ export function NUETSimulatorClient({
     flushQuestionTime();
     activeQuestionIdRef.current = q.id;
     questionStartedAtRef.current = performance.now();
+    // The displayed badge uses Date.now() to match nowMs (which also ticks
+    // off Date.now). The ref keeps its monotonic anchor for accurate
+    // accumulation; it just doesn't drive React state.
+    setCurrentQuestionStartedAt(Date.now());
     return () => {
       // On stage change / unmount, capture the in-flight question's time so
       // it makes it into the next save call.
@@ -324,6 +336,20 @@ export function NUETSimulatorClient({
         const tag = target.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) return;
       }
+      // ? toggles the shortcuts overlay regardless of modal state so the
+      // user can always pull it up. Esc closes it.
+      if (event.key === "?" && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault();
+        setShortcutsOpen((v) => !v);
+        return;
+      }
+      if (shortcutsOpen) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setShortcutsOpen(false);
+        }
+        return;
+      }
       if (
         submitConfirmOpen ||
         terminatedModal ||
@@ -380,6 +406,7 @@ export function NUETSimulatorClient({
     strictMode,
     activeQuestion,
     questions.length,
+    shortcutsOpen,
   ]);
 
   // Audio warning at 5 minutes and 1 minute remaining. Uses the Web Audio API
@@ -1019,6 +1046,15 @@ export function NUETSimulatorClient({
           </button>
         ) : null}
 
+        <button
+          type="button"
+          onClick={() => setShortcutsOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+        >
+          <kbd className="inline-flex h-5 w-5 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface)] font-mono text-[11px] font-semibold">?</kbd>
+          {t("nuet.simulator.shortcutsButton")}
+        </button>
+
         {violationBanner ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
             {violationBanner}
@@ -1097,8 +1133,14 @@ export function NUETSimulatorClient({
                 <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
                   {activeQuestion.section === "math" ? t("nuet.sectionMath") : t("nuet.sectionCT")}
                 </p>
-                <h2 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
-                  #{currentIndex + 1}
+                <h2 className="mt-2 flex items-baseline gap-3 text-xl font-semibold text-[var(--text-primary)]">
+                  <span>#{currentIndex + 1}</span>
+                  {currentQuestionStartedAt != null ? (
+                    <span className="font-mono text-xs font-normal text-[var(--text-muted)]">
+                      {Math.max(0, Math.floor((nowMs - currentQuestionStartedAt) / 1000))}
+                      {t("quiz.secondsShort")}
+                    </span>
+                  ) : null}
                 </h2>
               </div>
               <button
@@ -1277,6 +1319,53 @@ export function NUETSimulatorClient({
                 {t("nuet.simulator.terminatedAction")}
               </Link>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {shortcutsOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                {t("nuet.simulator.shortcutsTitle")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShortcutsOpen(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                aria-label={t("nuet.simulator.shortcutsClose")}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <dl className="mt-4 space-y-2 text-sm">
+              {([
+                { keys: ["A", "B", "C", "D"], label: t("nuet.simulator.shortcutPick") },
+                { keys: ["←", "→"], label: t("nuet.simulator.shortcutNav") },
+                { keys: ["F"], label: t("nuet.simulator.shortcutFlag") },
+                { keys: [strictMode ? "—" : "Space"], label: t("nuet.simulator.shortcutPause") },
+                { keys: ["⌘", "Enter"], label: t("nuet.simulator.shortcutSubmit") },
+                { keys: ["?"], label: t("nuet.simulator.shortcutHelp") },
+              ] as const).map((row, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-base)] px-3 py-2"
+                >
+                  <dt className="text-[var(--text-secondary)]">{row.label}</dt>
+                  <dd className="flex items-center gap-1">
+                    {row.keys.map((k, j) => (
+                      <kbd
+                        key={j}
+                        className="inline-flex min-w-[28px] items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[var(--text-primary)]"
+                      >
+                        {k}
+                      </kbd>
+                    ))}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
       ) : null}

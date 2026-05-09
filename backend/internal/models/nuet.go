@@ -103,12 +103,15 @@ func (NUETViolation) TableName() string { return "nuet_simulator_violations" }
 // so it's excluded from future practice drills. Compound unique on
 // (user_id, question_id) means re-dismissing the same question is a no-op
 // rather than an error. Dropping the row (via DELETE endpoint) re-enables
-// the question.
+// the question. ReviewAt drives optional spaced repetition: NULL means
+// "hide forever", a future timestamp means the row is filtered out only
+// until that date and then the question reappears in drills.
 type NUETQuestionDismissal struct {
-	ID           string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	UserID       string    `gorm:"type:uuid;not null;uniqueIndex:uni_nuet_dismissal_user_question,priority:1" json:"userId"`
-	QuestionID   string    `gorm:"type:uuid;not null;uniqueIndex:uni_nuet_dismissal_user_question,priority:2" json:"questionId"`
-	DismissedAt  time.Time `gorm:"autoCreateTime" json:"dismissedAt"`
+	ID           string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	UserID       string     `gorm:"type:uuid;not null;uniqueIndex:uni_nuet_dismissal_user_question,priority:1" json:"userId"`
+	QuestionID   string     `gorm:"type:uuid;not null;uniqueIndex:uni_nuet_dismissal_user_question,priority:2" json:"questionId"`
+	DismissedAt  time.Time  `gorm:"autoCreateTime" json:"dismissedAt"`
+	ReviewAt     *time.Time `json:"reviewAt,omitempty"`
 }
 
 func (NUETQuestionDismissal) TableName() string { return "nuet_question_dismissals" }

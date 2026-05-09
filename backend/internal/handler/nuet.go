@@ -254,11 +254,13 @@ func (h *NUETHandler) ListQuestions(w http.ResponseWriter, r *http.Request) {
 	// Hide questions the user has marked as "I know this" unless they
 	// explicitly asked to see them all (e.g. for a manage-dismissed view).
 	// Guests have no dismissals so the subquery is a no-op for them.
+	// review_at semantics: NULL = hide forever; a future timestamp means
+	// the question is only hidden until that date (spaced repetition).
 	includeDismissed := r.URL.Query().Get("includeDismissed") == "1"
 	if !includeDismissed {
 		if userID, ok := middleware.UserIDFromContext(r.Context()); ok && userID != "" {
 			q = q.Where(
-				"id NOT IN (SELECT question_id FROM nuet_question_dismissals WHERE user_id = ?)",
+				"id NOT IN (SELECT question_id FROM nuet_question_dismissals WHERE user_id = ? AND (review_at IS NULL OR review_at > NOW()))",
 				userID,
 			)
 		}
@@ -292,9 +294,18 @@ func (h *NUETHandler) ListQuestions(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, resp)
 }
 
+type nuetDismissRequest struct {
+	// RepeatInDays controls spaced repetition. 0 (or omitted) = hide
+	// forever; positive = resurface after that many days. Capped at 365
+	// so a typo doesn't write a timestamp far enough in the future to
+	// be effectively forever.
+	RepeatInDays int `json:"repeatInDays"`
+}
+
 // POST /nuet/questions/:questionID/dismiss — user marks a question as "I
-// know this", excluding it from future practice drills. Idempotent: a
-// duplicate dismiss is a no-op (compound unique on user_id + question_id).
+// know this", excluding it from future practice drills. Idempotent on
+// the (user, question) pair; a re-dismiss with a different repeatInDays
+// updates the schedule instead of erroring.
 func (h *NUETHandler) DismissQuestion(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
@@ -306,6 +317,21 @@ func (h *NUETHandler) DismissQuestion(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "questionID required", nil)
 		return
 	}
+	// Body is optional — older clients that just POST with no payload get
+	// the legacy "hide forever" behavior.
+	req := nuetDismissRequest{}
+	if r.ContentLength > 0 {
+		_ = decodeJSON(r, &req)
+	}
+	var reviewAt *time.Time
+	if req.RepeatInDays > 0 {
+		days := req.RepeatInDays
+		if days > 365 {
+			days = 365
+		}
+		t := time.Now().Add(time.Duration(days) * 24 * time.Hour)
+		reviewAt = &t
+	}
 	// Verify the question exists so a malformed UUID doesn't get persisted.
 	var exists int64
 	if err := h.db.Model(&models.NUETQuestion{}).Where("id = ?", questionID).Count(&exists).Error; err != nil {
@@ -316,13 +342,31 @@ func (h *NUETHandler) DismissQuestion(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "question not found", nil)
 		return
 	}
-	row := models.NUETQuestionDismissal{UserID: userID, QuestionID: questionID}
-	if err := h.db.Where("user_id = ? AND question_id = ?", userID, questionID).
-		FirstOrCreate(&row).Error; err != nil {
+	var existing models.NUETQuestionDismissal
+	err := h.db.Where("user_id = ? AND question_id = ?", userID, questionID).First(&existing).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
 		writeError(w, http.StatusInternalServerError, "failed to dismiss question", err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"dismissed": true})
+	if err == gorm.ErrRecordNotFound {
+		row := models.NUETQuestionDismissal{
+			UserID:     userID,
+			QuestionID: questionID,
+			ReviewAt:   reviewAt,
+		}
+		if err := h.db.Create(&row).Error; err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to dismiss question", err)
+			return
+		}
+	} else {
+		// Update the schedule on re-dismiss so the user can adjust without
+		// undismissing first.
+		if err := h.db.Model(&existing).Update("review_at", reviewAt).Error; err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to update dismissal", err)
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"dismissed": true, "reviewAt": reviewAt})
 }
 
 // GET /nuet/roadmap — read the current user's roadmap progress (plan key +
@@ -419,13 +463,14 @@ func (h *NUETHandler) ListDismissedQuestions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	type row struct {
-		QuestionID  string    `json:"questionId"`
-		Section     string    `json:"section"`
-		TopicID     *string   `json:"topicId,omitempty"`
-		TopicTitle  *string   `json:"topicTitle,omitempty"`
-		TopicSlug   *string   `json:"topicSlug,omitempty"`
-		Prompt      string    `json:"prompt"`
-		DismissedAt time.Time `json:"dismissedAt"`
+		QuestionID  string     `json:"questionId"`
+		Section     string     `json:"section"`
+		TopicID     *string    `json:"topicId,omitempty"`
+		TopicTitle  *string    `json:"topicTitle,omitempty"`
+		TopicSlug   *string    `json:"topicSlug,omitempty"`
+		Prompt      string     `json:"prompt"`
+		DismissedAt time.Time  `json:"dismissedAt"`
+		ReviewAt    *time.Time `json:"reviewAt,omitempty"`
 	}
 	var items []row
 	if err := h.db.Raw(`
@@ -436,7 +481,8 @@ func (h *NUETHandler) ListDismissedQuestions(w http.ResponseWriter, r *http.Requ
 			t.title AS topic_title,
 			t.slug  AS topic_slug,
 			q.prompt,
-			d.dismissed_at
+			d.dismissed_at,
+			d.review_at
 		FROM nuet_question_dismissals d
 		JOIN nuet_questions q ON q.id = d.question_id
 		LEFT JOIN nuet_topics t ON t.id = q.topic_id

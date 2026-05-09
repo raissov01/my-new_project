@@ -74,7 +74,7 @@ export function NUETPracticeClient({
     setChecked((current) => ({ ...current, [currentQuestion.id]: true }));
   }
 
-  function handleDismiss() {
+  function handleDismiss(repeatInDays: number = 0) {
     if (!currentQuestion) return;
     if (dismissedIds.has(currentQuestion.id)) return;
     setDismissedIds((current) => {
@@ -82,7 +82,7 @@ export function NUETPracticeClient({
       next.add(currentQuestion.id);
       return next;
     });
-    void dismissNUETQuestion(currentQuestion.id).catch(() => {
+    void dismissNUETQuestion(currentQuestion.id, { repeatInDays }).catch(() => {
       // Roll the local state back if the call failed so the user can try
       // again — toast omitted to keep the runner uninterrupted.
       setDismissedIds((current) => {
@@ -366,15 +366,26 @@ export function NUETPracticeClient({
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {currentQuestion && !dismissedIds.has(currentQuestion.id) ? (
-            <button
-              type="button"
-              onClick={handleDismiss}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-base)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:border-emerald-300 hover:text-emerald-700"
-              title={t("nuet.practice.dismissTooltip")}
-            >
-              <ThumbsUp className="h-3.5 w-3.5" />
-              {t("nuet.practice.dismiss")}
-            </button>
+            <div className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-base)] text-xs font-medium text-[var(--text-secondary)]">
+              <button
+                type="button"
+                onClick={() => handleDismiss(0)}
+                className="inline-flex items-center gap-1.5 rounded-l-full px-3 py-1.5 hover:bg-[var(--bg-soft)] hover:text-emerald-700"
+                title={t("nuet.practice.dismissTooltip")}
+              >
+                <ThumbsUp className="h-3.5 w-3.5" />
+                {t("nuet.practice.dismiss")}
+              </button>
+              <span className="h-4 w-px bg-[var(--border)]" />
+              <button
+                type="button"
+                onClick={() => handleDismiss(7)}
+                className="rounded-r-full px-2.5 py-1.5 hover:bg-[var(--bg-soft)] hover:text-[var(--primary)]"
+                title={t("nuet.practice.reviewLaterTooltip")}
+              >
+                {t("nuet.practice.reviewLater")}
+              </button>
+            </div>
           ) : currentQuestion && dismissedIds.has(currentQuestion.id) ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
