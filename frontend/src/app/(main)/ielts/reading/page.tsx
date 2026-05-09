@@ -4,8 +4,6 @@ import { BookOpen, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { createTranslator } from "@/lib/shared/i18n";
 import { getServerLocale } from "@/server/i18n";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://studywithraissov.com";
-
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
   const t = createTranslator(locale);
@@ -43,15 +41,15 @@ export default async function IELTSReadingPage() {
           </Link>
           <h3>{t("ielts.readingTitle")}</h3>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            <Clock size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
-            20 мин
+            <Clock size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} aria-hidden />
+            {t("ielts.reading.twentyMin")}
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            <BookOpen size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+            <BookOpen size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} aria-hidden />
             13 {t("ielts.questions")}
           </span>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--ink-mute)" }}>
-            <CheckCircle2 size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+            <CheckCircle2 size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} aria-hidden />
             {t("ielts.reading.autoBadge")}
           </span>
         </div>
@@ -67,27 +65,23 @@ export default async function IELTSReadingPage() {
             <Link
               key={pt.key}
               href={`/ielts/simulator?section=reading&focus=${pt.key}`}
-              style={{ textDecoration: "none" }}
+              className="block rounded-[14px] border-[1.5px] border-[var(--line)] no-underline transition-colors hover:border-[var(--terra)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--terra)] focus-visible:ring-offset-2"
             >
               <div
                 style={{
                   background: "var(--paper)",
-                  border: "1.5px solid var(--line)",
                   borderRadius: 14,
                   padding: "18px 20px",
                   display: "flex",
                   flexDirection: "column",
                   gap: 8,
                   cursor: "pointer",
-                  transition: "border-color .15s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--terra)")}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
               >
                 <p style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)" }}>{pt.label}</p>
                 <p style={{ fontSize: 13, color: "var(--ink-mute)", flex: 1 }}>{t(pt.descKey)}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--terra)", fontWeight: 600, marginTop: 4 }}>
-                  {t("ielts.reading.start")} <ArrowRight size={12} />
+                  {t("ielts.reading.start")} <ArrowRight size={12} aria-hidden />
                 </div>
               </div>
             </Link>
@@ -122,7 +116,7 @@ export default async function IELTSReadingPage() {
               flexShrink: 0,
             }}
           >
-            <BookOpen size={15} />
+            <BookOpen size={15} aria-hidden />
             {t("ielts.reading.fullPractice")}
           </Link>
         </div>
