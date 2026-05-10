@@ -14,6 +14,7 @@ import { createTranslator } from "@/lib/shared/i18n";
 import { getAttemptById, type AttemptAnswerResult } from "@/server/services/quizzes";
 import { DownloadCsvButton } from "./download-csv-button";
 import { GuestResultsPage } from "./guest-results";
+import { QuizText } from "@/components/quiz/quiz-text";
 
 interface ResultsPageProps {
   params: Promise<{ id: string }>;
@@ -433,7 +434,7 @@ function AnswerRow({
             #{index + 1}
           </p>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", margin: 0, lineHeight: 1.4, wordBreak: "break-word" }}>
-            {answer.questionText || "—"}
+            {answer.questionText ? <QuizText text={answer.questionText} /> : "—"}
           </h3>
         </div>
         <span

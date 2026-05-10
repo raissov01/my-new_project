@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, RotateCw, Timer, Trophy, X } from "lucide-react";
 import { createTranslator, type Locale } from "@/lib/shared/i18n";
+import { QuizText } from "@/components/quiz/quiz-text";
 
 type GuestAnswer = {
   questionId: string;
@@ -355,7 +356,7 @@ function GuestAnswerRow({
             #{index + 1}
           </p>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", margin: 0, lineHeight: 1.4, wordBreak: "break-word" }}>
-            {answer.questionText || "—"}
+            {answer.questionText ? <QuizText text={answer.questionText} /> : "—"}
           </h3>
         </div>
         <span

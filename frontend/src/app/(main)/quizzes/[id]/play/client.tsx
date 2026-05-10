@@ -25,6 +25,7 @@ import {
   PowerUpActivationOverlay,
 } from "@/features/quizzes/components/power-up-bar";
 import { trackQuizUsageEvent } from "@/features/quizzes/analytics";
+import { QuizText } from "@/components/quiz/quiz-text";
 import type {
   ComprehensionData,
   ComprehensionSubQuestion,
@@ -1266,7 +1267,7 @@ export function PlayQuizClient({
                 </div>
               ) : null}
               <h1 style={{ fontSize: "clamp(18px, 3vw, 28px)", fontWeight: 800, letterSpacing: "-.025em", color: "var(--ink)", lineHeight: 1.3, wordBreak: "break-word", margin: 0 }}>
-                {question.questionText}
+                <QuizText text={question.questionText} />
               </h1>
             </div>
 
@@ -1629,7 +1630,7 @@ function McqBody({
               {positionLabel}
             </span>
             <span style={{ flex: 1, textAlign: "left", wordBreak: "break-word", fontSize: 14 }}>
-              {opt.text}
+              <QuizText text={opt.text} />
             </span>
             {icon}
           </button>
@@ -1712,7 +1713,7 @@ function McqMultiBody({
                 {positionLabel}
               </span>
               <span style={{ flex: 1, textAlign: "left", wordBreak: "break-word", fontSize: 14 }}>
-                {opt.text}
+                <QuizText text={opt.text} />
               </span>
               {icon}
             </button>
@@ -2335,7 +2336,7 @@ function PollPlayBody({
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/20 bg-white/10 text-sm font-bold uppercase">
               {POSITION_LABELS[index]}
             </span>
-            <span className="flex-1 text-sm leading-snug">{opt.text}</span>
+            <span className="flex-1 text-sm leading-snug"><QuizText text={opt.text} /></span>
           </button>
         );
       })}
@@ -2559,7 +2560,7 @@ function ComprehensionPlayBody({
               }`}
             >
               <p className="mb-2 text-sm font-medium text-[var(--text-primary)]">
-                {idx + 1}. {sq.prompt}
+                {idx + 1}. <QuizText text={sq.prompt} />
               </p>
 
               {sq.type === "mcq" ? (
@@ -2592,7 +2593,7 @@ function ComprehensionPlayBody({
                         }`}>
                           {letter}
                         </span>
-                        {optText}
+                        <QuizText text={optText} />
                       </button>
                     );
                   })}

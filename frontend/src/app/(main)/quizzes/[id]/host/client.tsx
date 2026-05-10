@@ -6,6 +6,7 @@ import { ArrowLeft, Copy, Eye, EyeOff, Pause, Play, SkipForward, Square, UserX, 
 import { QRCodeSVG } from "qrcode.react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
+import { QuizText } from "@/components/quiz/quiz-text";
 
 // ─── WebSocket message types ──────────────────────────────────
 
@@ -581,7 +582,7 @@ export function HostLiveClient({ quizId, quizTitle, locale }: Props) {
         ) : null}
 
         <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-          <p className="text-lg font-semibold text-[var(--text-primary)]">{q.questionText}</p>
+          <p className="text-lg font-semibold text-[var(--text-primary)]"><QuizText text={q.questionText} /></p>
         </div>
 
         {/* Answer stats bar */}

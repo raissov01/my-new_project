@@ -20,6 +20,7 @@ import { ShareQuizButton } from "@/features/quizzes/components/share-quiz-button
 import { QuizSplitLinks } from "@/features/quizzes/components/quiz-split-links";
 import { QuizPageTracker } from "@/features/quizzes/components/quiz-page-tracker";
 import { StartQuizControls } from "@/features/quizzes/components/start-quiz-controls";
+import { QuizText } from "@/components/quiz/quiz-text";
 
 interface QuizDetailPageProps {
   params: Promise<{ id: string }>;
@@ -208,7 +209,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
                 <h5 style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--ink)", margin: 0 }}>
                   <span className="nd-mock-qn">{index + 1}</span>
-                  {question.questionText}
+                  <QuizText text={question.questionText} />
                 </h5>
                 {quiz.isAuthor && question.correctOption ? (
                   <span className="nd-tag nd-tag-green" style={{ fontSize: 10.5, whiteSpace: "nowrap" }}>
@@ -233,7 +234,7 @@ export default async function QuizDetailPage({ params }: QuizDetailPageProps) {
                         <span className={isCorrect ? "nd-mock-letter" : "nd-mock-letter"} style={isCorrect ? { background: "var(--terra)", borderColor: "var(--terra)", color: "#fff" } : undefined}>
                           {key.toUpperCase()}
                         </span>
-                        {text}
+                        <QuizText text={text} />
                       </div>
                     );
                   })}
@@ -312,7 +313,7 @@ function AccuracyRow({
           <span className="mr-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
             Q{index + 1}
           </span>
-          {stat.questionText}
+          <QuizText text={stat.questionText} />
         </p>
         <span className="shrink-0 text-sm text-[var(--text-secondary)]">
           {outOfLabel} &middot; <span className="font-semibold text-[var(--text-primary)]">{pct}%</span>{" "}

@@ -447,6 +447,9 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
           {t("quiz.downloadTemplate")}
         </button>
       </div>
+      <p className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+        {t("quiz.importLatexHint")}
+      </p>
       <div
         onDragOver={(e) => {
           e.preventDefault();

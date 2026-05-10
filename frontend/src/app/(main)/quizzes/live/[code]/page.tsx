@@ -8,6 +8,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { useGameSound } from "@/hooks/use-game-sound";
 import { SoundSettings } from "@/components/sound-settings";
+import { QuizText } from "@/components/quiz/quiz-text";
 
 // ─── WS protocol types ────────────────────────────────────────
 
@@ -740,7 +741,7 @@ function QuestionScreen({
         />
       ) : null}
       <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-        <p className="text-lg font-semibold leading-snug text-[var(--text-primary)]">{q.questionText}</p>
+        <p className="text-lg font-semibold leading-snug text-[var(--text-primary)]"><QuizText text={q.questionText} /></p>
       </div>
 
       {/* Answer inputs. audio/video render the same MCQ grid as plain MCQ — the
@@ -973,7 +974,7 @@ function QuestionScreen({
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold uppercase">
                 {["A","B","C","D","E"][i]}
               </span>
-              {opt.text}
+              <QuizText text={opt.text} />
             </button>
           ))}
         </div>
@@ -1250,7 +1251,7 @@ function LiveComprehensionInput({
         {subQuestions.map((sq, idx) => (
           <div key={sq.id} className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-surface)] p-3">
             <div className="mb-2 text-sm font-medium text-[var(--text-primary)]">
-              {idx + 1}. {sq.prompt}
+              {idx + 1}. <QuizText text={sq.prompt} />
             </div>
             {sq.type === "true_false" ? (
               <div className="flex gap-2">
@@ -1304,7 +1305,7 @@ function LiveComprehensionInput({
                       } disabled:opacity-60`}
                     >
                       <span className="mr-2 font-bold uppercase">{letter}.</span>
-                      {value}
+                      <QuizText text={value} />
                     </button>
                   );
                 })}
