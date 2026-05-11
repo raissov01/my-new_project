@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Sun, Moon } from 'lucide-react';
 import { useLocale } from '@/components/providers/locale-provider';
+import { useTheme } from '@/hooks/use-theme';
 import type { Locale } from '@/lib/shared/i18n';
 
 interface NavProps {
@@ -18,6 +20,8 @@ const LANG_OPTIONS: { locale: Locale; flag: string; code: string; label: string 
 
 export function LandingNav({ locale }: NavProps) {
   const { setLocale, t } = useLocale();
+  const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
+  const isDark = themeMounted && theme === 'dark';
   const [open, setOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const current = LANG_OPTIONS.find((l) => l.locale === locale) ?? LANG_OPTIONS[0];
@@ -51,12 +55,13 @@ export function LandingNav({ locale }: NavProps) {
             justifyContent: 'space-between',
             gap: 24,
             padding: '10px 14px 10px 18px',
-            background: 'rgba(251,247,240,0.9)',
+            background: 'color-mix(in srgb, var(--paper) 90%, transparent)',
             backdropFilter: 'blur(16px) saturate(180%)',
             WebkitBackdropFilter: 'blur(16px) saturate(180%)',
             border: '1px solid var(--line)',
             borderRadius: 999,
-            boxShadow: '0 2px 8px rgba(27,23,20,.06)',
+            boxShadow: isDark ? '0 2px 12px rgba(0,0,0,.4)' : '0 2px 8px rgba(27,23,20,.06)',
+            color: 'var(--ink)',
           }}
         >
           {/* Brand */}
@@ -83,6 +88,24 @@ export function LandingNav({ locale }: NavProps) {
 
           {/* Nav end */}
           <div className="lp-nav-end" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {/* Theme toggle */}
+            {themeMounted && (
+              <button
+                className="lp-nav-theme"
+                onClick={toggleTheme}
+                aria-label={isDark ? t('theme.switchToLight') : t('theme.switchToDark')}
+                title={isDark ? t('theme.switchToLight') : t('theme.switchToDark')}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 36, height: 36, borderRadius: 999,
+                  color: 'var(--ink-soft)', background: 'none', border: 'none', cursor: 'pointer',
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+              >
+                {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
+            )}
+
             {/* Lang dropdown */}
             <div ref={langRef} style={{ position: 'relative' }}>
               <button
@@ -115,9 +138,10 @@ export function LandingNav({ locale }: NavProps) {
                   role="menu"
                   style={{
                     position: 'absolute', top: 'calc(100% + 6px)', right: 0,
-                    background: '#fff', border: '1px solid var(--line)', borderRadius: 14,
+                    background: isDark ? 'var(--paper-3)' : '#fff',
+                    border: '1px solid var(--line)', borderRadius: 14,
                     padding: 6, minWidth: 180,
-                    boxShadow: '0 8px 24px -8px rgba(27,23,20,.12)',
+                    boxShadow: isDark ? '0 8px 24px -8px rgba(0,0,0,.5)' : '0 8px 24px -8px rgba(27,23,20,.12)',
                   }}
                 >
                   {LANG_OPTIONS.map((opt) => (
@@ -128,7 +152,7 @@ export function LandingNav({ locale }: NavProps) {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
                         borderRadius: 8, fontSize: 14, fontWeight: 500,
-                        color: opt.locale === locale ? 'var(--terra-deep)' : 'var(--ink-soft)',
+                        color: opt.locale === locale ? (isDark ? '#FBA968' : 'var(--terra-deep)') : 'var(--ink-soft)',
                         background: opt.locale === locale ? 'var(--terra-tint)' : 'transparent',
                         border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
                         fontFamily: 'inherit',
@@ -165,6 +189,7 @@ export function LandingNav({ locale }: NavProps) {
           .lp-nav-brand-subtitle { display: none !important; }
           .lp-nav-end { gap: 4px !important; }
           .lp-nav-lang { padding: 7px 8px !important; font-size: 12px !important; }
+          .lp-nav-theme { width: 32px !important; height: 32px !important; }
           .lp-nav-login { display: none !important; }
           .lp-nav-signup {
             padding: 8px 12px !important;

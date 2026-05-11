@@ -56,24 +56,24 @@ export function Pricing({ locale }: PricingProps) {
 
           {/* ── 7-DAY TRIAL ── */}
           <Reveal>
-            <div className="lp-plan" style={{ background: 'var(--ink)', color: '#fff', transform: 'translateY(-12px)', border: '2px solid #22c55e', boxShadow: '6px 6px 0 #22c55e' }}>
+            <div className="lp-plan" style={{ background: 'var(--reverse-bg)', color: 'var(--reverse-fg)', transform: 'translateY(-12px)', border: '2px solid #22c55e', boxShadow: '6px 6px 0 #22c55e' }}>
               <span style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: '#22c55e', color: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 14px', borderRadius: 99, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono', monospace", whiteSpace: 'nowrap' }}>
                 {t('lp.pricing.trialBadge')}
               </span>
-              <h3 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', margin: 0, color: '#fff' }}>
+              <h3 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', margin: 0, color: 'var(--reverse-fg)' }}>
                 {t('lp.pricing.trialName')}
               </h3>
               <div>
-                <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>
+                <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--reverse-fg)' }}>
                   {t('lp.pricing.trialPrice')}{' '}
-                  <small style={{ fontSize: 14, fontWeight: 500, color: '#A8A49E', letterSpacing: 0 }}>/ 7 күн</small>
+                  <small style={{ fontSize: 14, fontWeight: 500, color: 'var(--reverse-fg-mute)', letterSpacing: 0 }}>/ 7 күн</small>
                 </div>
                 <p style={{ fontSize: 13, color: '#22c55e', fontWeight: 600, margin: '4px 0 0' }}>{t('lp.pricing.trialSub')}</p>
               </div>
-              <p style={{ color: '#D4C7AE', margin: 0 }}>{t('lp.pricing.trialDesc')}</p>
+              <p style={{ color: 'var(--reverse-fg-soft)', margin: 0 }}>{t('lp.pricing.trialDesc')}</p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                 {[t('lp.pricing.plan2f1'), t('lp.pricing.plan2f2'), t('lp.pricing.plan2f3'), t('lp.pricing.plan2f4')].map((f, i) => (
-                  <li key={i} style={{ fontSize: 14, color: '#FBF7F0', display: 'flex', alignItems: 'flex-start', gap: 10, lineHeight: 1.5 }}>
+                  <li key={i} style={{ fontSize: 14, color: 'var(--reverse-fg)', display: 'flex', alignItems: 'flex-start', gap: 10, lineHeight: 1.5 }}>
                     <span style={{ color: '#22c55e', fontWeight: 800, flexShrink: 0 }}>✓</span>
                     {f}
                   </li>
@@ -87,25 +87,25 @@ export function Pricing({ locale }: PricingProps) {
 
           {/* ── PRO ── */}
           <Reveal>
-            <div className="lp-plan" style={{ background: 'var(--ink)', color: '#fff' }}>
-              <span style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: 'var(--terra)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 14px', borderRadius: 99, border: '1.5px solid var(--ink)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono', monospace" }}>
+            <div className="lp-plan" style={{ background: 'var(--reverse-bg)', color: 'var(--reverse-fg)' }}>
+              <span style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: 'var(--terra)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 14px', borderRadius: 99, border: '1.5px solid var(--reverse-border)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono', monospace" }}>
                 {t('lp.pricing.popular')}
               </span>
-              <h3 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', margin: 0, color: '#fff' }}>Pro</h3>
-              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>
+              <h3 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', margin: 0, color: 'var(--reverse-fg)' }}>Pro</h3>
+              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--reverse-fg)' }}>
                 {t('lp.pricing.plan2Price')}{' '}
-                <small style={{ fontSize: 14, fontWeight: 500, color: '#A8A49E', letterSpacing: 0 }}>{t('lp.pricing.perMonth')}</small>
+                <small style={{ fontSize: 14, fontWeight: 500, color: 'var(--reverse-fg-mute)', letterSpacing: 0 }}>{t('lp.pricing.perMonth')}</small>
               </div>
-              <p style={{ color: '#D4C7AE', margin: 0 }}>{t('lp.pricing.plan2Desc')}</p>
+              <p style={{ color: 'var(--reverse-fg-soft)', margin: 0 }}>{t('lp.pricing.plan2Desc')}</p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                 {[t('lp.pricing.plan2f1'), t('lp.pricing.plan2f2'), t('lp.pricing.plan2f3'), t('lp.pricing.plan2f4'), t('lp.pricing.plan2f5'), t('lp.pricing.plan2f6')].map((f, i) => (
-                  <li key={i} style={{ fontSize: 14, color: '#FBF7F0', display: 'flex', alignItems: 'flex-start', gap: 10, lineHeight: 1.5 }}>
-                    <span style={{ color: '#FBA968', fontWeight: 800, flexShrink: 0 }}>✓</span>
+                  <li key={i} style={{ fontSize: 14, color: 'var(--reverse-fg)', display: 'flex', alignItems: 'flex-start', gap: 10, lineHeight: 1.5 }}>
+                    <span style={{ color: 'var(--reverse-accent)', fontWeight: 800, flexShrink: 0 }}>✓</span>
                     {f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '14px 24px', borderRadius: 999, fontWeight: 600, fontSize: 15, letterSpacing: '-0.005em', transition: 'transform 0.15s, background 0.15s', textDecoration: 'none', background: '#fff', color: 'var(--ink)', border: 'none' }}>
+              <Link href="/signup" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '14px 24px', borderRadius: 999, fontWeight: 600, fontSize: 15, letterSpacing: '-0.005em', transition: 'transform 0.15s, background 0.15s', textDecoration: 'none', background: 'var(--reverse-btn-bg)', color: 'var(--reverse-btn-fg)', border: 'none' }}>
                 {t('lp.pricing.plan2Cta')}
               </Link>
             </div>

@@ -24,6 +24,19 @@
   --yellow:      #E9B949;
   --yellow-soft: #F9EBC2;
 
+  /* Reverse surfaces — bold dark cards/blocks that sit on the light page.
+     In dark mode these flip to an elevated dark surface (see .dark below) so
+     their light text never lands on a light background. */
+  --reverse-bg:      #1B1714;
+  --reverse-bg-2:    #252018;
+  --reverse-fg:      #FBF7F0;
+  --reverse-fg-soft: #D4C7AE;
+  --reverse-fg-mute: #A8A49E;
+  --reverse-accent:  #FBA968;
+  --reverse-border:  #1B1714;
+  --reverse-btn-bg:  #FFFFFF;
+  --reverse-btn-fg:  #1B1714;
+
   /* ── Existing Design System ── */
   /* Brand — terra as primary */
   --primary: #C2500A;
@@ -132,6 +145,16 @@
   --paper:        #1C1814;
   --paper-2:      #252018;
   --paper-3:      #2E281F;
+  /* Reverse surfaces invert: an elevated dark card with light text */
+  --reverse-bg:      #2E281F;
+  --reverse-bg-2:    #252018;
+  --reverse-fg:      #EDE4D8;
+  --reverse-fg-soft: #C9BBB0;
+  --reverse-fg-mute: #9A8C82;
+  --reverse-accent:  #FBA968;
+  --reverse-border:  rgba(255,255,255,0.14);
+  --reverse-btn-bg:  #EDE4D8;
+  --reverse-btn-fg:  #1B1714;
   --ink:          #EDE4D8;
   --ink-soft:     #C9BBB0;
   --ink-mute:     #877971;

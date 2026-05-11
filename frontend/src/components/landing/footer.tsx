@@ -16,7 +16,24 @@ export function LandingFooter({ locale }: FooterProps) {
         <div className="lp-foot">
           {/* Brand */}
           <div>
-            <Image src="/brand-lockup.svg" alt="StudyWithRaissov" width={160} height={40} style={{ height: 40, width: 'auto' }} />
+            <div aria-label="StudyWithRaissov">
+              <Image
+                className="lp-foot-logo-light"
+                src="/brand-lockup.svg"
+                alt=""
+                width={220}
+                height={51}
+                style={{ height: 51, maxWidth: '100%', width: 'auto' }}
+              />
+              <Image
+                className="lp-foot-logo-dark"
+                src="/brand-lockup-dark.svg"
+                alt=""
+                width={220}
+                height={51}
+                style={{ height: 51, maxWidth: '100%', width: 'auto' }}
+              />
+            </div>
             <p style={{ fontSize: 13.5, color: 'var(--ink-mute)', maxWidth: 300, marginTop: 14, lineHeight: 1.6 }}>
               {t('lp.footer.tagline')}
             </p>
@@ -82,6 +99,15 @@ export function LandingFooter({ locale }: FooterProps) {
           display: grid;
           grid-template-columns: 1fr;
           gap: 32px;
+        }
+        .lp-foot-logo-dark {
+          display: none;
+        }
+        .dark .lp-foot-logo-light {
+          display: none;
+        }
+        .dark .lp-foot-logo-dark {
+          display: block;
         }
         @media (min-width: 760px) {
           .lp-foot { grid-template-columns: 1.5fr 1fr 1fr 1fr; }
