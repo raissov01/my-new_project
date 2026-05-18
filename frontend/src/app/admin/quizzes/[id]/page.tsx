@@ -109,10 +109,12 @@ export default async function AdminQuizAnalyticsPage({ params, searchParams }: P
       fetchBackendJson<QuizAnalyticsResponse>({
         path: `/api/v1/admin/quizzes/${encodeURIComponent(id)}/analytics?days=${days}`,
         userId: auth.user.id,
+        timeoutMs: 20_000,
       }),
       fetchBackendJson<InviteLinksResponse>({
         path: `/api/v1/admin/quizzes/${encodeURIComponent(id)}/invite-links`,
         userId: auth.user.id,
+        timeoutMs: 20_000,
       }).catch(() => ({ quiz_id: id, links: [] })),
     ]);
     data = analytics;

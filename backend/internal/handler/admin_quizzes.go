@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 	"strings"
@@ -280,165 +281,184 @@ func (h *AdminQuizzesHandler) Analytics(w http.ResponseWriter, r *http.Request) 
 
 	ctx := r.Context()
 
-	// 1) Header — quiz + owner + question count.
-	var header quizAnalyticsHeader
-	err := h.db.WithContext(ctx).Raw(`
-		SELECT
-		  z.id::text                                                            AS id,
-		  z.title                                                               AS title,
-		  z.user_id::text                                                       AS owner_id,
-		  COALESCE(u.username, '')                                              AS owner_username,
-		  COALESCE(u.email, '')                                                 AS owner_email,
-		  z.is_public                                                           AS is_public,
-		  z.is_hidden_by_admin                                                  AS is_hidden,
-		  COALESCE((SELECT COUNT(*) FROM quiz_questions WHERE quiz_id = z.id), 0) AS question_count,
-		  to_char(z.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at
-		FROM quizzes z
-		LEFT JOIN users u ON u.id = z.user_id
-		WHERE z.id = ?
-	`, quizID).Scan(&header).Error
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to load quiz", err)
-		return
-	}
-	if header.ID == "" {
-		writeError(w, http.StatusNotFound, "quiz not found", nil)
-		return
-	}
-
-	// 2) Counts — events + attempts.
-	var counts quizAnalyticsCounts
-	err = h.db.WithContext(ctx).Raw(`
-		SELECT
-		  COALESCE(SUM(CASE WHEN event_type = 'quiz_page_opened' THEN 1 ELSE 0 END), 0) AS opens,
-		  COALESCE(SUM(CASE WHEN event_type = 'quiz_started'     THEN 1 ELSE 0 END), 0) AS starts,
-		  COALESCE(SUM(CASE WHEN event_type = 'quiz_finished'    THEN 1 ELSE 0 END), 0) AS finishes,
-		  COALESCE(SUM(CASE WHEN event_type = 'quiz_abandoned'   THEN 1 ELSE 0 END), 0) AS abandons
-		FROM quiz_usage_events
-		WHERE quiz_id = ?
-	`, quizID).Scan(&counts).Error
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to load event counts", err)
-		return
-	}
-
-	var distinct struct {
-		Total    int `gorm:"column:total"`
-		SignedIn int `gorm:"column:signed_in"`
-		Guests   int `gorm:"column:guests"`
-	}
-	err = h.db.WithContext(ctx).Raw(`
-		WITH session_to_user AS (
-		  SELECT DISTINCT session_id, user_id
-		  FROM quiz_usage_events
-		  WHERE quiz_id = ? AND user_id IS NOT NULL AND session_id IS NOT NULL
-		),
-		buckets AS (
-		  SELECT
-		    COALESCE(e.user_id::text, stu.user_id::text, e.session_id) AS bucket,
-		    (e.user_id IS NOT NULL OR stu.user_id IS NOT NULL)         AS is_signed_in
-		  FROM quiz_usage_events e
-		  LEFT JOIN session_to_user stu ON e.session_id = stu.session_id
-		  WHERE e.quiz_id = ? AND e.event_type IN ('quiz_started','quiz_finished','quiz_page_opened')
-		)
-		SELECT
-		  COUNT(DISTINCT bucket)                                AS total,
-		  COUNT(DISTINCT bucket) FILTER (WHERE is_signed_in)    AS signed_in,
-		  COUNT(DISTINCT bucket) FILTER (WHERE NOT is_signed_in) AS guests
-		FROM buckets
-		WHERE bucket IS NOT NULL
-	`, quizID, quizID).Scan(&distinct).Error
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to count players", err)
-		return
-	}
-	counts.DistinctPlayersTotal = distinct.Total
-	counts.DistinctSignedIn = distinct.SignedIn
-	counts.DistinctGuests = distinct.Guests
-
-	// Avg score from attempts.
-	var avgRow struct {
-		AvgScore *float64 `gorm:"column:avg_score"`
-	}
-	if err := h.db.WithContext(ctx).Raw(`
-		SELECT AVG(score::float / NULLIF(total_questions, 0) * 100) AS avg_score
-		FROM quiz_attempts
-		WHERE quiz_id = ? AND total_questions > 0
-	`, quizID).Scan(&avgRow).Error; err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to load avg score", err)
-		return
-	}
-	if avgRow.AvgScore != nil {
-		counts.AvgScore = roundPct(*avgRow.AvgScore)
-	}
-
-	if counts.Starts > 0 {
-		counts.CompletionRate = roundPct(float64(counts.Finishes) / float64(counts.Starts) * 100.0)
-	}
-
-	// 3) Daily breakdown for last `days` days.
 	now := time.Now().UTC()
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	rangeStart := startOfToday.AddDate(0, 0, -(days - 1))
 
-	var dailyAgg []struct {
-		Day      time.Time `gorm:"column:day"`
-		Opens    int       `gorm:"column:opens"`
-		Starts   int       `gorm:"column:starts"`
-		Finishes int       `gorm:"column:finishes"`
-	}
-	err = h.db.WithContext(ctx).Raw(`
-		SELECT
-		  date_trunc('day', created_at) AS day,
-		  COUNT(*) FILTER (WHERE event_type = 'quiz_page_opened') AS opens,
-		  COUNT(*) FILTER (WHERE event_type = 'quiz_started')     AS starts,
-		  COUNT(*) FILTER (WHERE event_type = 'quiz_finished')    AS finishes
-		FROM quiz_usage_events
-		WHERE quiz_id = ? AND created_at >= ? AND created_at < ?
-		GROUP BY day
-		ORDER BY day ASC
-	`, quizID, rangeStart, now.Add(24*time.Hour)).Scan(&dailyAgg).Error
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to load daily stats", err)
+	var (
+		header  quizAnalyticsHeader
+		counts  quizAnalyticsCounts
+		recent  []quizRecentAttempt
+		daily   []quizDailyRow
+		notFnd  bool
+		stepErr string
+	)
+
+	// Run all 5 reads on the same connection inside a tx so SET LOCAL jit = off
+	// applies to every statement. JIT compilation alone was costing ~3.5s on
+	// large-event quizzes (>1M rows) because the heavy CTEs trigger the
+	// optimization path even though each runs once.
+	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Exec(`SET LOCAL jit = off`).Error; err != nil {
+			stepErr = "failed to disable jit"
+			return err
+		}
+
+		if err := tx.Raw(`
+			SELECT
+			  z.id::text                                                            AS id,
+			  z.title                                                               AS title,
+			  z.user_id::text                                                       AS owner_id,
+			  COALESCE(u.username, '')                                              AS owner_username,
+			  COALESCE(u.email, '')                                                 AS owner_email,
+			  z.is_public                                                           AS is_public,
+			  z.is_hidden_by_admin                                                  AS is_hidden,
+			  COALESCE((SELECT COUNT(*) FROM quiz_questions WHERE quiz_id = z.id), 0) AS question_count,
+			  to_char(z.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at
+			FROM quizzes z
+			LEFT JOIN users u ON u.id = z.user_id
+			WHERE z.id = ?
+		`, quizID).Scan(&header).Error; err != nil {
+			stepErr = "failed to load quiz"
+			return err
+		}
+		if header.ID == "" {
+			notFnd = true
+			return nil
+		}
+
+		if err := tx.Raw(`
+			SELECT
+			  COALESCE(SUM(CASE WHEN event_type = 'quiz_page_opened' THEN 1 ELSE 0 END), 0) AS opens,
+			  COALESCE(SUM(CASE WHEN event_type = 'quiz_started'     THEN 1 ELSE 0 END), 0) AS starts,
+			  COALESCE(SUM(CASE WHEN event_type = 'quiz_finished'    THEN 1 ELSE 0 END), 0) AS finishes,
+			  COALESCE(SUM(CASE WHEN event_type = 'quiz_abandoned'   THEN 1 ELSE 0 END), 0) AS abandons
+			FROM quiz_usage_events
+			WHERE quiz_id = ?
+		`, quizID).Scan(&counts).Error; err != nil {
+			stepErr = "failed to load event counts"
+			return err
+		}
+
+		var distinct struct {
+			Total    int `gorm:"column:total"`
+			SignedIn int `gorm:"column:signed_in"`
+			Guests   int `gorm:"column:guests"`
+		}
+		if err := tx.Raw(`
+			WITH session_to_user AS (
+			  SELECT DISTINCT session_id, user_id
+			  FROM quiz_usage_events
+			  WHERE quiz_id = ? AND user_id IS NOT NULL AND session_id IS NOT NULL
+			),
+			buckets AS (
+			  SELECT
+			    COALESCE(e.user_id::text, stu.user_id::text, e.session_id) AS bucket,
+			    (e.user_id IS NOT NULL OR stu.user_id IS NOT NULL)         AS is_signed_in
+			  FROM quiz_usage_events e
+			  LEFT JOIN session_to_user stu ON e.session_id = stu.session_id
+			  WHERE e.quiz_id = ? AND e.event_type IN ('quiz_started','quiz_finished','quiz_page_opened')
+			)
+			SELECT
+			  COUNT(DISTINCT bucket)                                AS total,
+			  COUNT(DISTINCT bucket) FILTER (WHERE is_signed_in)    AS signed_in,
+			  COUNT(DISTINCT bucket) FILTER (WHERE NOT is_signed_in) AS guests
+			FROM buckets
+			WHERE bucket IS NOT NULL
+		`, quizID, quizID).Scan(&distinct).Error; err != nil {
+			stepErr = "failed to count players"
+			return err
+		}
+		counts.DistinctPlayersTotal = distinct.Total
+		counts.DistinctSignedIn = distinct.SignedIn
+		counts.DistinctGuests = distinct.Guests
+
+		var avgRow struct {
+			AvgScore *float64 `gorm:"column:avg_score"`
+		}
+		if err := tx.Raw(`
+			SELECT AVG(score::float / NULLIF(total_questions, 0) * 100) AS avg_score
+			FROM quiz_attempts
+			WHERE quiz_id = ? AND total_questions > 0
+		`, quizID).Scan(&avgRow).Error; err != nil {
+			stepErr = "failed to load avg score"
+			return err
+		}
+		if avgRow.AvgScore != nil {
+			counts.AvgScore = roundPct(*avgRow.AvgScore)
+		}
+		if counts.Starts > 0 {
+			counts.CompletionRate = roundPct(float64(counts.Finishes) / float64(counts.Starts) * 100.0)
+		}
+
+		var dailyAgg []struct {
+			Day      time.Time `gorm:"column:day"`
+			Opens    int       `gorm:"column:opens"`
+			Starts   int       `gorm:"column:starts"`
+			Finishes int       `gorm:"column:finishes"`
+		}
+		if err := tx.Raw(`
+			SELECT
+			  date_trunc('day', created_at) AS day,
+			  COUNT(*) FILTER (WHERE event_type = 'quiz_page_opened') AS opens,
+			  COUNT(*) FILTER (WHERE event_type = 'quiz_started')     AS starts,
+			  COUNT(*) FILTER (WHERE event_type = 'quiz_finished')    AS finishes
+			FROM quiz_usage_events
+			WHERE quiz_id = ? AND created_at >= ? AND created_at < ?
+			GROUP BY day
+			ORDER BY day ASC
+		`, quizID, rangeStart, now.Add(24*time.Hour)).Scan(&dailyAgg).Error; err != nil {
+			stepErr = "failed to load daily stats"
+			return err
+		}
+		type rawDay struct{ opens, starts, finishes int }
+		byDay := make(map[string]rawDay, len(dailyAgg))
+		for _, r := range dailyAgg {
+			byDay[r.Day.UTC().Format("2006-01-02")] = rawDay{r.Opens, r.Starts, r.Finishes}
+		}
+		daily = make([]quizDailyRow, 0, days)
+		for i := 0; i < days; i++ {
+			key := rangeStart.AddDate(0, 0, i).Format("2006-01-02")
+			raw := byDay[key]
+			daily = append(daily, quizDailyRow{
+				Date:     key,
+				Opens:    raw.opens,
+				Starts:   raw.starts,
+				Finishes: raw.finishes,
+			})
+		}
+
+		if err := tx.Raw(`
+			SELECT
+			  a.id::text                   AS id,
+			  a.user_id::text              AS user_id,
+			  u.username                   AS username,
+			  u.email                      AS email,
+			  a.score                      AS score,
+			  a.total_questions            AS total_questions,
+			  COALESCE(a.time_spent, 0)    AS duration_seconds,
+			  to_char(a.started_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at
+			FROM quiz_attempts a
+			LEFT JOIN users u ON u.id = a.user_id
+			WHERE a.quiz_id = ?
+			ORDER BY a.started_at DESC
+			LIMIT 20
+		`, quizID).Scan(&recent).Error; err != nil {
+			stepErr = "failed to load recent attempts"
+			return err
+		}
+		return nil
+	}, &sql.TxOptions{ReadOnly: true})
+	if txErr != nil {
+		msg := stepErr
+		if msg == "" {
+			msg = "failed to load analytics"
+		}
+		writeError(w, http.StatusInternalServerError, msg, txErr)
 		return
 	}
-	type rawDay struct{ opens, starts, finishes int }
-	byDay := make(map[string]rawDay, len(dailyAgg))
-	for _, r := range dailyAgg {
-		byDay[r.Day.UTC().Format("2006-01-02")] = rawDay{r.Opens, r.Starts, r.Finishes}
-	}
-	daily := make([]quizDailyRow, 0, days)
-	for i := 0; i < days; i++ {
-		key := rangeStart.AddDate(0, 0, i).Format("2006-01-02")
-		raw := byDay[key]
-		daily = append(daily, quizDailyRow{
-			Date:     key,
-			Opens:    raw.opens,
-			Starts:   raw.starts,
-			Finishes: raw.finishes,
-		})
-	}
-
-	// 4) Recent attempts (last 20).
-	var recent []quizRecentAttempt
-	err = h.db.WithContext(ctx).Raw(`
-		SELECT
-		  a.id::text                   AS id,
-		  a.user_id::text              AS user_id,
-		  u.username                   AS username,
-		  u.email                      AS email,
-		  a.score                      AS score,
-		  a.total_questions            AS total_questions,
-		  COALESCE(a.time_spent, 0)    AS duration_seconds,
-		  to_char(a.started_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at
-		FROM quiz_attempts a
-		LEFT JOIN users u ON u.id = a.user_id
-		WHERE a.quiz_id = ?
-		ORDER BY a.started_at DESC
-		LIMIT 20
-	`, quizID).Scan(&recent).Error
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to load recent attempts", err)
+	if notFnd {
+		writeError(w, http.StatusNotFound, "quiz not found", nil)
 		return
 	}
 	if recent == nil {
