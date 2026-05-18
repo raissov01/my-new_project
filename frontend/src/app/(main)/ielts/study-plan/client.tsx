@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   Headphones,
   Loader2,
   Mic,
+  PauseCircle,
   PenLine,
   RefreshCw,
   Sparkles,
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { AuthRequiredPrompt } from "@/features/auth/components/auth-required-prompt";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useSpeakingRecorder } from "@/features/ielts/use-speaking-recorder";
 import {
   checkAdaptive,
   completeStudyTask,
@@ -33,6 +35,7 @@ import {
   startStudyPlanGeneration,
   submitReflection,
   type PlacementQuestion,
+  type PlacementScoreResult,
 } from "../simulator/attempt-actions";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -255,8 +258,16 @@ export function IELTSStudyPlanClient({
       return (
         <div className="space-y-6">
           <PlacementCheck
-            onAccept={(band) => {
-              setWizardData((prev) => ({ ...prev, currentBand: band }));
+            onAccept={({ band, weakSkills }) => {
+              setWizardData((prev) => ({
+                ...prev,
+                currentBand: band,
+                // Pre-populate weakSections from placement only when the
+                // diagnostic actually flagged something — otherwise keep the
+                // existing default so the wizard isn't empty for users who
+                // scored evenly across all four skills.
+                weakSections: weakSkills.length > 0 ? weakSkills : prev.weakSections,
+              }));
               setPlacementStage("done");
             }}
             onSkip={() => setPlacementStage("skipped")}
@@ -1414,25 +1425,36 @@ function ErrorBanner({ message }: { message: string }) {
 
 // ── Placement Check ─────────────────────────────────────────────────────────
 //
-// Eight-question diagnostic (4 reading + 4 listening MCQ from existing
-// IELTSQuestion pool) that runs once at the start of the wizard. The result
-// pre-fills wizardData.currentBand so plan generation works from a measured
-// estimate instead of pure self-report. Skippable for users who'd rather not
-// take it.
+// Four-skill diagnostic: 4 reading MCQ + 4 listening MCQ + 1 writing micro
+// prompt (50-80 words, LLM-scored) + 1 speaking micro prompt (~30s, browser
+// records audio and transcribes via the Web Speech API, transcript is LLM-
+// scored). The result pre-fills wizardData.currentBand (overall band) and
+// wizardData.weakSections (skills more than 0.5 below the mean). Every step
+// is optional — users can skip the whole diagnostic or any individual skill.
+//
+// No audio leaves the browser; only the live transcript is sent.
 
-function PlacementCheck({ onAccept, onSkip }: { onAccept: (band: string) => void; onSkip: () => void }) {
+const PLACEMENT_SPEAKING_SECONDS = 30;
+
+function PlacementCheck({
+  onAccept,
+  onSkip,
+}: {
+  onAccept: (data: { band: string; weakSkills: string[] }) => void;
+  onSkip: () => void;
+}) {
   const { t } = useLocale();
-  const [stage, setStage] = useState<"intro" | "loading" | "questions" | "scoring" | "result" | "error">("intro");
+  const [stage, setStage] = useState<
+    "intro" | "loading" | "questions" | "writing" | "speaking" | "scoring" | "result" | "error"
+  >("intro");
   const [questions, setQuestions] = useState<PlacementQuestion[]>([]);
+  const [writingPrompt, setWritingPrompt] = useState("");
+  const [speakingPrompt, setSpeakingPrompt] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [index, setIndex] = useState(0);
-  const [result, setResult] = useState<{
-    readingCorrect: number;
-    readingTotal: number;
-    listeningCorrect: number;
-    listeningTotal: number;
-    estimatedBand: string;
-  } | null>(null);
+  const [writingText, setWritingText] = useState("");
+  const [speakingTranscript, setSpeakingTranscript] = useState("");
+  const [result, setResult] = useState<PlacementScoreResult | null>(null);
 
   async function startTest() {
     setStage("loading");
@@ -1443,18 +1465,37 @@ function PlacementCheck({ onAccept, onSkip }: { onAccept: (band: string) => void
         return;
       }
       setQuestions(data.questions);
+      setWritingPrompt(data.writingPrompt ?? "");
+      setSpeakingPrompt(data.speakingPrompt ?? "");
       setAnswers({});
       setIndex(0);
+      setWritingText("");
+      setSpeakingTranscript("");
       setStage("questions");
     } catch {
       setStage("error");
     }
   }
 
-  async function finishTest() {
+  async function submitScore(payload: { writingText: string; speakingTranscript: string }) {
     setStage("scoring");
     try {
-      const data = await scoreStudyPlanPlacement(answers);
+      const readingAnswers: Record<string, string> = {};
+      const listeningAnswers: Record<string, string> = {};
+      for (const q of questions) {
+        const a = answers[q.id];
+        if (!a) continue;
+        if (q.section === "reading") readingAnswers[q.id] = a;
+        else if (q.section === "listening") listeningAnswers[q.id] = a;
+      }
+      const data = await scoreStudyPlanPlacement({
+        readingAnswers,
+        listeningAnswers,
+        writingText: payload.writingText,
+        writingPrompt,
+        speakingTranscript: payload.speakingTranscript,
+        speakingPrompt,
+      });
       setResult(data);
       setStage("result");
     } catch {
@@ -1515,35 +1556,49 @@ function PlacementCheck({ onAccept, onSkip }: { onAccept: (band: string) => void
     );
   }
 
+  if (stage === "writing") {
+    return (
+      <PlacementWritingStep
+        prompt={writingPrompt}
+        value={writingText}
+        onChange={setWritingText}
+        onSubmit={() => setStage("speaking")}
+        onSkip={() => {
+          setWritingText("");
+          setStage("speaking");
+        }}
+      />
+    );
+  }
+
+  if (stage === "speaking") {
+    return (
+      <PlacementSpeakingStep
+        prompt={speakingPrompt}
+        onSubmit={(transcript) => {
+          setSpeakingTranscript(transcript);
+          void submitScore({ writingText, speakingTranscript: transcript });
+        }}
+        onSkip={() => {
+          setSpeakingTranscript("");
+          void submitScore({ writingText, speakingTranscript: "" });
+        }}
+      />
+    );
+  }
+
   if (stage === "result" && result) {
     return (
-      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
-            <CheckCircle2 className="h-5 w-5 text-emerald-400" aria-hidden="true" />
-          </div>
-          <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.placement.resultTitle")}</h2>
-        </div>
-        <p className="mt-4 text-2xl font-bold text-[var(--primary)]">
-          {t("ielts.studyPlan.placement.resultBand", { band: result.estimatedBand })}
-        </p>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          {t("ielts.studyPlan.placement.resultBreakdown", {
-            rc: result.readingCorrect,
-            rt: result.readingTotal,
-            lc: result.listeningCorrect,
-            lt: result.listeningTotal,
-          })}
-        </p>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">{t("ielts.studyPlan.placement.note")}</p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button onClick={() => onAccept(result.estimatedBand)}>
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            {t("ielts.studyPlan.placement.acceptButton")}
-          </Button>
-          <Button variant="ghost" onClick={startTest}>{t("ielts.studyPlan.placement.retakeButton")}</Button>
-        </div>
-      </div>
+      <PlacementResultPanel
+        result={result}
+        onAccept={() =>
+          onAccept({
+            band: result.estimatedBand,
+            weakSkills: result.weakSkills ?? [],
+          })
+        }
+        onRetake={startTest}
+      />
     );
   }
 
@@ -1615,8 +1670,8 @@ function PlacementCheck({ onAccept, onSkip }: { onAccept: (band: string) => void
           <ArrowLeft className="h-4 w-4" aria-hidden="true" /> {t("ielts.studyPlan.placement.previous")}
         </Button>
         {isLast ? (
-          <Button onClick={finishTest} disabled={!answers[q.id]}>
-            {t("ielts.studyPlan.placement.finish")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          <Button onClick={() => setStage("writing")} disabled={!answers[q.id]}>
+            {t("ielts.studyPlan.placement.next")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         ) : (
           <Button
@@ -1626,6 +1681,350 @@ function PlacementCheck({ onAccept, onSkip }: { onAccept: (band: string) => void
             {t("ielts.studyPlan.placement.next")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Placement Writing step ─────────────────────────────────────────────────
+
+function PlacementWritingStep({
+  prompt,
+  value,
+  onChange,
+  onSubmit,
+  onSkip,
+}: {
+  prompt: string;
+  value: string;
+  onChange: (next: string) => void;
+  onSubmit: () => void;
+  onSkip: () => void;
+}) {
+  const { t } = useLocale();
+  const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
+  const targetMin = 50;
+  const targetMax = 80;
+  const meetsMin = wordCount >= targetMin;
+
+  return (
+    <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10">
+          <PenLine className="h-5 w-5 text-violet-400" aria-hidden="true" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.placement.writingTitle")}</h2>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+        {t("ielts.studyPlan.placement.writingIntro")}
+      </p>
+
+      {prompt && (
+        <div className="mt-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 text-sm leading-6 text-[var(--text-primary)]">
+          {prompt}
+        </div>
+      )}
+
+      <label htmlFor="placement-writing" className="sr-only">
+        {t("ielts.studyPlan.placement.writingTitle")}
+      </label>
+      <textarea
+        id="placement-writing"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={6}
+        className="mt-4 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+        placeholder={t("ielts.studyPlan.placement.writingPlaceholder")}
+      />
+
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span
+          className={
+            meetsMin
+              ? "text-emerald-400"
+              : "text-[var(--text-muted)]"
+          }
+        >
+          {t("ielts.studyPlan.placement.wordCount", {
+            n: wordCount,
+            min: targetMin,
+            max: targetMax,
+          })}
+        </span>
+      </div>
+
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <Button variant="ghost" onClick={onSkip}>
+          {t("ielts.studyPlan.placement.skipStep")}
+        </Button>
+        <Button onClick={onSubmit} disabled={!meetsMin}>
+          {t("ielts.studyPlan.placement.next")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Placement Speaking step ────────────────────────────────────────────────
+
+function PlacementSpeakingStep({
+  prompt,
+  onSubmit,
+  onSkip,
+}: {
+  prompt: string;
+  onSubmit: (transcript: string) => void;
+  onSkip: () => void;
+}) {
+  const { t } = useLocale();
+  const {
+    audioUrl,
+    clearRecording,
+    detectedTranscript,
+    error,
+    isRecording,
+    isStarting,
+    startRecording,
+    stopRecording,
+    supportsRecording,
+    supportsSpeechRecognition,
+  } = useSpeakingRecorder();
+
+  // Live 30-second countdown that auto-stops the recording when it expires.
+  const [secondsLeft, setSecondsLeft] = useState(PLACEMENT_SPEAKING_SECONDS);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!isRecording) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+    setSecondsLeft(PLACEMENT_SPEAKING_SECONDS);
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          stopRecording();
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isRecording, stopRecording]);
+
+  const canSubmit = Boolean(audioUrl) && !isRecording;
+
+  if (!supportsRecording) {
+    return (
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10">
+            <Mic className="h-5 w-5 text-amber-400" aria-hidden="true" />
+          </div>
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.placement.speakingTitle")}</h2>
+        </div>
+        <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+          {t("ielts.studyPlan.placement.recorderUnavailable")}
+        </p>
+        <div className="mt-6 flex justify-end">
+          <Button onClick={onSkip}>{t("ielts.studyPlan.placement.skipStep")}</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/10">
+          <Mic className="h-5 w-5 text-rose-400" aria-hidden="true" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.placement.speakingTitle")}</h2>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+        {t("ielts.studyPlan.placement.speakingIntro")}
+      </p>
+
+      {prompt && (
+        <div className="mt-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 text-sm leading-6 text-[var(--text-primary)]">
+          {prompt}
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {!isRecording ? (
+          <Button onClick={startRecording} disabled={isStarting}>
+            <Mic className="h-4 w-4" aria-hidden="true" />
+            {isStarting
+              ? t("ielts.studyPlan.placement.recStarting")
+              : audioUrl
+                ? t("ielts.studyPlan.placement.recRetry")
+                : t("ielts.studyPlan.placement.recStart")}
+          </Button>
+        ) : (
+          <Button onClick={stopRecording}>
+            <PauseCircle className="h-4 w-4" aria-hidden="true" />
+            {t("ielts.studyPlan.placement.recStop")}
+          </Button>
+        )}
+        {audioUrl && !isRecording ? (
+          <Button variant="secondary" onClick={clearRecording}>
+            {t("ielts.studyPlan.placement.recClear")}
+          </Button>
+        ) : null}
+        {isRecording ? (
+          <span className="rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300">
+            {t("ielts.studyPlan.placement.recCountdown", { s: secondsLeft })}
+          </span>
+        ) : null}
+      </div>
+
+      {audioUrl && !isRecording ? (
+        <div className="mt-4 space-y-3">
+          <audio controls src={audioUrl} className="w-full">
+            <track kind="captions" />
+          </audio>
+          <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 text-xs leading-6 text-[var(--text-secondary)]">
+            {detectedTranscript
+              ? detectedTranscript
+              : supportsSpeechRecognition
+                ? t("ielts.studyPlan.placement.transcriptEmpty")
+                : t("ielts.studyPlan.placement.transcriptUnsupported")}
+          </div>
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="mt-4 rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+          {error}
+        </div>
+      ) : null}
+
+      <p className="mt-3 text-[11px] leading-5 text-[var(--text-muted)]">
+        {t("ielts.studyPlan.placement.audioPrivacy")}
+      </p>
+
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <Button variant="ghost" onClick={onSkip}>
+          {t("ielts.studyPlan.placement.skipStep")}
+        </Button>
+        <Button onClick={() => onSubmit(detectedTranscript.trim())} disabled={!canSubmit}>
+          {t("ielts.studyPlan.placement.finish")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Placement Result panel ─────────────────────────────────────────────────
+
+function PlacementResultPanel({
+  result,
+  onAccept,
+  onRetake,
+}: {
+  result: PlacementScoreResult;
+  onAccept: () => void;
+  onRetake: () => void;
+}) {
+  const { t } = useLocale();
+  const skills: Array<{ key: string; label: string; band: number | null; note?: string }> = [
+    {
+      key: "reading",
+      label: t("ielts.skill.reading"),
+      band: result.readingBand,
+      note:
+        result.readingTotal > 0
+          ? `${result.readingCorrect}/${result.readingTotal}`
+          : t("ielts.studyPlan.placement.skipped"),
+    },
+    {
+      key: "listening",
+      label: t("ielts.skill.listening"),
+      band: result.listeningBand,
+      note:
+        result.listeningTotal > 0
+          ? `${result.listeningCorrect}/${result.listeningTotal}`
+          : t("ielts.studyPlan.placement.skipped"),
+    },
+    {
+      key: "writing",
+      label: t("ielts.skill.writing"),
+      band: result.writingBand,
+      note: result.writingFeedback || (result.writingBand == null ? t("ielts.studyPlan.placement.skipped") : ""),
+    },
+    {
+      key: "speaking",
+      label: t("ielts.skill.speaking"),
+      band: result.speakingBand,
+      note: result.speakingFeedback || (result.speakingBand == null ? t("ielts.studyPlan.placement.skipped") : ""),
+    },
+  ];
+
+  return (
+    <div className="rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-surface)] p-5 sm:p-8">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400" aria-hidden="true" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("ielts.studyPlan.placement.resultTitle")}</h2>
+      </div>
+      <p className="mt-4 text-2xl font-bold text-[var(--primary)]">
+        {t("ielts.studyPlan.placement.resultBand", {
+          band: result.overallBand != null ? result.overallBand.toFixed(1) : result.estimatedBand,
+        })}
+      </p>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        {skills.map((s) => (
+          <div
+            key={s.key}
+            className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elevated)] p-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                {s.label}
+              </span>
+              <span className="text-sm font-bold text-[var(--text-primary)]">
+                {s.band != null ? s.band.toFixed(1) : "—"}
+              </span>
+            </div>
+            {s.note ? (
+              <p className="mt-1 text-[11px] leading-5 text-[var(--text-secondary)]">{s.note}</p>
+            ) : null}
+          </div>
+        ))}
+      </div>
+
+      {result.weakSkills && result.weakSkills.length > 0 ? (
+        <p className="mt-4 text-xs text-[var(--text-secondary)]">
+          {t("ielts.studyPlan.placement.weakSkillsLabel", {
+            skills: result.weakSkills.join(", "),
+          })}
+        </p>
+      ) : null}
+
+      <p className="mt-3 text-xs text-[var(--text-muted)]">{t("ielts.studyPlan.placement.note")}</p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Button onClick={onAccept}>
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          {t("ielts.studyPlan.placement.acceptButton")}
+        </Button>
+        <Button variant="ghost" onClick={onRetake}>
+          {t("ielts.studyPlan.placement.retakeButton")}
+        </Button>
       </div>
     </div>
   );

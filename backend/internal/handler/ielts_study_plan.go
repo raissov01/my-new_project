@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1418,11 +1421,15 @@ func (h *IELTSStudyPlanHandler) CheckAdaptive(w http.ResponseWriter, r *http.Req
 
 // ── Placement diagnostic ───────────────────────────────────────────────────
 //
-// Eight-question reading + listening MCQ that runs before plan generation so
-// the wizard's `currentBand` is grounded in measured performance instead of
-// pure self-report. Two endpoints:
-//   GET  /api/v1/ielts/study-plan/placement       — fetch questions
-//   POST /api/v1/ielts/study-plan/placement/score — submit answers, get band
+// Four-skill diagnostic that runs before plan generation so the wizard's
+// `currentBand` and `weakSections` are grounded in measured performance
+// instead of pure self-report. Two endpoints:
+//   GET  /api/v1/ielts/study-plan/placement       — fetch MCQ + W/S prompts
+//   POST /api/v1/ielts/study-plan/placement/score — submit answers, get bands
+//
+// Writing + speaking are graded by a single LLM call (each). Audio is never
+// stored — the frontend transcribes via the browser Web Speech API and
+// submits the transcript only.
 
 type placementQuestion struct {
 	ID       string   `json:"id"`
@@ -1431,6 +1438,34 @@ type placementQuestion struct {
 	Prompt   string   `json:"prompt"`
 	Content  string   `json:"content,omitempty"`
 	Options  []string `json:"options"`
+}
+
+// Hardcoded micro-prompts for the writing + speaking placement steps. The
+// pool is intentionally small — placement is a coarse signal, not a real
+// exam task — and a random pick each request prevents users memorising the
+// scoring on a retake.
+var placementWritingPrompts = []string{
+	"Describe a place you visited recently. Say where it is, why you went there, and one thing that stood out to you. Aim for 50-80 words.",
+	"Write about a hobby or activity you enjoy. Explain what it involves and why you find it rewarding. Aim for 50-80 words.",
+	"Some people prefer to study alone, others prefer to study in a group. Which do you prefer and why? Give one example. Aim for 50-80 words.",
+	"Describe a person who has influenced you. Say who they are, how you know them, and what you learned from them. Aim for 50-80 words.",
+	"Many cities are becoming more crowded. What is one problem this causes, and what is one possible solution? Aim for 50-80 words.",
+}
+
+var placementSpeakingPrompts = []string{
+	"Talk about your daily morning routine for about 30 seconds. Mention what time you wake up, what you eat, and how you get to work or school.",
+	"Describe your hometown for about 30 seconds. Say where it is, what it is famous for, and what you like or dislike about it.",
+	"Talk about a book, film, or TV show you enjoyed for about 30 seconds. Say what it was about and why you liked it.",
+	"Describe a typical weekend for you. What do you usually do, and who do you spend time with? Speak for about 30 seconds.",
+	"Talk about a goal you want to achieve in the next year. Why is it important to you and how will you work towards it? Speak for about 30 seconds.",
+}
+
+func pickPlacementPrompt(pool []string) string {
+	if len(pool) == 0 {
+		return ""
+	}
+	//nolint:gosec // placement prompt selection does not need crypto randomness
+	return pool[rand.Intn(len(pool))]
 }
 
 func (h *IELTSStudyPlanHandler) GetPlacement(w http.ResponseWriter, r *http.Request) {
@@ -1476,11 +1511,24 @@ func (h *IELTSStudyPlanHandler) GetPlacement(w http.ResponseWriter, r *http.Requ
 		})
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"questions": out})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"questions":      out,
+		"writingPrompt":  pickPlacementPrompt(placementWritingPrompts),
+		"speakingPrompt": pickPlacementPrompt(placementSpeakingPrompts),
+	})
 }
 
 type placementScoreRequest struct {
-	Answers map[string]string `json:"answers"`
+	// Legacy combined map: older frontend builds posted reading + listening
+	// answers together under "answers". New clients should send the per-section
+	// maps instead. We accept both to keep deploys decoupled.
+	Answers            map[string]string `json:"answers"`
+	ReadingAnswers     map[string]string `json:"readingAnswers"`
+	ListeningAnswers   map[string]string `json:"listeningAnswers"`
+	WritingText        string            `json:"writingText"`
+	WritingPrompt      string            `json:"writingPrompt"`
+	SpeakingTranscript string            `json:"speakingTranscript"`
+	SpeakingPrompt     string            `json:"speakingPrompt"`
 }
 
 func (h *IELTSStudyPlanHandler) ScorePlacement(w http.ResponseWriter, r *http.Request) {
@@ -1494,52 +1542,305 @@ func (h *IELTSStudyPlanHandler) ScorePlacement(w http.ResponseWriter, r *http.Re
 		writeError(w, http.StatusBadRequest, "invalid request body", err)
 		return
 	}
-	if len(req.Answers) == 0 {
-		writeError(w, http.StatusBadRequest, "answers required", nil)
-		return
+
+	// Merge the legacy combined map into the per-section maps so downstream
+	// logic can ignore the legacy field.
+	combined := make(map[string]string, len(req.Answers)+len(req.ReadingAnswers)+len(req.ListeningAnswers))
+	for id, v := range req.Answers {
+		combined[id] = v
+	}
+	for id, v := range req.ReadingAnswers {
+		combined[id] = v
+	}
+	for id, v := range req.ListeningAnswers {
+		combined[id] = v
 	}
 
-	ids := make([]string, 0, len(req.Answers))
-	for id := range req.Answers {
-		ids = append(ids, id)
-	}
+	readingTotal, readingCorrect := 0, 0
+	listeningTotal, listeningCorrect := 0, 0
 
-	var rows []models.IELTSQuestion
-	if err := h.db.Where("id IN ?", ids).Find(&rows).Error; err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to load questions", err)
-		return
-	}
-
-	var readingTotal, readingCorrect, listeningTotal, listeningCorrect int
-	for _, q := range rows {
-		if q.Answer == nil {
-			continue
+	if len(combined) > 0 {
+		ids := make([]string, 0, len(combined))
+		for id := range combined {
+			ids = append(ids, id)
 		}
-		given := strings.TrimSpace(strings.ToLower(req.Answers[q.ID]))
-		correct := strings.TrimSpace(strings.ToLower(*q.Answer))
-		switch q.Section {
-		case "reading":
-			readingTotal++
-			if given != "" && given == correct {
-				readingCorrect++
+
+		var rows []models.IELTSQuestion
+		if err := h.db.Where("id IN ?", ids).Find(&rows).Error; err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to load questions", err)
+			return
+		}
+
+		for _, q := range rows {
+			if q.Answer == nil {
+				continue
 			}
-		case "listening":
-			listeningTotal++
-			if given != "" && given == correct {
-				listeningCorrect++
+			given := strings.TrimSpace(strings.ToLower(combined[q.ID]))
+			correct := strings.TrimSpace(strings.ToLower(*q.Answer))
+			switch q.Section {
+			case "reading":
+				readingTotal++
+				if given != "" && given == correct {
+					readingCorrect++
+				}
+			case "listening":
+				listeningTotal++
+				if given != "" && given == correct {
+					listeningCorrect++
+				}
 			}
 		}
 	}
 
-	band := estimatePlacementBand(readingCorrect+listeningCorrect, readingTotal+listeningTotal)
+	// Per-skill MCQ bands — nil if the user skipped that section entirely.
+	var readingBand, listeningBand *float64
+	if readingTotal > 0 {
+		b := mcqBandValue(readingCorrect, readingTotal)
+		readingBand = &b
+	}
+	if listeningTotal > 0 {
+		b := mcqBandValue(listeningCorrect, listeningTotal)
+		listeningBand = &b
+	}
+
+	// Writing — LLM scored. Return nil if the user skipped or the call fails.
+	var writingBand *float64
+	writingFeedback := ""
+	if strings.TrimSpace(req.WritingText) != "" && strings.TrimSpace(req.WritingPrompt) != "" {
+		if len(strings.Fields(strings.TrimSpace(req.WritingText))) >= 20 {
+			band, fb, err := h.scorePlacementWriting(req.WritingPrompt, req.WritingText)
+			if err != nil {
+				log.Printf("[placement] writing scoring failed: %v", err)
+				writingFeedback = "Writing auto-scoring is temporarily unavailable. Your response was received."
+			} else {
+				writingBand = &band
+				writingFeedback = fb
+			}
+		} else {
+			writingFeedback = "Response was too short to score reliably (aim for at least 20 words)."
+		}
+	}
+
+	// Speaking — LLM scored from the in-browser transcript. Audio is never sent
+	// to the server, so an empty transcript means transcription failed client-side.
+	var speakingBand *float64
+	speakingFeedback := ""
+	if strings.TrimSpace(req.SpeakingPrompt) != "" {
+		transcript := strings.TrimSpace(req.SpeakingTranscript)
+		switch {
+		case transcript == "":
+			speakingFeedback = "No transcript captured. Try a Chromium-based browser, or record again in a quieter setting."
+		case len(strings.Fields(transcript)) < 5:
+			speakingFeedback = "Transcript was too short to score reliably."
+		default:
+			band, fb, err := h.scorePlacementSpeaking(req.SpeakingPrompt, transcript)
+			if err != nil {
+				log.Printf("[placement] speaking scoring failed: %v", err)
+				speakingFeedback = "Speaking auto-scoring is temporarily unavailable. Your transcript was received."
+			} else {
+				speakingBand = &band
+				speakingFeedback = fb
+			}
+		}
+	}
+
+	overallBand, weakSkills := computeOverallAndWeak(readingBand, listeningBand, writingBand, speakingBand)
+
+	// Legacy combined-band string — kept for backwards compatibility with the
+	// previous wizard implementation which only reads `estimatedBand`.
+	legacyBand := estimatePlacementBand(readingCorrect+listeningCorrect, readingTotal+listeningTotal)
+	if overallBand != nil {
+		legacyBand = formatBand(*overallBand)
+	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"readingCorrect":   readingCorrect,
 		"readingTotal":     readingTotal,
 		"listeningCorrect": listeningCorrect,
 		"listeningTotal":   listeningTotal,
-		"estimatedBand":    band,
+		"readingBand":      readingBand,
+		"listeningBand":    listeningBand,
+		"writingBand":      writingBand,
+		"writingFeedback":  writingFeedback,
+		"speakingBand":     speakingBand,
+		"speakingFeedback": speakingFeedback,
+		"overallBand":      overallBand,
+		"weakSkills":       weakSkills,
+		"estimatedBand":    legacyBand,
 	})
+}
+
+// computeOverallAndWeak averages the available per-skill bands (nil ones are
+// ignored) and flags any skill more than 0.5 below the mean as weak.
+func computeOverallAndWeak(r, l, wr, s *float64) (*float64, []string) {
+	type entry struct {
+		name string
+		band float64
+	}
+	entries := make([]entry, 0, 4)
+	if r != nil {
+		entries = append(entries, entry{"reading", *r})
+	}
+	if l != nil {
+		entries = append(entries, entry{"listening", *l})
+	}
+	if wr != nil {
+		entries = append(entries, entry{"writing", *wr})
+	}
+	if s != nil {
+		entries = append(entries, entry{"speaking", *s})
+	}
+	if len(entries) == 0 {
+		return nil, []string{}
+	}
+	sum := 0.0
+	for _, e := range entries {
+		sum += e.band
+	}
+	avg := sum / float64(len(entries))
+	overall := math.Round(avg*2) / 2 // nearest 0.5
+	threshold := avg - 0.5
+	weak := []string{}
+	for _, e := range entries {
+		if e.band < threshold {
+			weak = append(weak, e.name)
+		}
+	}
+	return &overall, weak
+}
+
+// formatBand renders a band float as the canonical "6.5" / "7.0" string.
+func formatBand(b float64) string {
+	return strconv.FormatFloat(b, 'f', 1, 64)
+}
+
+// mcqBandValue maps MCQ accuracy on a section to a numeric IELTS band. Mirrors
+// estimatePlacementBand but returns float64 so the per-skill response stays
+// uniformly typed alongside the LLM-scored writing/speaking bands.
+func mcqBandValue(correct, total int) float64 {
+	if total == 0 {
+		return 5.5
+	}
+	pct := float64(correct) / float64(total) * 100
+	switch {
+	case pct >= 95:
+		return 7.5
+	case pct >= 85:
+		return 7.0
+	case pct >= 75:
+		return 6.5
+	case pct >= 62:
+		return 6.0
+	case pct >= 50:
+		return 5.5
+	case pct >= 37:
+		return 5.0
+	case pct >= 25:
+		return 4.5
+	default:
+		return 4.0
+	}
+}
+
+// scorePlacementWriting asks the LLM for a single band + one-line note.
+// Intentionally lightweight: this is a 50-80 word micro task, not a real
+// IELTS essay, so the full criterion breakdown is unnecessary.
+func (h *IELTSStudyPlanHandler) scorePlacementWriting(promptText, essay string) (float64, string, error) {
+	if h.openAIKey == "" && h.claudeKey == "" {
+		return 0, "", fmt.Errorf("no LLM provider configured")
+	}
+	prompt := fmt.Sprintf(`You are an IELTS Writing examiner. Score this short placement response on the official IELTS band scale (half-band increments from 4.0 to 9.0). Be realistic — most candidates score between 4.5 and 7.0. This is a 50-80 word micro task, so judge proportionally: grammar control, vocabulary range, and task focus matter more than length or full essay development.
+
+Task prompt: %s
+
+Candidate response:
+%s
+
+Return ONLY valid JSON in this exact shape:
+{"band": 6.0, "brief_feedback": "one short sentence (max 25 words) explaining the band"}`, strings.TrimSpace(promptText), strings.TrimSpace(essay))
+
+	raw, err := h.placementCallLLM(prompt)
+	if err != nil {
+		return 0, "", err
+	}
+	var parsed struct {
+		Band     float64 `json:"band"`
+		Feedback string  `json:"brief_feedback"`
+	}
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		return 0, "", fmt.Errorf("parse writing score JSON: %w", err)
+	}
+	return clampBand(parsed.Band), strings.TrimSpace(parsed.Feedback), nil
+}
+
+// scorePlacementSpeaking scores a short transcribed speaking sample. Same
+// shape and constraints as scorePlacementWriting — single band + brief note.
+func (h *IELTSStudyPlanHandler) scorePlacementSpeaking(promptText, transcript string) (float64, string, error) {
+	if h.openAIKey == "" && h.claudeKey == "" {
+		return 0, "", fmt.Errorf("no LLM provider configured")
+	}
+	prompt := fmt.Sprintf(`You are an IELTS Speaking examiner. The candidate spoke for ~30 seconds in response to a placement prompt; their speech was transcribed by the browser (expect minor transcription noise). Score the response on the official IELTS band scale (half-band increments from 4.0 to 9.0). Judge fluency, vocabulary range, and grammar control from the transcript. Pronunciation cannot be assessed from text alone — ignore that criterion. Be realistic — most candidates score between 4.5 and 7.0.
+
+Examiner prompt: %s
+
+Candidate transcript:
+%s
+
+Return ONLY valid JSON in this exact shape:
+{"band": 6.0, "brief_feedback": "one short sentence (max 25 words) explaining the band"}`, strings.TrimSpace(promptText), strings.TrimSpace(transcript))
+
+	raw, err := h.placementCallLLM(prompt)
+	if err != nil {
+		return 0, "", err
+	}
+	var parsed struct {
+		Band     float64 `json:"band"`
+		Feedback string  `json:"brief_feedback"`
+	}
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		return 0, "", fmt.Errorf("parse speaking score JSON: %w", err)
+	}
+	return clampBand(parsed.Band), strings.TrimSpace(parsed.Feedback), nil
+}
+
+// placementCallLLM is a thin, single-attempt wrapper around the providers the
+// rest of this handler uses. Placement scoring is a short, cheap call — it
+// doesn't need the multi-fallback chain that plan generation uses.
+func (h *IELTSStudyPlanHandler) placementCallLLM(prompt string) (string, error) {
+	timeout := 25 * time.Second
+	if h.timeout > 0 && h.timeout < timeout {
+		timeout = h.timeout
+	}
+
+	if strings.TrimSpace(h.openAIKey) != "" {
+		start := time.Now()
+		raw, usage, err := callOpenAIChatCompletion(h.openAIKey, h.openAIModel, "", prompt, timeout)
+		aicost.Record(h.db, aicost.Event{
+			Feature: "ielts_placement", Model: h.openAIModel,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(start), Err: err,
+		})
+		if err == nil {
+			return raw, nil
+		}
+		log.Printf("[placement-llm] openai failed: %v", err)
+	}
+
+	if strings.TrimSpace(h.claudeKey) != "" && strings.TrimSpace(h.claudeURL) != "" {
+		start := time.Now()
+		raw, usage, err := callClaudeChatCompletion(h.claudeKey, h.claudeModel, h.claudeURL, "", prompt, timeout)
+		aicost.Record(h.db, aicost.Event{
+			Feature: "ielts_placement", Model: h.claudeModel,
+			PromptTokens: usage.Prompt, CompletionTokens: usage.Completion,
+			Latency: time.Since(start), Err: err,
+		})
+		if err == nil {
+			return raw, nil
+		}
+		log.Printf("[placement-llm] claude failed: %v", err)
+	}
+
+	return "", fmt.Errorf("all LLM providers failed")
 }
 
 // estimatePlacementBand returns a coarse band estimate from a raw 8-question

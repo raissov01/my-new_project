@@ -355,29 +355,63 @@ export type PlacementQuestion = {
   options: string[];
 };
 
+export type PlacementPayload = {
+  questions: PlacementQuestion[];
+  writingPrompt: string;
+  speakingPrompt: string;
+};
+
+export type PlacementScoreInput = {
+  readingAnswers: Record<string, string>;
+  listeningAnswers: Record<string, string>;
+  writingText: string;
+  writingPrompt: string;
+  speakingTranscript: string;
+  speakingPrompt: string;
+};
+
+export type PlacementScoreResult = {
+  readingCorrect: number;
+  readingTotal: number;
+  listeningCorrect: number;
+  listeningTotal: number;
+  readingBand: number | null;
+  listeningBand: number | null;
+  writingBand: number | null;
+  writingFeedback: string;
+  speakingBand: number | null;
+  speakingFeedback: string;
+  overallBand: number | null;
+  weakSkills: string[];
+  // Legacy: still returned by the backend for backwards compatibility.
+  estimatedBand: string;
+};
+
 export async function getStudyPlanPlacement() {
   const user = await requireUser();
-  return fetchBackendJson<{ questions: PlacementQuestion[] }>({
+  return fetchBackendJson<PlacementPayload>({
     path: "/api/v1/ielts/study-plan/placement",
     userId: user.id,
     timeoutMs: 15_000,
   });
 }
 
-export async function scoreStudyPlanPlacement(answers: Record<string, string>) {
+export async function scoreStudyPlanPlacement(input: PlacementScoreInput) {
   const user = await requireUser();
-  return fetchBackendJson<{
-    readingCorrect: number;
-    readingTotal: number;
-    listeningCorrect: number;
-    listeningTotal: number;
-    estimatedBand: string;
-  }>({
+  return fetchBackendJson<PlacementScoreResult>({
     path: "/api/v1/ielts/study-plan/placement/score",
     userId: user.id,
     method: "POST",
-    body: JSON.stringify({ answers }),
+    body: JSON.stringify({
+      readingAnswers: input.readingAnswers,
+      listeningAnswers: input.listeningAnswers,
+      writingText: input.writingText,
+      writingPrompt: input.writingPrompt,
+      speakingTranscript: input.speakingTranscript,
+      speakingPrompt: input.speakingPrompt,
+    }),
     headers: { "Content-Type": "application/json" },
-    timeoutMs: 15_000,
+    // Writing + speaking scoring make LLM calls; allow up to 60s.
+    timeoutMs: 60_000,
   });
 }
