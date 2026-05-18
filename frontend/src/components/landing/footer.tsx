@@ -62,9 +62,23 @@ export function LandingFooter({ locale }: FooterProps) {
               marginBottom: 14, fontWeight: 600, margin: '0 0 14px',
             }}>{t('lp.footer.company')}</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
-              <li><Link href="#" style={footLinkStyle}>{t('lp.footer.about')}</Link></li>
-              <li><Link href="#" style={footLinkStyle}>{t('lp.footer.blog')}</Link></li>
-              <li><Link href="#" style={footLinkStyle}>{t('lp.footer.contact')}</Link></li>
+              <li><Link href="/about" style={footLinkStyle}>{t('lp.footer.about')}</Link></li>
+              <li><Link href="/blog" style={footLinkStyle}>{t('lp.footer.blog')}</Link></li>
+              <li><Link href="/contact" style={footLinkStyle}>{t('lp.footer.contact')}</Link></li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 style={{
+              fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'var(--ink-mute)', fontFamily: "'JetBrains Mono', monospace",
+              marginBottom: 14, fontWeight: 600, margin: '0 0 14px',
+            }}>{t('lp.footer.legal')}</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
+              <li><Link href="/terms" style={footLinkStyle}>{t('lp.footer.terms')}</Link></li>
+              <li><Link href="/privacy" style={footLinkStyle}>{t('lp.footer.privacy')}</Link></li>
+              <li><Link href="/refund" style={footLinkStyle}>{t('lp.footer.refund')}</Link></li>
             </ul>
           </div>
 
@@ -110,7 +124,10 @@ export function LandingFooter({ locale }: FooterProps) {
           display: block;
         }
         @media (min-width: 760px) {
-          .lp-foot { grid-template-columns: 1.5fr 1fr 1fr 1fr; }
+          .lp-foot { grid-template-columns: 1fr 1fr; }
+        }
+        @media (min-width: 1024px) {
+          .lp-foot { grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr; }
         }
       `}</style>
     </footer>

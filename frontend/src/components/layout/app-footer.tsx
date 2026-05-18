@@ -69,9 +69,25 @@ export async function AppFooter() {
           />
         </div>
         <div className="section-divider mt-8" />
-        <p className="mt-5 text-sm text-[var(--text-muted)]">
-          {t("landing.footerCopyright").replace("{year}", String(new Date().getFullYear()))}
-        </p>
+        <div className="mt-5 flex flex-col gap-3 text-sm text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            {t("landing.footerCopyright").replace("{year}", String(new Date().getFullYear()))}
+          </p>
+          <nav className="flex flex-wrap gap-x-5 gap-y-2">
+            <Link href="/terms" className="transition-colors hover:text-[var(--primary)]">
+              {t("lp.footer.terms")}
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-[var(--primary)]">
+              {t("lp.footer.privacy")}
+            </Link>
+            <Link href="/refund" className="transition-colors hover:text-[var(--primary)]">
+              {t("lp.footer.refund")}
+            </Link>
+            <Link href="/contact" className="transition-colors hover:text-[var(--primary)]">
+              {t("lp.footer.contact")}
+            </Link>
+          </nav>
+        </div>
       </div>
     </footer>
   );
