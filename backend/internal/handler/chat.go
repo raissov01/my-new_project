@@ -12,12 +12,15 @@ import (
 	"unicode"
 
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/plan"
 	"github.com/midoriya/flashlearn-backend/internal/repository"
+	"gorm.io/gorm"
 )
 
 // ChatHandler handles the AI tutor chat endpoints.
 type ChatHandler struct {
 	repo             *repository.ChatRepository
+	db               *gorm.DB
 	openaiKey        string
 	openaiModel      string
 	claudeKey        string
@@ -29,6 +32,7 @@ type ChatHandler struct {
 
 func NewChat(
 	repo *repository.ChatRepository,
+	db *gorm.DB,
 	openaiKey, openaiModel string,
 	claudeKey, claudeModel, claudeFallback, claudeURL string,
 	timeout time.Duration,
@@ -41,6 +45,7 @@ func NewChat(
 	}
 	return &ChatHandler{
 		repo:           repo,
+		db:             db,
 		openaiKey:      openaiKey,
 		openaiModel:    chatModel,
 		claudeKey:      claudeKey,
@@ -117,6 +122,11 @@ func (h *ChatHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	msg := strings.TrimSpace(req.Message)
 	if msg == "" || len(msg) > 5000 {
 		http.Error(w, `{"error":"message must be 1-5000 characters"}`, http.StatusBadRequest)
+		return
+	}
+
+	if err := plan.CheckAndConsume(h.db, userID, plan.FeatureChat); err != nil {
+		plan.WritePaywall(w, plan.FeatureChat)
 		return
 	}
 

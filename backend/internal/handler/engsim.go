@@ -9,6 +9,7 @@ import (
 
 	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/plan"
 	"github.com/midoriya/flashlearn-backend/internal/service"
 	"gorm.io/gorm"
 )
@@ -552,6 +553,11 @@ func (h *EngSimHandler) SpeakingPractice(w http.ResponseWriter, r *http.Request)
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
 		jsonErr(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if err := plan.CheckAndConsume(h.db, userID, plan.FeatureEngSim); err != nil {
+		plan.WritePaywall(w, plan.FeatureEngSim)
 		return
 	}
 

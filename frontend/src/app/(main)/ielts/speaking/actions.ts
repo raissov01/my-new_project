@@ -1,7 +1,12 @@
 "use server";
 
 import { getCurrentUser } from "@/server/auth";
-import { fetchBackendJson } from "@/server/integrations/go-backend/server";
+import {
+  BackendError,
+  fetchBackendJson,
+  isPaywall,
+  type PaywallInfo,
+} from "@/server/integrations/go-backend/server";
 
 export type SpeakingResult = {
   id: string;
@@ -50,7 +55,7 @@ export async function evaluateSpeaking(
   part: string,
   prompt: string,
   transcript: string
-): Promise<{ result?: SpeakingResult; error?: string }> {
+): Promise<{ result?: SpeakingResult; error?: string; paywall?: PaywallInfo }> {
   const user = await getCurrentUser();
   if (!user) return { error: "Not authenticated." };
 
@@ -65,6 +70,9 @@ export async function evaluateSpeaking(
     });
     return { result };
   } catch (err) {
+    if (err instanceof BackendError && err.status === 402 && isPaywall(err.data)) {
+      return { paywall: err.data };
+    }
     const msg = err instanceof Error ? err.message : "Evaluation failed.";
     return { error: msg };
   }

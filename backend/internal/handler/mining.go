@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/midoriya/flashlearn-backend/internal/aicost"
+	"github.com/midoriya/flashlearn-backend/internal/middleware"
+	"github.com/midoriya/flashlearn-backend/internal/plan"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +36,12 @@ type ExtractedWord struct {
 // POST /mining/extract
 // Body: { text: string, level: string }
 func (h *MiningHandler) Extract(w http.ResponseWriter, r *http.Request) {
+	userID, _ := middleware.UserIDFromContext(r.Context())
+	if err := plan.CheckAndConsume(h.db, userID, plan.FeatureMining); err != nil {
+		plan.WritePaywall(w, plan.FeatureMining)
+		return
+	}
+
 	var body struct {
 		Text  string `json:"text"`
 		Level string `json:"level"`

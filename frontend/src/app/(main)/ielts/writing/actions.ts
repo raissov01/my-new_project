@@ -1,7 +1,12 @@
 "use server";
 
 import { getCurrentUser } from "@/server/auth";
-import { fetchBackendJson } from "@/server/integrations/go-backend/server";
+import {
+  BackendError,
+  fetchBackendJson,
+  isPaywall,
+  type PaywallInfo,
+} from "@/server/integrations/go-backend/server";
 
 export type WritingResult = {
   id: string;
@@ -50,7 +55,7 @@ export async function evaluateWriting(
   prompt: string,
   essay: string,
   timeTakenSecs?: number
-): Promise<{ result?: WritingResult; error?: string }> {
+): Promise<{ result?: WritingResult; error?: string; paywall?: PaywallInfo }> {
   const user = await getCurrentUser();
   if (!user) return { error: "Not authenticated." };
 
@@ -65,6 +70,9 @@ export async function evaluateWriting(
     });
     return { result };
   } catch (err) {
+    if (err instanceof BackendError && err.status === 402 && isPaywall(err.data)) {
+      return { paywall: err.data };
+    }
     const msg = err instanceof Error ? err.message : "Evaluation failed.";
     return { error: msg };
   }

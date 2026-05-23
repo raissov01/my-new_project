@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { Mic, MicOff, Volume2, Loader2, ArrowLeft, Star, TrendingUp, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { speakingPractice, type SpeakingResponse } from "@/features/learn/api";
+import { PaywallModal } from "@/components/billing/paywall-modal";
+import type { PaywallInfo } from "@/lib/billing/paywall";
 import Link from "next/link";
 
 type Message = {
@@ -29,6 +31,7 @@ export function SpeakClient() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [context, setContext] = useState("");
+  const [paywall, setPaywall] = useState<PaywallInfo | null>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +45,10 @@ export function SpeakClient() {
     setIsProcessing(true);
     try {
       const res = await speakingPractice({ transcript: "", topic: topicId, context: "" });
+      if ("paywall" in res) {
+        setPaywall(res.paywall);
+        return;
+      }
       const aiMsg = res.followUp || "Hello! Let's practice your English. Tell me about yourself.";
       setMessages([{ role: "ai", text: aiMsg }]);
       setContext(res.followUpContext || "");
@@ -131,6 +138,11 @@ export function SpeakClient() {
         topic: topic || "free",
         context,
       });
+
+      if ("paywall" in res) {
+        setPaywall(res.paywall);
+        return;
+      }
 
       // Add feedback
       setMessages(prev => [...prev, {
@@ -306,6 +318,7 @@ export function SpeakClient() {
           </div>
         )}
       </div>
+      <PaywallModal paywall={paywall} onClose={() => setPaywall(null)} />
     </div>
   );
 }

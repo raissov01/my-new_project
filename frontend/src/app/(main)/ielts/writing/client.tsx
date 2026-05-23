@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import type { IELTSQuestion } from "@/features/ielts/api";
 import { fetchIELTSQuestions } from "@/features/ielts/api";
 import { evaluateWriting, type WritingResult } from "./actions";
+import { PaywallModal } from "@/components/billing/paywall-modal";
+import type { PaywallInfo } from "@/lib/billing/paywall";
 
 type Phase = "select" | "write" | "evaluating" | "results";
 type WritingTaskType = "task1" | "task2";
@@ -37,6 +39,7 @@ export function WritingPracticeClient() {
   const [essay, setEssay] = useState("");
   const [result, setResult] = useState<WritingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallInfo | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedSecs, setElapsedSecs] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
@@ -182,13 +185,18 @@ export function WritingPracticeClient() {
     setError(null);
     setPhase("evaluating");
 
-    const { result: response, error: submitError } = await evaluateWriting(
+    const { result: response, error: submitError, paywall: pw } = await evaluateWriting(
       taskType,
       prompt,
       essay,
       elapsedSecs
     );
 
+    if (pw) {
+      setPaywall(pw);
+      setPhase("write");
+      return;
+    }
     if (submitError) {
       setError(t("ielts.evalError"));
       setPhase("write");
@@ -438,6 +446,7 @@ export function WritingPracticeClient() {
             </Button>
           </div>
         ) : null}
+        <PaywallModal paywall={paywall} onClose={() => setPaywall(null)} />
       </div>
     );
   }

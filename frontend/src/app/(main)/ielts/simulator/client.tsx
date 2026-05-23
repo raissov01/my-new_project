@@ -38,6 +38,8 @@ import {
 } from "./attempt-actions";
 import { evaluateSpeaking, type SpeakingResult } from "../speaking/actions";
 import { evaluateWriting, type WritingResult } from "../writing/actions";
+import { PaywallModal } from "@/components/billing/paywall-modal";
+import type { PaywallInfo } from "@/lib/billing/paywall";
 
 type MockType = "predictions" | "cambridge_style";
 type Section = "full" | "reading" | "listening" | "writing" | "speaking";
@@ -67,6 +69,7 @@ export function SimulatorClient() {
   const [mock, setMock] = useState<IELTSMockExam | null>(null);
   const [activeSectionIndex, setActiveSectionIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallInfo | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [objectiveAnswers, setObjectiveAnswers] = useState<Record<string, string>>({});
   const [revealedSections, setRevealedSections] = useState<Record<string, boolean>>({});
@@ -416,7 +419,7 @@ export function SimulatorClient() {
     setError(null);
     setEvaluatingQuestionId(question.id);
 
-    const { result, error: evaluationError } = await evaluateWriting(
+    const { result, error: evaluationError, paywall: pw } = await evaluateWriting(
       question.questionType,
       question.prompt,
       essay
@@ -424,6 +427,10 @@ export function SimulatorClient() {
 
     setEvaluatingQuestionId(null);
 
+    if (pw) {
+      setPaywall(pw);
+      return;
+    }
     if (evaluationError) {
       setError(evaluationError);
       return;
@@ -444,7 +451,7 @@ export function SimulatorClient() {
     setError(null);
     setEvaluatingQuestionId(question.id);
 
-    const { result, error: evaluationError } = await evaluateSpeaking(
+    const { result, error: evaluationError, paywall: pw } = await evaluateSpeaking(
       question.questionType,
       question.prompt,
       transcript
@@ -452,6 +459,10 @@ export function SimulatorClient() {
 
     setEvaluatingQuestionId(null);
 
+    if (pw) {
+      setPaywall(pw);
+      return;
+    }
     if (evaluationError) {
       setError(evaluationError);
       return;
@@ -1214,6 +1225,7 @@ export function SimulatorClient() {
         onCancel={() => setShowListeningSectionConfirm(false)}
         onConfirm={handleAdvanceListeningGroup}
       />
+      <PaywallModal paywall={paywall} onClose={() => setPaywall(null)} />
       </div>
     </div>
   );

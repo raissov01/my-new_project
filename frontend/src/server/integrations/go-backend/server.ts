@@ -3,6 +3,21 @@ import "server-only";
 import { headers as requestHeaders } from "next/headers";
 import { getBackendBaseUrl, getBackendInternalToken } from "./env";
 
+export { isPaywall, type PaywallInfo } from "@/lib/billing/paywall";
+
+// BackendError preserves the HTTP status and parsed JSON body from the Go
+// backend so callers can branch on specific status codes (e.g. 402 paywall).
+export class BackendError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly data: unknown,
+    message?: string,
+  ) {
+    super(message ?? `[Go backend] ${status}`);
+    this.name = "BackendError";
+  }
+}
+
 type BackendFetchOptions = {
   path: string;
   userId: string;
@@ -66,8 +81,10 @@ export async function fetchBackendJson<T>(options: BackendFetchOptions): Promise
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      throw new Error(
-        `[Go backend] ${response.status} ${typeof data?.error === "string" ? data.error : "request failed"}`
+      throw new BackendError(
+        response.status,
+        data,
+        `[Go backend] ${response.status} ${typeof (data as { error?: unknown })?.error === "string" ? (data as { error: string }).error : "request failed"}`,
       );
     }
 

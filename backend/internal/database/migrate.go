@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/plan"
 	"gorm.io/gorm"
 )
 
@@ -150,6 +151,8 @@ func AutoMigrate(db *gorm.DB) (err error) {
 		&models.DailyNews{},
 		// Billing
 		&models.Subscription{},
+		// Freemium quota counter (per-feature, rolling 24h)
+		&plan.FeatureUsageEvent{},
 		// Push notifications
 		&models.PushSubscription{},
 		// In-app notifications (bell dropdown)

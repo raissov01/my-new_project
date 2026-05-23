@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/plan"
 	"gorm.io/gorm"
 )
 
@@ -122,7 +123,9 @@ func (h *BillingHandler) Webhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Status handles GET /api/v1/billing/status — returns current plan and checkout URL.
+// Status handles GET /api/v1/billing/status — returns current plan,
+// effective tier (free/pro including trial), trial window, per-feature
+// daily quotas, and the checkout URL.
 func (h *BillingHandler) Status(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
@@ -131,7 +134,7 @@ func (h *BillingHandler) Status(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	if err := h.db.Select("id, plan, ls_customer_id").Where("id = ?", userID).First(&user).Error; err != nil {
+	if err := h.db.Select("id, plan, ls_customer_id, created_at").Where("id = ?", userID).First(&user).Error; err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
 	}
@@ -144,18 +147,28 @@ func (h *BillingHandler) Status(w http.ResponseWriter, r *http.Request) {
 		checkoutURL = h.checkoutURL + "?embed=1&checkout[custom][user_id]=" + userID
 	}
 
+	status, _ := plan.Status(h.db, userID)
+
 	type response struct {
-		Plan            string     `json:"plan"`
-		IsPro           bool       `json:"isPro"`
-		CheckoutURL     string     `json:"checkoutURL"`
-		SubStatus       string     `json:"subStatus,omitempty"`
-		CurrentPeriodEnd *time.Time `json:"currentPeriodEnd,omitempty"`
+		Plan             string                          `json:"plan"`
+		IsPro            bool                            `json:"isPro"`
+		Tier             plan.Tier                       `json:"tier"`
+		InTrial          bool                            `json:"inTrial"`
+		TrialEndsAt      *time.Time                      `json:"trialEndsAt,omitempty"`
+		CheckoutURL      string                          `json:"checkoutURL"`
+		SubStatus        string                          `json:"subStatus,omitempty"`
+		CurrentPeriodEnd *time.Time                      `json:"currentPeriodEnd,omitempty"`
+		Features         map[string]plan.FeatureStatus   `json:"features"`
 	}
 
 	resp := response{
 		Plan:        user.Plan,
-		IsPro:       user.Plan == "pro",
+		IsPro:       status.Tier == plan.TierPro,
+		Tier:        status.Tier,
+		InTrial:     status.InTrial,
+		TrialEndsAt: status.TrialEndsAt,
 		CheckoutURL: checkoutURL,
+		Features:    status.Features,
 	}
 	if hasSub {
 		resp.SubStatus = sub.Status

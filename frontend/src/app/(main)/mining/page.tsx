@@ -4,6 +4,8 @@ import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Pickaxe, Loader2, PlusCircle, CheckCircle2, ExternalLink } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { PaywallModal } from "@/components/billing/paywall-modal";
+import { isPaywall, type PaywallInfo } from "@/lib/billing/paywall";
 
 interface ExtractedWord {
   word: string;
@@ -14,18 +16,25 @@ interface ExtractedWord {
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
-async function extractWords(text: string, level: string): Promise<ExtractedWord[]> {
+async function extractWords(
+  text: string,
+  level: string,
+): Promise<{ words: ExtractedWord[]; paywall?: PaywallInfo }> {
   try {
     const res = await fetch("/api/mining", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, level }),
     });
-    if (!res.ok) return [];
-    const data = await res.json() as { words?: ExtractedWord[] };
-    return data.words ?? [];
+    if (res.status === 402) {
+      const body = await res.json().catch(() => null);
+      if (isPaywall(body)) return { words: [], paywall: body };
+    }
+    if (!res.ok) return { words: [] };
+    const data = (await res.json()) as { words?: ExtractedWord[] };
+    return { words: data.words ?? [] };
   } catch {
-    return [];
+    return { words: [] };
   }
 }
 
@@ -77,13 +86,18 @@ export default function MiningPage() {
   const [saving, setSaving] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [paywall, setPaywall] = useState<PaywallInfo | null>(null);
 
   const handleExtract = () => {
     if (text.trim().length < 20) { setError("Please paste at least 20 characters."); return; }
     setError("");
     setSavedSetId(null);
     startTransition(async () => {
-      const result = await extractWords(text, level);
+      const { words: result, paywall: pw } = await extractWords(text, level);
+      if (pw) {
+        setPaywall(pw);
+        return;
+      }
       setWords(result);
       setAdded(new Set());
     });
@@ -336,6 +350,7 @@ export default function MiningPage() {
           </div>
         </div>
       )}
+      <PaywallModal paywall={paywall} onClose={() => setPaywall(null)} />
     </div>
   );
 }

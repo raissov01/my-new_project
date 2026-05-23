@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Trash2, Bot, User, Loader2 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
+import { PaywallModal } from "@/components/billing/paywall-modal";
+import { isPaywall, type PaywallInfo } from "@/lib/billing/paywall";
 
 type ChatMessage = {
   id: string;
@@ -18,6 +20,7 @@ export function ChatClient() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [paywall, setPaywall] = useState<PaywallInfo | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -69,6 +72,15 @@ export function ChatClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
       });
+
+      if (res.status === 402) {
+        const body = await res.json().catch(() => null);
+        if (isPaywall(body)) {
+          setPaywall(body);
+          setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
+          return;
+        }
+      }
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Request failed" }));
@@ -297,6 +309,7 @@ export function ChatClient() {
           {t("chat.disclaimer")}
         </p>
       </div>
+      <PaywallModal paywall={paywall} onClose={() => setPaywall(null)} />
     </div>
   );
 }

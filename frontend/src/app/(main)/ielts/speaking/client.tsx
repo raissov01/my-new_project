@@ -19,6 +19,8 @@ import { SpeakingRecorderPanel } from "@/features/ielts/components/speaking-reco
 import type { IELTSQuestion } from "@/features/ielts/api";
 import { fetchIELTSQuestions } from "@/features/ielts/api";
 import { evaluateSpeaking, type SpeakingResult } from "./actions";
+import { PaywallModal } from "@/components/billing/paywall-modal";
+import type { PaywallInfo } from "@/lib/billing/paywall";
 
 type Phase = "select" | "practice" | "evaluating" | "results";
 type PartKey = "part1" | "part2" | "part3";
@@ -46,6 +48,7 @@ export function SpeakingPracticeClient() {
   const [transcript, setTranscript] = useState("");
   const [result, setResult] = useState<SpeakingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallInfo | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [prepTime, setPrepTime] = useState(0);
   const [activeFollowUps, setActiveFollowUps] = useState<string[]>([]);
@@ -226,12 +229,17 @@ export function SpeakingPracticeClient() {
     setError(null);
     setPhase("evaluating");
 
-    const { result: response, error: submitError } = await evaluateSpeaking(
+    const { result: response, error: submitError, paywall: pw } = await evaluateSpeaking(
       activeQuestion.questionType,
       currentPrompt,
       transcript
     );
 
+    if (pw) {
+      setPaywall(pw);
+      setPhase("practice");
+      return;
+    }
     if (submitError) {
       setError(t("ielts.evalError"));
       setPhase("practice");
@@ -555,6 +563,7 @@ export function SpeakingPracticeClient() {
             </Button>
           </div>
         ) : null}
+        <PaywallModal paywall={paywall} onClose={() => setPaywall(null)} />
       </div>
     );
   }

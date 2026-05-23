@@ -206,7 +206,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		IELTSStudyPlan:     handler.NewIELTSStudyPlan(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
 		IELTSDashboard:     handler.NewIELTSDashboard(gormDB),
 		IELTSQuestionAdmin: handler.NewIELTSQuestionAdmin(gormDB),
-		Chat:               handler.NewChat(chatRepo, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
+		Chat:               handler.NewChat(chatRepo, gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
 		Files:              handler.NewFiles("telegram-media"),
 		QuizImage:          handler.NewQuizImage("uploads/quiz-images", 5*1024*1024),
 		QuizAudio:          handler.NewQuizAudio("uploads/quiz-audio", 25*1024*1024),

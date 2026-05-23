@@ -14,6 +14,7 @@ import (
 	"github.com/midoriya/flashlearn-backend/internal/aicost"
 	"github.com/midoriya/flashlearn-backend/internal/middleware"
 	"github.com/midoriya/flashlearn-backend/internal/models"
+	"github.com/midoriya/flashlearn-backend/internal/plan"
 	"gorm.io/gorm"
 )
 
@@ -86,6 +87,11 @@ func (h *IELTSExaminerHandler) EvaluateWriting(w http.ResponseWriter, r *http.Re
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
 		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	if err := plan.CheckAndConsume(h.db, userID, plan.FeatureIELTSWriting); err != nil {
+		plan.WritePaywall(w, plan.FeatureIELTSWriting)
 		return
 	}
 
@@ -324,6 +330,11 @@ func (h *IELTSExaminerHandler) EvaluateSpeaking(w http.ResponseWriter, r *http.R
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
 		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	if err := plan.CheckAndConsume(h.db, userID, plan.FeatureIELTSSpeaking); err != nil {
+		plan.WritePaywall(w, plan.FeatureIELTSSpeaking)
 		return
 	}
 

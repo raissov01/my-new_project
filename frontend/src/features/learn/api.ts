@@ -1,7 +1,12 @@
 "use server";
 
 import { getCurrentUser } from "@/server/auth";
-import { fetchBackendJson } from "@/server/integrations/go-backend/server";
+import {
+  BackendError,
+  fetchBackendJson,
+  isPaywall,
+  type PaywallInfo,
+} from "@/server/integrations/go-backend/server";
 import { getServerLocale } from "@/server/i18n";
 
 // ── Types ──
@@ -301,15 +306,22 @@ export async function speakingPractice(data: {
   transcript: string;
   topic: string;
   context: string;
-}) {
+}): Promise<SpeakingResponse | { paywall: PaywallInfo }> {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
-  return fetchBackendJson<SpeakingResponse>({
-    path: "/api/v1/engsim/speaking",
-    userId: user.id,
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-    timeoutMs: 60_000,
-  });
+  try {
+    return await fetchBackendJson<SpeakingResponse>({
+      path: "/api/v1/engsim/speaking",
+      userId: user.id,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      timeoutMs: 60_000,
+    });
+  } catch (err) {
+    if (err instanceof BackendError && err.status === 402 && isPaywall(err.data)) {
+      return { paywall: err.data };
+    }
+    throw err;
+  }
 }

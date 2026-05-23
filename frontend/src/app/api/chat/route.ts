@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/server/auth";
-import { fetchBackendJson } from "@/server/integrations/go-backend/server";
+import {
+  BackendError,
+  fetchBackendJson,
+} from "@/server/integrations/go-backend/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,6 +53,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(data);
   } catch (err) {
+    if (err instanceof BackendError && err.status === 402) {
+      return NextResponse.json(err.data, { status: 402 });
+    }
     const msg = err instanceof Error ? err.message : "Backend request failed";
     console.error("[chat] POST error:", msg);
     return NextResponse.json({ error: msg }, { status: 502 });

@@ -33,7 +33,10 @@ export default async function UpgradePage() {
   if (!user) redirect("/login");
 
   const billing = await getBillingStatus();
-  if (billing?.isPro) redirect("/settings?upgraded=1");
+  // Only redirect users with a real paid subscription. Trial users have
+  // isPro=true (effective tier) but still need to be able to subscribe
+  // before their trial expires.
+  if (billing?.plan === "pro") redirect("/settings?upgraded=1");
 
   const checkoutURL = billing?.checkoutURL ?? "";
   // Trial checkout — same URL with trial flag (LemonSqueezy handles trial if enabled on product)
