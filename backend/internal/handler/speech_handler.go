@@ -85,8 +85,8 @@ func (h *SpeechHandler) Transcribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = mw.WriteField("model", "whisper-1")
-	_ = mw.WriteField("language", "en")
 	_ = mw.WriteField("response_format", "json")
+	// No language hint — let Whisper auto-detect kk/ru/en
 	mw.Close()
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.timeout)

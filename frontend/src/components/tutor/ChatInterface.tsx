@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, useRef, useEffect, useTransition, useCallback } from "react";
-import { Loader2, CheckCircle2, Volume2, VolumeX, Mic, Square, Send } from "lucide-react";
+import { Loader2, CheckCircle2, Volume2, VolumeX, Mic } from "lucide-react";
 import { sendMessage, gradeConversation, startConversation } from "@/features/tutor/api";
 import type { AIScenario, ConversationMessage, GradeScores } from "@/features/tutor/api";
 import { GradeResults } from "./GradeResults";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useSpeakingRecorder } from "@/features/ielts/use-speaking-recorder";
+
+type ConvState = "idle" | "recording" | "transcribing" | "thinking" | "speaking";
+
+const STATE_LABEL: Record<ConvState, string> = {
+  idle: "Tap to speak",
+  recording: "Listening...",
+  transcribing: "Processing...",
+  thinking: "Thinking...",
+  speaking: "Speaking...",
+};
 
 interface Props {
   scenario: AIScenario;
@@ -16,136 +25,156 @@ export function ChatInterface({ scenario }: Props) {
   const { t } = useLocale();
   const [convId, setConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [isPending, startTransition] = useTransition();
+  const [convState, setConvState] = useState<ConvState>("idle");
+  const [, startServerTransition] = useTransition();
   const [grading, setGrading] = useState(false);
   const [scores, setScores] = useState<GradeScores | null>(null);
   const [started, setStarted] = useState(false);
   const [gradeError, setGradeError] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [pendingTranscript, setPendingTranscript] = useState("");
-  const [transcribing, setTranscribing] = useState(false);
-  const [transcribeError, setTranscribeError] = useState("");
+  const [error, setError] = useState("");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const prevAudioUrl = useRef<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const convIdRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const {
-    audioUrl,
-    clearRecording,
-    detectedTranscript,
-    isRecording,
-    isStarting,
-    startRecording,
-    stopRecording,
-    supportsRecording,
-  } = useSpeakingRecorder();
+  useEffect(() => { convIdRef.current = convId; }, [convId]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const playTTS = useCallback(async (text: string): Promise<void> => {
+    if (!ttsEnabled) return;
+    return new Promise((resolve) => {
+      fetch("/api/speech/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      })
+        .then((res) => (res.ok ? res.blob() : null))
+        .then((blob) => {
+          if (!blob) { resolve(); return; }
+          const url = URL.createObjectURL(blob);
+          if (audioRef.current) audioRef.current.pause();
+          const audio = new Audio(url);
+          audioRef.current = audio;
+          audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+          audio.onerror = () => resolve();
+          audio.play().catch(() => resolve());
+        })
+        .catch(() => resolve());
+    });
+  }, [ttsEnabled]);
 
-  // Transcribe audio via Whisper when recording stops
-  useEffect(() => {
-    if (!audioUrl || audioUrl === prevAudioUrl.current) return;
-    prevAudioUrl.current = audioUrl;
-    if (detectedTranscript.trim()) {
-      setPendingTranscript(detectedTranscript.trim());
-      return;
-    }
-    void whisperTranscribe(audioUrl);
-  }, [audioUrl, detectedTranscript]);
+  const handleAIReply = useCallback(async (userText: string) => {
+    const cid = convIdRef.current;
+    if (!cid) return;
 
-  async function whisperTranscribe(url: string) {
-    setTranscribing(true);
-    setTranscribeError("");
+    setConvState("thinking");
+    setMessages((prev) => [...prev, { role: "user", content: userText }]);
+
+    return new Promise<void>((resolve) => {
+      startServerTransition(async () => {
+        const reply = await sendMessage(cid, userText);
+        if (reply) {
+          setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+          setConvState("speaking");
+          await playTTS(reply);
+        }
+        setConvState("idle");
+        resolve();
+      });
+    });
+  }, [playTTS, startServerTransition]);
+
+  const stopRecording = useCallback(() => {
+    const rec = mediaRecorderRef.current;
+    if (rec && rec.state !== "inactive") rec.stop();
+  }, []);
+
+  const startRecording = useCallback(async () => {
+    setError("");
     try {
-      const resp = await fetch(url);
-      const blob = await resp.blob();
-      const form = new FormData();
-      form.append("file", blob, "audio.webm");
-      const res = await fetch("/api/whisper", { method: "POST", body: form });
-      const data = (await res.json()) as { text?: string; error?: string };
-      if (data.text) {
-        setPendingTranscript(data.text.trim());
-      } else {
-        setTranscribeError(data.error ?? "Transcription failed");
-      }
-    } catch {
-      setTranscribeError("Could not transcribe. Try again.");
-    } finally {
-      setTranscribing(false);
-    }
-  }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
 
-  const playTTS = useCallback(
-    async (text: string) => {
-      if (!ttsEnabled) return;
-      try {
-        setIsSpeaking(true);
-        const res = await fetch("/api/speech/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) return;
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        if (audioRef.current) audioRef.current.pause();
-        const audio = new Audio(url);
-        audioRef.current = audio;
-        audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(url); };
-        audio.onerror = () => setIsSpeaking(false);
-        await audio.play().catch(() => setIsSpeaking(false));
-      } catch {
-        setIsSpeaking(false);
-      }
-    },
-    [ttsEnabled]
-  );
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        audioChunksRef.current = [];
+        mediaRecorderRef.current = null;
+
+        if (blob.size < 1000) { setConvState("idle"); return; }
+
+        setConvState("transcribing");
+        const form = new FormData();
+        form.append("file", blob, "audio.webm");
+
+        try {
+          const res = await fetch("/api/whisper", { method: "POST", body: form });
+          const data = (await res.json()) as { text?: string; error?: string };
+          const text = data.text?.trim() ?? "";
+          if (!text) { setError("Could not hear you. Please try again."); setConvState("idle"); return; }
+          await handleAIReply(text);
+        } catch {
+          setError("Transcription failed. Please try again.");
+          setConvState("idle");
+        }
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setConvState("recording");
+    } catch {
+      setError("Microphone access denied.");
+      setConvState("idle");
+    }
+  }, [handleAIReply]);
+
+  const handleTap = useCallback(() => {
+    if (convState === "recording") stopRecording();
+    else if (convState === "idle") void startRecording();
+  }, [convState, startRecording, stopRecording]);
 
   const handleStart = () => {
-    startTransition(async () => {
+    startServerTransition(async () => {
       const conv = await startConversation(scenario.id);
       if (!conv) return;
       setConvId(conv.id);
+      convIdRef.current = conv.id;
       setStarted(true);
       const greeting = `Hello! I'm ${scenario.personaName ?? "your conversation partner"}. ${scenario.description} Ready when you are.`;
       setMessages([{ role: "assistant", content: greeting }]);
-      void playTTS(greeting);
-    });
-  };
-
-  const handleSend = () => {
-    const text = pendingTranscript.trim();
-    if (!text || !convId || isPending) return;
-
-    setPendingTranscript("");
-    clearRecording();
-    prevAudioUrl.current = null;
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
-
-    startTransition(async () => {
-      const reply = await sendMessage(convId, text);
-      if (reply) {
-        setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-        void playTTS(reply);
-      }
+      setConvState("speaking");
+      await playTTS(greeting);
+      setConvState("idle");
     });
   };
 
   const handleGrade = async () => {
-    if (!convId) return;
+    const cid = convIdRef.current;
+    if (!cid) return;
     setGrading(true);
     setGradeError(false);
-    const result = await gradeConversation(convId);
+    const result = await gradeConversation(cid);
     if (result) setScores(result);
     else setGradeError(true);
     setGrading(false);
   };
 
   const userMsgCount = messages.filter((m) => m.role === "user").length;
+  const canTap = convState === "idle" || convState === "recording";
+  const isActive = convState !== "idle";
 
   if (scores) return <GradeResults scores={scores} scenarioSlug={scenario.slug} />;
 
@@ -167,95 +196,69 @@ export function ChatInterface({ scenario }: Props) {
           {scenario.vocabFocus && scenario.vocabFocus.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {scenario.vocabFocus.map((w) => (
-                <span
-                  key={w}
-                  className="rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-xs text-[var(--primary)]"
-                >
-                  {w}
-                </span>
+                <span key={w} className="rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-xs text-[var(--primary)]">{w}</span>
               ))}
             </div>
           )}
         </div>
         <button
           onClick={handleStart}
-          disabled={isPending}
+          disabled={convState === "speaking"}
           className="w-full rounded-[var(--radius-md)] bg-[var(--primary)] py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
-          {isPending ? (
-            <Loader2 className="mx-auto h-4 w-4 animate-spin" />
-          ) : (
-            t("tutor.startConversation")
-          )}
+          {convState === "speaking"
+            ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+            : t("tutor.startConversation")}
         </button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[70vh] rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
+    <div className="flex flex-col h-[75vh] rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
-        <div>
-          <p className="font-semibold text-sm flex items-center gap-2">
-            {scenario.personaName ?? scenario.title}
-            {isSpeaking && (
+      <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-sm">{scenario.personaName ?? scenario.title}</p>
+          {isActive && (
+            <span className="flex items-center gap-1.5 rounded-full bg-[var(--bg-soft)] px-2.5 py-1 text-[11px] text-[var(--text-secondary)]">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--primary)]" />
-            )}
-          </p>
-          <p className="text-xs text-[var(--text-secondary)]">
-            {t("tutor.exchanges", { n: userMsgCount })}
-          </p>
+              {STATE_LABEL[convState]}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              setTtsEnabled((v) => !v);
-              if (isSpeaking) { audioRef.current?.pause(); setIsSpeaking(false); }
-            }}
+            onClick={() => { setTtsEnabled((v) => !v); audioRef.current?.pause(); }}
             className="rounded-[var(--radius-md)] border border-[var(--border)] p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-            title={ttsEnabled ? "Mute AI voice" : "Unmute AI voice"}
           >
             {ttsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </button>
           {userMsgCount >= 3 && (
-            <div className="flex flex-col items-end gap-1">
-              <button
-                onClick={handleGrade}
-                disabled={grading}
-                className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] hover:bg-[var(--primary-soft)] disabled:opacity-50 transition-colors"
-              >
-                {grading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-3 w-3" />
-                )}
-                {t("tutor.finishGrade")}
-              </button>
-              {gradeError && (
-                <p className="text-xs text-red-500">{t("tutor.gradingFailed")}</p>
-              )}
-            </div>
+            <button
+              onClick={handleGrade}
+              disabled={grading || isActive}
+              className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary)] hover:bg-[var(--primary-soft)] disabled:opacity-50 transition-colors"
+            >
+              {grading ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+              {t("tutor.finishGrade")}
+            </button>
           )}
+          {gradeError && <p className="text-xs text-red-500">{t("tutor.gradingFailed")}</p>}
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-[var(--radius-lg)] px-3 py-2 text-sm ${
-                msg.role === "user"
-                  ? "bg-[var(--primary)] text-white"
-                  : "bg-[var(--bg-soft)] text-[var(--text-primary)]"
-              }`}
-            >
+          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[80%] rounded-[var(--radius-lg)] px-3 py-2 text-sm ${
+              msg.role === "user"
+                ? "bg-[var(--primary)] text-white"
+                : "bg-[var(--bg-soft)] text-[var(--text-primary)]"
+            }`}>
               {msg.role !== "user" && (
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest opacity-50">
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest opacity-40">
                   {scenario.personaName ?? "AI"}
                 </p>
               )}
@@ -263,7 +266,7 @@ export function ChatInterface({ scenario }: Props) {
             </div>
           </div>
         ))}
-        {isPending && (
+        {(convState === "thinking" || convState === "transcribing") && (
           <div className="flex justify-start">
             <div className="rounded-[var(--radius-lg)] bg-[var(--bg-soft)] px-3 py-2">
               <Loader2 className="h-4 w-4 animate-spin text-[var(--text-secondary)]" />
@@ -273,81 +276,35 @@ export function ChatInterface({ scenario }: Props) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Voice input bar */}
-      <div className="border-t border-[var(--border)] p-3 space-y-2">
-        {/* Transcript preview */}
-        {(pendingTranscript || transcribing || transcribeError) && (
-          <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
-              Your words
-            </p>
-            {transcribing ? (
-              <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Transcribing...
-              </div>
-            ) : transcribeError ? (
-              <p className="text-sm text-red-500">{transcribeError}</p>
-            ) : (
-              <textarea
-                value={pendingTranscript}
-                onChange={(e) => setPendingTranscript(e.target.value)}
-                rows={2}
-                className="w-full resize-none bg-transparent text-sm leading-6 text-[var(--text-primary)] outline-none"
-              />
-            )}
-          </div>
-        )}
+      {/* Big tap button */}
+      <div className="shrink-0 border-t border-[var(--border)] flex flex-col items-center gap-2 py-5">
+        {error && <p className="text-xs text-red-500 mb-1">{error}</p>}
 
-        <div className="flex items-center gap-2">
-          {supportsRecording && (
-            isRecording ? (
-              <button
-                onClick={stopRecording}
-                className="flex items-center gap-1.5 rounded-[var(--radius-md)] bg-red-500 px-3 py-2 text-sm font-medium text-white"
-              >
-                <Square className="h-3.5 w-3.5" />
-                Stop
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setPendingTranscript("");
-                  clearRecording();
-                  prevAudioUrl.current = null;
-                  startRecording();
-                }}
-                disabled={isStarting || isPending || transcribing || userMsgCount >= 15}
-                className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 transition-colors"
-              >
-                <Mic className="h-3.5 w-3.5" />
-                {isStarting ? "Starting..." : t("ielts.rec.startRecording")}
-              </button>
-            )
+        <button
+          onClick={handleTap}
+          disabled={!canTap}
+          className={`relative flex h-16 w-16 items-center justify-center rounded-full transition-all disabled:opacity-40 ${
+            convState === "recording"
+              ? "bg-red-500 shadow-[0_0_0_10px_rgba(239,68,68,0.15)]"
+              : "border-2 border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--primary)] hover:bg-[var(--primary-soft)]"
+          }`}
+        >
+          {convState === "recording" ? (
+            <span className="h-4 w-4 rounded-sm bg-white" />
+          ) : convState === "thinking" || convState === "transcribing" ? (
+            <Loader2 className="h-6 w-6 animate-spin text-[var(--text-muted)]" />
+          ) : (
+            <Mic className="h-6 w-6 text-[var(--text-secondary)]" />
           )}
-
-          {isRecording && (
-            <span className="flex items-center gap-1.5 text-sm text-red-500">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-              Recording...
-            </span>
+          {convState === "recording" && (
+            <span className="absolute inset-0 animate-ping rounded-full bg-red-400 opacity-25" />
           )}
+        </button>
 
-          <div className="flex-1" />
-
-          <button
-            onClick={handleSend}
-            disabled={!pendingTranscript.trim() || isPending || transcribing || userMsgCount >= 15}
-            className="flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--primary)] px-3 py-2 text-sm font-semibold text-white disabled:opacity-40 hover:opacity-90 transition-opacity"
-          >
-            <Send className="h-3.5 w-3.5" />
-            Send
-          </button>
-        </div>
-
-        {userMsgCount >= 15 && (
-          <p className="text-xs text-amber-600">{t("tutor.maxExchanges")}</p>
-        )}
+        <p className="text-xs text-[var(--text-muted)]">
+          {convState === "recording" ? "Tap to stop" : convState === "idle" ? "Tap to speak" : STATE_LABEL[convState]}
+        </p>
+        {userMsgCount >= 15 && <p className="text-xs text-amber-600">{t("tutor.maxExchanges")}</p>}
       </div>
     </div>
   );
