@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
-import { Send, Loader2, CheckCircle2 } from "lucide-react";
+import { useState, useRef, useEffect, useTransition, useCallback } from "react";
+import { Send, Loader2, CheckCircle2, Volume2, VolumeX } from "lucide-react";
 import { sendMessage, gradeConversation, startConversation } from "@/features/tutor/api";
 import type { AIScenario, ConversationMessage, GradeScores } from "@/features/tutor/api";
 import { GradeResults } from "./GradeResults";
@@ -22,7 +22,33 @@ export function ChatInterface({ scenario }: Props) {
   const [scores, setScores] = useState<GradeScores | null>(null);
   const [started, setStarted] = useState(false);
   const [gradeError, setGradeError] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const playTTS = useCallback(async (text: string) => {
+    if (!ttsEnabled) return;
+    try {
+      setIsSpeaking(true);
+      const res = await fetch("/api/speech/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      if (audioRef.current) audioRef.current.pause();
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(url); };
+      audio.onerror = () => setIsSpeaking(false);
+      await audio.play().catch(() => setIsSpeaking(false));
+    } catch {
+      setIsSpeaking(false);
+    }
+  }, [ttsEnabled]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,11 +60,9 @@ export function ChatInterface({ scenario }: Props) {
       if (!conv) return;
       setConvId(conv.id);
       setStarted(true);
-      // Seed with persona greeting
-      setMessages([{
-        role: "assistant",
-        content: `Hello! I'm ${scenario.personaName ?? "your conversation partner"}. ${scenario.description} Ready when you are.`,
-      }]);
+      const greeting = `Hello! I'm ${scenario.personaName ?? "your conversation partner"}. ${scenario.description} Ready when you are.`;
+      setMessages([{ role: "assistant", content: greeting }]);
+      void playTTS(greeting);
     });
   };
 
@@ -52,6 +76,7 @@ export function ChatInterface({ scenario }: Props) {
       const reply = await sendMessage(convId, text);
       if (reply) {
         setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+        void playTTS(reply);
       }
     });
   };
@@ -110,9 +135,20 @@ export function ChatInterface({ scenario }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
         <div>
-          <p className="font-semibold text-sm">{scenario.personaName ?? scenario.title}</p>
+          <p className="font-semibold text-sm flex items-center gap-2">
+            {scenario.personaName ?? scenario.title}
+            {isSpeaking && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--primary)]" />}
+          </p>
           <p className="text-xs text-[var(--text-secondary)]">{t("tutor.exchanges", { n: userMsgCount })}</p>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setTtsEnabled((v) => !v); if (isSpeaking) { audioRef.current?.pause(); setIsSpeaking(false); } }}
+            className="rounded-[var(--radius-md)] border border-[var(--border)] p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            title={ttsEnabled ? "Mute AI voice" : "Unmute AI voice"}
+          >
+            {ttsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+          </button>
         {userMsgCount >= 3 && (
           <div className="flex flex-col items-end gap-1">
             <button
@@ -128,6 +164,7 @@ export function ChatInterface({ scenario }: Props) {
             )}
           </div>
         )}
+        </div>
       </div>
 
       {/* Messages */}

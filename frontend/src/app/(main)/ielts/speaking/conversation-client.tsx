@@ -17,7 +17,6 @@ import { conversationTurn, type ConvMessage } from "./actions";
 import { PaywallModal } from "@/components/billing/paywall-modal";
 import type { PaywallInfo } from "@/lib/billing/paywall";
 
-type Mode = "general" | "ielts";
 type Part = "part1" | "part2" | "part3";
 
 interface Message {
@@ -26,21 +25,23 @@ interface Message {
   text: string;
 }
 
-const IELTS_OPENERS: Record<Part, string> = {
+const PARTS: { key: Part; label: string; desc: string }[] = [
+  { key: "part1", label: "Part 1", desc: "Introduction & Interview — personal questions (4-5 min)" },
+  { key: "part2", label: "Part 2", desc: "Long Turn — cue card topic, 1-2 min monologue" },
+  { key: "part3", label: "Part 3", desc: "Two-way Discussion — abstract ideas (4-5 min)" },
+];
+
+const OPENERS: Record<Part, string> = {
   part1:
     "Good morning. My name is Emma. Before we start, could you tell me your full name, please?",
   part2:
     "Now I'm going to give you a topic and I'd like you to talk about it for one to two minutes. Before you talk you'll have one minute to think about what you're going to say. Please go ahead when you're ready.",
   part3:
-    "We've been talking about a topic related to daily life. I'd like to discuss some wider issues now. Do you think people today communicate differently than they did in the past?",
+    "We've been talking about a topic related to everyday life. I'd like to discuss some wider issues now. Do you think the way people communicate has changed significantly over the past few decades?",
 };
 
-const GENERAL_OPENER =
-  "Hi! I'm your English conversation partner. What would you like to talk about today?";
-
 export function ConversationModeClient() {
-  const [mode, setMode] = useState<Mode | null>(null);
-  const [part, setPart] = useState<Part>("part1");
+  const [part, setPart] = useState<Part | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingTranscript, setPendingTranscript] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -69,16 +70,13 @@ export function ConversationModeClient() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // When a new audio recording is ready, transcribe it via Whisper
   useEffect(() => {
     if (!audioUrl || audioUrl === prevAudioUrl.current) return;
     prevAudioUrl.current = audioUrl;
-
     if (detectedTranscript.trim()) {
       setPendingTranscript(detectedTranscript.trim());
       return;
     }
-
     void whisperTranscribe(audioUrl);
   }, [audioUrl, detectedTranscript]);
 
@@ -100,70 +98,58 @@ export function ConversationModeClient() {
     }
   }
 
-  const playTTS = useCallback(async (text: string) => {
-    if (!ttsEnabled) return;
-    try {
-      setIsSpeaking(true);
-      const res = await fetch("/api/speech/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) return;
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => {
+  const playTTS = useCallback(
+    async (text: string) => {
+      if (!ttsEnabled) return;
+      try {
+        setIsSpeaking(true);
+        const res = await fetch("/api/speech/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        if (audioRef.current) audioRef.current.pause();
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(url); };
+        audio.onerror = () => setIsSpeaking(false);
+        await audio.play().catch(() => setIsSpeaking(false));
+      } catch {
         setIsSpeaking(false);
-        URL.revokeObjectURL(url);
-      };
-      audio.onerror = () => setIsSpeaking(false);
-      await audio.play().catch(() => setIsSpeaking(false));
-    } catch {
-      setIsSpeaking(false);
-    }
-  }, [ttsEnabled]);
+      }
+    },
+    [ttsEnabled]
+  );
 
   function stopTTS() {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     setIsSpeaking(false);
   }
 
   function addMessage(role: "examiner" | "candidate", text: string) {
     const msg: Message = { id: `${Date.now()}-${role}`, role, text };
     setMessages((prev) => [...prev, msg]);
-    return msg;
   }
 
-  async function startMode(selectedMode: Mode, selectedPart: Part) {
+  async function startPart(selectedPart: Part) {
     stopTTS();
-    setMode(selectedMode);
     setPart(selectedPart);
     setMessages([]);
     setError(null);
     setPendingTranscript("");
     clearRecording();
     prevAudioUrl.current = null;
-
-    const opener =
-      selectedMode === "ielts" ? IELTS_OPENERS[selectedPart] : GENERAL_OPENER;
+    const opener = OPENERS[selectedPart];
     addMessage("examiner", opener);
     await playTTS(opener);
   }
 
   async function sendMessage() {
     const text = pendingTranscript.trim();
-    if (!text || !mode || isProcessing) return;
+    if (!text || !part || isProcessing) return;
 
     setError(null);
     const snapshot = pendingTranscript;
@@ -171,32 +157,17 @@ export function ConversationModeClient() {
     clearRecording();
     prevAudioUrl.current = null;
 
-    const candidateMsg: Message = {
-      id: `${Date.now()}-candidate`,
-      role: "candidate",
-      text,
-    };
+    const candidateMsg: Message = { id: `${Date.now()}-candidate`, role: "candidate", text };
     const updatedMessages = [...messages, candidateMsg];
     setMessages(updatedMessages);
     setIsProcessing(true);
 
     try {
-      const history: ConvMessage[] = messages.map((m) => ({
-        role: m.role,
-        text: m.text,
-      }));
+      const history: ConvMessage[] = messages.map((m) => ({ role: m.role, text: m.text }));
+      const result = await conversationTurn("ielts", part, history, text);
 
-      const result = await conversationTurn(mode, part, history, text);
-
-      if ("paywall" in result) {
-        setPaywall(result.paywall);
-        return;
-      }
-      if ("error" in result) {
-        setError(result.error);
-        setPendingTranscript(snapshot);
-        return;
-      }
+      if ("paywall" in result) { setPaywall(result.paywall); return; }
+      if ("error" in result) { setError(result.error); setPendingTranscript(snapshot); return; }
 
       addMessage("examiner", result.reply);
       await playTTS(result.reply);
@@ -210,7 +181,7 @@ export function ConversationModeClient() {
 
   function handleReset() {
     stopTTS();
-    setMode(null);
+    setPart(null);
     setMessages([]);
     setPendingTranscript("");
     setError(null);
@@ -218,49 +189,29 @@ export function ConversationModeClient() {
     prevAudioUrl.current = null;
   }
 
-  // ── Mode selection screen ───────────────────────────────────────────────
+  // ── Part selection ──────────────────────────────────────────────────────
 
-  if (!mode) {
+  if (!part) {
     return (
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <ModeCard
-            title="General English"
-            description="Free conversation with an AI partner on any topic. Build fluency, expand vocabulary, and gain confidence."
-            badge="Any topic"
-            badgeColor="bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-            onClick={() => startMode("general", "part1")}
-          />
-          <ModeCard
-            title="IELTS Speaking"
-            description="Official IELTS examiner format. Practice Part 1, 2, or 3 with realistic questions and examiner style."
-            badge="Band-focused"
-            badgeColor="bg-violet-500/10 text-violet-400 border-violet-500/20"
-            onClick={null}
-            extra={
-              <div className="mt-4 space-y-3">
-                <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
-                  Choose part
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["part1", "part2", "part3"] as Part[]).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => startMode("ielts", p)}
-                      className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] py-2.5 text-sm font-medium text-[var(--text-primary)] transition-all hover:border-violet-500/40 hover:bg-violet-500/5"
-                    >
-                      {p === "part1" ? "Part 1" : p === "part2" ? "Part 2" : "Part 3"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            }
-          />
-        </div>
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-5 py-4 text-sm text-[var(--text-secondary)]">
-          <span className="font-medium text-[var(--text-primary)]">How it works:</span> speak or
-          type your response, the AI replies and speaks back. Use Whisper transcription for accurate
-          speech-to-text in any browser.
+      <div className="space-y-4">
+        <p className="text-sm text-[var(--text-secondary)]">
+          Choose a part to start a live IELTS Speaking simulation. The AI examiner will ask
+          questions and speak back — just like the real test.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {PARTS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => startPart(p.key)}
+              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 text-left transition-all hover:border-violet-500/40 hover:bg-violet-500/5"
+            >
+              <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-semibold text-violet-400">
+                {p.label}
+              </span>
+              <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">{p.label}</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">{p.desc}</p>
+            </button>
+          ))}
         </div>
       </div>
     );
@@ -268,18 +219,17 @@ export function ConversationModeClient() {
 
   // ── Active conversation ─────────────────────────────────────────────────
 
-  const modeLabel =
-    mode === "general"
-      ? "General English"
-      : `IELTS Speaking — ${part === "part1" ? "Part 1" : part === "part2" ? "Part 2" : "Part 3"}`;
+  const partLabel = PARTS.find((p) => p.key === part)?.label ?? part;
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Header bar */}
+      {/* Header */}
       <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-violet-400" />
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{modeLabel}</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            IELTS Speaking — {partLabel}
+          </span>
           {isSpeaking && (
             <span className="flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-400">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
@@ -289,18 +239,15 @@ export function ConversationModeClient() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              setTtsEnabled((v) => !v);
-              if (isSpeaking) stopTTS();
-            }}
+            onClick={() => { setTtsEnabled((v) => !v); if (isSpeaking) stopTTS(); }}
             className="rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
-            title={ttsEnabled ? "Mute AI voice" : "Unmute AI voice"}
+            title={ttsEnabled ? "Mute examiner" : "Unmute examiner"}
           >
             {ttsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </button>
           <Button size="sm" variant="outline" onClick={handleReset}>
             <RotateCcw className="h-3.5 w-3.5" />
-            New chat
+            New session
           </Button>
         </div>
       </div>
@@ -308,10 +255,7 @@ export function ConversationModeClient() {
       {/* Messages */}
       <div className="flex min-h-[320px] flex-col gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.role === "candidate" ? "justify-end" : "justify-start"}`}
-          >
+          <div key={msg.id} className={`flex ${msg.role === "candidate" ? "justify-end" : "justify-start"}`}>
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-6 ${
                 msg.role === "examiner"
@@ -320,17 +264,12 @@ export function ConversationModeClient() {
               }`}
             >
               <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
-                {msg.role === "examiner"
-                  ? mode === "ielts"
-                    ? "Examiner"
-                    : "AI Partner"
-                  : "You"}
+                {msg.role === "examiner" ? "Examiner" : "You"}
               </p>
               {msg.text}
             </div>
           </div>
         ))}
-
         {isProcessing && (
           <div className="flex justify-start">
             <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-violet-500/20 bg-violet-500/8 px-4 py-3 text-sm text-violet-400">
@@ -339,20 +278,17 @@ export function ConversationModeClient() {
             </div>
           </div>
         )}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Error */}
       {error && (
         <div className="rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-400">
           {error}
         </div>
       )}
 
-      {/* Input bar */}
+      {/* Input */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-        {/* Transcript preview */}
         {(pendingTranscript || transcribing) && (
           <div className="mb-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
@@ -377,33 +313,30 @@ export function ConversationModeClient() {
 
         <div className="flex items-center gap-2">
           {supportsRecording && (
-            <>
-              {isRecording ? (
-                <Button size="sm" onClick={stopRecording} className="shrink-0">
-                  <Square className="h-3.5 w-3.5" />
-                  Stop
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    setPendingTranscript("");
-                    clearRecording();
-                    prevAudioUrl.current = null;
-                    startRecording();
-                  }}
-                  disabled={isStarting || isProcessing || transcribing}
-                  className="shrink-0"
-                >
-                  <Mic className="h-3.5 w-3.5" />
-                  {isStarting ? "Starting..." : "Record"}
-                </Button>
-              )}
-            </>
+            isRecording ? (
+              <Button size="sm" onClick={stopRecording} className="shrink-0">
+                <Square className="h-3.5 w-3.5" />
+                Stop
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setPendingTranscript("");
+                  clearRecording();
+                  prevAudioUrl.current = null;
+                  startRecording();
+                }}
+                disabled={isStarting || isProcessing || transcribing}
+                className="shrink-0"
+              >
+                <Mic className="h-3.5 w-3.5" />
+                {isStarting ? "Starting..." : "Record"}
+              </Button>
+            )
           )}
 
-          {/* Text input when not recording */}
           {!isRecording && !pendingTranscript && (
             <input
               type="text"
@@ -413,10 +346,7 @@ export function ConversationModeClient() {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   const val = (e.target as HTMLInputElement).value.trim();
-                  if (val) {
-                    setPendingTranscript(val);
-                    (e.target as HTMLInputElement).value = "";
-                  }
+                  if (val) { setPendingTranscript(val); (e.target as HTMLInputElement).value = ""; }
                 }
               }}
             />
@@ -428,11 +358,7 @@ export function ConversationModeClient() {
             disabled={!pendingTranscript.trim() || isProcessing || transcribing}
             className="shrink-0"
           >
-            {isProcessing ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
+            {isProcessing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
             Send
           </Button>
         </div>
@@ -446,42 +372,6 @@ export function ConversationModeClient() {
       </div>
 
       <PaywallModal paywall={paywall} onClose={() => setPaywall(null)} />
-    </div>
-  );
-}
-
-function ModeCard({
-  title,
-  description,
-  badge,
-  badgeColor,
-  onClick,
-  extra,
-}: {
-  title: string;
-  description: string;
-  badge: string;
-  badgeColor: string;
-  onClick: (() => void) | null;
-  extra?: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 ${
-        onClick ? "cursor-pointer transition-all hover:border-violet-500/30 hover:bg-violet-500/5" : ""
-      }`}
-      onClick={onClick ?? undefined}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="text-base font-semibold text-[var(--text-primary)]">{title}</h3>
-        <span
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium ${badgeColor}`}
-        >
-          {badge}
-        </span>
-      </div>
-      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{description}</p>
-      {extra}
     </div>
   );
 }
