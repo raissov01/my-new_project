@@ -202,6 +202,7 @@ func buildDependencies(cfg *config.Config, pool *pgxpool.Pool, gormDB *gorm.DB) 
 		AI:                 handler.NewAI(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModelMini, cfg.OpenAIModelMiniFallback, cfg.AIRequestTimeout, cfg.MaxUploadBytes),
 		IELTSMaterial:      handler.NewIELTSMaterial(gormDB),
 		IELTSExaminer:      handler.NewIELTSExaminer(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
+		Speech:             handler.NewSpeech(cfg.OpenAIAPIKey, cfg.AIRequestTimeout),
 		IELTSAttempt:       handler.NewIELTSAttempt(gormDB),
 		IELTSStudyPlan:     handler.NewIELTSStudyPlan(gormDB, cfg.OpenAIAPIKey, cfg.OpenAIModel, cfg.ClaudeAPIKey, cfg.ClaudeModel, cfg.ClaudeFallbackModel, cfg.ClaudeAPIURL, cfg.AIRequestTimeout),
 		IELTSDashboard:     handler.NewIELTSDashboard(gormDB),

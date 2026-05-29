@@ -19,6 +19,7 @@ type Dependencies struct {
 	GoogleOAuth         *GoogleOAuthHandler
 	IELTSMaterial       *IELTSMaterialHandler
 	IELTSExaminer       *IELTSExaminerHandler
+	Speech              *SpeechHandler
 	IELTSAttempt        *IELTSAttemptHandler
 	IELTSStudyPlan      *IELTSStudyPlanHandler
 	IELTSDashboard      *IELTSDashboardHandler
@@ -239,6 +240,8 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.POST("/ielts/speaking/evaluate", aiLimiter, wrapHTTP(deps.IELTSExaminer.EvaluateSpeaking))
 		internal.GET("/ielts/speaking/history", wrapHTTP(deps.IELTSExaminer.GetSpeakingHistory))
 		internal.POST("/ielts/speaking/conversation", aiLimiter, wrapHTTP(deps.IELTSExaminer.ConversationTurn))
+		internal.POST("/speech/transcribe", wrapHTTP(deps.Speech.Transcribe))
+		internal.POST("/speech/tts", wrapHTTP(deps.Speech.TextToSpeech))
 
 		// Material notes (user's reading progress, notes, exercise answers)
 		internal.GET("/materials/:materialID/notes", wrapHTTP(deps.MaterialNotes.GetNote))
