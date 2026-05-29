@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { SpeakingRecorderPanel } from "@/features/ielts/components/speaking-recorder-panel";
 import type { IELTSQuestion } from "@/features/ielts/api";
 import { fetchIELTSQuestions } from "@/features/ielts/api";
-import { evaluateSpeaking, type SpeakingResult } from "./actions";
+import { evaluateSpeaking, fetchSpeakingDetails, type SpeakingDetails, type SpeakingResult } from "./actions";
 import { PaywallModal } from "@/components/billing/paywall-modal";
 import type { PaywallInfo } from "@/lib/billing/paywall";
 import { ConversationModeClient } from "./conversation-client";
@@ -51,6 +51,8 @@ export function SpeakingPracticeClient() {
   const [cuePoints, setCuePoints] = useState<string[]>([]);
   const [transcript, setTranscript] = useState("");
   const [result, setResult] = useState<SpeakingResult | null>(null);
+  const [details, setDetails] = useState<SpeakingDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paywall, setPaywall] = useState<PaywallInfo | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -251,8 +253,18 @@ export function SpeakingPracticeClient() {
     }
 
     setResult(response ?? null);
+    setDetails(null);
     setActiveFollowUps(extractFollowUps(response?.feedback));
     setPhase("results");
+
+    // Phase 2: fetch detailed feedback in background
+    if (response?.id) {
+      setLoadingDetails(true);
+      fetchSpeakingDetails(response.id).then(({ details: d }) => {
+        if (d) setDetails(d);
+        setLoadingDetails(false);
+      });
+    }
   }
 
   function handleRetry() {
@@ -267,6 +279,8 @@ export function SpeakingPracticeClient() {
     setCuePoints([]);
     setTranscript("");
     setResult(null);
+    setDetails(null);
+    setLoadingDetails(false);
     setError(null);
     setPrepTime(0);
     setTimeLeft(0);
@@ -711,41 +725,52 @@ export function SpeakingPracticeClient() {
           color="text-amber-400"
         />
 
-        {result.feedback.bandExplanation ? (
-          <TextPanel
-            title="Why this band was awarded"
-            body={result.feedback.bandExplanation}
-          />
-        ) : null}
-        {result.feedback.detailedFeedback ? (
-          <TextPanel
-            title={t("ielts.wr.detailedFeedback")}
-            body={result.feedback.detailedFeedback}
-          />
-        ) : null}
-        {result.feedback.rewrittenResponse ? (
-          <TextPanel
-            title="Improved version of your response"
-            body={result.feedback.rewrittenResponse}
-          />
-        ) : null}
-        {result.feedback.modelAnswer ? (
-          <TextPanel
-            title="Band 7-9 model answer"
-            body={result.feedback.modelAnswer}
-          />
+        {/* Phase 2 details — stream in after score card */}
+        {loadingDetails ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)]" />
+            ))}
+          </div>
+        ) : details ? (
+          <>
+            {details.bandExplanation ? (
+              <TextPanel title="Why this band was awarded" body={details.bandExplanation} />
+            ) : null}
+            {details.detailedFeedback ? (
+              <TextPanel title={t("ielts.wr.detailedFeedback")} body={details.detailedFeedback} />
+            ) : null}
+            {details.rewrittenResponse ? (
+              <TextPanel title="Improved version of your response" body={details.rewrittenResponse} />
+            ) : null}
+            {details.modelAnswer ? (
+              <TextPanel title="Band 7-9 model answer" body={details.modelAnswer} />
+            ) : null}
+            <IssueSection
+              title="Grammar highlights"
+              items={details.grammarHighlights ?? []}
+              tone="text-red-400"
+            />
+            <IssueSection
+              title="Vocabulary upgrades"
+              items={details.vocabularyHighlights ?? []}
+              tone="text-[var(--text-secondary)]"
+            />
+            {details.improvementPlan && details.improvementPlan.length > 0 ? (
+              <FeedbackSection
+                icon={Target}
+                title="Improvement plan"
+                items={details.improvementPlan}
+                color="text-amber-400"
+              />
+            ) : null}
+          </>
         ) : null}
 
-        <IssueSection
-          title="Grammar highlights"
-          items={result.feedback.grammarHighlights ?? []}
-          tone="text-red-400"
-        />
-        <IssueSection
-          title="Vocabulary upgrades"
-          items={result.feedback.vocabularyHighlights ?? []}
-          tone="text-[var(--text-secondary)]"
-        />
+        {/* Keep quick feedback from phase 1 above details */}
+        {result.feedback.bandExplanation && !details && !loadingDetails ? (
+          <TextPanel title="Why this band was awarded" body={result.feedback.bandExplanation} />
+        ) : null}
 
         {activeFollowUps.length > 0 ? (
           <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">

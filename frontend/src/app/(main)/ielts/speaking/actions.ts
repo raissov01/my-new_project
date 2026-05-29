@@ -116,6 +116,38 @@ export async function evaluateSpeaking(
   }
 }
 
+export type SpeakingDetails = {
+  detailedFeedback: string;
+  bandExplanation: string;
+  modelAnswer: string;
+  rewrittenResponse: string;
+  improvementPlan: string[];
+  grammarHighlights: SpeakingResult["feedback"]["grammarHighlights"];
+  vocabularyHighlights: SpeakingResult["feedback"]["vocabularyHighlights"];
+};
+
+export async function fetchSpeakingDetails(
+  sessionId: string
+): Promise<{ details?: SpeakingDetails; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Not authenticated." };
+
+  try {
+    const details = await fetchBackendJson<SpeakingDetails>({
+      path: "/api/v1/ielts/speaking/details",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify({ sessionId }),
+      headers: { "Content-Type": "application/json" },
+      timeoutMs: 120_000,
+    });
+    return { details };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to load details.";
+    return { error: msg };
+  }
+}
+
 export async function getSpeakingHistory(): Promise<SpeakingHistoryItem[]> {
   const user = await getCurrentUser();
   if (!user) return [];

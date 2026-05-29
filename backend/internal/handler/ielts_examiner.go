@@ -378,31 +378,21 @@ Expected: extended monologue covering all cue card points. Evaluate ability to s
 Expected: developed opinions with reasoning, examples, and abstract thinking. Evaluate depth of ideas and language sophistication.`
 	}
 
-	prompt := fmt.Sprintf(`You are a senior IELTS Speaking examiner with 20+ years of experience. Evaluate this response with detailed, mentor-level feedback.
+	// Phase 1: scores + brief bullets only — fast response (~3-5 s).
+	// Detailed feedback (modelAnswer, rewrittenResponse, highlights) is fetched
+	// separately via /ielts/speaking/details after the score card is shown.
+	prompt := fmt.Sprintf(`You are a senior IELTS Speaking examiner. Score this response quickly and accurately.
 
 %s
 
-Examiner's question/prompt: %s
+Question: %s
 
-Candidate's response (transcribed):
+Transcript:
 %s
 
-SCORING INSTRUCTIONS:
-Use the official IELTS band scale (half-band increments). Be realistic — most candidates score 5.5-7.0.
+Use official IELTS half-band scale. Be realistic — most candidates score 5.5-7.0.
 
-For Fluency & Coherence: assess speech rate, hesitation, self-correction, topic development, coherence markers.
-For Lexical Resource: assess vocabulary range, precision, idiomatic language, paraphrasing ability.
-For Grammar: assess sentence variety, accuracy, complex structures, error frequency.
-For Pronunciation: estimate from text — assess word choice naturalness, likely stress patterns, and phrasing sophistication. Note this is an estimate from written transcript.
-
-FEEDBACK INSTRUCTIONS:
-- Quote exact phrases from the transcript
-- Explain HOW to improve with specific techniques
-- Write paragraph-length detailed feedback (150+ words)
-- Provide a model answer appropriate for this part type
-- Generate 2-3 follow-up questions that react to the candidate's actual ideas
-
-Return ONLY valid JSON:
+Return ONLY valid JSON (keep every string short — max 15 words each):
 {
   "overallBand": 6.5,
   "fluencyCoherence": 6.5,
@@ -410,22 +400,12 @@ Return ONLY valid JSON:
   "grammar": 6.0,
   "pronunciation": 6.5,
   "feedback": {
-    "strengths": ["Specific strength quoting the transcript", "Another strength with examples"],
-    "weaknesses": ["Specific weakness quoting the transcript", "Another weakness"],
-    "suggestions": ["Detailed actionable suggestion with technique to practice", "Another specific suggestion"],
-    "improvementPlan": ["This week: practice X because...", "Next: focus on Y to reach band 7", "Then: develop Z for fluency"],
-    "bandExplanation": "A detailed 3-4 sentence explanation of why this band was awarded, referencing specific moments from the response that demonstrate each band level.",
-    "detailedFeedback": "A long detailed paragraph (150+ words) analyzing the candidate's fluency patterns, vocabulary choices, grammatical accuracy, and overall communicative effectiveness. Reference specific examples from their response.",
-    "modelAnswer": "A complete model answer at band 7.5+ level for this exact question. Natural spoken style, not written style.",
-    "rewrittenResponse": "The candidate's response rewritten to band 7.0+ level, preserving their ideas but improving naturalness and sophistication.",
-    "grammarHighlights": [
-      {"original": "exact phrase from transcript", "issue": "specific grammar error", "suggestion": "corrected version", "explanation": "grammar rule"}
-    ],
-    "vocabularyHighlights": [
-      {"original": "basic expression used", "issue": "too simple or repetitive", "suggestion": "more natural/sophisticated alternative", "explanation": "why this sounds more band 7+"}
-    ],
-    "followUpQuestion": "A natural follow-up question reacting to the candidate's actual ideas.",
-    "followUpQuestions": ["follow-up reacting to their ideas 1", "follow-up 2", "follow-up 3"]
+    "strengths": ["one short strength quoting transcript", "second strength"],
+    "weaknesses": ["one short weakness quoting transcript", "second weakness"],
+    "suggestions": ["one actionable tip", "second tip"],
+    "bandExplanation": "One sentence: why this band.",
+    "followUpQuestion": "A natural follow-up question.",
+    "followUpQuestions": ["follow-up 1", "follow-up 2"]
   }
 }`, partContext, req.Prompt, strings.TrimSpace(req.Transcript))
 
@@ -489,6 +469,93 @@ Return ONLY valid JSON:
 		"feedback":         scores.Feedback,
 		"aiModel":          modelName,
 	})
+}
+
+// SpeakingDetails generates the heavy part of speaking feedback (modelAnswer,
+// rewrittenResponse, detailedFeedback, grammarHighlights, vocabularyHighlights)
+// for a session that was already scored by EvaluateSpeaking.
+// Called from the frontend after the score card is shown.
+func (h *IELTSExaminerHandler) SpeakingDetails(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	var req struct {
+		SessionID string `json:"sessionId"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+	if strings.TrimSpace(req.SessionID) == "" {
+		writeError(w, http.StatusBadRequest, "sessionId is required", nil)
+		return
+	}
+
+	var session models.IELTSSpeakingSession
+	if err := h.db.Where("id = ? AND user_id = ?", req.SessionID, userID).First(&session).Error; err != nil {
+		writeError(w, http.StatusNotFound, "session not found", err)
+		return
+	}
+
+	partLabel := "Part 1"
+	switch session.Part {
+	case "part2":
+		partLabel = "Part 2 (Long Turn)"
+	case "part3":
+		partLabel = "Part 3 (Discussion)"
+	}
+
+	prompt := fmt.Sprintf(`You are a senior IELTS Speaking examiner. Provide deep feedback for this %s response.
+
+Question: %s
+
+Transcript:
+%s
+
+Band scores already assigned: Overall %.1f | Fluency %.1f | Lexical %.1f | Grammar %.1f | Pronunciation %.1f
+
+Return ONLY valid JSON:
+{
+  "detailedFeedback": "150+ word paragraph analyzing fluency, vocabulary, grammar with specific quotes from the transcript.",
+  "bandExplanation": "3-4 sentences explaining why this band, referencing specific transcript moments.",
+  "modelAnswer": "Complete band 7.5+ model answer in natural spoken style.",
+  "rewrittenResponse": "Candidate's response rewritten to band 7.0+, keeping their ideas.",
+  "improvementPlan": ["This week: ...", "Next: ...", "Then: ..."],
+  "grammarHighlights": [
+    {"original": "exact phrase", "issue": "error type", "suggestion": "correction", "explanation": "why"}
+  ],
+  "vocabularyHighlights": [
+    {"original": "basic word", "issue": "too simple", "suggestion": "better alternative", "explanation": "why it scores higher"}
+  ]
+}`,
+		partLabel, session.Prompt, session.Transcript,
+		session.OverallBand, session.FluencyCoherence, session.LexicalResource,
+		session.Grammar, session.Pronunciation)
+
+	raw, _, err := h.callLLM(prompt)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "Details generation failed. Please try again.", err)
+		return
+	}
+
+	var details struct {
+		DetailedFeedback     string          `json:"detailedFeedback"`
+		BandExplanation      string          `json:"bandExplanation"`
+		ModelAnswer          string          `json:"modelAnswer"`
+		RewrittenResponse    string          `json:"rewrittenResponse"`
+		ImprovementPlan      []string        `json:"improvementPlan"`
+		GrammarHighlights    []feedbackIssue `json:"grammarHighlights"`
+		VocabularyHighlights []feedbackIssue `json:"vocabularyHighlights"`
+	}
+	if err := json.Unmarshal([]byte(raw), &details); err != nil {
+		writeError(w, http.StatusBadGateway, "Failed to parse details response", err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, details)
 }
 
 func (h *IELTSExaminerHandler) GetSpeakingHistory(w http.ResponseWriter, r *http.Request) {
