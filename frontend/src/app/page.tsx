@@ -50,6 +50,22 @@ export default async function LandingPage() {
         }}
       />
 
+      {/* Paper grain — dark mode only; gives the dark page a "printed" feel rather than a flat render */}
+      <div
+        aria-hidden="true"
+        className="lp-grain"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          mixBlendMode: 'overlay',
+          opacity: 0.18,
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")",
+        }}
+      />
+
       {/* Navigation */}
       <LandingNav locale={locale} />
 

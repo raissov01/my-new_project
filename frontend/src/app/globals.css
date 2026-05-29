@@ -36,6 +36,7 @@
   --reverse-border:  #1B1714;
   --reverse-btn-bg:  #FFFFFF;
   --reverse-btn-fg:  #1B1714;
+  --reverse-shadow:  #C2500A;   /* hard offset behind bold callout cards */
 
   /* ── Existing Design System ── */
   /* Brand — terra as primary */
@@ -141,27 +142,33 @@
   --surface-shadow: var(--shadow-sm);
   --surface-shadow-strong: var(--shadow-md);
 
-  /* nd- palette — warm dark */
-  --paper:        #1C1814;
-  --paper-2:      #252018;
-  --paper-3:      #2E281F;
-  /* Reverse surfaces invert: an elevated dark card with light text */
-  --reverse-bg:      #2E281F;
-  --reverse-bg-2:    #252018;
-  --reverse-fg:      #EDE4D8;
-  --reverse-fg-soft: #C9BBB0;
-  --reverse-fg-mute: #9A8C82;
-  --reverse-accent:  #FBA968;
-  --reverse-border:  rgba(255,255,255,0.14);
-  --reverse-btn-bg:  #EDE4D8;
-  --reverse-btn-fg:  #1B1714;
-  --ink:          #EDE4D8;
-  --ink-soft:     #C9BBB0;
-  --ink-mute:     #877971;
-  --line:         rgba(255,255,255,0.09);
-  --line-strong:  rgba(255,255,255,0.14);
-  --terra-tint:   rgba(194,80,10,0.14);
-  --terra-soft:   rgba(194,80,10,0.22);
+  /* nd- palette — warm dark "zine printed on dark stock" */
+  --paper:        #1A1613;   /* dark kraft / newsprint ink, warm near-black */
+  --paper-2:      #221E19;   /* raised card stock */
+  --paper-3:      #2A251F;   /* hover / higher elevation */
+  --shadow-ink:   #0C0907;   /* hard offsets go DEEPER than the page -> a debossed/letterpress edge, not a slab */
+  /* Bold callout cards: elevated dark card, cream text, a faint terracotta ring + terracotta button (no big orange slabs) */
+  --reverse-bg:      #221E19;
+  --reverse-bg-2:    #2A251F;
+  --reverse-fg:      #ECE5D8;
+  --reverse-fg-soft: #C3B8A8;
+  --reverse-fg-mute: #8C8174;
+  --reverse-accent:  #F0A86E;
+  --reverse-border:  rgba(207,94,24,0.32);
+  --reverse-btn-bg:  #CF5E18;
+  --reverse-btn-fg:  #FFFFFF;
+  --reverse-shadow:  #0C0907;
+  --ink:          #ECE5D8;
+  --ink-soft:     #C3B8A8;
+  --ink-mute:     #8C8174;
+  --line:         rgba(236,229,216,0.10);
+  --line-strong:  rgba(236,229,216,0.22);
+  /* terracotta lifted for dark: one flat, matte pass — bright enough not to go muddy, no glow.
+     --terra-deep is LIGHTER than --terra here (in dark, "more emphasis" = lighter; used for text on --terra-tint). */
+  --terra:        #CF5E18;
+  --terra-deep:   #E5894A;
+  --terra-tint:   rgba(207,94,24,0.16);
+  --terra-soft:   rgba(207,94,24,0.26);
   --green-soft:   rgba(63,125,63,0.20);
   --yellow-soft:  rgba(233,185,73,0.16);
   --blue-soft:    rgba(37,99,235,0.18);
@@ -209,6 +216,9 @@ a, button, input, textarea, select {
   background-image: radial-gradient(circle, rgba(0, 0, 0, 0.055) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+.lp-grain { display: none; }
+.dark .lp-grain { display: block; }
 
 .dark .dot-grid {
   background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);

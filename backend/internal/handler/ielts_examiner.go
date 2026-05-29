@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -667,6 +668,154 @@ func callOpenAIChatCompletion(apiKey, model, systemPrompt, prompt string, timeou
 	}
 
 	return cleanJSON(chatResp.Choices[0].Message.Content), usage, nil
+}
+
+// ── Conversation (interactive speaking practice) ────────────────────────────
+
+type convMessage struct {
+	Role string `json:"role"` // "examiner" | "candidate"
+	Text string `json:"text"`
+}
+
+type convRequest struct {
+	Mode    string        `json:"mode"`    // "general" | "ielts"
+	Part    string        `json:"part"`    // "part1" | "part2" | "part3"
+	History []convMessage `json:"history"` // all prior turns
+	Message string        `json:"message"` // latest candidate message
+}
+
+func (h *IELTSExaminerHandler) ConversationTurn(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required", nil)
+		return
+	}
+
+	if err := plan.CheckAndConsume(h.db, userID, plan.FeatureSpeakingConversation); err != nil {
+		plan.WritePaywall(w, plan.FeatureSpeakingConversation)
+		return
+	}
+
+	var req convRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	if req.Mode != "general" && req.Mode != "ielts" {
+		writeError(w, http.StatusBadRequest, "mode must be general or ielts", nil)
+		return
+	}
+	if strings.TrimSpace(req.Message) == "" {
+		writeError(w, http.StatusBadRequest, "message is required", nil)
+		return
+	}
+
+	// Cap history to last 20 turns to control token usage
+	history := req.History
+	if len(history) > 20 {
+		history = history[len(history)-20:]
+	}
+
+	sysPrompt := buildConvSystemPrompt(req.Mode, req.Part)
+
+	messages := []map[string]string{
+		{"role": "system", "content": sysPrompt},
+	}
+	for _, m := range history {
+		role := "user"
+		if m.Role == "examiner" {
+			role = "assistant"
+		}
+		messages = append(messages, map[string]string{"role": role, "content": m.Text})
+	}
+	messages = append(messages, map[string]string{"role": "user", "content": req.Message})
+
+	reply, err := h.callOpenAIMessages(messages)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "AI service unavailable. Please try again.", err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"reply": reply})
+}
+
+func buildConvSystemPrompt(mode, part string) string {
+	if mode == "ielts" {
+		var partCtx string
+		switch part {
+		case "part2":
+			partCtx = "You are conducting Part 2 (Long Turn). The candidate has had one minute to prepare and is now speaking from a cue card. Listen and react naturally. After they finish, ask one brief follow-up question."
+		case "part3":
+			partCtx = "You are conducting Part 3 (Two-way Discussion). Discuss abstract ideas related to the topic. Ask thought-provoking questions to encourage the candidate to develop their ideas further."
+		default:
+			partCtx = "You are conducting Part 1 (Introduction & Interview). Ask short personal questions about familiar topics such as home, family, work, studies, or hobbies."
+		}
+		return `You are a professional IELTS Speaking examiner conducting an official test. ` + partCtx + `
+Rules:
+- Keep each response to 1-2 sentences maximum.
+- Stay in character as a calm, professional British examiner at all times.
+- Do NOT give feedback, corrections, grammar tips, or band-score comments during the session.
+- React briefly to what the candidate just said, then ask the next question.
+- Do not start with "Great!" or "That's interesting!" — remain neutral and professional.`
+	}
+
+	return `You are a friendly English conversation partner helping someone practise speaking English.
+Rules:
+- Keep each response to 1-2 sentences maximum.
+- Ask one engaging follow-up question to keep the conversation flowing.
+- Be warm, encouraging, and natural.
+- React genuinely to what they said before asking your question.
+- Do not correct grammar explicitly; model correct usage naturally instead.
+- Engage with any topic the user brings up.`
+}
+
+// callOpenAIMessages sends a full messages array to the OpenAI chat endpoint and
+// returns the assistant's reply. Uses gpt-4.1-mini with a 200-token cap for low
+// latency conversational responses.
+func (h *IELTSExaminerHandler) callOpenAIMessages(messages []map[string]string) (string, error) {
+	body := map[string]any{
+		"model":                 h.openAIModel,
+		"messages":              messages,
+		"max_completion_tokens": 200,
+	}
+	bodyBytes, _ := json.Marshal(body)
+
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), h.timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(timeoutCtx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(bodyBytes))
+	if err != nil {
+		return "", fmt.Errorf("build request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+h.openAIKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("openai request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 300))
+		return "", fmt.Errorf("openai returned %d: %s", resp.StatusCode, string(raw))
+	}
+
+	var chatResp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
+		return "", fmt.Errorf("decode response: %w", err)
+	}
+	if len(chatResp.Choices) == 0 {
+		return "", fmt.Errorf("empty response from openai")
+	}
+	return strings.TrimSpace(chatResp.Choices[0].Message.Content), nil
 }
 
 // cleanJSON strips markdown backticks that LLMs sometimes add around JSON.

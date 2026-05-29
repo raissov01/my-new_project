@@ -82,3 +82,25 @@
 /* 16. Feedback items */
 .dark .nd-feedback-item { background: var(--paper-3) }
 
+/* ── Landing page (.lp-*) — "zine on dark stock" ──────────────────────────── */
+/* The landing components are inline-styled; in light mode their bold cards use
+   var(--ink) (near-black) for hard offset shadows and the IELTS card is a solid
+   terracotta block. In dark, var(--ink) becomes cream and var(--terra) is bright,
+   so those auto-flip into heavy cream/orange slabs. Re-ink them here: the hard
+   offsets become a deboss (#0C0907, darker than the page), and the IELTS spotlight
+   becomes an elevated dark card with terracotta accents instead of a slab. */
+
+/* IELTS spotlight: dark card, not a solid-orange rectangle */
+.dark .lp-ielts-card        { background: var(--paper-2); border-color: var(--line-strong); box-shadow: 10px 10px 0 var(--shadow-ink) }
+
+/* hard offset shadows -> deboss */
+.dark .lp-plan              { box-shadow: 6px 6px 0 var(--shadow-ink) }
+.dark .lp-step              { box-shadow: 6px 6px 0 var(--shadow-ink) }
+.dark .lp-step:hover        { box-shadow: 8px 8px 0 var(--shadow-ink) }
+.dark .lp-tool              { box-shadow: 4px 4px 0 var(--shadow-ink) }
+.dark .lp-tool:hover        { box-shadow: 6px 6px 0 var(--shadow-ink) }
+.dark .lp-quote             { box-shadow: 5px 5px 0 var(--shadow-ink) }
+
+/* hero floating chips: a dark "sticker" instead of a bright white card */
+.dark .lp-floater           { background: var(--paper-3); color: var(--ink); box-shadow: 6px 6px 0 var(--shadow-ink) }
+

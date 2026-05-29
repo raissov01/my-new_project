@@ -8,6 +8,44 @@ import {
   type PaywallInfo,
 } from "@/server/integrations/go-backend/server";
 
+export type ConvMessage = {
+  role: "examiner" | "candidate";
+  text: string;
+};
+
+export type ConversationTurnResult =
+  | { reply: string }
+  | { error: string }
+  | { paywall: PaywallInfo };
+
+export async function conversationTurn(
+  mode: "general" | "ielts",
+  part: string,
+  history: ConvMessage[],
+  message: string
+): Promise<ConversationTurnResult> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Not authenticated." };
+
+  try {
+    const result = await fetchBackendJson<{ reply: string }>({
+      path: "/api/v1/ielts/speaking/conversation",
+      userId: user.id,
+      method: "POST",
+      body: JSON.stringify({ mode, part, history, message }),
+      headers: { "Content-Type": "application/json" },
+      timeoutMs: 30_000,
+    });
+    return { reply: result.reply };
+  } catch (err) {
+    if (err instanceof BackendError && err.status === 402 && isPaywall(err.data)) {
+      return { paywall: err.data };
+    }
+    const msg = err instanceof Error ? err.message : "Conversation failed.";
+    return { error: msg };
+  }
+}
+
 export type SpeakingResult = {
   id: string;
   overallBand: number;

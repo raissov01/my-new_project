@@ -30,12 +30,13 @@ const (
 type Feature string
 
 const (
-	FeatureQuizAI        Feature = "quiz_ai"
-	FeatureIELTSWriting  Feature = "ielts_writing"
-	FeatureIELTSSpeaking Feature = "ielts_speaking"
-	FeatureChat          Feature = "chat"
-	FeatureMining        Feature = "mining"
-	FeatureEngSim        Feature = "engsim"
+	FeatureQuizAI               Feature = "quiz_ai"
+	FeatureIELTSWriting         Feature = "ielts_writing"
+	FeatureIELTSSpeaking        Feature = "ielts_speaking"
+	FeatureChat                 Feature = "chat"
+	FeatureMining               Feature = "mining"
+	FeatureEngSim               Feature = "engsim"
+	FeatureSpeakingConversation Feature = "speaking_conv"
 )
 
 // FreeLimits is the daily cap for free-tier users (rolling 24h window).
@@ -44,12 +45,13 @@ const (
 //
 // Pro / trial users are unlimited regardless of the value here.
 var FreeLimits = map[Feature]int{
-	FeatureQuizAI:        0, // quizzes stay free for everyone (anti-abuse cap lives in the handler)
-	FeatureIELTSWriting:  2,
-	FeatureIELTSSpeaking: 2,
-	FeatureChat:          50,
-	FeatureMining:        3,
-	FeatureEngSim:        3,
+	FeatureQuizAI:               0, // quizzes stay free for everyone (anti-abuse cap lives in the handler)
+	FeatureIELTSWriting:         2,
+	FeatureIELTSSpeaking:        2,
+	FeatureChat:                 50,
+	FeatureMining:               3,
+	FeatureEngSim:               3,
+	FeatureSpeakingConversation: 10,
 }
 
 // ErrQuotaExceeded is returned by CheckAndConsume when a free user is over

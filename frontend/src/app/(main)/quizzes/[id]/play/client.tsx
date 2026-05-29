@@ -974,26 +974,42 @@ export function PlayQuizClient({
       quizStartRef.current = Date.now();
     }
     questionStartRef.current = Date.now();
-    if (!isPractice) {
-      trackQuizUsageEvent({
-        quizId: quiz.id,
-        eventType: "quiz_started",
-        metadata: {
-          mode,
-          guest: isGuest,
-          restored: restoredProgress,
-          totalQuestions,
-        },
-      });
-    }
+  }, []);
+
+  // One-shot guard. Non-memoized hook returns (e.g. `sounds` from
+  // useGameSound) churn references across renders; bundling the emit into
+  // an effect that depends on them re-fires `quiz_started` on every render
+  // and inflates the count by 100-1000x per session.
+  const startedEmittedRef = useRef(false);
+  useEffect(() => {
+    if (isPractice || startedEmittedRef.current) return;
+    startedEmittedRef.current = true;
+    trackQuizUsageEvent({
+      quizId: quiz.id,
+      eventType: "quiz_started",
+      metadata: {
+        mode,
+        guest: isGuest,
+        restored: restoredProgress,
+        totalQuestions,
+      },
+    });
+  }, [isPractice, quiz.id, mode, isGuest, restoredProgress, totalQuestions]);
+
+  useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
       trackAbandoned("unmount");
       sounds.stopAll();
     };
-  }, [isPractice, quiz.id, mode, isGuest, restoredProgress, totalQuestions, trackAbandoned, sounds]);
+  }, [trackAbandoned, sounds]);
 
   useEffect(() => {
     const handlePageHide = () => trackAbandoned("pagehide");

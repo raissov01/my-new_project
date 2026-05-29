@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock3,
   Loader2,
+  MessageSquare,
   MessageSquareQuote,
   Mic,
   RotateCcw,
@@ -21,7 +22,9 @@ import { fetchIELTSQuestions } from "@/features/ielts/api";
 import { evaluateSpeaking, type SpeakingResult } from "./actions";
 import { PaywallModal } from "@/components/billing/paywall-modal";
 import type { PaywallInfo } from "@/lib/billing/paywall";
+import { ConversationModeClient } from "./conversation-client";
 
+type Tab = "practice" | "conversation";
 type Phase = "select" | "practice" | "evaluating" | "results";
 type PartKey = "part1" | "part2" | "part3";
 
@@ -33,6 +36,7 @@ const PART_DURATIONS: Record<PartKey, number> = {
 
 export function SpeakingPracticeClient() {
   const { t } = useLocale();
+  const [tab, setTab] = useState<Tab>("practice");
   const [phase, setPhase] = useState<Phase>("select");
   const [part, setPart] = useState<PartKey>("part1");
   const [mockType, setMockType] = useState<"all" | IELTSQuestion["mockType"]>("all");
@@ -289,9 +293,46 @@ export function SpeakingPracticeClient() {
   const formatTime = (secs: number) =>
     `${Math.floor(secs / 60)}:${(secs % 60).toString().padStart(2, "0")}`;
 
+  const tabBar = (
+    <div className="mb-6 flex gap-1 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-1">
+      <button
+        onClick={() => setTab("practice")}
+        className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-all ${
+          tab === "practice"
+            ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        }`}
+      >
+        <Mic className="h-4 w-4" />
+        Practice Mode
+      </button>
+      <button
+        onClick={() => setTab("conversation")}
+        className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-all ${
+          tab === "conversation"
+            ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        }`}
+      >
+        <MessageSquare className="h-4 w-4" />
+        AI Conversation
+      </button>
+    </div>
+  );
+
+  if (tab === "conversation") {
+    return (
+      <div>
+        {tabBar}
+        <ConversationModeClient />
+      </div>
+    );
+  }
+
   if (phase === "select") {
     return (
       <div className="space-y-6">
+        {tabBar}
         <div className="grid gap-4 rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-sm)] lg:grid-cols-5">
           <FilterSelect
             label={t("ielts.sp.filterPart")}

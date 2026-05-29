@@ -7,6 +7,14 @@ import "github.com/midoriya/flashlearn-backend/internal/models"
 // source of truth for cmd/seed-nuet — anything not in this list is
 // removed from nuet_topics on reseed.
 //
+// Mapped against the Cambridge 2026 NUET specification
+// (backend/nuet-materials/specs/2026/). For the verbatim Cambridge
+// objective codes (M1.1 … M5.19, PS-1 … CT-7) and the slug-to-spec
+// crosswalk, see nuet_2026_spec.go. The 2026 spec contains items the
+// platform does not yet cover — they are tracked in
+// Spec2026PendingMathSlugs() rather than added here, because each new
+// topic requires a seed explanation and at least one practice question.
+//
 // Each entry carries:
 //   - Slug: stable URL key (kebab-case, no trailing punctuation)
 //   - Section: math | critical_thinking
@@ -201,8 +209,8 @@ var mathSyllabus = []officialTopicSeed{
 	{
 		slug:        "bearings",
 		title:       "Bearings",
-		description: "Three-figure bearings, navigation problems, combining with trig.",
-		explanation: "🌙 Bearings\n\nA bearing is measured clockwise from north as a three-figure number (e.g. 045°, 230°). Most bearings questions become trig problems once you draw the diagram.\n\nFocus on:\n• drawing accurate diagrams from worded directions\n• converting bearings into triangle interior angles\n• using sine and cosine rules with bearings",
+		description: "Three-figure bearings and navigation problems on maps and scale drawings.",
+		explanation: "🌙 Bearings\n\nA bearing is measured clockwise from north as a three-figure number (e.g. 045°, 230°). Most bearings questions are solved by drawing the diagram and applying right-angled trigonometry or Pythagoras. The 2026 specification (M5.13, M5.18) does not require the sine or cosine rules.\n\nFocus on:\n• drawing accurate diagrams from worded directions\n• converting bearings into triangle interior angles\n• right-angled trigonometry and Pythagoras applied to bearings problems",
 	},
 	{
 		slug:        "polygons",
@@ -225,8 +233,8 @@ var mathSyllabus = []officialTopicSeed{
 	{
 		slug:        "trigonometry",
 		title:       "Trigonometry",
-		description: "Right-angled trig, sine and cosine rules, identities.",
-		explanation: "🌙 Trigonometry\n\nSOH-CAH-TOA in right-angled triangles. The sine rule a/sin A = b/sin B applies in any triangle; cosine rule a² = b² + c² − 2bc cos A is for two sides and the included angle. The identity sin² + cos² = 1 lets you swap between them.\n\nFocus on:\n• SOH-CAH-TOA + Pythagoras\n• sine rule and cosine rule\n• area = ½ ab sin C\n• common identities",
+		description: "Right-angled trig, exact ratios for standard angles, sine/cosine/tangent graphs.",
+		explanation: "🌙 Trigonometry\n\nSOH-CAH-TOA in right-angled triangles, plus the graphs of y = sin x, y = cos x and y = tan x in degrees for angles of any size. The 2026 Cambridge specification (M5.18) explicitly does NOT require the sine rule or the cosine rule — focus on right-angled work and the exact values for 0°, 30°, 45°, 60°, 90°.\n\nFocus on:\n• SOH-CAH-TOA + Pythagoras\n• exact ratios for 0°/30°/45°/60°/90°\n• sketching y = sin x, y = cos x, y = tan x\n• applying trig in 3D figures",
 	},
 }
 
@@ -239,25 +247,25 @@ var ctSyllabus = []officialTopicSeed{
 	},
 	{
 		slug:        "expression-of-conclusion",
-		title:       "Expression of Conclusion",
+		title:       "Summarising the Main Conclusion",
 		description: "Picking the answer choice that best states the argument's conclusion.",
 		explanation: "🌙 Expression of Conclusion\n\nThe argument has one main conclusion; the answer choices paraphrase it with varying accuracy. Avoid options that go beyond what the text actually claims, and reject options that are merely premises.\n\nFocus on:\n• identifying the main claim\n• rejecting overgeneralisations\n• distinguishing the conclusion from a supporting reason",
 	},
 	{
 		slug:        "drawing-conclusion",
-		title:       "Drawing Conclusion",
+		title:       "Drawing a Conclusion",
 		description: "What can be validly inferred from the given premises?",
 		explanation: "🌙 Drawing Conclusion\n\nUnlike Expression of Conclusion (which restates), Drawing Conclusion asks you to infer something new that must follow. Look for the answer with the strongest logical support.\n\nFocus on:\n• necessary vs sufficient conditions\n• 'must be true' vs 'could be true'\n• transitive chains: A → B and B → C ⇒ A → C",
 	},
 	{
 		slug:        "assumptions",
-		title:       "Assumptions",
+		title:       "Identifying an Assumption",
 		description: "What unstated belief is needed for the argument to hold?",
 		explanation: "🌙 Assumptions\n\nAn assumption is the missing link between the premises and the conclusion. The 'negation test' is the gold standard: negate each candidate; whichever destroys the argument is the assumption.\n\nFocus on:\n• locating the gap between premise and conclusion\n• applying the negation test\n• distinguishing assumptions from supporting evidence",
 	},
 	{
 		slug:        "flaws-and-logical-fallacies",
-		title:       "Flaws and Logical Fallacies",
+		title:       "Detecting Reasoning Errors",
 		description: "Naming the reasoning error in a flawed argument.",
 		explanation: "🌙 Flaws and Logical Fallacies\n\nClassic fallacies: circular reasoning, false dilemma, post hoc, ad hominem, appeal to authority, hasty generalisation. NUET tests the description of the flaw, not its label.\n\nFocus on:\n• circular reasoning\n• false dilemma and false cause\n• generalising from a small sample\n• ad hominem and appeal to authority",
 	},
@@ -281,13 +289,13 @@ var ctSyllabus = []officialTopicSeed{
 	},
 	{
 		slug:        "applying-principle",
-		title:       "Applying Principle",
+		title:       "Applying Principles",
 		description: "A general principle is given; pick the option that follows it correctly.",
 		explanation: "🌙 Applying Principle\n\nThe stem states a rule (e.g. 'a service is acceptable if and only if X and Y'). The answer choices describe situations; pick the one that conforms to the rule exactly.\n\nFocus on:\n• both directions of an 'if and only if'\n• checking every clause of the rule\n• distinguishing necessary from sufficient",
 	},
 	{
 		slug:        "parallel-reasoning",
-		title:       "Parallel Reasoning",
+		title:       "Matching Arguments",
 		description: "Identify the answer whose argument structure matches the stem's.",
 		explanation: "🌙 Parallel Reasoning\n\nAbstract the stem's structure into a skeleton (e.g. 'all P are Q; X is P; therefore X is Q'). The right answer matches that skeleton even if the topic is unrelated.\n\nFocus on:\n• abstracting away the surface topic\n• preserving universal/existential quantifiers\n• matching the strength of the conclusion",
 	},
@@ -317,7 +325,7 @@ var ctSyllabus = []officialTopicSeed{
 	},
 	{
 		slug:        "identifying-similarities",
-		title:       "Identifying Similarities",
+		title:       "Identifying Similarity",
 		description: "Pick the situation/object/diagram most similar to the one given.",
 		explanation: "🌙 Identifying Similarities\n\nA prompt and five candidates. Decide on the relevant axis of similarity (structure? function? cause?) and judge each option on that axis.\n\nFocus on:\n• naming the axis of comparison explicitly\n• ignoring irrelevant surface features\n• looking for shared underlying structure",
 	},

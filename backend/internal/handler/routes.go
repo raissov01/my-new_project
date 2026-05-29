@@ -238,6 +238,7 @@ func RegisterRoutes(router *gin.Engine) {
 		internal.GET("/ielts/writing/history", wrapHTTP(deps.IELTSExaminer.GetWritingHistory))
 		internal.POST("/ielts/speaking/evaluate", aiLimiter, wrapHTTP(deps.IELTSExaminer.EvaluateSpeaking))
 		internal.GET("/ielts/speaking/history", wrapHTTP(deps.IELTSExaminer.GetSpeakingHistory))
+		internal.POST("/ielts/speaking/conversation", aiLimiter, wrapHTTP(deps.IELTSExaminer.ConversationTurn))
 
 		// Material notes (user's reading progress, notes, exercise answers)
 		internal.GET("/materials/:materialID/notes", wrapHTTP(deps.MaterialNotes.GetNote))

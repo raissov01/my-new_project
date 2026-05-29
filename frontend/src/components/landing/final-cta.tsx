@@ -18,7 +18,7 @@ export function FinalCta({ locale }: FinalCtaProps) {
             background: 'var(--reverse-bg)', color: 'var(--reverse-fg)',
             borderRadius: 32, padding: '72px 40px',
             textAlign: 'center', position: 'relative', overflow: 'hidden',
-            border: '2px solid var(--reverse-border)', boxShadow: '10px 10px 0 var(--terra)',
+            border: '2px solid var(--reverse-border)', boxShadow: '10px 10px 0 var(--reverse-shadow)',
           }}>
             {/* Ambient glows */}
             <div style={{
