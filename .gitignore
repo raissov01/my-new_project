@@ -82,3 +82,7 @@ next-env.d.ts
 
 /src/generated/prisma
 /frontend/src/generated/prisma
+
+# Telegram user sessions (secrets — never commit)
+backend/.telegram-session*
+.telegram-session*
