@@ -173,6 +173,12 @@ services:
     configs:
       - source: nginx_conf
         target: /etc/nginx/conf.d/default.conf
+    # Map host-gateway to the docker_gwbridge gateway so the balu-fit server
+    # blocks in nginx.conf can reach the balu-fit stack's host-published ports
+    # (miniapp :8080, api :3001). Swarm does not translate the special
+    # "host-gateway" value, so the gateway IP is set explicitly.
+    extra_hosts:
+      - "host-gateway:172.18.0.1"
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /opt/studywithraissov/frontend/public/audio:/usr/share/nginx/audio:ro
