@@ -133,19 +133,40 @@ func (h *IELTSExaminerHandler) GetMockExam(w http.ResponseWriter, r *http.Reques
 		sections = []string{section}
 	}
 
-	examSet := strings.TrimSpace(r.URL.Query().Get("examSet"))
-	if examSet == "" {
-		var err error
-		examSet, err = h.pickExamSet(mockType)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to choose exam set", err)
-			return
-		}
-	}
+	explicitExamSet := strings.TrimSpace(r.URL.Query().Get("examSet"))
 
 	responseSections := make([]ieltsMockSectionPayload, 0, len(sections))
 	for _, sectionKey := range sections {
-		questions, err := h.loadMockQuestions(mockType, examSet, sectionKey, bandTarget)
+		// Fill each section from its own richest exam set (of this mock type),
+		// falling back to the other mock type when this one has nothing for the
+		// section. Locking every section to one global exam set leaves the
+		// sections it does not cover empty (e.g. the predictions speaking set
+		// has no reading/listening, so those came back empty).
+		secMock, secExamSet := mockType, explicitExamSet
+		if secExamSet == "" {
+			es, cnt, err := h.pickExamSetForSection(mockType, sectionKey)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to choose exam set", err)
+				return
+			}
+			// Enrich a thin section from the other mock type when it is richer.
+			// Cambridge tests carry only ~2 writing / ~3 speaking each, while the
+			// predictions banks hold far more, so a default cambridge mock would
+			// otherwise show almost no writing/speaking.
+			sectionMin := map[string]int{"reading": 13, "listening": 10, "writing": 3, "speaking": 5}
+			if cnt < sectionMin[sectionKey] {
+				alt := "cambridge_style"
+				if mockType == "cambridge_style" {
+					alt = "predictions"
+				}
+				if altES, altCnt, _ := h.pickExamSetForSection(alt, sectionKey); altCnt > cnt {
+					secMock, es = alt, altES
+				}
+			}
+			secExamSet = es
+		}
+
+		questions, err := h.loadMockQuestions(secMock, secExamSet, sectionKey, bandTarget)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to load mock section", err)
 			return
@@ -173,47 +194,31 @@ func (h *IELTSExaminerHandler) GetMockExam(w http.ResponseWriter, r *http.Reques
 		MockType:      mockType,
 		Section:       section,
 		BandTarget:    bandTarget,
-		ExamSet:       examSet,
+		ExamSet:       explicitExamSet,
 		Sections:      responseSections,
 		GeneratedByAI: false,
 	})
 }
 
-func (h *IELTSExaminerHandler) pickExamSet(mockType string) (string, error) {
-	var questions []models.IELTSQuestion
-	if err := h.db.Model(&models.IELTSQuestion{}).
-		Where("mock_type = ?", mockType).
-		Order("exam_set ASC, sort_order ASC").
-		Find(&questions).Error; err != nil {
-		return "", err
+// pickExamSetForSection returns the exam set with the most questions for the
+// given mock type + section, and that count. Lets a full mock fill every
+// section from its richest source instead of one global exam set.
+func (h *IELTSExaminerHandler) pickExamSetForSection(mockType, section string) (string, int, error) {
+	var res struct {
+		ExamSet string
+		Cnt     int
 	}
-
-	if len(questions) == 0 {
-		return "", fmt.Errorf("no questions found for mock type %s", mockType)
+	err := h.db.Model(&models.IELTSQuestion{}).
+		Select("exam_set, count(*) as cnt").
+		Where("mock_type = ? AND section = ? AND exam_set <> ''", mockType, section).
+		Group("exam_set").
+		Order("cnt DESC").
+		Limit(1).
+		Scan(&res).Error
+	if err != nil {
+		return "", 0, err
 	}
-
-	counts := make(map[string]int)
-	order := make([]string, 0, len(questions))
-	for _, question := range questions {
-		if question.ExamSet == "" {
-			continue
-		}
-		if _, exists := counts[question.ExamSet]; !exists {
-			order = append(order, question.ExamSet)
-		}
-		counts[question.ExamSet]++
-	}
-
-	if len(order) == 0 {
-		return "", fmt.Errorf("no exam set available for mock type %s", mockType)
-	}
-	best := order[0]
-	for _, candidate := range order[1:] {
-		if counts[candidate] > counts[best] {
-			best = candidate
-		}
-	}
-	return best, nil
+	return res.ExamSet, res.Cnt, nil
 }
 
 func (h *IELTSExaminerHandler) loadMockQuestions(mockType, examSet, section, bandTarget string) ([]models.IELTSQuestion, error) {
