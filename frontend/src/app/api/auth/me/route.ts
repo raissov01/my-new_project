@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser, getCurrentProfile, getCurrentBackendUser } from "@/server/auth";
+import {
+  getCurrentUser,
+  getCurrentProfile,
+  getCurrentBackendUser,
+  getAuthToken,
+  clearAuthToken,
+} from "@/server/auth";
+import { isJwtExpired } from "@/lib/shared/auth/token-expiry";
 
 /**
  * GET /api/auth/me
@@ -11,6 +18,15 @@ import { getCurrentUser, getCurrentProfile, getCurrentBackendUser } from "@/serv
  */
 export async function GET() {
   try {
+    // Drop a cookie whose JWT has already expired so the middleware stops
+    // treating the user as logged in (route handlers can set cookies,
+    // server components cannot).
+    const token = await getAuthToken();
+    if (token && isJwtExpired(token)) {
+      await clearAuthToken();
+      return NextResponse.json({ user: null }, { status: 200 });
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {

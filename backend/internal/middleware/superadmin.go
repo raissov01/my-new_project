@@ -11,7 +11,7 @@ import (
 
 // RequireSuperadmin gates the developer/owner admin panel. The check is
 // DB-authoritative — JWT claims are not trusted, so revoking is_superadmin
-// in the DB takes effect immediately even though tokens have a 7-day TTL.
+// in the DB takes effect immediately even though tokens have a 30-day TTL.
 //
 // Mirrors RequireAdmin's signature so it can be slotted into route groups
 // the same way (typically chained AFTER InternalAuth or JWTAuth, which set
