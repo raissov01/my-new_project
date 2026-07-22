@@ -181,6 +181,8 @@ services:
       - "host-gateway:172.18.0.1"
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
+      # ACME webroot: qadam домендерінің (sslip.io) сертификаты осы жол арқылы жаңарады.
+      - /var/www/certbot:/var/www/certbot:ro
       - /opt/studywithraissov/frontend/public/audio:/usr/share/nginx/audio:ro
     networks:
       - internal
